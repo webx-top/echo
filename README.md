@@ -9,14 +9,14 @@ A fast and unfancy micro web framework for Go.
 	- `echo.MiddlewareFunc`
 	- `func(echo.HandlerFunc) echo.HandlerFunc`
 	- `echo.HandlerFunc`
-	- `func(*echo.Context) error`
+	- `func(echo.Context) error`
 	- `func(http.Handler) http.Handler`
 	- `http.Handler`
 	- `http.HandlerFunc`
 	- `func(http.ResponseWriter, *http.Request)`
 - Extensible handler, supports:
     - `echo.HandlerFunc`
-    - `func(*echo.Context) error`
+    - `func(echo.Context) error`
     - `http.Handler`
     - `http.HandlerFunc`
     - `func(http.ResponseWriter, *http.Request)`

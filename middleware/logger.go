@@ -10,10 +10,10 @@ import (
 
 func Logger() echo.MiddlewareFunc {
 	return func(h echo.HandlerFunc) echo.HandlerFunc {
-		return func(c *echo.Context) error {
+		return func(c echo.Context) error {
 			req := c.Request()
 			res := c.Response()
-			logger := c.Echo().Logger()
+			logger := c.X().Echo().Logger()
 
 			remoteAddr := req.RemoteAddr
 			if ip := req.Header.Get(echo.XRealIP); ip != "" {

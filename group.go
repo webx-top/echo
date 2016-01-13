@@ -10,6 +10,10 @@ type (
 	}
 )
 
+func (g *Group) URL(h Handler, params ...interface{}) string {
+	return g.echo.URL(h, params...)
+}
+
 func (g *Group) SetRenderer(r Renderer) {
 	g.echo.renderer = r
 }

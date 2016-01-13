@@ -2,6 +2,7 @@ package echo
 
 import (
 	"errors"
+	htmlTmpl "html/template"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -25,7 +26,7 @@ type (
 	}
 )
 
-func (t *Template) Render(w io.Writer, name string, data interface{}) error {
+func (t *Template) Render(w io.Writer, name string, data interface{}, funcMap htmlTmpl.FuncMap) error {
 	return t.templates.ExecuteTemplate(w, name, data)
 }
 
@@ -52,8 +53,8 @@ func TestContext(t *testing.T) {
 	assert.Nil(t, c.Socket())
 
 	// Param by id
-	c.pnames = []string{"id"}
-	c.pvalues = []string{"1"}
+	c.X().pnames = []string{"id"}
+	c.X().pvalues = []string{"1"}
 	assert.Equal(t, "1", c.P(0))
 
 	// Param by name
@@ -71,7 +72,7 @@ func TestContext(t *testing.T) {
 	testBind(t, c, "application/json")
 
 	// XML
-	c.request, _ = http.NewRequest(POST, "/", strings.NewReader(userXML))
+	c.X().request, _ = http.NewRequest(POST, "/", strings.NewReader(userXML))
 	testBind(t, c, ApplicationXML)
 
 	// Unsupported
@@ -84,14 +85,14 @@ func TestContext(t *testing.T) {
 	tpl := &Template{
 		templates: template.Must(template.New("hello").Parse("Hello, {{.}}!")),
 	}
-	c.echo.SetRenderer(tpl)
+	c.X().echo.SetRenderer(tpl)
 	err := c.Render(http.StatusOK, "hello", "Joe")
 	if assert.NoError(t, err) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "Hello, Joe!", rec.Body.String())
 	}
 
-	c.echo.renderer = nil
+	c.X().echo.renderer = nil
 	err = c.Render(http.StatusOK, "hello", "Joe")
 	assert.Error(t, err)
 
@@ -214,7 +215,7 @@ func TestContext(t *testing.T) {
 	rec = httptest.NewRecorder()
 	c = NewContext(req, NewResponse(rec, e), e)
 	c.NoContent(http.StatusOK)
-	assert.Equal(t, http.StatusOK, c.response.status)
+	assert.Equal(t, http.StatusOK, c.X().response.status)
 
 	// Redirect
 	rec = httptest.NewRecorder()
@@ -225,10 +226,10 @@ func TestContext(t *testing.T) {
 	rec = httptest.NewRecorder()
 	c = NewContext(req, NewResponse(rec, e), e)
 	c.Error(errors.New("error"))
-	assert.Equal(t, http.StatusInternalServerError, c.response.status)
+	assert.Equal(t, http.StatusInternalServerError, c.X().response.status)
 
 	// reset
-	c.reset(req, NewResponse(httptest.NewRecorder(), e), e)
+	c.Reset(req, NewResponse(httptest.NewRecorder(), e), e)
 }
 
 func TestContextPath(t *testing.T) {
@@ -275,13 +276,13 @@ func TestContextForm(t *testing.T) {
 }
 
 func TestContextNetContext(t *testing.T) {
-	c := new(Context)
+	c := new(xContext)
 	c.Context = context.WithValue(nil, "key", "val")
 	assert.Equal(t, "val", c.Value("key"))
 }
 
-func testBind(t *testing.T, c *Context, ct string) {
-	c.request.Header.Set(ContentType, ct)
+func testBind(t *testing.T, c Context, ct string) {
+	c.Request().Header.Set(ContentType, ct)
 	u := new(user)
 	err := c.Bind(u)
 	if ct == "" {
