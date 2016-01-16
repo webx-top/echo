@@ -28,6 +28,7 @@ type (
 		query    url.Values
 		store    store
 		echo     *Echo
+		Funcs    map[string]interface{}
 	}
 	store map[string]interface{}
 )
@@ -40,6 +41,7 @@ func NewContext(req *http.Request, res *Response, e *Echo) *Context {
 		echo:     e,
 		pvalues:  make([]string, *e.maxParam),
 		store:    make(store),
+		Funcs:    make(map[string]interface{}),
 	}
 }
 
@@ -123,7 +125,7 @@ func (c *Context) Render(code int, name string, data interface{}) (err error) {
 		return RendererNotRegistered
 	}
 	buf := new(bytes.Buffer)
-	if err = c.echo.renderer.Render(buf, name, data); err != nil {
+	if err = c.echo.renderer.Render(buf, name, data, c.Funcs); err != nil {
 		return
 	}
 	c.response.Header().Set(ContentType, TextHTMLCharsetUTF8)
@@ -266,4 +268,5 @@ func (c *Context) reset(r *http.Request, w http.ResponseWriter, e *Echo) {
 	c.query = nil
 	c.store = nil
 	c.echo = e
+	c.Funcs = make(map[string]interface{})
 }
