@@ -29,8 +29,6 @@ type (
 		Form(string) string
 		Set(string, interface{})
 		Get(string) interface{}
-		SetFunc(string, interface{})
-		GetFunc(string) interface{}
 		Bind(interface{}) error
 		Render(int, string, interface{}) error
 		HTML(int, string) error
@@ -44,6 +42,8 @@ type (
 		NoContent(int) error
 		Redirect(int, string) error
 		Error(error)
+		SetFunc(string, interface{})
+		GetFunc(string) interface{}
 		Funcs() template.FuncMap
 		X() *xContext
 	}
@@ -175,16 +175,26 @@ func (c *xContext) Bind(i interface{}) error {
 // Render renders a template with data and sends a text/html response with status
 // code. Templates can be registered using `Echo.SetRenderer()`.
 func (c *xContext) Render(code int, name string, data interface{}) (err error) {
-	if c.echo.renderer == nil {
-		return RendererNotRegistered
-	}
-	buf := new(bytes.Buffer)
-	if err = c.echo.renderer.Render(buf, name, data, c.funcs); err != nil {
+	b, err := c.Fetch(name, data)
+	if err != nil {
 		return
 	}
 	c.response.Header().Set(ContentType, TextHTMLCharsetUTF8)
 	c.response.WriteHeader(code)
-	c.response.Write(buf.Bytes())
+	c.response.Write(b)
+	return
+}
+
+func (c *xContext) Fetch(name string, data interface{}) (b []byte, err error) {
+	if c.echo.renderer == nil {
+		return nil, RendererNotRegistered
+	}
+	buf := new(bytes.Buffer)
+	err = c.echo.renderer.Render(buf, name, data, c.funcs)
+	if err != nil {
+		return
+	}
+	b = buf.Bytes()
 	return
 }
 
@@ -210,9 +220,7 @@ func (c *xContext) JSON(code int, i interface{}) (err error) {
 	if err != nil {
 		return err
 	}
-	c.response.Header().Set(ContentType, ApplicationJSONCharsetUTF8)
-	c.response.WriteHeader(code)
-	c.response.Write(b)
+	c.Json(code, b)
 	return
 }
 
@@ -222,11 +230,11 @@ func (c *xContext) JSONIndent(code int, i interface{}, prefix string, indent str
 	if err != nil {
 		return err
 	}
-	c.json(code, b)
+	c.Json(code, b)
 	return
 }
 
-func (c *xContext) json(code int, b []byte) {
+func (c *xContext) Json(code int, b []byte) {
 	c.response.Header().Set(ContentType, ApplicationJSONCharsetUTF8)
 	c.response.WriteHeader(code)
 	c.response.Write(b)
@@ -239,12 +247,16 @@ func (c *xContext) JSONP(code int, callback string, i interface{}) (err error) {
 	if err != nil {
 		return err
 	}
+	c.Jsonp(code, callback, b)
+	return
+}
+
+func (c *xContext) Jsonp(code int, callback string, b []byte) {
 	c.response.Header().Set(ContentType, ApplicationJavaScriptCharsetUTF8)
 	c.response.WriteHeader(code)
 	c.response.Write([]byte(callback + "("))
 	c.response.Write(b)
 	c.response.Write([]byte(");"))
-	return
 }
 
 // XML sends an XML response with status code.
@@ -253,10 +265,7 @@ func (c *xContext) XML(code int, i interface{}) (err error) {
 	if err != nil {
 		return err
 	}
-	c.response.Header().Set(ContentType, ApplicationXMLCharsetUTF8)
-	c.response.WriteHeader(code)
-	c.response.Write([]byte(xml.Header))
-	c.response.Write(b)
+	c.Xml(code, b)
 	return
 }
 
@@ -266,11 +275,11 @@ func (c *xContext) XMLIndent(code int, i interface{}, prefix string, indent stri
 	if err != nil {
 		return err
 	}
-	c.xml(code, b)
+	c.Xml(code, b)
 	return
 }
 
-func (c *xContext) xml(code int, b []byte) {
+func (c *xContext) Xml(code int, b []byte) {
 	c.response.Header().Set(ContentType, ApplicationXMLCharsetUTF8)
 	c.response.WriteHeader(code)
 	c.response.Write([]byte(xml.Header))
