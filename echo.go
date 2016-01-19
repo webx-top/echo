@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -54,10 +55,10 @@ type (
 	Middleware     interface{}
 	MiddlewareFunc func(HandlerFunc) HandlerFunc
 	Handler        interface{}
-	HandlerFunc    func(*Context) error
+	HandlerFunc    func(Context) error
 
 	// HTTPErrorHandler is a centralized HTTP error handler.
-	HTTPErrorHandler func(error, *Context)
+	HTTPErrorHandler func(error, Context)
 
 	// Binder is the interface that wraps the Bind method.
 	Binder interface {
@@ -74,7 +75,7 @@ type (
 
 	// Renderer is the interface that wraps the Render method.
 	Renderer interface {
-		Render(w io.Writer, name string, data interface{}, funcMaps ...map[string]interface{}) error
+		Render(w io.Writer, name string, data interface{}, funcMap template.FuncMap) error
 	}
 )
 
@@ -173,11 +174,11 @@ var (
 	// Error handlers
 	//----------------
 
-	notFoundHandler = func(c *Context) error {
+	notFoundHandler = func(c Context) error {
 		return NewHTTPError(http.StatusNotFound)
 	}
 
-	methodNotAllowedHandler = func(c *Context) error {
+	methodNotAllowedHandler = func(c Context) error {
 		return NewHTTPError(http.StatusMethodNotAllowed)
 	}
 
@@ -197,7 +198,7 @@ func New() (e *Echo) {
 	//----------
 
 	e.HTTP2(true)
-	e.defaultHTTPErrorHandler = func(err error, c *Context) {
+	e.defaultHTTPErrorHandler = func(err error, c Context) {
 		code := http.StatusInternalServerError
 		msg := http.StatusText(code)
 		if he, ok := err.(*HTTPError); ok {
@@ -207,8 +208,8 @@ func New() (e *Echo) {
 		if e.debug {
 			msg = err.Error()
 		}
-		if !c.response.committed {
-			http.Error(c.response, msg, code)
+		if !c.Response().committed {
+			http.Error(c.Response(), msg, code)
 		}
 		e.logger.Error(err)
 	}
@@ -253,7 +254,7 @@ func (e *Echo) HTTP2(on bool) {
 }
 
 // DefaultHTTPErrorHandler invokes the default HTTP error handler.
-func (e *Echo) DefaultHTTPErrorHandler(err error, c *Context) {
+func (e *Echo) DefaultHTTPErrorHandler(err error, c Context) {
 	e.defaultHTTPErrorHandler(err, c)
 }
 
@@ -362,15 +363,15 @@ func (e *Echo) Match(methods []string, path string, h Handler) {
 
 // WebSocket adds a WebSocket route > handler to the router.
 func (e *Echo) WebSocket(path string, h HandlerFunc) {
-	e.Get(path, func(c *Context) (err error) {
+	e.Get(path, func(c Context) (err error) {
 		wss := websocket.Server{
 			Handler: func(ws *websocket.Conn) {
-				c.socket = ws
-				c.response.status = http.StatusSwitchingProtocols
+				c.X().socket = ws
+				c.Response().status = http.StatusSwitchingProtocols
 				err = h(c)
 			},
 		}
-		wss.ServeHTTP(c.response, c.request)
+		wss.ServeHTTP(c.Response(), c.Request())
 		return err
 	})
 }
@@ -403,20 +404,20 @@ func (e *Echo) Static(path, dir string) {
 
 // ServeDir serves files from a directory.
 func (e *Echo) ServeDir(path, dir string) {
-	e.Get(path+"*", func(c *Context) error {
+	e.Get(path+"*", func(c Context) error {
 		return e.serveFile(dir, c.P(0), c) // Param `_*`
 	})
 }
 
 // ServeFile serves a file.
 func (e *Echo) ServeFile(path, file string) {
-	e.Get(path, func(c *Context) error {
+	e.Get(path, func(c Context) error {
 		dir, file := filepath.Split(file)
 		return e.serveFile(dir, file, c)
 	})
 }
 
-func (e *Echo) serveFile(dir, file string, c *Context) (err error) {
+func (e *Echo) serveFile(dir, file string, c Context) (err error) {
 	fs := http.Dir(dir)
 	f, err := fs.Open(file)
 	if err != nil {
@@ -445,11 +446,11 @@ func (e *Echo) serveFile(dir, file string, c *Context) (err error) {
 		fi, _ = f.Stat() // Index file stat
 	}
 
-	http.ServeContent(c.response, c.request, fi.Name(), fi.ModTime(), f)
+	http.ServeContent(c.Response(), c.Request(), fi.Name(), fi.ModTime(), f)
 	return
 }
 
-func listDir(d http.File, c *Context) (err error) {
+func listDir(d http.File, c Context) (err error) {
 	dirs, err := d.Readdir(-1)
 	if err != nil {
 		return err
@@ -523,15 +524,15 @@ func (e *Echo) Routes() []Route {
 	return e.router.routes
 }
 
-// ServeHTTP implements `http.Handler` interface, which serves HTTP requests.
+// ServeHTTP implements `http.Handler` interface, which serves HTTP c.Request()s.
 func (e *Echo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if e.hook != nil {
 		e.hook(w, r)
 	}
 
-	c := e.pool.Get().(*Context)
+	c := e.pool.Get().(Context)
 	h, e := e.router.Find(r.Method, r.URL.Path, c)
-	c.reset(r, w, e)
+	c.X().reset(r, w, e)
 
 	// Chain middleware with handler in the end
 	for i := len(e.middleware) - 1; i >= 0; i-- {
@@ -624,16 +625,16 @@ func wrapMiddleware(m Middleware) MiddlewareFunc {
 		return m
 	case HandlerFunc:
 		return wrapHandlerFuncMW(m)
-	case func(*Context) error:
+	case func(Context) error:
 		return wrapHandlerFuncMW(m)
 	case func(http.Handler) http.Handler:
 		return func(h HandlerFunc) HandlerFunc {
-			return func(c *Context) (err error) {
+			return func(c Context) (err error) {
 				m(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					c.response.writer = w
-					c.request = r
+					c.Response().writer = w
+					c.X().request = r
 					err = h(c)
-				})).ServeHTTP(c.response.writer, c.request)
+				})).ServeHTTP(c.Response().writer, c.Request())
 				return
 			}
 		}
@@ -649,7 +650,7 @@ func wrapMiddleware(m Middleware) MiddlewareFunc {
 // wrapHandlerFuncMW wraps HandlerFunc middleware.
 func wrapHandlerFuncMW(m HandlerFunc) MiddlewareFunc {
 	return func(h HandlerFunc) HandlerFunc {
-		return func(c *Context) error {
+		return func(c Context) error {
 			if err := m(c); err != nil {
 				return err
 			}
@@ -661,9 +662,9 @@ func wrapHandlerFuncMW(m HandlerFunc) MiddlewareFunc {
 // wrapHTTPHandlerFuncMW wraps http.HandlerFunc middleware.
 func wrapHTTPHandlerFuncMW(m http.HandlerFunc) MiddlewareFunc {
 	return func(h HandlerFunc) HandlerFunc {
-		return func(c *Context) error {
-			if !c.response.committed {
-				m.ServeHTTP(c.response.writer, c.request)
+		return func(c Context) error {
+			if !c.Response().committed {
+				m.ServeHTTP(c.Response().writer, c.Request())
 			}
 			return h(c)
 		}
@@ -675,16 +676,16 @@ func wrapHandler(h Handler) HandlerFunc {
 	switch h := h.(type) {
 	case HandlerFunc:
 		return h
-	case func(*Context) error:
+	case func(Context) error:
 		return h
 	case http.Handler, http.HandlerFunc:
-		return func(c *Context) error {
-			h.(http.Handler).ServeHTTP(c.response, c.request)
+		return func(c Context) error {
+			h.(http.Handler).ServeHTTP(c.Response(), c.Request())
 			return nil
 		}
 	case func(http.ResponseWriter, *http.Request):
-		return func(c *Context) error {
-			h(c.response, c.request)
+		return func(c Context) error {
+			h(c.Response(), c.Request())
 			return nil
 		}
 	default:

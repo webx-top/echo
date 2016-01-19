@@ -275,7 +275,7 @@ func (n *node) check405() HandlerFunc {
 	return notFoundHandler
 }
 
-func (r *Router) Find(method, path string, ctx *Context) (h HandlerFunc, e *Echo) {
+func (r *Router) Find(method, path string, ctx Context) (h HandlerFunc, e *Echo) {
 	h = notFoundHandler
 	e = r.echo
 	cn := r.tree // Current node as root
@@ -358,7 +358,7 @@ func (r *Router) Find(method, path string, ctx *Context) (h HandlerFunc, e *Echo
 			i, l := 0, len(search)
 			for ; i < l && search[i] != '/'; i++ {
 			}
-			ctx.pvalues[n] = search[:i]
+			ctx.X().pvalues[n] = search[:i]
 			n++
 			search = search[i:]
 			continue
@@ -371,13 +371,13 @@ func (r *Router) Find(method, path string, ctx *Context) (h HandlerFunc, e *Echo
 			// Not found
 			return
 		}
-		ctx.pvalues[len(cn.pnames)-1] = search
+		ctx.X().pvalues[len(cn.pnames)-1] = search
 		goto End
 	}
 
 End:
-	ctx.path = cn.ppath
-	ctx.pnames = cn.pnames
+	ctx.X().path = cn.ppath
+	ctx.X().pnames = cn.pnames
 	h = cn.findHandler(method)
 	if cn.echo != nil {
 		e = cn.echo
@@ -392,7 +392,7 @@ End:
 		if cn = cn.findChildByKind(mkind); cn == nil {
 			return
 		}
-		ctx.pvalues[len(cn.pnames)-1] = ""
+		ctx.X().pvalues[len(cn.pnames)-1] = ""
 		if h = cn.findHandler(method); h == nil {
 			h = cn.check405()
 		}
@@ -401,9 +401,9 @@ End:
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	c := r.echo.pool.Get().(*Context)
+	c := r.echo.pool.Get().(Context)
 	h, _ := r.Find(req.Method, req.URL.Path, c)
-	c.reset(req, w, r.echo)
+	c.X().reset(req, w, r.echo)
 	if err := h(c); err != nil {
 		r.echo.httpErrorHandler(err, c)
 	}
