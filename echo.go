@@ -186,11 +186,11 @@ var (
 )
 
 // New creates an instance of Echo.
-func New(args ...Context) (e *Echo) {
+func New(args ...func(*Response, *Echo) interface{}) (e *Echo) {
 	e = &Echo{maxParam: new(int)}
-	if len(args) > 0 {
+	if len(args) > 0 && args[0] != nil {
 		e.pool.New = func() interface{} {
-			return args[0]
+			return args[0](new(Response), e)
 		}
 	} else {
 		e.pool.New = func() interface{} {
