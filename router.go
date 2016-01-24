@@ -403,7 +403,7 @@ End:
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	c := r.echo.pool.Get().(Context)
 	h, _ := r.Find(req.Method, req.URL.Path, c)
-	c.X().reset(req, w, r.echo)
+	c.Reset(req, w, r.echo)
 	if err := h(c); err != nil {
 		r.echo.httpErrorHandler(err, c)
 	}

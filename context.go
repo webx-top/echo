@@ -45,6 +45,7 @@ type (
 		SetFunc(string, interface{})
 		GetFunc(string) interface{}
 		Funcs() template.FuncMap
+		Reset(*http.Request, http.ResponseWriter, *Echo)
 		X() *xContext
 	}
 
@@ -325,7 +326,7 @@ func (c *xContext) Echo() *Echo {
 	return c.echo
 }
 
-func (c *xContext) reset(r *http.Request, w http.ResponseWriter, e *Echo) {
+func (c *xContext) Reset(r *http.Request, w http.ResponseWriter, e *Echo) {
 	c.request = r
 	c.response.reset(w, e)
 	c.query = nil
