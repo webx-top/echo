@@ -150,7 +150,7 @@ const (
 )
 
 var (
-	methods = [...]string{
+	methods = []string{
 		CONNECT,
 		DELETE,
 		GET,
@@ -708,4 +708,8 @@ func (binder) Bind(r *http.Request, i interface{}) (err error) {
 		err = xml.NewDecoder(r.Body).Decode(i)
 	}
 	return
+}
+
+func Methods() []string {
+	return methods
 }
