@@ -2,7 +2,7 @@ package echo
 
 import (
 	"bytes"
-	"encoding/json"
+
 	"errors"
 	"fmt"
 	"html/template"
@@ -11,11 +11,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
-
-	"encoding/xml"
 
 	"github.com/labstack/gommon/log"
 	"golang.org/x/net/http2"
@@ -63,9 +60,6 @@ type (
 	// Binder is the interface that wraps the Bind method.
 	Binder interface {
 		Bind(*http.Request, interface{}) error
-	}
-
-	binder struct {
 	}
 
 	// Validator is the interface that wraps the Validate method.
@@ -220,7 +214,7 @@ func New(args ...func(*Response, *Echo) interface{}) (e *Echo) {
 		e.logger.Error(err)
 	}
 	e.SetHTTPErrorHandler(e.defaultHTTPErrorHandler)
-	e.SetBinder(&binder{})
+	e.SetBinder(&binder{Echo: e})
 
 	// Logger
 	e.logger = log.New("echo")
@@ -697,17 +691,6 @@ func wrapHandler(h Handler) HandlerFunc {
 	default:
 		panic("unknown handler")
 	}
-}
-
-func (binder) Bind(r *http.Request, i interface{}) (err error) {
-	ct := r.Header.Get(ContentType)
-	err = UnsupportedMediaType
-	if strings.HasPrefix(ct, ApplicationJSON) {
-		err = json.NewDecoder(r.Body).Decode(i)
-	} else if strings.HasPrefix(ct, ApplicationXML) {
-		err = xml.NewDecoder(r.Body).Decode(i)
-	}
-	return
 }
 
 func Methods() []string {
