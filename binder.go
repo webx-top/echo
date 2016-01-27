@@ -80,7 +80,9 @@ func SplitJson(s string) ([]string, error) {
 }
 
 func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) error {
-
+	if r.Form == nil {
+		r.ParseForm()
+	}
 	vc := reflect.ValueOf(m)
 	tc := reflect.TypeOf(m)
 
