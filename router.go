@@ -276,6 +276,7 @@ func (n *node) check405() HandlerFunc {
 }
 
 func (r *Router) Find(method, path string, ctx Context) (h HandlerFunc, e *Echo) {
+	x := ctx.X()
 	h = notFoundHandler
 	e = r.echo
 	cn := r.tree // Current node as root
@@ -358,7 +359,7 @@ func (r *Router) Find(method, path string, ctx Context) (h HandlerFunc, e *Echo)
 			i, l := 0, len(search)
 			for ; i < l && search[i] != '/'; i++ {
 			}
-			ctx.X().pvalues[n] = search[:i]
+			x.pvalues[n] = search[:i]
 			n++
 			search = search[i:]
 			continue
@@ -371,13 +372,13 @@ func (r *Router) Find(method, path string, ctx Context) (h HandlerFunc, e *Echo)
 			// Not found
 			return
 		}
-		ctx.X().pvalues[len(cn.pnames)-1] = search
+		x.pvalues[len(cn.pnames)-1] = search
 		goto End
 	}
 
 End:
-	ctx.X().path = cn.ppath
-	ctx.X().pnames = cn.pnames
+	x.path = cn.ppath
+	x.pnames = cn.pnames
 	h = cn.findHandler(method)
 	if cn.echo != nil {
 		e = cn.echo
@@ -392,7 +393,7 @@ End:
 		if cn = cn.findChildByKind(mkind); cn == nil {
 			return
 		}
-		ctx.X().pvalues[len(cn.pnames)-1] = ""
+		x.pvalues[len(cn.pnames)-1] = ""
 		if h = cn.findHandler(method); h == nil {
 			h = cn.check405()
 		}
