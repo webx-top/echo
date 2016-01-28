@@ -5,6 +5,7 @@ import "net/http"
 type (
 	Router struct {
 		tree   *node
+		static map[string]*nodeLite
 		routes []Route
 		echo   *Echo
 	}
@@ -18,6 +19,12 @@ type (
 		pnames        []string
 		methodHandler *methodHandler
 		echo          *Echo
+		isFileServer  bool
+	}
+	nodeLite struct {
+		methodHandler *methodHandler
+		echo          *Echo
+		isFileServer  bool
 	}
 	kind          uint8
 	children      []*node
@@ -40,25 +47,77 @@ const (
 	mkind
 )
 
+func (m *methodHandler) addHandler(method string, h HandlerFunc) {
+	switch method {
+	case GET:
+		m.get = h
+	case POST:
+		m.post = h
+	case PUT:
+		m.put = h
+	case DELETE:
+		m.delete = h
+	case PATCH:
+		m.patch = h
+	case OPTIONS:
+		m.options = h
+	case HEAD:
+		m.head = h
+	case CONNECT:
+		m.connect = h
+	case TRACE:
+		m.trace = h
+	}
+}
+
+func (m *methodHandler) findHandler(method string) HandlerFunc {
+	switch method {
+	case GET:
+		return m.get
+	case POST:
+		return m.post
+	case PUT:
+		return m.put
+	case DELETE:
+		return m.delete
+	case PATCH:
+		return m.patch
+	case OPTIONS:
+		return m.options
+	case HEAD:
+		return m.head
+	case CONNECT:
+		return m.connect
+	case TRACE:
+		return m.trace
+	default:
+		return nil
+	}
+}
+
 func NewRouter(e *Echo) *Router {
 	return &Router{
 		tree: &node{
 			methodHandler: new(methodHandler),
 		},
+		static: make(map[string]*nodeLite),
 		routes: []Route{},
 		echo:   e,
 	}
 }
 
-func (r *Router) Add(method, path string, h HandlerFunc, e *Echo) {
+func (r *Router) Add(method, path string, h HandlerFunc, e *Echo, args ...bool) {
 	ppath := path        // Pristine path
 	pnames := []string{} // Param names
-
+	isFileServer := false
+	if len(args) > 0 {
+		isFileServer = args[0]
+	}
 	for i, l := 0, len(path); i < l; i++ {
 		if path[i] == ':' {
 			j := i + 1
 
-			r.insert(method, path[:i], nil, skind, "", nil, e)
+			r.insert(method, path[:i], nil, skind, "", nil, e, isFileServer)
 			for ; i < l && path[i] != '/'; i++ {
 			}
 
@@ -67,22 +126,34 @@ func (r *Router) Add(method, path string, h HandlerFunc, e *Echo) {
 			i, l = j, len(path)
 
 			if i == l {
-				r.insert(method, path[:i], h, pkind, ppath, pnames, e)
+				r.insert(method, path[:i], h, pkind, ppath, pnames, e, isFileServer)
 				return
 			}
-			r.insert(method, path[:i], nil, pkind, ppath, pnames, e)
+			r.insert(method, path[:i], nil, pkind, ppath, pnames, e, isFileServer)
 		} else if path[i] == '*' {
-			r.insert(method, path[:i], nil, skind, "", nil, e)
+			r.insert(method, path[:i], nil, skind, "", nil, e, isFileServer)
 			pnames = append(pnames, "_*")
-			r.insert(method, path[:i+1], h, mkind, ppath, pnames, e)
+			r.insert(method, path[:i+1], h, mkind, ppath, pnames, e, isFileServer)
 			return
 		}
 	}
 
-	r.insert(method, path, h, skind, ppath, pnames, e)
+	//static route
+	if m, ok := r.static[path]; ok {
+		m.methodHandler.addHandler(method, h)
+	} else {
+		m = &nodeLite{
+			methodHandler: &methodHandler{},
+			echo:          e,
+			isFileServer:  isFileServer,
+		}
+		m.methodHandler.addHandler(method, h)
+		r.static[path] = m
+	}
+	//r.insert(method, path, h, skind, ppath, pnames, e,isFileServer)
 }
 
-func (r *Router) insert(method, path string, h HandlerFunc, t kind, ppath string, pnames []string, e *Echo) {
+func (r *Router) insert(method, path string, h HandlerFunc, t kind, ppath string, pnames []string, e *Echo, isFileServer bool) {
 	// Adjust max param
 	l := len(pnames)
 	if *e.maxParam < l {
@@ -121,7 +192,7 @@ func (r *Router) insert(method, path string, h HandlerFunc, t kind, ppath string
 			}
 		} else if l < pl {
 			// Split node
-			n := newNode(cn.kind, cn.prefix[l:], cn, cn.children, cn.methodHandler, cn.ppath, cn.pnames, cn.echo)
+			n := newNode(cn.kind, cn.prefix[l:], cn, cn.children, cn.methodHandler, cn.ppath, cn.pnames, cn.echo, isFileServer)
 
 			// Reset parent node
 			cn.kind = skind
@@ -144,7 +215,7 @@ func (r *Router) insert(method, path string, h HandlerFunc, t kind, ppath string
 				cn.echo = e
 			} else {
 				// Create child node
-				n = newNode(t, search[l:], cn, nil, new(methodHandler), ppath, pnames, e)
+				n = newNode(t, search[l:], cn, nil, new(methodHandler), ppath, pnames, e, isFileServer)
 				n.addHandler(method, h)
 				cn.addChild(n)
 			}
@@ -157,7 +228,7 @@ func (r *Router) insert(method, path string, h HandlerFunc, t kind, ppath string
 				continue
 			}
 			// Create child node
-			n := newNode(t, search, cn, nil, new(methodHandler), ppath, pnames, e)
+			n := newNode(t, search, cn, nil, new(methodHandler), ppath, pnames, e, isFileServer)
 			n.addHandler(method, h)
 			cn.addChild(n)
 		} else {
@@ -173,7 +244,7 @@ func (r *Router) insert(method, path string, h HandlerFunc, t kind, ppath string
 	}
 }
 
-func newNode(t kind, pre string, p *node, c children, mh *methodHandler, ppath string, pnames []string, e *Echo) *node {
+func newNode(t kind, pre string, p *node, c children, mh *methodHandler, ppath string, pnames []string, e *Echo, isFileServer bool) *node {
 	return &node{
 		kind:          t,
 		label:         pre[0],
@@ -184,6 +255,7 @@ func newNode(t kind, pre string, p *node, c children, mh *methodHandler, ppath s
 		pnames:        pnames,
 		methodHandler: mh,
 		echo:          e,
+		isFileServer:  isFileServer,
 	}
 }
 
@@ -219,51 +291,11 @@ func (n *node) findChildByKind(t kind) *node {
 }
 
 func (n *node) addHandler(method string, h HandlerFunc) {
-	switch method {
-	case GET:
-		n.methodHandler.get = h
-	case POST:
-		n.methodHandler.post = h
-	case PUT:
-		n.methodHandler.put = h
-	case DELETE:
-		n.methodHandler.delete = h
-	case PATCH:
-		n.methodHandler.patch = h
-	case OPTIONS:
-		n.methodHandler.options = h
-	case HEAD:
-		n.methodHandler.head = h
-	case CONNECT:
-		n.methodHandler.connect = h
-	case TRACE:
-		n.methodHandler.trace = h
-	}
+	n.methodHandler.addHandler(method, h)
 }
 
 func (n *node) findHandler(method string) HandlerFunc {
-	switch method {
-	case GET:
-		return n.methodHandler.get
-	case POST:
-		return n.methodHandler.post
-	case PUT:
-		return n.methodHandler.put
-	case DELETE:
-		return n.methodHandler.delete
-	case PATCH:
-		return n.methodHandler.patch
-	case OPTIONS:
-		return n.methodHandler.options
-	case HEAD:
-		return n.methodHandler.head
-	case CONNECT:
-		return n.methodHandler.connect
-	case TRACE:
-		return n.methodHandler.trace
-	default:
-		return nil
-	}
+	return n.methodHandler.findHandler(method)
 }
 
 func (n *node) check405() HandlerFunc {
@@ -279,6 +311,21 @@ func (r *Router) Find(method, path string, ctx Context) (h HandlerFunc, e *Echo)
 	x := ctx.X()
 	h = notFoundHandler
 	e = r.echo
+
+	if m, ok := r.static[path]; ok {
+		h = m.methodHandler.findHandler(method)
+		x.path = path
+		x.pnames = []string{}
+		x.isFileServer = m.isFileServer
+		if m.echo != nil {
+			e = m.echo
+		}
+		if h == nil {
+			h = methodNotAllowedHandler
+		}
+		return
+	}
+
 	cn := r.tree // Current node as root
 
 	var (
@@ -379,6 +426,7 @@ func (r *Router) Find(method, path string, ctx Context) (h HandlerFunc, e *Echo)
 End:
 	x.path = cn.ppath
 	x.pnames = cn.pnames
+	x.isFileServer = cn.isFileServer
 	h = cn.findHandler(method)
 	if cn.echo != nil {
 		e = cn.echo

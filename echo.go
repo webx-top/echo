@@ -376,9 +376,9 @@ func (e *Echo) WebSocket(path string, h HandlerFunc) {
 	})
 }
 
-func (e *Echo) add(method, path string, h Handler) {
+func (e *Echo) add(method, path string, h Handler, args ...bool) {
 	path = e.prefix + path
-	e.router.Add(method, path, wrapHandler(h), e)
+	e.router.Add(method, path, wrapHandler(h), e, args...)
 	r := Route{
 		Method:  method,
 		Path:    path,
@@ -404,17 +404,17 @@ func (e *Echo) Static(path, dir string) {
 
 // ServeDir serves files from a directory.
 func (e *Echo) ServeDir(path, dir string) {
-	e.Get(path+"*", func(c Context) error {
+	e.add(GET, path+"*", func(c Context) error {
 		return e.serveFile(dir, c.P(0), c) // Param `_*`
-	})
+	}, true)
 }
 
 // ServeFile serves a file.
 func (e *Echo) ServeFile(path, file string) {
-	e.Get(path, func(c Context) error {
+	e.add(GET, path, func(c Context) error {
 		dir, file := filepath.Split(file)
 		return e.serveFile(dir, file, c)
-	})
+	}, true)
 }
 
 func (e *Echo) serveFile(dir, file string, c Context) (err error) {

@@ -19,6 +19,7 @@ type (
 	// response objects, path parameters, data and registered handler.
 	Context interface {
 		context.Context
+		IsFileServer() bool
 		Request() *http.Request
 		Response() *Response
 		Socket() *websocket.Conn
@@ -51,16 +52,17 @@ type (
 
 	xContext struct {
 		context.Context
-		request  *http.Request
-		response *Response
-		socket   *websocket.Conn
-		path     string
-		pnames   []string
-		pvalues  []string
-		query    url.Values
-		store    store
-		echo     *Echo
-		funcs    template.FuncMap
+		request      *http.Request
+		response     *Response
+		socket       *websocket.Conn
+		path         string
+		pnames       []string
+		pvalues      []string
+		query        url.Values
+		store        store
+		echo         *Echo
+		funcs        template.FuncMap
+		isFileServer bool
 	}
 	store map[string]interface{}
 )
@@ -75,6 +77,10 @@ func NewContext(req *http.Request, res *Response, e *Echo) Context {
 		store:    make(store),
 		funcs:    make(template.FuncMap),
 	}
+}
+
+func (c *xContext) IsFileServer() bool {
+	return c.isFileServer
 }
 
 // Request returns *http.Request.
