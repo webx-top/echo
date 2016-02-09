@@ -33,8 +33,6 @@ package echo
 
 import (
 	"bytes"
-	"encoding/json"
-	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -43,7 +41,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
-	"strings"
 	"sync"
 
 	"github.com/labstack/gommon/log"
@@ -115,14 +112,6 @@ type (
 
 	// HTTPErrorHandler is a centralized HTTP error handler.
 	HTTPErrorHandler func(error, *Context)
-
-	// Binder is the interface that wraps the Bind method.
-	Binder interface {
-		Bind(*http.Request, interface{}) error
-	}
-
-	binder struct {
-	}
 
 	// Validator is the interface that wraps the Validate method.
 	Validator interface {
@@ -252,22 +241,7 @@ func New() (e *Echo) {
 	//----------
 
 	e.HTTP2(true)
-	e.defaultHTTPErrorHandler = func(err error, c *Context) {
-		code := http.StatusInternalServerError
-		msg := http.StatusText(code)
-		if he, ok := err.(*HTTPError); ok {
-			code = he.code
-			msg = he.message
-		}
-		if e.debug {
-			msg = err.Error()
-		}
-		if !c.response.committed {
-			http.Error(c.response, msg, code)
-		}
-		e.logger.Error(err)
-	}
-	e.SetHTTPErrorHandler(e.defaultHTTPErrorHandler)
+	e.SetHTTPErrorHandler(e.DefaultHTTPErrorHandler)
 	e.SetBinder(&binder{})
 
 	// Logger
@@ -298,7 +272,19 @@ func (e *Echo) HTTP2(on bool) {
 
 // DefaultHTTPErrorHandler invokes the default HTTP error handler.
 func (e *Echo) DefaultHTTPErrorHandler(err error, c *Context) {
-	e.defaultHTTPErrorHandler(err, c)
+	code := http.StatusInternalServerError
+	msg := http.StatusText(code)
+	if he, ok := err.(*HTTPError); ok {
+		code = he.code
+		msg = he.message
+	}
+	if e.debug {
+		msg = err.Error()
+	}
+	if !c.response.committed {
+		http.Error(c.response, msg, code)
+	}
+	e.logger.Error(err)
 }
 
 // SetHTTPErrorHandler registers a custom Echo.HTTPErrorHandler.
@@ -606,8 +592,8 @@ func (e *Echo) Run(addr string) {
 }
 
 // RunTLS runs a server with TLS configuration.
-func (e *Echo) RunTLS(addr, crtFile, keyFile string) {
-	e.run(e.Server(addr), crtFile, keyFile)
+func (e *Echo) RunTLS(addr, certfile, keyfile string) {
+	e.run(e.Server(addr), certfile, keyfile)
 }
 
 // RunServer runs a custom server.
@@ -735,20 +721,4 @@ func wrapHandler(h Handler) HandlerFunc {
 	default:
 		panic("unknown handler")
 	}
-}
-
-func (binder) Bind(r *http.Request, i interface{}) (err error) {
-	ct := r.Header.Get(ContentType)
-	err = ErrUnsupportedMediaType
-	if strings.HasPrefix(ct, ApplicationJSON) {
-		if err = json.NewDecoder(r.Body).Decode(i); err != nil {
-			err = NewHTTPError(http.StatusBadRequest, err.Error())
-		}
-	} else if strings.HasPrefix(ct, ApplicationXML) {
-		if err = xml.NewDecoder(r.Body).Decode(i); err != nil {
-			err = NewHTTPError(http.StatusBadRequest, err.Error())
-		}
-
-	}
-	return
 }

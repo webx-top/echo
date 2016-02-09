@@ -85,6 +85,7 @@ BenchmarkZeus_GithubAll              2000            748827 ns/op          30068
 
 ### Who's using Echo?
 
+- [LabStack](https://labstack.com)
 - [ShowChampions](https://showchampions.photoserve.co)
 - [deferpanic](https://deferpanic.com)
 - [Center for Open Science](https://cos.io)
@@ -98,6 +99,7 @@ BenchmarkZeus_GithubAll              2000            748827 ns/op          30068
 - [Gomoku](http://gomoku.thoughtsfromplac.es)
 - [DrinkIn](https://drinkin.com)
 - [PodBaby](https://podbaby.me)
+- [gifs](https://gifs.com)
 
 ### Community created packages around Echo
 
