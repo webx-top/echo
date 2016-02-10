@@ -18,26 +18,66 @@ var DefaultHtmlFilter = func(v string) (r string) {
 	return v
 }
 
-type binder struct {
-	*Echo
+const (
+	defaultMaxMemory = 32 << 20 // 32 MB
+)
+
+type (
+	// Binder is the interface that wraps the Bind method.
+	Binder interface {
+		Bind(*http.Request, interface{}) error
+	}
+	binder struct {
+		*Echo
+		maxMemory int64
+	}
+)
+
+// SetMaxBodySize sets multipart forms max body size
+func (b *binder) SetMaxMemory(size int64) {
+	b.maxMemory = size
 }
 
-func (a binder) Bind(r *http.Request, i interface{}) (err error) {
+// MaxBodySize return multipart forms max body size
+func (b *binder) MaxMemory() int64 {
+	return b.maxMemory
+}
+
+func (b binder) Bind(r *http.Request, i interface{}) (err error) {
+	if r.Body == nil {
+		err = NewHTTPError(http.StatusBadRequest, "Request body can't be nil")
+		return
+	}
+	defer r.Body.Close()
 	ct := r.Header.Get(ContentType)
 	err = UnsupportedMediaType
 	if strings.HasPrefix(ct, ApplicationJSON) {
 		err = json.NewDecoder(r.Body).Decode(i)
 	} else if strings.HasPrefix(ct, ApplicationXML) {
 		err = xml.NewDecoder(r.Body).Decode(i)
+	} else if strings.HasPrefix(ct, ApplicationForm) {
+		if r.Form == nil {
+			r.ParseForm()
+		}
+		err = b.structMap(i, r)
 	} else if strings.Contains(ct, MultipartForm) {
-		err = a.structMap(i, r)
+		if r.Form == nil {
+			if b.maxMemory == 0 {
+				b.maxMemory = defaultMaxMemory
+			}
+			r.ParseMultipartForm(b.maxMemory)
+			if len(r.PostForm) == 0 {
+				r.PostForm = r.MultipartForm.Value
+			}
+		}
+		err = b.structMap(i, r)
 	}
 	return
 }
 
 // StructMap function mapping params to controller's properties
-func (a binder) structMap(m interface{}, r *http.Request) error {
-	return NamedStructMap(a.Echo, m, r, "")
+func (b binder) structMap(m interface{}, r *http.Request) error {
+	return NamedStructMap(b.Echo, m, r, "")
 }
 
 // user[name][test]
@@ -80,9 +120,6 @@ func SplitJson(s string) ([]string, error) {
 }
 
 func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) error {
-	if r.Form == nil {
-		r.ParseForm()
-	}
 	vc := reflect.ValueOf(m)
 	tc := reflect.TypeOf(m)
 

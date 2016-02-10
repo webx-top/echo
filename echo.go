@@ -57,11 +57,6 @@ type (
 	// HTTPErrorHandler is a centralized HTTP error handler.
 	HTTPErrorHandler func(error, Context)
 
-	// Binder is the interface that wraps the Bind method.
-	Binder interface {
-		Bind(*http.Request, interface{}) error
-	}
-
 	// Validator is the interface that wraps the Validate method.
 	Validator interface {
 		Validate() error
