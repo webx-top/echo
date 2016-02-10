@@ -51,20 +51,19 @@ import (
 type (
 	// Echo is the top-level framework instance.
 	Echo struct {
-		prefix                  string
-		middleware              []MiddlewareFunc
-		http2                   bool
-		maxParam                *int
-		defaultHTTPErrorHandler HTTPErrorHandler
-		httpErrorHandler        HTTPErrorHandler
-		binder                  Binder
-		renderer                Renderer
-		pool                    sync.Pool
-		debug                   bool
-		hook                    http.HandlerFunc
-		autoIndex               bool
-		logger                  Logger
-		router                  *Router
+		prefix           string
+		middleware       []MiddlewareFunc
+		http2            bool
+		maxParam         *int
+		httpErrorHandler HTTPErrorHandler
+		binder           Binder
+		renderer         Renderer
+		pool             sync.Pool
+		debug            bool
+		hook             http.HandlerFunc
+		autoIndex        bool
+		logger           Logger
+		router           *Router
 	}
 
 	// Logger is the interface that declares echo's logging system.
