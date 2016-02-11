@@ -156,6 +156,7 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 		}
 		length = len(names)
 		var value reflect.Value = vc
+		var typev reflect.Type = tc
 		for i, name := range names {
 			name = strings.Title(name)
 
@@ -174,7 +175,8 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 					e.Logger().Warn("can not set %v -> %v", name, value.Interface())
 					break
 				}
-				f, _ := value.Type().FieldByName(name)
+				typev = value.Type()
+				f, _ := typev.FieldByName(name)
 				if tagfast.Value(tc, f, "form_options") == "-" {
 					continue
 				}
@@ -197,7 +199,7 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 					e.Logger().Warn("can not set %v to %v", k, tv)
 					break
 				}
-				f, _ := tv.Type().FieldByName(name)
+				f, _ := typev.FieldByName(name)
 				if tagfast.Value(tc, f, "form_options") == "-" {
 					continue
 				}
