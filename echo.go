@@ -5,7 +5,6 @@ import (
 
 	"errors"
 	"fmt"
-	"html/template"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -64,7 +63,7 @@ type (
 
 	// Renderer is the interface that wraps the Render method.
 	Renderer interface {
-		Render(w io.Writer, name string, data interface{}, funcMap template.FuncMap) error
+		Render(w io.Writer, name string, data interface{}, funcMap map[string]interface{}) error
 	}
 )
 
