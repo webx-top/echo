@@ -150,7 +150,7 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 		if length == 1 {
 			names, err = SplitJson(k)
 			if err != nil {
-				e.Logger().Warn("Unrecognize form key %v %v", k, err)
+				e.Logger().Warnf("Unrecognize form key %v %v", k, err)
 				continue
 			}
 		}
@@ -163,16 +163,16 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 			//不是最后一个元素
 			if i != length-1 {
 				if value.Kind() != reflect.Struct {
-					e.Logger().Warn("arg error, value kind is %v", value.Kind())
+					e.Logger().Warnf("arg error, value kind is %v", value.Kind())
 					break
 				}
 				value = value.FieldByName(name)
 				if !value.IsValid() {
-					e.Logger().Warn("(%v value is not valid %v)", name, value)
+					e.Logger().Warnf("(%v value is not valid %v)", name, value)
 					break
 				}
 				if !value.CanSet() {
-					e.Logger().Warn("can not set %v -> %v", name, value.Interface())
+					e.Logger().Warnf("can not set %v -> %v", name, value.Interface())
 					break
 				}
 				typev = value.Type()
@@ -188,7 +188,7 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 				}
 			} else {
 				if value.Kind() != reflect.Struct {
-					e.Logger().Warn("arg error, value %v kind is %v", name, value.Kind())
+					e.Logger().Warnf("arg error, value %v kind is %v", name, value.Kind())
 					break
 				}
 				tv := value.FieldByName(name)
@@ -196,7 +196,7 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 					break
 				}
 				if !tv.CanSet() {
-					e.Logger().Warn("can not set %v to %v", k, tv)
+					e.Logger().Warnf("can not set %v to %v", k, tv)
 					break
 				}
 				f, _ := typev.FieldByName(name)
@@ -223,7 +223,7 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
 					x, err := strconv.Atoi(v)
 					if err != nil {
-						e.Logger().Warn("arg %v as int: %v", v, err)
+						e.Logger().Warnf("arg %v as int: %v", v, err)
 						break
 					}
 					l = x
@@ -231,7 +231,7 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 				case reflect.Int64:
 					x, err := strconv.ParseInt(v, 10, 64)
 					if err != nil {
-						e.Logger().Warn("arg %v as int64: %v", v, err)
+						e.Logger().Warnf("arg %v as int64: %v", v, err)
 						break
 					}
 					l = x
@@ -239,7 +239,7 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 				case reflect.Float32, reflect.Float64:
 					x, err := strconv.ParseFloat(v, 64)
 					if err != nil {
-						e.Logger().Warn("arg %v as float64: %v", v, err)
+						e.Logger().Warnf("arg %v as float64: %v", v, err)
 						break
 					}
 					l = x
@@ -247,7 +247,7 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 				case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 					x, err := strconv.ParseUint(v, 10, 64)
 					if err != nil {
-						e.Logger().Warn("arg %v as uint: %v", v, err)
+						e.Logger().Warnf("arg %v as uint: %v", v, err)
 						break
 					}
 					l = x
@@ -256,7 +256,7 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 					if tvf, ok := tv.Interface().(FromConversion); ok {
 						err := tvf.FromString(v)
 						if err != nil {
-							e.Logger().Warn("struct %v invoke FromString faild", tvf)
+							e.Logger().Warnf("struct %v invoke FromString faild", tvf)
 						}
 					} else if tv.Type().String() == "time.Time" {
 						x, err := time.Parse("2006-01-02 15:04:05.000 -0700", v)
@@ -265,7 +265,7 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 							if err != nil {
 								x, err = time.Parse("2006-01-02", v)
 								if err != nil {
-									e.Logger().Warn("unsupported time format %v, %v", v, err)
+									e.Logger().Warnf("unsupported time format %v, %v", v, err)
 									break
 								}
 							}
@@ -321,7 +321,7 @@ func NamedStructMap(e *Echo, m interface{}, r *http.Request, topName string) err
 							err = fmt.Errorf("unsupported slice element type %v", tk.String())
 						}
 						if err != nil {
-							e.Logger().Warn("slice error: %v, %v", name, err)
+							e.Logger().Warnf("slice error: %v, %v", name, err)
 							break
 						}
 					}

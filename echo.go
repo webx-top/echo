@@ -14,27 +14,27 @@ import (
 	"time"
 
 	"github.com/labstack/gommon/log"
+	"github.com/webx-top/echo/logger"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/websocket"
 )
 
 type (
 	Echo struct {
-		prefix                  string
-		middleware              []MiddlewareFunc
-		http2                   bool
-		maxParam                *int
-		notFoundHandler         HandlerFunc
-		defaultHTTPErrorHandler HTTPErrorHandler
-		httpErrorHandler        HTTPErrorHandler
-		binder                  Binder
-		renderer                Renderer
-		pool                    sync.Pool
-		debug                   bool
-		hook                    http.HandlerFunc
-		autoIndex               bool
-		logger                  *log.Logger
-		router                  *Router
+		prefix           string
+		middleware       []MiddlewareFunc
+		http2            bool
+		maxParam         *int
+		notFoundHandler  HandlerFunc
+		httpErrorHandler HTTPErrorHandler
+		binder           Binder
+		renderer         Renderer
+		pool             sync.Pool
+		debug            bool
+		hook             http.HandlerFunc
+		autoIndex        bool
+		logger           logger.Logger
+		router           *Router
 	}
 
 	Route struct {
@@ -192,27 +192,11 @@ func New(args ...func(*Response, *Echo) interface{}) (e *Echo) {
 	//----------
 
 	e.HTTP2(true)
-	e.defaultHTTPErrorHandler = func(err error, c Context) {
-		code := http.StatusInternalServerError
-		msg := http.StatusText(code)
-		if he, ok := err.(*HTTPError); ok {
-			code = he.code
-			msg = he.message
-		}
-		if e.debug {
-			msg = err.Error()
-		}
-		if !c.Response().committed {
-			http.Error(c.Response(), msg, code)
-		}
-		e.logger.Error(err)
-	}
-	e.SetHTTPErrorHandler(e.defaultHTTPErrorHandler)
+	e.SetHTTPErrorHandler(e.DefaultHTTPErrorHandler)
 	e.SetBinder(&binder{Echo: e})
 
 	// Logger
 	e.logger = log.New("echo")
-	e.logger.SetLevel(log.INFO)
 
 	return
 }
@@ -222,23 +206,13 @@ func (e *Echo) Router() *Router {
 	return e.router
 }
 
-// SetLogPrefix sets the prefix for the logger. Default value is `echo`.
-func (e *Echo) SetLogPrefix(prefix string) {
-	e.logger.SetPrefix(prefix)
-}
-
-// SetLogOutput sets the output destination for the logger. Default value is `os.Std*`
-func (e *Echo) SetLogOutput(w io.Writer) {
-	e.logger.SetOutput(w)
-}
-
-// SetLogLevel sets the log level for the logger. Default value is `log.INFO`.
-func (e *Echo) SetLogLevel(l log.Level) {
-	e.logger.SetLevel(l)
+// SetLogger sets the logger instance.
+func (e *Echo) SetLogger(l logger.Logger) {
+	e.logger = l
 }
 
 // Logger returns the logger instance.
-func (e *Echo) Logger() *log.Logger {
+func (e *Echo) Logger() logger.Logger {
 	return e.logger
 }
 
@@ -249,7 +223,19 @@ func (e *Echo) HTTP2(on bool) {
 
 // DefaultHTTPErrorHandler invokes the default HTTP error handler.
 func (e *Echo) DefaultHTTPErrorHandler(err error, c Context) {
-	e.defaultHTTPErrorHandler(err, c)
+	code := http.StatusInternalServerError
+	msg := http.StatusText(code)
+	if he, ok := err.(*HTTPError); ok {
+		code = he.code
+		msg = he.message
+	}
+	if e.debug {
+		msg = err.Error()
+	}
+	if !c.Response().Committed() {
+		c.String(code, msg)
+	}
+	e.logger.Error(err)
 }
 
 // SetHTTPErrorHandler registers a custom Echo.HTTPErrorHandler.
