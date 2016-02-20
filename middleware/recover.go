@@ -5,15 +5,15 @@ import (
 
 	"runtime"
 
-	"github.com/labstack/echo"
+	"github.com/webx-top/echo"
 )
 
 // Recover returns a middleware which recovers from panics anywhere in the chain
 // and handles the control to the centralized HTTPErrorHandler.
 func Recover() echo.MiddlewareFunc {
-	// TODO: Provide better stack trace `https://github.com/go-errors/errors` `https://github.com/docker/libcontainer/tree/master/stacktrace`
-	return func(h echo.HandlerFunc) echo.HandlerFunc {
-		return func(c *echo.Context) error {
+	return func(h echo.Handler) echo.Handler {
+		// TODO: Provide better stack trace `https://github.com/go-errors/errors` `https://github.com/docker/libcontainer/tree/master/stacktrace`
+		return echo.HandlerFunc(func(c echo.Context) error {
 			defer func() {
 				if err := recover(); err != nil {
 					trace := make([]byte, 1<<16)
@@ -22,7 +22,7 @@ func Recover() echo.MiddlewareFunc {
 						err, n, trace[:n]))
 				}
 			}()
-			return h(c)
-		}
+			return h.Handle(c)
+		})
 	}
 }

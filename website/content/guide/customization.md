@@ -45,7 +45,7 @@ SetLogLevel sets the log level for the logger. Default value is `log.INFO`.
 
 ### HTTP2
 
-`echo#HTTP2(on bool)`
+`echo#HTTP(on bool)`
 
 Enable/disable HTTP2 support.
 
@@ -60,7 +60,7 @@ Enable/disable automatically creating an index page for the directory.
 ```go
 e := echo.New()
 e.AutoIndex(true)
-e.ServeDir("/", "/Users/vr/Projects/echo")
+e.ServerDir("/", "/Users/vr/Projects/echo")
 e.Run(":1323")
 ```
 

@@ -1,47 +1,37 @@
+
+# **WORK IN PROGRESS!**
+
 # [Echo](http://labstack.com/echo) [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/labstack/echo) [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/labstack/echo/master/LICENSE) [![Build Status](http://img.shields.io/travis/labstack/echo.svg?style=flat-square)](https://travis-ci.org/labstack/echo) [![Coverage Status](http://img.shields.io/coveralls/labstack/echo.svg?style=flat-square)](https://coveralls.io/r/labstack/echo) [![Join the chat at https://gitter.im/labstack/echo](https://img.shields.io/badge/gitter-join%20chat-brightgreen.svg?style=flat-square)](https://gitter.im/labstack/echo)
 
-A fast and unfancy micro web framework for Go.
+**A fast and unfancy micro web framework for Go.**
 
-[![Donate](https://www.paypalobjects.com/webstatic/en_US/btn/btn_donate_92x26.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=JD5R56K84A8G4&lc=US&item_name=LabStack&item_number=echo&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHosted)
+```go
+package main
 
-## Features
+import (
+	"github.com/webx-top/echo"
+	// "github.com/webx-top/echo/engine/fasthttp"
+	"github.com/webx-top/echo/engine/standard"
+	mw "github.com/webx-top/echo/middleware"
+)
 
-- Fast HTTP router which smartly prioritize routes.
-- Extensible middleware, supports:
-	- `echo.MiddlewareFunc`
-	- `func(echo.HandlerFunc) echo.HandlerFunc`
-	- `echo.HandlerFunc`
-	- `func(*echo.Context) error`
-	- `func(http.Handler) http.Handler`
-	- `http.Handler`
-	- `http.HandlerFunc`
-	- `func(http.ResponseWriter, *http.Request)`
-- Extensible handler, supports:
-    - `echo.HandlerFunc`
-    - `func(*echo.Context) error`
-    - `http.Handler`
-    - `http.HandlerFunc`
-    - `func(http.ResponseWriter, *http.Request)`
-- Sub-router/Groups
-- Handy functions to send variety of HTTP response:
-    - HTML
-    - HTML via templates
-    - String
-    - JSON
-    - JSONP
-    - XML
-    - File
-    - NoContent
-    - Redirect
-    - Error
-- Build-in support for:
-	- Favicon
-	- Index file
-	- Static files
-	- WebSocket
-- Centralized HTTP error handling.
-- Customizable HTTP request binding function.
-- Customizable HTTP response rendering function, allowing you to use any HTML template engine.
+func main() {
+	e := echo.New()
+	e.Use(mw.Log())
+	e.Get("/", func(c echo.Context) error {
+		return c.String(200, "Hello, World!")
+	})
+	e.Get("/v2", func(c echo.Context) error {
+		return c.String(200, "Echo v2")
+	})
+
+	// FastHTTP
+	// e.Run(fasthttp.New(":4444"))
+
+	// Standard
+	e.Run(standard.New(":4444"))
+}
+```
 
 ## Performance
 
@@ -82,49 +72,6 @@ BenchmarkTraffic_GithubAll            200           7292170 ns/op         266477
 BenchmarkVulcan_GithubAll            5000            271682 ns/op           19894 B/op       609 allocs/op
 BenchmarkZeus_GithubAll              2000            748827 ns/op          300688 B/op     2648 allocs/op
 ```
-
-## Echo System
-
-### Who's using Echo?
-
-- [LabStack](https://labstack.com)
-- [ShowChampions](https://showchampions.photoserve.co)
-- [deferpanic](https://deferpanic.com)
-- [Center for Open Science](https://cos.io)
-- [SeeSaw Labs](http://www.seesawlabs.com)
-- [Kyäni](http://www.kyani.net)
-- [Carrot Creative](http://carrot.is)
-- [EurekaMetrics](http://eurekametrics.com)
-- [Coursella](https://www.coursella.com)
-- [blue Vanilla](https://www.bleuvanille.fr)
-- [ImPlaces](http://www.implaces.com)
-- [Gomoku](http://gomoku.thoughtsfromplac.es)
-- [DrinkIn](https://drinkin.com)
-- [PodBaby](https://podbaby.me)
-- [gifs](https://gifs.com)
-
-### Community created packages around Echo
-
-- [echo-logrus](https://github.com/deoxxa/echo-logrus)
-- [go_middleware](https://github.com/rightscale/go_middleware)
-- [permissions2](https://github.com/xyproto/permissions2)
-- [permissionbolt](https://github.com/xyproto/permissionbolt)
-- [echo-middleware](https://github.com/syntaqx/echo-middleware)
-- [dpecho](https://github.com/deferpanic/dpecho)
-- [echosentry](https://github.com/01walid/echosentry)
-- [go-starter-kit](https://github.com/olebedev/go-starter-kit)
-
-[Want to get listed?](https://github.com/labstack/echo/issues/295)
-
-## Installation
-
-```sh
-$ go get github.com/labstack/echo
-```
-
-## [Recipes](http://labstack.com/echo/recipes/hello-world)
-
-## [Guide](http://labstack.com/echo/guide/installation)
 
 ## Contribute
 

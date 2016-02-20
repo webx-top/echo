@@ -1,12 +1,11 @@
-package: .
+package: github.com/webx-top/echo
 import:
-- package: github.com/labstack/echo
 - package: github.com/labstack/gommon
   subpackages:
   - /color
   - log
+- package: github.com/admpub/fasthttp
 - package: golang.org/x/net
   subpackages:
   - /context
-  - http2
   - websocket

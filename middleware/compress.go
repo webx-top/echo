@@ -10,13 +10,14 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/labstack/echo"
+	"github.com/webx-top/echo"
+	"github.com/webx-top/echo/engine"
 )
 
 type (
 	gzipWriter struct {
 		io.Writer
-		http.ResponseWriter
+		engine.Response
 	}
 )
 
@@ -32,11 +33,11 @@ func (w gzipWriter) Flush() error {
 }
 
 func (w gzipWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	return w.ResponseWriter.(http.Hijacker).Hijack()
+	return w.Response.(http.Hijacker).Hijack()
 }
 
 func (w *gzipWriter) CloseNotify() <-chan bool {
-	return w.ResponseWriter.(http.CloseNotifier).CloseNotify()
+	return w.Response.(http.CloseNotifier).CloseNotify()
 }
 
 var writerPool = sync.Pool{
@@ -48,26 +49,25 @@ var writerPool = sync.Pool{
 // Gzip returns a middleware which compresses HTTP response using gzip compression
 // scheme.
 func Gzip() echo.MiddlewareFunc {
-	scheme := "gzip"
-
-	return func(h echo.HandlerFunc) echo.HandlerFunc {
-		return func(c *echo.Context) error {
+	return func(h echo.Handler) echo.Handler {
+		scheme := "gzip"
+		return echo.HandlerFunc(func(c echo.Context) error {
 			c.Response().Header().Add(echo.Vary, echo.AcceptEncoding)
-			if strings.Contains(c.Request().Header.Get(echo.AcceptEncoding), scheme) {
+			if strings.Contains(c.Request().Header().Get(echo.AcceptEncoding), scheme) {
 				w := writerPool.Get().(*gzip.Writer)
 				w.Reset(c.Response().Writer())
 				defer func() {
 					w.Close()
 					writerPool.Put(w)
 				}()
-				gw := gzipWriter{Writer: w, ResponseWriter: c.Response().Writer()}
+				gw := gzipWriter{Writer: w, Response: c.Response()}
 				c.Response().Header().Set(echo.ContentEncoding, scheme)
 				c.Response().SetWriter(gw)
 			}
-			if err := h(c); err != nil {
+			if err := h.Handle(c); err != nil {
 				c.Error(err)
 			}
 			return nil
-		}
+		})
 	}
 }
