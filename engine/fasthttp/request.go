@@ -83,7 +83,10 @@ func (r *Request) PostForm() engine.UrlValuer {
 }
 
 func (r *Request) MultipartForm() *multipart.Form {
-	re, _ := r.context.MultipartForm()
+	re, err := r.context.MultipartForm()
+	if err != nil {
+		r.context.Logger().Printf(err.Error())
+	}
 	return re
 }
 
