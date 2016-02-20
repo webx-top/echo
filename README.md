@@ -18,12 +18,12 @@ import (
 func main() {
 	e := echo.New()
 	e.Use(mw.Log())
-	e.Get("/", func(c echo.Context) error {
+	e.Get("/", echo.HandlerFunc(func(c echo.Context) error {
 		return c.String(200, "Hello, World!")
-	})
-	e.Get("/v2", func(c echo.Context) error {
+	}))
+	e.Get("/v2", echo.HandlerFunc(func(c echo.Context) error {
 		return c.String(200, "Echo v2")
-	})
+	}))
 
 	// FastHTTP
 	// e.Run(fasthttp.New(":4444"))
