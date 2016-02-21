@@ -21,15 +21,18 @@ type (
 func Static(root string, options ...*StaticOptions) echo.MiddlewareFunc {
 	return func(next echo.Handler) echo.Handler {
 		// Default options
-		opts := &StaticOptions{Index: "index.html"}
+		opts := new(StaticOptions)
 		if len(options) > 0 {
 			opts = options[0]
+		}
+		if opts.Index == "" {
+			opts.Index = "index.html"
 		}
 
 		opts.Root, _ = filepath.Abs(opts.Root)
 
 		return echo.HandlerFunc(func(c echo.Context) error {
-			file := c.Request().URI()
+			file := filepath.Clean(c.Request().URL().Path())
 			absFile := filepath.Join(opts.Root, file)
 			if !strings.HasPrefix(absFile, opts.Root) {
 				return next.Handle(c)
@@ -41,7 +44,7 @@ func Static(root string, options ...*StaticOptions) echo.MiddlewareFunc {
 			w := c.Response()
 			if fi.IsDir() {
 				// Index file
-				indexFile := filepath.Join(file, opts.Index)
+				indexFile := filepath.Join(absFile, opts.Index)
 				fi, err = os.Stat(indexFile)
 				if err != nil || fi.IsDir() {
 					if opts.Browse {

@@ -56,10 +56,6 @@ func (r *Router) Handle(h Handler) Handler {
 	})
 }
 
-func (r *Router) Priority() int {
-	return 0
-}
-
 func (r *Router) Add(method, path string, h Handler, e *Echo) {
 	ppath := path        // Pristine path
 	pnames := []string{} // Param names

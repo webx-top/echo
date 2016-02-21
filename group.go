@@ -78,21 +78,19 @@ func (g *Group) Group(prefix string, m ...Middleware) *Group {
 	return g.echo.Group(prefix, m...)
 }
 
-func (g *Group) add(method, path string, h Handler, middleware ...Middleware) {
+func (g *Group) add(method, path string, handler Handler, middleware ...Middleware) {
 	path = g.prefix + path
-	name := handlerName(h)
+	name := handlerName(handler)
 	middleware = append(g.middleware, middleware...)
 	// for k, mw := range g.echo.middleware {
 	// 	fmt.Printf("%v. %+v\n", k, handlerName(mw))
 	// }
 	// fmt.Printf("=========================%+v\n", handlerName(h))
-
-	for i := len(middleware) - 1; i >= 0; i-- {
-		h = middleware[i].Handle(h)
+	for _, m := range middleware {
+		handler = m.Handle(handler)
 	}
-
 	g.echo.router.Add(method, path, HandlerFunc(func(c Context) error {
-		return h.Handle(c)
+		return handler.Handle(c)
 	}), g.echo)
 	r := Route{
 		Method:  method,

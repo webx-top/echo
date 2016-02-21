@@ -68,6 +68,7 @@ type (
 		Del(string)
 		Get(string) string
 		Set(string, string)
+		Object() interface{}
 	}
 
 	UrlValuer interface {
@@ -86,6 +87,7 @@ type (
 		Host() string
 		QueryValue(string) string
 		RawQuery() string
+		Object() interface{}
 	}
 
 	Config struct {

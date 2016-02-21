@@ -44,7 +44,7 @@ func (s Static) Handle(c echo.Context) error {
 		*/
 
 		// Index file
-		indexFile := filepath.Join(file, s.Index)
+		indexFile := filepath.Join(absFile, s.Index)
 		fi, err = os.Stat(indexFile)
 		if err != nil || fi.IsDir() {
 			if s.Browse {

@@ -44,7 +44,6 @@ type (
 
 	Middleware interface {
 		Handle(Handler) Handler
-		Priority() int
 	}
 
 	MiddlewareFunc func(Handler) Handler
@@ -201,10 +200,6 @@ func NewWithContext(fn func(*Echo) interface{}) (e *Echo) {
 
 func (f MiddlewareFunc) Handle(h Handler) Handler {
 	return f(h)
-}
-
-func (f MiddlewareFunc) Priority() int {
-	return 1
 }
 
 func (f HandlerFunc) Handle(c Context) error {

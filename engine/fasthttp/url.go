@@ -33,3 +33,7 @@ func (u *URL) QueryValue(name string) string {
 func (u *URL) RawQuery() string {
 	return string(u.url.QueryString())
 }
+
+func (u *URL) Object() interface{} {
+	return u.url
+}

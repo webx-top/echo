@@ -288,7 +288,7 @@ func (c *context) NoContent(code int) error {
 	return nil
 }
 
-// Redirect redirects the request using http.Redirect with status code.
+// Redirect redirects the request with status code.
 func (c *context) Redirect(code int, url string) error {
 	if code < http.StatusMultipleChoices || code > http.StatusTemporaryRedirect {
 		return ErrInvalidRedirectCode
