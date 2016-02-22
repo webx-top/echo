@@ -119,3 +119,10 @@ func (r *Request) FormFile(key string) (multipart.File, *multipart.FileHeader, e
 	file, err = fileHeader.Open()
 	return file, fileHeader, err
 }
+
+func (r *Request) reset(c *fasthttp.RequestCtx, h engine.Header, u engine.URL) {
+	r.context = c
+	r.header = h
+	r.url = u
+	r.value = NewValue(c)
+}

@@ -19,11 +19,11 @@ type (
 	}
 
 	Pool struct {
-		request  sync.Pool
-		response sync.Pool
-		header   sync.Pool
-		resHdr   sync.Pool
-		url      sync.Pool
+		request        sync.Pool
+		response       sync.Pool
+		requestHeader  sync.Pool
+		responseHeader sync.Pool
+		url            sync.Pool
 	}
 )
 
@@ -56,12 +56,12 @@ func NewConfig(c *engine.Config) (s *Server) {
 					return &Response{logger: s.logger}
 				},
 			},
-			header: sync.Pool{
+			requestHeader: sync.Pool{
 				New: func() interface{} {
 					return &Header{}
 				},
 			},
-			resHdr: sync.Pool{
+			responseHeader: sync.Pool{
 				New: func() interface{} {
 					return &Header{}
 				},
@@ -73,7 +73,7 @@ func NewConfig(c *engine.Config) (s *Server) {
 			},
 		},
 		handler: engine.ClearHandler(func(req engine.Request, res engine.Response) {
-			s.logger.Info("handler not set")
+			s.logger.Warn("handler not set")
 		}),
 		logger: log.New("echo"),
 	}
@@ -95,7 +95,7 @@ func (s *Server) Start() {
 	s.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Request
 		req := s.pool.request.Get().(*Request)
-		reqHdr := s.pool.header.Get().(*Header)
+		reqHdr := s.pool.requestHeader.Get().(*Header)
 		reqHdr.reset(r.Header)
 		reqURL := s.pool.url.Get().(*URL)
 		reqURL.reset(r.URL)
@@ -104,7 +104,7 @@ func (s *Server) Start() {
 
 		// Response
 		res := s.pool.response.Get().(*Response)
-		resHdr := s.pool.resHdr.Get().(*Header)
+		resHdr := s.pool.responseHeader.Get().(*Header)
 		resHdr.reset(w.Header())
 		res.reset(w, r, resHdr)
 		res.config = s.config
@@ -112,10 +112,10 @@ func (s *Server) Start() {
 		s.handler(req, res)
 
 		s.pool.request.Put(req)
-		s.pool.header.Put(reqHdr)
+		s.pool.requestHeader.Put(reqHdr)
 		s.pool.url.Put(reqURL)
 		s.pool.response.Put(res)
-		s.pool.resHdr.Put(resHdr)
+		s.pool.responseHeader.Put(resHdr)
 	})
 	s.logger.Fatal(s.ListenAndServe())
 }

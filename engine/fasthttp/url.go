@@ -37,3 +37,7 @@ func (u *URL) RawQuery() string {
 func (u *URL) Object() interface{} {
 	return u.url
 }
+
+func (u *URL) reset(url *fasthttp.URI) {
+	u.url = url
+}

@@ -117,3 +117,12 @@ func (r *Response) SetCookie(cookie *http.Cookie) {
 func (r *Response) ServeFile(file string) {
 	fasthttp.ServeFile(r.context, file)
 }
+
+func (r *Response) reset(c *fasthttp.RequestCtx, h engine.Header) {
+	r.context = c
+	r.header = h
+	r.status = http.StatusOK
+	r.size = 0
+	r.committed = false
+	r.writer = c
+}
