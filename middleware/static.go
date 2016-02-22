@@ -20,19 +20,19 @@ type (
 )
 
 func Static(options ...*StaticOptions) echo.MiddlewareFunc {
+	// Default options
+	opts := new(StaticOptions)
+	if len(options) > 0 {
+		opts = options[0]
+	}
+	if opts.Index == "" {
+		opts.Index = "index.html"
+	}
+
+	opts.Root, _ = filepath.Abs(opts.Root)
+	length := len(opts.Path)
+
 	return func(next echo.Handler) echo.Handler {
-		// Default options
-		opts := new(StaticOptions)
-		if len(options) > 0 {
-			opts = options[0]
-		}
-		if opts.Index == "" {
-			opts.Index = "index.html"
-		}
-
-		opts.Root, _ = filepath.Abs(opts.Root)
-		length := len(opts.Path)
-
 		return echo.HandlerFunc(func(c echo.Context) error {
 			file := c.Request().URL().Path()
 			if len(file) < length || file[0:length] != opts.Path {
