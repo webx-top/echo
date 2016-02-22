@@ -12,13 +12,14 @@ import (
 
 type (
 	StaticOptions struct {
+		Path   string `json:"path"` //UrlPath
 		Root   string `json:"root"`
 		Index  string `json:"index"`
 		Browse bool   `json:"browse"`
 	}
 )
 
-func Static(root string, options ...*StaticOptions) echo.MiddlewareFunc {
+func Static(options ...*StaticOptions) echo.MiddlewareFunc {
 	return func(next echo.Handler) echo.Handler {
 		// Default options
 		opts := new(StaticOptions)
@@ -30,9 +31,14 @@ func Static(root string, options ...*StaticOptions) echo.MiddlewareFunc {
 		}
 
 		opts.Root, _ = filepath.Abs(opts.Root)
+		length := len(opts.Path)
 
 		return echo.HandlerFunc(func(c echo.Context) error {
-			file := filepath.Clean(c.Request().URL().Path())
+			file := c.Request().URL().Path()
+			if len(file) < length || file[0:length] != opts.Path {
+				return next.Handle(c)
+			}
+			file = filepath.Clean(file[length:])
 			absFile := filepath.Join(opts.Root, file)
 			if !strings.HasPrefix(absFile, opts.Root) {
 				return next.Handle(c)
