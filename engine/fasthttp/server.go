@@ -13,7 +13,6 @@ import (
 
 type (
 	Server struct {
-		*fasthttp.Server
 		config  *engine.Config
 		handler engine.HandlerFunc
 		pool    *Pool
@@ -44,15 +43,7 @@ func NewTLS(addr, certfile, keyfile string) *Server {
 }
 
 func NewConfig(c *engine.Config) (s *Server) {
-	fastHTTPServer := &fasthttp.Server{
-		ReadTimeout:        c.ReadTimeout,
-		WriteTimeout:       c.WriteTimeout,
-		MaxConnsPerIP:      c.MaxConnsPerIP,
-		MaxRequestsPerConn: c.MaxRequestsPerConn,
-		MaxRequestBodySize: c.MaxRequestBodySize,
-	}
 	s = &Server{
-		Server: fastHTTPServer,
 		config: c,
 		pool: &Pool{
 			request: sync.Pool{
@@ -99,7 +90,14 @@ func (s *Server) SetLogger(l logger.Logger) {
 }
 
 func (s *Server) Start() {
-	s.Server.Handler = func(c *fasthttp.RequestCtx) {
+	server := &fasthttp.Server{
+		ReadTimeout:        c.ReadTimeout,
+		WriteTimeout:       c.WriteTimeout,
+		MaxConnsPerIP:      c.MaxConnsPerIP,
+		MaxRequestsPerConn: c.MaxRequestsPerConn,
+		MaxRequestBodySize: c.MaxRequestBodySize,
+	}
+	server.Handler = func(c *fasthttp.RequestCtx) {
 		// Request
 		req := s.pool.request.Get().(*Request)
 		reqHdr := s.pool.requestHeader.Get().(*RequestHeader)
@@ -122,5 +120,12 @@ func (s *Server) Start() {
 		s.pool.response.Put(res)
 		s.pool.responseHeader.Put(resHdr)
 	}
-	s.logger.Fatal(s.Server.ListenAndServe(s.config.Address))
+	addr := s.config.Address
+	certfile := s.config.TLSCertfile
+	keyfile := s.config.TLSKeyfile
+	if certfile != "" && keyfile != "" {
+		s.logger.Fatal(server.ListenAndServeTLS(addr, certfile, keyfile))
+	} else {
+		s.logger.Fatal(server.ListenAndServe(addr))
+	}
 }

@@ -120,6 +120,10 @@ func (r *Request) FormFile(key string) (multipart.File, *multipart.FileHeader, e
 	return file, fileHeader, err
 }
 
+func (r *Request) Scheme() string {
+	return string(r.context.URI().Scheme())
+}
+
 func (r *Request) reset(c *fasthttp.RequestCtx, h engine.Header, u engine.URL) {
 	r.context = c
 	r.header = h

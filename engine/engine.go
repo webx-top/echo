@@ -20,6 +20,7 @@ type (
 	}
 
 	Request interface {
+		Scheme() string
 		Host() string
 		URI() string
 		URL() URL
@@ -81,10 +82,8 @@ type (
 	}
 
 	URL interface {
-		Scheme() string
 		SetPath(string)
 		Path() string
-		Host() string
 		QueryValue(string) string
 		RawQuery() string
 		Object() interface{}
@@ -92,12 +91,12 @@ type (
 
 	Config struct {
 		Address            string
+		TLSCertfile        string
+		TLSKeyfile         string
 		ReadTimeout        time.Duration
 		WriteTimeout       time.Duration
 		MaxConnsPerIP      int
 		MaxRequestsPerConn int
 		MaxRequestBodySize int
-		TLSCertfile        string
-		TLSKeyfile         string
 	}
 )

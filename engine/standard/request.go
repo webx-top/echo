@@ -143,3 +143,10 @@ func (r *Request) FormFile(key string) (multipart.File, *multipart.FileHeader, e
 	}
 	return file, fileHeader, err
 }
+
+func (r *Request) Scheme() string {
+	if r.IsTLS() {
+		return `https`
+	}
+	return `http`
+}
