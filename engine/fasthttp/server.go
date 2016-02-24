@@ -91,11 +91,11 @@ func (s *Server) SetLogger(l logger.Logger) {
 
 func (s *Server) Start() {
 	server := &fasthttp.Server{
-		ReadTimeout:        c.ReadTimeout,
-		WriteTimeout:       c.WriteTimeout,
-		MaxConnsPerIP:      c.MaxConnsPerIP,
-		MaxRequestsPerConn: c.MaxRequestsPerConn,
-		MaxRequestBodySize: c.MaxRequestBodySize,
+		ReadTimeout:        s.config.ReadTimeout,
+		WriteTimeout:       s.config.WriteTimeout,
+		MaxConnsPerIP:      s.config.MaxConnsPerIP,
+		MaxRequestsPerConn: s.config.MaxRequestsPerConn,
+		MaxRequestBodySize: s.config.MaxRequestBodySize,
 	}
 	server.Handler = func(c *fasthttp.RequestCtx) {
 		// Request
