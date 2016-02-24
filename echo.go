@@ -130,6 +130,7 @@ const (
 	WWWAuthenticate    = "WWW-Authenticate"
 	XForwardedFor      = "X-Forwarded-For"
 	XRealIP            = "X-Real-IP"
+
 	//-----------
 	// Protocols
 	//-----------
@@ -189,6 +190,7 @@ func NewWithContext(fn func(*Echo) interface{}) (e *Echo) {
 	//----------
 	// Defaults
 	//----------
+
 	e.SetHTTPErrorHandler(e.DefaultHTTPErrorHandler)
 	e.SetBinder(&binder{Echo: e})
 
