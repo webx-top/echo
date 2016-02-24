@@ -216,7 +216,7 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 					l = v
 					tv.Set(reflect.ValueOf(l))
 				case reflect.Bool:
-					l = (v != "false" && v != "0")
+					l = (v != "false" && v != "0" && v != "")
 					tv.Set(reflect.ValueOf(l))
 				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
 					x, err := strconv.Atoi(v)
