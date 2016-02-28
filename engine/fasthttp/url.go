@@ -2,11 +2,16 @@
 
 package fasthttp
 
-import "github.com/admpub/fasthttp"
+import (
+	"net/url"
+
+	"github.com/admpub/fasthttp"
+)
 
 type (
 	URL struct {
-		url *fasthttp.URI
+		url   *fasthttp.URI
+		query url.Values
 	}
 )
 
@@ -20,6 +25,16 @@ func (u *URL) Path() string {
 
 func (u *URL) QueryValue(name string) string {
 	return string(u.url.QueryArgs().Peek(name))
+}
+
+func (u *URL) Query() url.Values {
+	if u.query == nil {
+		u.query = url.Values{}
+		u.url.QueryArgs().VisitAll(func(key []byte, value []byte) {
+			u.query.Set(string(key), string(value))
+		})
+	}
+	return u.query
 }
 
 func (u *URL) RawQuery() string {

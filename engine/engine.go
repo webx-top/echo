@@ -5,6 +5,7 @@ import (
 	"mime/multipart"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/webx-top/echo/logger"
@@ -85,6 +86,7 @@ type (
 		SetPath(string)
 		Path() string
 		QueryValue(string) string
+		Query() url.Values
 		RawQuery() string
 		Object() interface{}
 	}
