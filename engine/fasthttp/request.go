@@ -72,9 +72,7 @@ func (r *Request) FormValue(name string) string {
 }
 
 func (r *Request) Form() engine.UrlValuer {
-	if r.value.form == nil {
-		r.value.All()
-	}
+	r.value.init()
 	return r.value
 }
 

@@ -80,6 +80,7 @@ type (
 		Set(string, string)
 		Encode() string
 		All() map[string][]string
+		Reset(url.Values)
 	}
 
 	URL interface {

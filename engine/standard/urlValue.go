@@ -31,3 +31,7 @@ func (u *UrlValue) Encode() string {
 func (u *UrlValue) All() map[string][]string {
 	return *u.Args
 }
+
+func (u *UrlValue) Reset(data url.Values) {
+	*u.Args = data
+}
