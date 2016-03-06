@@ -356,7 +356,7 @@ func (c *context) Fetch(name string, data interface{}) (b []byte, err error) {
 		c.renderer = c.echo.renderer
 	}
 	buf := new(bytes.Buffer)
-	err = c.renderer.Render(buf, name, data, c.funcs)
+	err = c.renderer.Render(buf, name, data, c)
 	if err != nil {
 		return
 	}

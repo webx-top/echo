@@ -64,7 +64,7 @@ type (
 
 	// Renderer is the interface that wraps the Render method.
 	Renderer interface {
-		Render(w io.Writer, name string, data interface{}, funcMap map[string]interface{}) error
+		Render(w io.Writer, name string, data interface{}, c Context) error
 	}
 )
 
