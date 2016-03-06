@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/webx/lib/tagfast"
 )
 
@@ -22,7 +21,7 @@ var DefaultHtmlFilter = func(v string) (r string) {
 type (
 	// Binder is the interface that wraps the Bind method.
 	Binder interface {
-		Bind(engine.Request, interface{}) error
+		Bind(interface{}, Context) error
 	}
 	binder struct {
 		*Echo
@@ -46,7 +45,8 @@ func (binder) Bind(r engine.Request, i interface{}) (err error) {
 }
 */
 
-func (b binder) Bind(r engine.Request, i interface{}) (err error) {
+func (b binder) Bind(i interface{}, c Context) (err error) {
+	r := c.Request()
 	body := r.Body()
 	if body == nil {
 		err = NewHTTPError(http.StatusBadRequest, "Request body can't be nil")

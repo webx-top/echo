@@ -180,7 +180,7 @@ func (c *context) Set(key string, val interface{}) {
 // Bind binds the request body into specified type `i`. The default binder does
 // it based on Content-Type header.
 func (c *context) Bind(i interface{}) error {
-	return c.echo.binder.Bind(c.request, i)
+	return c.echo.binder.Bind(i, c)
 }
 
 // Render renders a template with data and sends a text/html response with status
