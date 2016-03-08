@@ -28,23 +28,6 @@ type (
 	}
 )
 
-/*
-func (binder) Bind(r engine.Request, i interface{}) (err error) {
-	ct := r.Header().Get(ContentType)
-	err = ErrUnsupportedMediaType
-	if strings.HasPrefix(ct, ApplicationJSON) {
-		if err = json.NewDecoder(r.Body()).Decode(i); err != nil {
-			err = NewHTTPError(http.StatusBadRequest, err.Error())
-		}
-	} else if strings.HasPrefix(ct, ApplicationXML) {
-		if err = xml.NewDecoder(r.Body()).Decode(i); err != nil {
-			err = NewHTTPError(http.StatusBadRequest, err.Error())
-		}
-	}
-	return
-}
-*/
-
 func (b binder) Bind(i interface{}, c Context) (err error) {
 	r := c.Request()
 	body := r.Body()
