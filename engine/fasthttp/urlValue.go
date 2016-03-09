@@ -40,7 +40,7 @@ func (u *UrlValue) Reset(data url.Values) {
 			a.Set(key, value)
 		}
 	}
-	a.CopyTo(u)
+	a.CopyTo(u.Args)
 }
 
 func (u *UrlValue) init() {
