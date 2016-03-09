@@ -13,10 +13,11 @@ import (
 
 type (
 	Server struct {
+		server  *fasthttp.Server
 		config  *engine.Config
 		handler engine.HandlerFunc
-		pool    *Pool
 		logger  logger.Logger
+		pool    *Pool
 	}
 
 	Pool struct {
@@ -30,20 +31,27 @@ type (
 
 func New(addr string) *Server {
 	c := &engine.Config{Address: addr}
-	return NewConfig(c)
+	return NewWithConfig(c)
 }
 
-func NewTLS(addr, certfile, keyfile string) *Server {
+func NewWithTLS(addr, certfile, keyfile string) *Server {
 	c := &engine.Config{
 		Address:     addr,
 		TLSCertfile: certfile,
 		TLSKeyfile:  keyfile,
 	}
-	return NewConfig(c)
+	return NewWithConfig(c)
 }
 
-func NewConfig(c *engine.Config) (s *Server) {
+func NewWithConfig(c *engine.Config) (s *Server) {
 	s = &Server{
+		server: &fasthttp.Server{
+			ReadTimeout:        c.ReadTimeout,
+			WriteTimeout:       c.WriteTimeout,
+			MaxConnsPerIP:      c.MaxConnsPerIP,
+			MaxRequestsPerConn: c.MaxRequestsPerConn,
+			MaxRequestBodySize: c.MaxRequestBodySize,
+		},
 		config: c,
 		pool: &Pool{
 			request: sync.Pool{
@@ -77,7 +85,6 @@ func NewConfig(c *engine.Config) (s *Server) {
 		}),
 		logger: log.New("echo"),
 	}
-	//s.Server.Logger = s.logger
 	return
 }
 
@@ -90,14 +97,8 @@ func (s *Server) SetLogger(l logger.Logger) {
 }
 
 func (s *Server) Start() {
-	server := &fasthttp.Server{
-		ReadTimeout:        s.config.ReadTimeout,
-		WriteTimeout:       s.config.WriteTimeout,
-		MaxConnsPerIP:      s.config.MaxConnsPerIP,
-		MaxRequestsPerConn: s.config.MaxRequestsPerConn,
-		MaxRequestBodySize: s.config.MaxRequestBodySize,
-	}
-	server.Handler = func(c *fasthttp.RequestCtx) {
+	//s.server.Logger = s.logger
+	s.server.Handler = func(c *fasthttp.RequestCtx) {
 		// Request
 		req := s.pool.request.Get().(*Request)
 		reqHdr := s.pool.requestHeader.Get().(*RequestHeader)
@@ -124,8 +125,8 @@ func (s *Server) Start() {
 	certfile := s.config.TLSCertfile
 	keyfile := s.config.TLSKeyfile
 	if certfile != "" && keyfile != "" {
-		s.logger.Fatal(server.ListenAndServeTLS(addr, certfile, keyfile))
+		s.logger.Fatal(s.server.ListenAndServeTLS(addr, certfile, keyfile))
 	} else {
-		s.logger.Fatal(server.ListenAndServe(addr))
+		s.logger.Fatal(s.server.ListenAndServe(addr))
 	}
 }
