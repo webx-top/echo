@@ -169,12 +169,12 @@ var (
 
 // New creates an instance of Echo.
 func New() (e *Echo) {
-	return NewWithContext(func(e *Echo) interface{} {
+	return NewWithContext(func(e *Echo) Context {
 		return NewContext(nil, nil, e)
 	})
 }
 
-func NewWithContext(fn func(*Echo) interface{}) (e *Echo) {
+func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 	e = &Echo{maxParam: new(int)}
 	e.pool.New = func() interface{} {
 		return fn(e)
