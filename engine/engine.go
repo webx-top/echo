@@ -12,10 +12,8 @@ import (
 )
 
 type (
-	HandlerFunc func(Request, Response)
-
 	Engine interface {
-		SetHandler(HandlerFunc)
+		SetHandler(Handler)
 		SetLogger(logger.Logger)
 		Start()
 	}
@@ -102,4 +100,14 @@ type (
 		MaxRequestsPerConn int
 		MaxRequestBodySize int
 	}
+
+	Handler interface {
+		ServeHTTP(Request, Response)
+	}
+
+	HandlerFunc func(Request, Response)
 )
+
+func (h HandlerFunc) ServeHTTP(req Request, res Response) {
+	h(req, res)
+}

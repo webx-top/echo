@@ -97,7 +97,7 @@ func (r *Router) insert(method, path string, h Handler, t kind, ppath string, pn
 
 	cn := r.tree // Current node as root
 	if cn == nil {
-		panic("echo ⇛ invalid method")
+		panic("echo => invalid method")
 	}
 	search := path
 
@@ -167,7 +167,7 @@ func (r *Router) insert(method, path string, h Handler, t kind, ppath string, pn
 			// Node already exists
 			if h != nil {
 				cn.addHandler(method, h)
-				cn.ppath = path
+				cn.ppath = ppath
 				cn.pnames = pnames
 			}
 		}
@@ -278,8 +278,6 @@ func (n *node) check405() HandlerFunc {
 
 func (r *Router) Find(method, path string, context Context) {
 	ctx := context.Object()
-	// h = notFoundHandler
-	// e = r.echo
 	cn := r.tree // Current node as root
 
 	var (

@@ -16,7 +16,6 @@ import (
 	"bytes"
 
 	netContext "golang.org/x/net/context"
-	"golang.org/x/net/websocket"
 )
 
 type (
@@ -26,7 +25,6 @@ type (
 		netContext.Context
 		Request() engine.Request
 		Response() engine.Response
-		Socket() *websocket.Conn
 		Path() string
 		P(int) string
 		Param(string) string
@@ -62,7 +60,6 @@ type (
 	context struct {
 		request  engine.Request
 		response engine.Response
-		socket   *websocket.Conn
 		path     string
 		pnames   []string
 		pvalues  []string
@@ -121,11 +118,6 @@ func (c *context) Request() engine.Request {
 // Response returns *Response.
 func (c *context) Response() engine.Response {
 	return c.response
-}
-
-// Socket returns *websocket.Conn.
-func (c *context) Socket() *websocket.Conn {
-	return c.socket
 }
 
 // Path returns the registered path for the handler.
@@ -325,6 +317,7 @@ func (c *context) reset(req engine.Request, res engine.Response) {
 	c.store = nil
 	c.funcs = make(map[string]interface{})
 	c.renderer = nil
+	c.handler = notFoundHandler
 }
 
 // Echo returns the `Echo` instance.

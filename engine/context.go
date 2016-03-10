@@ -133,9 +133,9 @@ func Purge(maxAge int) int {
 
 // ClearHandler wraps an http.Handler and clears request values at the end
 // of a request lifetime.
-func ClearHandler(h HandlerFunc) HandlerFunc {
+func ClearHandler(h Handler) Handler {
 	return HandlerFunc(func(r Request, w Response) {
 		defer Clear(r)
-		h(r, w)
+		h.ServeHTTP(r, w)
 	})
 }

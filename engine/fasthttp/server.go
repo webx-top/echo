@@ -15,7 +15,7 @@ type (
 	Server struct {
 		server  *fasthttp.Server
 		config  *engine.Config
-		handler engine.HandlerFunc
+		handler engine.Handler
 		logger  logger.Logger
 		pool    *Pool
 	}
@@ -80,15 +80,15 @@ func NewWithConfig(c *engine.Config) (s *Server) {
 				},
 			},
 		},
-		handler: engine.ClearHandler(func(req engine.Request, res engine.Response) {
+		handler: engine.ClearHandler(engine.HandlerFunc(func(req engine.Request, res engine.Response) {
 			s.logger.Warn("handler not set")
-		}),
+		})),
 		logger: log.New("echo"),
 	}
 	return
 }
 
-func (s *Server) SetHandler(h engine.HandlerFunc) {
+func (s *Server) SetHandler(h engine.Handler) {
 	s.handler = engine.ClearHandler(h)
 }
 
@@ -113,7 +113,7 @@ func (s *Server) Start() {
 		resHdr.reset(&c.Response.Header)
 		res.reset(c, resHdr)
 
-		s.handler(req, res)
+		s.handler.ServeHTTP(req, res)
 
 		s.pool.request.Put(req)
 		s.pool.requestHeader.Put(reqHdr)
