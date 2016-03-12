@@ -12,12 +12,14 @@ import (
 )
 
 type (
+	// Engine defines an interface for HTTP server.
 	Engine interface {
 		SetHandler(Handler)
 		SetLogger(logger.Logger)
 		Start()
 	}
 
+	// Request defines an interface for HTTP request.
 	Request interface {
 		Scheme() string
 		Host() string
@@ -44,6 +46,7 @@ type (
 		FormFile(string) (multipart.File, *multipart.FileHeader, error)
 	}
 
+	// Response defines an interface for HTTP response.
 	Response interface {
 		Header() Header
 		WriteHeader(int)
@@ -63,6 +66,7 @@ type (
 		ServeFile(string)
 	}
 
+	// Header defines an interface for HTTP header.
 	Header interface {
 		Add(string, string)
 		Del(string)
@@ -71,6 +75,7 @@ type (
 		Object() interface{}
 	}
 
+	// Wrap url.Values
 	UrlValuer interface {
 		Add(string, string)
 		Del(string)
@@ -81,6 +86,7 @@ type (
 		Reset(url.Values)
 	}
 
+	// URL defines an interface for HTTP request url.
 	URL interface {
 		SetPath(string)
 		Path() string
@@ -90,6 +96,7 @@ type (
 		Object() interface{}
 	}
 
+	// Config defines engine configuration.
 	Config struct {
 		Address            string
 		TLSCertfile        string
@@ -101,13 +108,17 @@ type (
 		MaxRequestBodySize int
 	}
 
+	// Handler defines an interface to server HTTP requests via `ServeHTTP(Request, Response)`
+	// function.
 	Handler interface {
 		ServeHTTP(Request, Response)
 	}
 
+	// HandlerFunc is an adapter to allow the use of `func(Request, Response)` as HTTP handlers.
 	HandlerFunc func(Request, Response)
 )
 
+// ServeHTTP serves HTTP request.
 func (h HandlerFunc) ServeHTTP(req Request, res Response) {
 	h(req, res)
 }

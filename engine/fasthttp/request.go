@@ -4,7 +4,6 @@ package fasthttp
 
 import (
 	"bytes"
-	//"fmt"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
