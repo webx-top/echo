@@ -184,7 +184,7 @@ func (c *context) Render(code int, name string, data interface{}) (err error) {
 	}
 	c.response.Header().Set(ContentType, TextHTMLCharsetUTF8)
 	c.response.WriteHeader(code)
-	c.response.Write(b)
+	_, err = c.response.Write(b)
 	return
 }
 
@@ -192,7 +192,7 @@ func (c *context) Render(code int, name string, data interface{}) (err error) {
 func (c *context) HTML(code int, html string) (err error) {
 	c.response.Header().Set(ContentType, TextHTMLCharsetUTF8)
 	c.response.WriteHeader(code)
-	c.response.Write([]byte(html))
+	_, err = c.response.Write([]byte(html))
 	return
 }
 
@@ -200,7 +200,7 @@ func (c *context) HTML(code int, html string) (err error) {
 func (c *context) String(code int, s string) (err error) {
 	c.response.Header().Set(ContentType, TextPlainCharsetUTF8)
 	c.response.WriteHeader(code)
-	c.response.Write([]byte(s))
+	_, err = c.response.Write([]byte(s))
 	return
 }
 
@@ -220,7 +220,7 @@ func (c *context) JSON(code int, i interface{}) (err error) {
 func (c *context) JSONBlob(code int, b []byte) (err error) {
 	c.response.Header().Set(ContentType, ApplicationJSONCharsetUTF8)
 	c.response.WriteHeader(code)
-	c.response.Write(b)
+	_, err = c.response.Write(b)
 	return
 }
 
@@ -233,9 +233,14 @@ func (c *context) JSONP(code int, callback string, i interface{}) (err error) {
 	}
 	c.response.Header().Set(ContentType, ApplicationJavaScriptCharsetUTF8)
 	c.response.WriteHeader(code)
-	c.response.Write([]byte(callback + "("))
-	c.response.Write(b)
-	c.response.Write([]byte(");"))
+
+	if _, err = c.response.Write([]byte(callback + "(")); err != nil {
+		return
+	}
+	if _, err = c.response.Write(b); err != nil {
+		return
+	}
+	_, err = c.response.Write([]byte(");"))
 	return
 }
 
@@ -255,8 +260,10 @@ func (c *context) XML(code int, i interface{}) (err error) {
 func (c *context) XMLBlob(code int, b []byte) (err error) {
 	c.response.Header().Set(ContentType, ApplicationXMLCharsetUTF8)
 	c.response.WriteHeader(code)
-	c.response.Write([]byte(xml.Header))
-	c.response.Write(b)
+	if _, err = c.response.Write([]byte(xml.Header)); err != nil {
+		return
+	}
+	_, err = c.response.Write(b)
 	return
 }
 
