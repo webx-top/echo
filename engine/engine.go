@@ -80,6 +80,7 @@ type (
 		Add(string, string)
 		Del(string)
 		Get(string) string
+		Gets(string) []string
 		Set(string, string)
 		Encode() string
 		All() map[string][]string

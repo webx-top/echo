@@ -11,6 +11,7 @@ import (
 type UrlValue struct {
 	*fasthttp.Args
 	initFn func(*fasthttp.Args)
+	values *url.Values
 }
 
 func (u *UrlValue) Add(key string, value string) {
@@ -28,6 +29,15 @@ func (u *UrlValue) Get(key string) string {
 	return string(u.Args.Peek(key))
 }
 
+func (u *UrlValue) Gets(key string) []string {
+	u.init()
+	u.All()
+	if v, ok := (*u.values)[key]; ok {
+		return v
+	}
+	return []string{}
+}
+
 func (u *UrlValue) Set(key string, value string) {
 	u.init()
 	u.Args.Set(key, value)
@@ -41,6 +51,7 @@ func (u *UrlValue) Reset(data url.Values) {
 		}
 	}
 	a.CopyTo(u.Args)
+	u.values = &data
 }
 
 func (u *UrlValue) init() {
@@ -56,7 +67,10 @@ func (u *UrlValue) Encode() string {
 }
 
 func (u *UrlValue) All() map[string][]string {
-	r := make(map[string][]string)
+	if u.values != nil {
+		return *u.values
+	}
+	r := url.Values{}
 	u.init()
 	u.Args.VisitAll(func(k, v []byte) {
 		key := string(k)
@@ -65,7 +79,8 @@ func (u *UrlValue) All() map[string][]string {
 		}
 		r[key] = append(r[key], string(v))
 	})
-	return r
+	u.values = &r
+	return *u.values
 }
 
 func NewValue(c *fasthttp.RequestCtx) *Value {
@@ -101,6 +116,14 @@ func (v *Value) Del(key string) {
 func (v *Value) Get(key string) string {
 	v.init()
 	return v.form.Get(key)
+}
+
+func (v *Value) Gets(key string) []string {
+	v.init()
+	if v, ok := v.form[key]; ok {
+		return v
+	}
+	return []string{}
 }
 
 func (v *Value) Set(key string, value string) {

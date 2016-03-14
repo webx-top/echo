@@ -20,6 +20,13 @@ func (u *UrlValue) Get(key string) string {
 	return u.Args.Get(key)
 }
 
+func (u *UrlValue) Gets(key string) []string {
+	if v, ok := (*u.Args)[key]; ok {
+		return v
+	}
+	return []string{}
+}
+
 func (u *UrlValue) Set(key string, value string) {
 	u.Args.Set(key, value)
 }
