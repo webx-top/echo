@@ -8,6 +8,8 @@ import (
 	"github.com/webx-top/echo/engine"
 )
 
+var defaultMaxRequestBodySize int64 = 32 << 20 // 32 MB
+
 type (
 	Request struct {
 		config    *engine.Config
@@ -96,7 +98,7 @@ func (r *Request) PostForm() engine.UrlValuer {
 
 func (r *Request) MultipartForm() *multipart.Form {
 	if r.request.MultipartForm == nil {
-		var maxMemory int64 = 32 << 20 // 32 MB
+		maxMemory := defaultMaxRequestBodySize
 		if r.config.MaxRequestBodySize != 0 {
 			maxMemory = int64(r.config.MaxRequestBodySize)
 		}
