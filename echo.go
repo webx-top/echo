@@ -124,6 +124,7 @@ const (
 	ContentEncoding    = "Content-Encoding"
 	ContentLength      = "Content-Length"
 	ContentType        = "Content-Type"
+	LastModified       = "Last-Modified"
 	Location           = "Location"
 	Upgrade            = "Upgrade"
 	Vary               = "Vary"
