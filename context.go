@@ -60,16 +60,17 @@ type (
 	}
 
 	context struct {
-		request  engine.Request
-		response engine.Response
-		path     string
-		pnames   []string
-		pvalues  []string
-		store    store
-		handler  Handler
-		echo     *Echo
-		funcs    map[string]interface{}
-		renderer Renderer
+		netContext netContext.Context
+		request    engine.Request
+		response   engine.Response
+		path       string
+		pnames     []string
+		pvalues    []string
+		store      store
+		handler    Handler
+		echo       *Echo
+		funcs      map[string]interface{}
+		renderer   Renderer
 	}
 
 	store map[string]interface{}
@@ -92,24 +93,32 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 	}
 }
 
-func (c *context) Handle(ctx Context) error {
-	return c.handler.Handle(ctx)
+func (c *context) NetContext() netContext.Context {
+	return c.netContext
+}
+
+func (c *context) SetNetContext(ctx netContext.Context) {
+	c.netContext = ctx
 }
 
 func (c *context) Deadline() (deadline time.Time, ok bool) {
-	return
+	return c.netContext.Deadline()
 }
 
 func (c *context) Done() <-chan struct{} {
-	return nil
+	return c.netContext.Done()
 }
 
 func (c *context) Err() error {
-	return nil
+	return c.netContext.Err()
 }
 
 func (c *context) Value(key interface{}) interface{} {
-	return nil
+	return c.netContext.Value(key)
+}
+
+func (c *context) Handle(ctx Context) error {
+	return c.handler.Handle(ctx)
 }
 
 // Request returns *http.Request.
@@ -348,6 +357,7 @@ func detectContentType(name string) (t string) {
 }
 
 func (c *context) reset(req engine.Request, res engine.Response) {
+	c.netContext = nil
 	c.request = req
 	c.response = res
 	c.store = nil
