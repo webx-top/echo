@@ -152,6 +152,8 @@ var (
 
 	ErrUnsupportedMediaType  = NewHTTPError(http.StatusUnsupportedMediaType)
 	ErrNotFound              = NewHTTPError(http.StatusNotFound)
+	ErrUnauthorized          = NewHTTPError(http.StatusUnauthorized)
+	ErrMethodNotAllowed      = NewHTTPError(http.StatusMethodNotAllowed)
 	ErrRendererNotRegistered = errors.New("renderer not registered")
 	ErrInvalidRedirectCode   = errors.New("invalid redirect status code")
 
@@ -160,11 +162,11 @@ var (
 	//----------------
 
 	notFoundHandler = HandlerFunc(func(c Context) error {
-		return NewHTTPError(http.StatusNotFound)
+		return ErrNotFound
 	})
 
 	methodNotAllowedHandler = HandlerFunc(func(c Context) error {
-		return NewHTTPError(http.StatusMethodNotAllowed)
+		return ErrMethodNotAllowed
 	})
 )
 
@@ -232,7 +234,7 @@ func (e *Echo) DefaultHTTPErrorHandler(err error, c Context) {
 	if !c.Response().Committed() {
 		c.String(code, msg)
 	}
-	e.logger.Error(err)
+	e.logger.Debug(err)
 }
 
 // SetHTTPErrorHandler registers a custom Echo.HTTPErrorHandler.
