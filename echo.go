@@ -389,12 +389,12 @@ func (e *Echo) Routes() []Route {
 	return e.router.routes
 }
 
-func (e *Echo) doMiddleware() {
+// Chain middleware
+func (e *Echo) chainMiddleware() {
 	if e.head != nil {
 		return
 	}
 	e.head = e.router.Handle(nil)
-	// Chain middleware
 	for i := len(e.middleware) - 1; i >= 0; i-- {
 		e.head = e.middleware[i].Handle(e.head)
 	}
@@ -404,7 +404,7 @@ func (e *Echo) ServeHTTP(req engine.Request, res engine.Response) {
 	c := e.pool.Get().(Context)
 	c.Reset(req, res)
 
-	e.doMiddleware()
+	e.chainMiddleware()
 
 	if err := e.head.Handle(c); err != nil {
 		e.httpErrorHandler(err, c)
