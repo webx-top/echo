@@ -156,16 +156,16 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 					e.Logger().Warnf("can not set %v -> %v", name, value.Interface())
 					break
 				}
-				typev = value.Type()
-				f, _ := typev.FieldByName(name)
-				if tagfast.Value(tc, f, "form_options") == "-" {
-					continue
-				}
 				if value.Kind() == reflect.Ptr {
 					if value.IsNil() {
 						value.Set(reflect.New(value.Type().Elem()))
 					}
 					value = value.Elem()
+				}
+				typev = value.Type()
+				f, _ := typev.FieldByName(name)
+				if tagfast.Value(tc, f, "form_options") == "-" {
+					break
 				}
 			} else {
 				if value.Kind() != reflect.Struct {
@@ -182,7 +182,7 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 				}
 				f, _ := typev.FieldByName(name)
 				if tagfast.Value(tc, f, "form_options") == "-" {
-					continue
+					break
 				}
 				if tv.Kind() == reflect.Ptr {
 					tv.Set(reflect.New(tv.Type().Elem()))
