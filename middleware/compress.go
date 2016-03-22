@@ -22,7 +22,7 @@ type (
 )
 
 func (w gzipWriter) Write(b []byte) (int, error) {
-	if w.Header().Get(echo.ContentType) == "" {
+	if w.Header().Get(echo.ContentType) == `` {
 		w.Header().Set(echo.ContentType, http.DetectContentType(b))
 	}
 	return w.Writer.Write(b)
@@ -50,13 +50,22 @@ var writerPool = sync.Pool{
 // scheme.
 func Gzip() echo.MiddlewareFunc {
 	return func(h echo.Handler) echo.Handler {
-		scheme := "gzip"
+		scheme := `gzip`
 		return echo.HandlerFunc(func(c echo.Context) error {
 			c.Response().Header().Add(echo.Vary, echo.AcceptEncoding)
 			if strings.Contains(c.Request().Header().Get(echo.AcceptEncoding), scheme) {
+				rw := c.Response().Writer()
 				w := writerPool.Get().(*gzip.Writer)
-				w.Reset(c.Response().Writer())
+				w.Reset(rw)
 				defer func() {
+					if c.Response().Size() == 0 {
+						// We have to reset response to it's pristine state when
+						// nothing is written to body or error is returned.
+						// See issue #424, #407.
+						c.Response().SetWriter(rw)
+						c.Response().Header().Del(echo.ContentEncoding)
+						w.Reset(ioutil.Discard)
+					}
 					w.Close()
 					writerPool.Put(w)
 				}()
@@ -64,10 +73,7 @@ func Gzip() echo.MiddlewareFunc {
 				c.Response().Header().Set(echo.ContentEncoding, scheme)
 				c.Response().SetWriter(gw)
 			}
-			if err := h.Handle(c); err != nil {
-				c.Error(err)
-			}
-			return nil
+			return h.Handle(c)
 		})
 	}
 }
