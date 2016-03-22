@@ -407,7 +407,7 @@ func (e *Echo) ServeHTTP(req engine.Request, res engine.Response) {
 	e.chainMiddleware()
 
 	if err := e.head.Handle(c); err != nil {
-		e.httpErrorHandler(err, c)
+		c.Error(err)
 	}
 
 	e.pool.Put(c)
