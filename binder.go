@@ -58,7 +58,7 @@ func (b binder) Bind(i interface{}, c Context) (err error) {
 
 // StructMap function mapping params to controller's properties
 func (b binder) structMap(m interface{}, data map[string][]string) error {
-	return NamedStructMap(b.Echo, m, data, "")
+	return NamedStructMap(b.Echo, m, data, ``)
 }
 
 // user[name][test]
@@ -72,7 +72,7 @@ func SplitJson(s string) ([]string, error) {
 			isleft = true
 			if i > 0 && s[i-1] != ']' {
 				if begin == end {
-					return nil, errors.New("unknow character")
+					return nil, errors.New(`unknow character`)
 				}
 				res = append(res, s[begin:end+1])
 			}
@@ -80,12 +80,10 @@ func SplitJson(s string) ([]string, error) {
 			end = begin
 		case ']':
 			if !isleft {
-				return nil, errors.New("unknow character")
+				return nil, errors.New(`unknow character`)
 			}
 			isleft = false
 			if begin != end {
-				//return nil, errors.New("unknow character")
-
 				res = append(res, s[begin:end+1])
 				begin = i + 1
 				end = begin
@@ -113,11 +111,11 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 
 	for k, t := range data {
 
-		if k == "" || k[0] == '_' {
+		if k == `` || k[0] == '_' {
 			continue
 		}
 
-		if topName != "" {
+		if topName != `` {
 			if !strings.HasPrefix(k, topName) {
 				continue
 			}
@@ -125,17 +123,17 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 		}
 
 		v := t[0]
-		names := strings.Split(k, ".")
+		names := strings.Split(k, `.`)
 		var err error
 		length := len(names)
-		if length == 1 {
+		if length == 1 && strings.HasSuffix(k, `]`) {
 			names, err = SplitJson(k)
 			if err != nil {
-				e.Logger().Warnf("Unrecognize form key %v %v", k, err)
+				e.Logger().Warnf(`Unrecognize form key %v %v`, k, err)
 				continue
 			}
+			length = len(names)
 		}
-		length = len(names)
 		var value reflect.Value = vc
 		var typev reflect.Type = tc
 		for i, name := range names {
@@ -144,16 +142,16 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 			//不是最后一个元素
 			if i != length-1 {
 				if value.Kind() != reflect.Struct {
-					e.Logger().Warnf("arg error, value kind is %v", value.Kind())
+					e.Logger().Warnf(`arg error, value kind is %v`, value.Kind())
 					break
 				}
 				value = value.FieldByName(name)
 				if !value.IsValid() {
-					e.Logger().Warnf("(%v value is not valid %v)", name, value)
+					e.Logger().Warnf(`(%v value is not valid %v)`, name, value)
 					break
 				}
 				if !value.CanSet() {
-					e.Logger().Warnf("can not set %v -> %v", name, value.Interface())
+					e.Logger().Warnf(`can not set %v -> %v`, name, value.Interface())
 					break
 				}
 				if value.Kind() == reflect.Ptr {
@@ -164,12 +162,12 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 				}
 				typev = value.Type()
 				f, _ := typev.FieldByName(name)
-				if tagfast.Value(tc, f, "form_options") == "-" {
+				if tagfast.Value(tc, f, `form_options`) == `-` {
 					break
 				}
 			} else {
 				if value.Kind() != reflect.Struct {
-					e.Logger().Warnf("arg error, value %v kind is %v", name, value.Kind())
+					e.Logger().Warnf(`arg error, value %v kind is %v`, name, value.Kind())
 					break
 				}
 				tv := value.FieldByName(name)
@@ -177,11 +175,11 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 					break
 				}
 				if !tv.CanSet() {
-					e.Logger().Warnf("can not set %v to %v", k, tv)
+					e.Logger().Warnf(`can not set %v to %v`, k, tv)
 					break
 				}
 				f, _ := typev.FieldByName(name)
-				if tagfast.Value(tc, f, "form_options") == "-" {
+				if tagfast.Value(tc, f, `form_options`) == `-` {
 					break
 				}
 				if tv.Kind() == reflect.Ptr {
@@ -192,19 +190,19 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 				var l interface{}
 				switch k := tv.Kind(); k {
 				case reflect.String:
-					switch tagfast.Value(tc, f, "form_filter") {
-					case "html":
+					switch tagfast.Value(tc, f, `form_filter`) {
+					case `html`:
 						v = DefaultHtmlFilter(v)
 					}
 					l = v
 					tv.Set(reflect.ValueOf(l))
 				case reflect.Bool:
-					l = (v != "false" && v != "0" && v != "")
+					l = (v != `false` && v != `0` && v != ``)
 					tv.Set(reflect.ValueOf(l))
 				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
 					x, err := strconv.Atoi(v)
 					if err != nil {
-						e.Logger().Warnf("arg %v as int: %v", v, err)
+						e.Logger().Warnf(`arg %v as int: %v`, v, err)
 						break
 					}
 					l = x
@@ -212,7 +210,7 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 				case reflect.Int64:
 					x, err := strconv.ParseInt(v, 10, 64)
 					if err != nil {
-						e.Logger().Warnf("arg %v as int64: %v", v, err)
+						e.Logger().Warnf(`arg %v as int64: %v`, v, err)
 						break
 					}
 					l = x
@@ -220,7 +218,7 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 				case reflect.Float32, reflect.Float64:
 					x, err := strconv.ParseFloat(v, 64)
 					if err != nil {
-						e.Logger().Warnf("arg %v as float64: %v", v, err)
+						e.Logger().Warnf(`arg %v as float64: %v`, v, err)
 						break
 					}
 					l = x
@@ -228,7 +226,7 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 				case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 					x, err := strconv.ParseUint(v, 10, 64)
 					if err != nil {
-						e.Logger().Warnf("arg %v as uint: %v", v, err)
+						e.Logger().Warnf(`arg %v as uint: %v`, v, err)
 						break
 					}
 					l = x
@@ -237,16 +235,16 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 					if tvf, ok := tv.Interface().(FromConversion); ok {
 						err := tvf.FromString(v)
 						if err != nil {
-							e.Logger().Warnf("struct %v invoke FromString faild", tvf)
+							e.Logger().Warnf(`struct %v invoke FromString faild`, tvf)
 						}
-					} else if tv.Type().String() == "time.Time" {
-						x, err := time.Parse("2006-01-02 15:04:05.000 -0700", v)
+					} else if tv.Type().String() == `time.Time` {
+						x, err := time.Parse(`2006-01-02 15:04:05.000 -0700`, v)
 						if err != nil {
-							x, err = time.Parse("2006-01-02 15:04:05", v)
+							x, err = time.Parse(`2006-01-02 15:04:05`, v)
 							if err != nil {
-								x, err = time.Parse("2006-01-02", v)
+								x, err = time.Parse(`2006-01-02`, v)
 								if err != nil {
-									e.Logger().Warnf("unsupported time format %v, %v", v, err)
+									e.Logger().Warnf(`unsupported time format %v, %v`, v, err)
 									break
 								}
 							}
@@ -254,10 +252,10 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 						l = x
 						tv.Set(reflect.ValueOf(l))
 					} else {
-						e.Logger().Warn("can not set an struct which is not implement Fromconversion interface")
+						e.Logger().Warn(`can not set an struct which is not implement Fromconversion interface`)
 					}
 				case reflect.Ptr:
-					e.Logger().Warn("can not set an ptr of ptr")
+					e.Logger().Warn(`can not set an ptr of ptr`)
 				case reflect.Slice, reflect.Array:
 					tt := tv.Type().Elem()
 					tk := tt.Kind()
@@ -297,12 +295,12 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 							tv.Index(i).SetString(s)
 						case reflect.Complex64, reflect.Complex128:
 							// TODO:
-							err = fmt.Errorf("unsupported slice element type %v", tk.String())
+							err = fmt.Errorf(`unsupported slice element type %v`, tk.String())
 						default:
-							err = fmt.Errorf("unsupported slice element type %v", tk.String())
+							err = fmt.Errorf(`unsupported slice element type %v`, tk.String())
 						}
 						if err != nil {
-							e.Logger().Warnf("slice error: %v, %v", name, err)
+							e.Logger().Warnf(`slice error: %v, %v`, name, err)
 							break
 						}
 					}
