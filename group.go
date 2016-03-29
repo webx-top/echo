@@ -93,7 +93,7 @@ func (g *Group) add(method, path string, handler Handler, middleware ...Middlewa
 	fpath := g.echo.router.Add(method, path, HandlerFunc(func(c Context) error {
 		return handler.Handle(c)
 	}), g.echo)
-	g.echo.logger.Infof(`ROUTE|[%v]%v -> %v`+"\n", method, fpath, name)
+	g.echo.logger.Debugf(`ROUTE|[%v]%v -> %v`+"\n", method, fpath, name)
 	r := Route{
 		Method:  method,
 		Path:    path,
