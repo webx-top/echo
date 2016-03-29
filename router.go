@@ -1,5 +1,9 @@
 package echo
 
+import (
+	"bytes"
+)
+
 type (
 	Router struct {
 		tree   *node
@@ -56,12 +60,17 @@ func (r *Router) Handle(h Handler) Handler {
 	})
 }
 
-func (r *Router) Add(method, path string, h Handler, e *Echo) {
+func (r *Router) Add(method, path string, h Handler, e *Echo) (fpath string) {
 	ppath := path        // Pristine path
 	pnames := []string{} // Param names
+	uri := new(bytes.Buffer)
+	defer func() {
+		fpath = uri.String()
+	}()
 
 	for i, l := 0, len(path); i < l; i++ {
 		if path[i] == ':' {
+			uri.WriteString(`%v`)
 			j := i + 1
 
 			r.insert(method, path[:i], nil, skind, "", nil, e)
@@ -78,14 +87,20 @@ func (r *Router) Add(method, path string, h Handler, e *Echo) {
 			}
 			r.insert(method, path[:i], nil, pkind, ppath, pnames, e)
 		} else if path[i] == '*' {
+			uri.WriteString(`%v`)
 			r.insert(method, path[:i], nil, skind, "", nil, e)
 			pnames = append(pnames, "_*")
 			r.insert(method, path[:i+1], h, akind, ppath, pnames, e)
 			return
 		}
+
+		if i < l {
+			uri.WriteByte(path[i])
+		}
 	}
 
 	r.insert(method, path, h, skind, ppath, pnames, e)
+	return
 }
 
 func (r *Router) insert(method, path string, h Handler, t kind, ppath string, pnames []string, e *Echo) {

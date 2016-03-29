@@ -1,7 +1,6 @@
 package echo
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -35,6 +34,7 @@ type (
 		Method  string
 		Path    string
 		Handler string
+		Format  string
 	}
 
 	HTTPError struct {
@@ -50,6 +50,10 @@ type (
 
 	Handler interface {
 		Handle(Context) error
+	}
+
+	HandleNamer interface {
+		HandleName() string
 	}
 
 	HandlerFunc func(Context) error
@@ -267,7 +271,7 @@ func (e *Echo) Use(middleware ...Middleware) {
 	e.middleware = append(e.middleware, middleware...)
 }
 
-// Use adds handler to the middleware chain.
+// PreUse adds handler to the middleware chain.
 func (e *Echo) PreUse(middleware ...Middleware) {
 	e.middleware = append(middleware, e.middleware...)
 }
@@ -332,17 +336,24 @@ func (e *Echo) Match(methods []string, path string, handler Handler, middleware 
 }
 
 func (e *Echo) add(method, path string, handler Handler, middleware ...Middleware) {
-	name := handlerName(handler)
+	var name string
+	if hn, ok := handler.(HandleNamer); ok {
+		name = hn.HandleName()
+	} else {
+		name = handlerName(handler)
+	}
 	for _, m := range middleware {
 		handler = m.Handle(handler)
 	}
-	e.router.Add(method, path, HandlerFunc(func(c Context) error {
+	fpath := e.router.Add(method, path, HandlerFunc(func(c Context) error {
 		return handler.Handle(c)
 	}), e)
+	e.logger.Infof(`ROUTE|[%v]%v -> %v`+"\n", method, fpath, name)
 	r := Route{
 		Method:  method,
 		Path:    path,
 		Handler: name,
+		Format:  fpath,
 	}
 	e.router.routes = append(e.router.routes, r)
 }
@@ -355,32 +366,31 @@ func (e *Echo) Group(prefix string, m ...Middleware) (g *Group) {
 }
 
 // URI generates a URI from handler.
-func (e *Echo) URI(handler Handler, params ...interface{}) string {
-	uri := new(bytes.Buffer)
-	ln := len(params)
-	n := 0
-	name := handlerName(handler)
+func (e *Echo) URI(handler interface{}, params ...interface{}) string {
+	uri := ``
+	var name string
+	if h, ok := handler.(Handler); ok {
+		if hn, ok := h.(HandleNamer); ok {
+			name = hn.HandleName()
+		} else {
+			name = handlerName(h)
+		}
+	} else if h, ok := handler.(string); ok {
+		name = h
+	} else {
+		return uri
+	}
 	for _, r := range e.router.routes {
 		if r.Handler == name {
-			for i, l := 0, len(r.Path); i < l; i++ {
-				if r.Path[i] == ':' && n < ln {
-					for ; i < l && r.Path[i] != '/'; i++ {
-					}
-					uri.WriteString(fmt.Sprintf("%v", params[n]))
-					n++
-				}
-				if i < l {
-					uri.WriteByte(r.Path[i])
-				}
-			}
+			uri = fmt.Sprintf(r.Format, params...)
 			break
 		}
 	}
-	return uri.String()
+	return uri
 }
 
 // URL is an alias for `URI` function.
-func (e *Echo) URL(h Handler, params ...interface{}) string {
+func (e *Echo) URL(h interface{}, params ...interface{}) string {
 	return e.URI(h, params...)
 }
 

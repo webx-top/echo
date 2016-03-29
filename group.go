@@ -1,7 +1,5 @@
 package echo
 
-//import "fmt"
-
 type (
 	Group struct {
 		prefix     string
@@ -10,7 +8,7 @@ type (
 	}
 )
 
-func (g *Group) URL(h Handler, params ...interface{}) string {
+func (g *Group) URL(h interface{}, params ...interface{}) string {
 	return g.echo.URL(h, params...)
 }
 
@@ -80,22 +78,27 @@ func (g *Group) Group(prefix string, m ...Middleware) *Group {
 
 func (g *Group) add(method, path string, handler Handler, middleware ...Middleware) {
 	path = g.prefix + path
-	name := handlerName(handler)
+
+	var name string
+	if hn, ok := handler.(HandleNamer); ok {
+		name = hn.HandleName()
+	} else {
+		name = handlerName(handler)
+	}
+
 	middleware = append(g.middleware, middleware...)
-	// for k, mw := range g.echo.middleware {
-	// 	fmt.Printf("%v. %+v\n", k, handlerName(mw))
-	// }
-	// fmt.Printf("=========================%+v\n", handlerName(h))
 	for _, m := range middleware {
 		handler = m.Handle(handler)
 	}
-	g.echo.router.Add(method, path, HandlerFunc(func(c Context) error {
+	fpath := g.echo.router.Add(method, path, HandlerFunc(func(c Context) error {
 		return handler.Handle(c)
 	}), g.echo)
+	g.echo.logger.Infof(`ROUTE|[%v]%v -> %v`+"\n", method, fpath, name)
 	r := Route{
 		Method:  method,
 		Path:    path,
 		Handler: name,
+		Format:  fpath,
 	}
 	g.echo.router.routes = append(g.echo.router.routes, r)
 }
