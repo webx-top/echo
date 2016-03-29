@@ -43,15 +43,9 @@ func (b binder) Bind(i interface{}, c Context) (err error) {
 	} else if strings.HasPrefix(ct, ApplicationXML) {
 		err = xml.NewDecoder(body).Decode(i)
 	} else if strings.HasPrefix(ct, ApplicationForm) {
-		err = b.structMap(i, r.Form().All())
+		err = b.structMap(i, r.PostForm().All())
 	} else if strings.Contains(ct, MultipartForm) {
-		data := r.Form().All()
-		if mf := r.MultipartForm(); mf != nil && mf.Value != nil {
-			for key, vals := range mf.Value {
-				data[key] = vals
-			}
-		}
-		err = b.structMap(i, data)
+		err = b.structMap(i, r.Form().All())
 	}
 	return
 }
