@@ -22,12 +22,13 @@ type (
 )
 
 func NewRequest(c *fasthttp.RequestCtx) *Request {
-	return &Request{
+	req := &Request{
 		context: c,
 		url:     &URL{url: c.URI()},
 		header:  &RequestHeader{&c.Request.Header},
-		value:   NewValue(c),
 	}
+	req.value = NewValue(req)
+	return req
 }
 
 func (r *Request) Host() string {
@@ -70,12 +71,11 @@ func (r *Request) FormValue(name string) string {
 	return string(r.context.FormValue(name))
 }
 
-func (r *Request) Form() engine.UrlValuer {
-	r.value.init()
+func (r *Request) Form() engine.URLValuer {
 	return r.value
 }
 
-func (r *Request) PostForm() engine.UrlValuer {
+func (r *Request) PostForm() engine.URLValuer {
 	return r.value.postArgs
 }
 
@@ -121,9 +121,14 @@ func (r *Request) Scheme() string {
 	return string(r.context.URI().Scheme())
 }
 
+// Size implements `engine.Request#ContentLength` function.
+func (r *Request) Size() int64 {
+	return int64(r.context.Request.Header.ContentLength())
+}
+
 func (r *Request) reset(c *fasthttp.RequestCtx, h engine.Header, u engine.URL) {
 	r.context = c
 	r.header = h
 	r.url = u
-	r.value = NewValue(c)
+	r.value = NewValue(r)
 }

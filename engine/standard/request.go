@@ -12,23 +12,22 @@ var defaultMaxRequestBodySize int64 = 32 << 20 // 32 MB
 
 type (
 	Request struct {
-		config    *engine.Config
-		request   *http.Request
-		url       engine.URL
-		header    engine.Header
-		queryArgs *UrlValue
-		postArgs  *UrlValue
+		config  *engine.Config
+		request *http.Request
+		url     engine.URL
+		header  engine.Header
+		value   *Value
 	}
 )
 
 func NewRequest(r *http.Request) *Request {
-	return &Request{
-		request:   r,
-		url:       &URL{url: r.URL},
-		header:    &Header{r.Header},
-		queryArgs: &UrlValue{Args: &r.Form},
-		postArgs:  &UrlValue{Args: &r.PostForm},
+	req := &Request{
+		request: r,
+		url:     &URL{url: r.URL},
+		header:  &Header{r.Header},
 	}
+	req.value = NewValue(req)
+	return req
 }
 
 func (r *Request) Host() string {
@@ -80,20 +79,12 @@ func (r *Request) FormValue(name string) string {
 	return r.request.FormValue(name)
 }
 
-func (r *Request) Form() engine.UrlValuer {
-	if r.request.Form == nil {
-		r.PostForm()
-		r.queryArgs.Args = &r.request.Form
-	}
-	return r.queryArgs
+func (r *Request) Form() engine.URLValuer {
+	return r.value
 }
 
-func (r *Request) PostForm() engine.UrlValuer {
-	if r.request.PostForm == nil {
-		r.request.ParseForm()
-		r.postArgs.Args = &r.request.PostForm
-	}
-	return r.postArgs
+func (r *Request) PostForm() engine.URLValuer {
+	return r.value.postArgs
 }
 
 func (r *Request) MultipartForm() *multipart.Form {
@@ -134,8 +125,7 @@ func (r *Request) reset(req *http.Request, h engine.Header, u engine.URL) {
 	r.request = req
 	r.header = h
 	r.url = u
-	r.queryArgs = &UrlValue{Args: &req.Form}
-	r.postArgs = &UrlValue{Args: &req.PostForm}
+	r.value = NewValue(r)
 }
 
 func (r *Request) FormFile(key string) (multipart.File, *multipart.FileHeader, error) {
@@ -144,6 +134,11 @@ func (r *Request) FormFile(key string) (multipart.File, *multipart.FileHeader, e
 		return nil, nil, err
 	}
 	return file, fileHeader, err
+}
+
+// Size implements `engine.Request#ContentLength` function.
+func (r *Request) Size() int64 {
+	return r.request.ContentLength
 }
 
 func (r *Request) Scheme() string {

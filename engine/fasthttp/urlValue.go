@@ -83,15 +83,15 @@ func (u *UrlValue) All() map[string][]string {
 	return *u.values
 }
 
-func NewValue(c *fasthttp.RequestCtx) *Value {
+func NewValue(c *Request) *Value {
 	v := &Value{
 		queryArgs: &UrlValue{initFn: func(args *fasthttp.Args) {
-			args = c.QueryArgs()
+			args = c.context.QueryArgs()
 		}},
 		postArgs: &UrlValue{initFn: func(args *fasthttp.Args) {
-			args = c.PostArgs()
+			args = c.context.PostArgs()
 		}},
-		context: c,
+		request: c,
 	}
 	return v
 }
@@ -99,8 +99,8 @@ func NewValue(c *fasthttp.RequestCtx) *Value {
 type Value struct {
 	queryArgs *UrlValue
 	postArgs  *UrlValue
-	form      url.Values
-	context   *fasthttp.RequestCtx
+	form      *url.Values
+	request   *Request
 }
 
 func (v *Value) Add(key string, value string) {
@@ -120,7 +120,8 @@ func (v *Value) Get(key string) string {
 
 func (v *Value) Gets(key string) []string {
 	v.init()
-	if v, ok := v.form[key]; ok {
+	form := *v.form
+	if v, ok := form[key]; ok {
 		return v
 	}
 	return []string{}
@@ -140,25 +141,24 @@ func (v *Value) init() {
 	if v.form != nil {
 		return
 	}
-	v.form = url.Values(v.postArgs.All())
-	for key, vals := range v.queryArgs.All() {
-		v.form[key] = vals
+	form := url.Values(v.queryArgs.All())
+	for key, vals := range v.postArgs.All() {
+		form[key] = vals
 	}
-	/*
-		mf, err := v.context.MultipartForm()
-		if err == nil && mf.Value != nil {
-			for key, vals := range mf.Value {
-				v.form[key] = vals
-			}
+	mf := v.request.MultipartForm()
+	if mf != nil && mf.Value != nil {
+		for key, vals := range mf.Value {
+			form[key] = vals
 		}
-	*/
+	}
+	v.form = &form
 }
 
 func (v *Value) All() map[string][]string {
 	v.init()
-	return v.form
+	return *v.form
 }
 
 func (v *Value) Reset(data url.Values) {
-	v.form = data
+	v.form = &data
 }
