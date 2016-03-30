@@ -35,9 +35,11 @@ type (
 
 		// Queries returns the query parameters as map. It is an alias for `engine.URL#QueryParams()`.
 		Queries() map[string][]string
-
+		QueryValues(string) []string
 		Query(string) string
+
 		Form(string) string
+		FormValues(string) []string
 
 		// Forms returns the form parameters as map. It is an alias for `engine.Request#FormParams()`.
 		Forms() map[string][]string
@@ -182,6 +184,10 @@ func (c *context) Query(name string) string {
 	return c.request.URL().QueryValue(name)
 }
 
+func (c *context) QueryValues(name string) []string {
+	return c.request.URL().QueryValues(name)
+}
+
 func (c *context) Queries() map[string][]string {
 	return c.request.URL().Query()
 }
@@ -189,6 +195,10 @@ func (c *context) Queries() map[string][]string {
 // Form returns form parameter by name.
 func (c *context) Form(name string) string {
 	return c.request.FormValue(name)
+}
+
+func (c *context) FormValues(name string) []string {
+	return c.request.Form().Gets(name)
 }
 
 func (c *context) Forms() map[string][]string {

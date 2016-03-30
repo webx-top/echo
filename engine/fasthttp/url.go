@@ -27,6 +27,14 @@ func (u *URL) QueryValue(name string) string {
 	return string(u.url.QueryArgs().Peek(name))
 }
 
+func (u *URL) QueryValues(name string) []string {
+	u.Query()
+	if v, ok := u.query[name]; ok {
+		return v
+	}
+	return []string{}
+}
+
 func (u *URL) Query() url.Values {
 	if u.query == nil {
 		u.query = url.Values{}

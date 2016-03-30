@@ -151,6 +151,7 @@ type (
 		SetPath(string)
 		Path() string
 		QueryValue(string) string
+		QueryValues(string) []string
 		Query() url.Values
 		RawQuery() string
 		Object() interface{}
