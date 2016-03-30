@@ -29,8 +29,19 @@ type (
 		Path() string
 		P(int) string
 		Param(string) string
+
+		// ParamNames returns path parameter names.
+		ParamNames() []string
+
+		// Queries returns the query parameters as map. It is an alias for `engine.URL#QueryParams()`.
+		Queries() map[string][]string
+
 		Query(string) string
 		Form(string) string
+
+		// Forms returns the form parameters as map. It is an alias for `engine.Request#FormParams()`.
+		Forms() map[string][]string
+
 		Set(string, interface{})
 		Get(string) interface{}
 		Bind(interface{}) error
@@ -43,13 +54,18 @@ type (
 		XML(int, interface{}) error
 		XMLBlob(int, []byte) error
 		File(string) error
-		Attachment(io.Reader, string) error
+		Attachment(io.ReadSeeker, string) error
 		NoContent(int) error
 		Redirect(int, string) error
 		Error(err error)
 		Handle(Context) error
 		Logger() logger.Logger
 		Object() *context
+
+		// ServeContent sends static content from `io.Reader` and handles caching
+		// via `If-Modified-Since` request header. It automatically sets `Content-Type`
+		// and `Last-Modified` response headers.
+		ServeContent(io.ReadSeeker, string, time.Time) error
 
 		SetFunc(string, interface{})
 		GetFunc(string) interface{}
@@ -157,14 +173,26 @@ func (c *context) Param(name string) (value string) {
 	return
 }
 
+func (c *context) ParamNames() []string {
+	return c.pnames
+}
+
 // Query returns query parameter by name.
 func (c *context) Query(name string) string {
 	return c.request.URL().QueryValue(name)
 }
 
+func (c *context) Queries() map[string][]string {
+	return c.request.URL().Query()
+}
+
 // Form returns form parameter by name.
 func (c *context) Form(name string) string {
 	return c.request.FormValue(name)
+}
+
+func (c *context) Forms() map[string][]string {
+	return c.request.Form().All()
 }
 
 // Get retrieves data from the context.
@@ -278,11 +306,8 @@ func (c *context) XMLBlob(code int, b []byte) (err error) {
 	return
 }
 
-// File sends a response with the content of the file.
 func (c *context) File(file string) error {
-	root, file := filepath.Split(file)
-	fs := http.Dir(root)
-	f, err := fs.Open(file)
+	f, err := os.Open(file)
 	if err != nil {
 		return ErrNotFound
 	}
@@ -291,20 +316,17 @@ func (c *context) File(file string) error {
 	fi, _ := f.Stat()
 	if fi.IsDir() {
 		file = path.Join(file, "index.html")
-		f, err = fs.Open(file)
+		f, err = os.Open(file)
 		if err != nil {
 			return ErrNotFound
 		}
 		fi, _ = f.Stat()
 	}
-
-	return ServeContent(c.Request(), c.Response(), f, fi)
+	return c.ServeContent(f, fi.Name(), fi.ModTime())
 }
 
-// Attachment sends a response from `io.Reader` as attachment, prompting client
-// to save the file.
-func (c *context) Attachment(r io.Reader, name string) (err error) {
-	c.response.Header().Set(ContentType, detectContentType(name))
+func (c *context) Attachment(r io.ReadSeeker, name string) (err error) {
+	c.response.Header().Set(ContentType, ContentTypeByExtension(name))
 	c.response.Header().Set(ContentDisposition, "attachment; filename="+name)
 	c.response.WriteHeader(http.StatusOK)
 	_, err = io.Copy(c.response, r)
@@ -341,29 +363,31 @@ func (c *context) Object() *context {
 	return c
 }
 
-func ServeContent(req engine.Request, res engine.Response, f http.File, fi os.FileInfo) error {
-	res.Header().Set(ContentType, detectContentType(fi.Name()))
-	res.Header().Set(LastModified, fi.ModTime().UTC().Format(http.TimeFormat))
-	res.WriteHeader(http.StatusOK)
-	_, err := io.Copy(res, f)
+func (c *context) ServeContent(content io.ReadSeeker, name string, modtime time.Time) error {
+	rq := c.Request()
+	rs := c.Response()
+
+	if t, err := time.Parse(http.TimeFormat, rq.Header().Get(IfModifiedSince)); err == nil && modtime.Before(t.Add(1*time.Second)) {
+		rs.Header().Del(ContentType)
+		rs.Header().Del(ContentLength)
+		return c.NoContent(http.StatusNotModified)
+	}
+
+	rs.Header().Set(ContentType, ContentTypeByExtension(name))
+	rs.Header().Set(LastModified, modtime.UTC().Format(http.TimeFormat))
+	rs.WriteHeader(http.StatusOK)
+	_, err := io.Copy(rs, content)
 	return err
 }
 
-func detectContentType(name string) (t string) {
+// ContentTypeByExtension returns the MIME type associated with the file based on
+// its extension. It returns `application/octet-stream` incase MIME type is not
+// found.
+func ContentTypeByExtension(name string) (t string) {
 	if t = mime.TypeByExtension(filepath.Ext(name)); t == "" {
 		t = OctetStream
 	}
 	return
-}
-
-func (c *context) reset(req engine.Request, res engine.Response) {
-	c.netContext = nil
-	c.request = req
-	c.response = res
-	c.store = nil
-	c.funcs = make(map[string]interface{})
-	c.renderer = nil
-	c.handler = notFoundHandler
 }
 
 // Echo returns the `Echo` instance.
@@ -372,7 +396,13 @@ func (c *context) Echo() *Echo {
 }
 
 func (c *context) Reset(req engine.Request, res engine.Response) {
-	c.reset(req, res)
+	c.netContext = nil
+	c.request = req
+	c.response = res
+	c.store = nil
+	c.funcs = make(map[string]interface{})
+	c.renderer = nil
+	c.handler = notFoundHandler
 }
 
 func (c *context) GetFunc(key string) interface{} {
