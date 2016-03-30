@@ -90,7 +90,7 @@ func (g *Group) add(method, path string, handler Handler, middleware ...Middlewa
 	for _, m := range middleware {
 		handler = m.Handle(handler)
 	}
-	fpath := g.echo.router.Add(method, path, HandlerFunc(func(c Context) error {
+	fpath, pnames := g.echo.router.Add(method, path, HandlerFunc(func(c Context) error {
 		return handler.Handle(c)
 	}), g.echo)
 	g.echo.logger.Debugf(`ROUTE|[%v]%v -> %v`+"\n", method, fpath, name)
@@ -99,6 +99,12 @@ func (g *Group) add(method, path string, handler Handler, middleware ...Middlewa
 		Path:    path,
 		Handler: name,
 		Format:  fpath,
+		Params:  pnames,
+	}
+	if _, ok := g.echo.router.nroute[name]; !ok {
+		g.echo.router.nroute[name] = []int{len(g.echo.router.routes)}
+	} else {
+		g.echo.router.nroute[name] = append(g.echo.router.nroute[name], len(g.echo.router.routes))
 	}
 	g.echo.router.routes = append(g.echo.router.routes, r)
 }

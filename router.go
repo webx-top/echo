@@ -8,6 +8,7 @@ type (
 	Router struct {
 		tree   *node
 		routes []Route
+		nroute map[string][]int
 		echo   *Echo
 	}
 	node struct {
@@ -47,6 +48,7 @@ func NewRouter(e *Echo) *Router {
 			methodHandler: new(methodHandler),
 		},
 		routes: []Route{},
+		nroute: map[string][]int{},
 		echo:   e,
 	}
 }
@@ -60,9 +62,9 @@ func (r *Router) Handle(h Handler) Handler {
 	})
 }
 
-func (r *Router) Add(method, path string, h Handler, e *Echo) (fpath string) {
-	ppath := path        // Pristine path
-	pnames := []string{} // Param names
+func (r *Router) Add(method, path string, h Handler, e *Echo) (fpath string, pnames []string) {
+	ppath := path       // Pristine path
+	pnames = []string{} // Param names
 	uri := new(bytes.Buffer)
 	defer func() {
 		fpath = uri.String()

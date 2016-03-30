@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"reflect"
 	"runtime"
+	"strings"
 	"sync"
 
 	"github.com/labstack/gommon/log"
@@ -35,6 +37,7 @@ type (
 		Path    string
 		Handler string
 		Format  string
+		Params  []string
 	}
 
 	HTTPError struct {
@@ -346,7 +349,7 @@ func (e *Echo) add(method, path string, handler Handler, middleware ...Middlewar
 	for _, m := range middleware {
 		handler = m.Handle(handler)
 	}
-	fpath := e.router.Add(method, path, HandlerFunc(func(c Context) error {
+	fpath, pnames := e.router.Add(method, path, HandlerFunc(func(c Context) error {
 		return handler.Handle(c)
 	}), e)
 	e.logger.Debugf(`ROUTE|[%v]%v -> %v`+"\n", method, fpath, name)
@@ -355,6 +358,12 @@ func (e *Echo) add(method, path string, handler Handler, middleware ...Middlewar
 		Path:    path,
 		Handler: name,
 		Format:  fpath,
+		Params:  pnames,
+	}
+	if _, ok := e.router.nroute[name]; !ok {
+		e.router.nroute[name] = []int{len(e.router.routes)}
+	} else {
+		e.router.nroute[name] = append(e.router.nroute[name], len(e.router.routes))
 	}
 	e.router.routes = append(e.router.routes, r)
 }
@@ -381,10 +390,44 @@ func (e *Echo) URI(handler interface{}, params ...interface{}) string {
 	} else {
 		return uri
 	}
-	for _, r := range e.router.routes {
-		if r.Handler == name {
+	if indexes, ok := e.router.nroute[name]; ok && len(indexes) > 0 {
+		r := e.router.routes[indexes[0]]
+		length := len(params)
+		if length == 1 {
+			switch params[0].(type) {
+			case url.Values:
+				val := params[0].(url.Values)
+				uri = r.Path
+				for _, name := range r.Params {
+					tag := `:` + name
+					v := val.Get(name)
+					uri = strings.Replace(uri, tag+`/`, v+`/`, -1)
+					if strings.HasSuffix(uri, tag) {
+						uri = strings.TrimSuffix(uri, tag) + v
+					}
+					val.Del(name)
+				}
+				q := val.Encode()
+				if q != `` {
+					uri += `?` + q
+				}
+			case map[string]string:
+				val := params[0].(map[string]string)
+				uri = r.Path
+				for _, name := range r.Params {
+					tag := `:` + name
+					v, _ := val[name]
+					uri = strings.Replace(uri, tag+`/`, v+`/`, -1)
+					if strings.HasSuffix(uri, tag) {
+						uri = strings.TrimSuffix(uri, tag) + v
+					}
+				}
+			case []interface{}:
+				val := params[0].([]interface{})
+				uri = fmt.Sprintf(r.Format, val...)
+			}
+		} else {
 			uri = fmt.Sprintf(r.Format, params...)
-			break
 		}
 	}
 	return uri

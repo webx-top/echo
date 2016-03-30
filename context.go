@@ -33,7 +33,7 @@ type (
 		// ParamNames returns path parameter names.
 		ParamNames() []string
 
-		// Queries returns the query parameters as map. It is an alias for `engine.URL#QueryParams()`.
+		// Queries returns the query parameters as map. It is an alias for `engine.URL#Query()`.
 		Queries() map[string][]string
 		QueryValues(string) []string
 		Query(string) string
@@ -41,7 +41,7 @@ type (
 		Form(string) string
 		FormValues(string) []string
 
-		// Forms returns the form parameters as map. It is an alias for `engine.Request#FormParams()`.
+		// Forms returns the form parameters as map. It is an alias for `engine.Request#Form().All()`.
 		Forms() map[string][]string
 
 		Set(string, interface{})
