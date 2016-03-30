@@ -450,6 +450,11 @@ func (e *Echo) Routes() []Route {
 	return e.router.routes
 }
 
+// NamedRoutes returns the registered handler name.
+func (e *Echo) NamedRoutes() map[string][]int {
+	return e.router.nroute
+}
+
 // Chain middleware
 func (e *Echo) chainMiddleware() {
 	if e.head != nil {
