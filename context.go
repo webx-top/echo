@@ -255,9 +255,11 @@ func (c *context) String(code int, s string) (err error) {
 
 // JSON sends a JSON response with status code.
 func (c *context) JSON(code int, i interface{}) (err error) {
-	b, err := json.Marshal(i)
+	var b []byte
 	if c.echo.Debug() {
 		b, err = json.MarshalIndent(i, "", "  ")
+	} else {
+		b, err = json.Marshal(i)
 	}
 	if err != nil {
 		return err
@@ -295,9 +297,11 @@ func (c *context) JSONP(code int, callback string, i interface{}) (err error) {
 
 // XML sends an XML response with status code.
 func (c *context) XML(code int, i interface{}) (err error) {
-	b, err := xml.Marshal(i)
+	var b []byte
 	if c.echo.Debug() {
 		b, err = xml.MarshalIndent(i, "", "  ")
+	} else {
+		b, err = xml.Marshal(i)
 	}
 	if err != nil {
 		return err
