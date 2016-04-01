@@ -15,11 +15,8 @@ type UrlValue struct {
 }
 
 func (u *UrlValue) Add(key string, value string) {
-	u.init()
 	u.All()
 	u.values.Add(key, value)
-	u.Reset(*u.values)
-	//u.Args.Set(key, value)
 }
 
 func (u *UrlValue) Del(key string) {
