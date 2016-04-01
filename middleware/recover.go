@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"fmt"
-
+	"net/http"
 	"runtime"
 
 	"github.com/webx-top/echo"
@@ -18,8 +18,8 @@ func Recover() echo.MiddlewareFunc {
 				if err := recover(); err != nil {
 					trace := make([]byte, 1<<16)
 					n := runtime.Stack(trace, true)
-					c.Error(fmt.Errorf("panic recover\n %v\n stack trace %d bytes\n %s",
-						err, n, trace[:n]))
+					c.Error(echo.NewHTTPError(http.StatusInternalServerError, fmt.Sprintf("panic recover\n %v\n stack trace %d bytes\n %s",
+						err, n, trace[:n])))
 				}
 			}()
 			return h.Handle(c)

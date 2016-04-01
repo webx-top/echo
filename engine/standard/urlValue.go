@@ -6,12 +6,12 @@ import (
 
 type UrlValue struct {
 	values *url.Values
-	initFn func(*url.Values)
+	initFn func() *url.Values
 }
 
 func (u *UrlValue) Add(key string, value string) {
 	u.init()
-	u.values.Set(key, value)
+	u.values.Add(key, value)
 }
 
 func (u *UrlValue) Del(key string) {
@@ -55,20 +55,20 @@ func (u *UrlValue) init() {
 	if u.values != nil {
 		return
 	}
-	u.initFn(u.values)
+	u.values = u.initFn()
 }
 
 func NewValue(r *Request) *Value {
 	v := &Value{
-		queryArgs: &UrlValue{initFn: func(val *url.Values) {
+		queryArgs: &UrlValue{initFn: func() *url.Values {
 			q := r.url.Query()
-			val = &q
+			return &q
 		}},
 		request: r,
 	}
-	v.postArgs = &UrlValue{initFn: func(val *url.Values) {
+	v.postArgs = &UrlValue{initFn: func() *url.Values {
 		r.MultipartForm()
-		val = &r.request.PostForm
+		return &r.request.PostForm
 	}}
 	return v
 }
@@ -82,7 +82,7 @@ type Value struct {
 
 func (v *Value) Add(key string, value string) {
 	v.init()
-	v.form.Set(key, value)
+	v.form.Add(key, value)
 }
 
 func (v *Value) Del(key string) {

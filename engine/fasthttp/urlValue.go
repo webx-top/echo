@@ -10,13 +10,16 @@ import (
 
 type UrlValue struct {
 	*fasthttp.Args
-	initFn func(*fasthttp.Args)
+	initFn func() *fasthttp.Args
 	values *url.Values
 }
 
 func (u *UrlValue) Add(key string, value string) {
 	u.init()
-	u.Args.Set(key, value)
+	u.All()
+	u.values.Add(key, value)
+	u.Reset(*u.values)
+	//u.Args.Set(key, value)
 }
 
 func (u *UrlValue) Del(key string) {
@@ -58,7 +61,7 @@ func (u *UrlValue) init() {
 	if u.Args != nil {
 		return
 	}
-	u.initFn(u.Args)
+	u.Args = u.initFn()
 }
 
 func (u *UrlValue) Encode() string {
@@ -74,10 +77,7 @@ func (u *UrlValue) All() map[string][]string {
 	u.init()
 	u.Args.VisitAll(func(k, v []byte) {
 		key := string(k)
-		if _, ok := r[key]; !ok {
-			r[key] = make([]string, 0)
-		}
-		r[key] = append(r[key], string(v))
+		r.Add(key, string(v))
 	})
 	u.values = &r
 	return *u.values
@@ -85,11 +85,11 @@ func (u *UrlValue) All() map[string][]string {
 
 func NewValue(c *Request) *Value {
 	v := &Value{
-		queryArgs: &UrlValue{initFn: func(args *fasthttp.Args) {
-			args = c.context.QueryArgs()
+		queryArgs: &UrlValue{initFn: func() *fasthttp.Args {
+			return c.context.QueryArgs()
 		}},
-		postArgs: &UrlValue{initFn: func(args *fasthttp.Args) {
-			args = c.context.PostArgs()
+		postArgs: &UrlValue{initFn: func() *fasthttp.Args {
+			return c.context.PostArgs()
 		}},
 		request: c,
 	}
@@ -105,7 +105,7 @@ type Value struct {
 
 func (v *Value) Add(key string, value string) {
 	v.init()
-	v.form.Set(key, value)
+	v.form.Add(key, value)
 }
 
 func (v *Value) Del(key string) {
