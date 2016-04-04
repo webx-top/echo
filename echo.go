@@ -288,65 +288,69 @@ func (e *Echo) PreUse(middleware ...Middleware) {
 }
 
 // Connect adds a CONNECT route > handler to the router.
-func (e *Echo) Connect(path string, h Handler, m ...Middleware) {
+func (e *Echo) Connect(path string, h interface{}, m ...Middleware) {
 	e.add(CONNECT, path, h, m...)
 }
 
 // Delete adds a DELETE route > handler to the router.
-func (e *Echo) Delete(path string, h Handler, m ...Middleware) {
+func (e *Echo) Delete(path string, h interface{}, m ...Middleware) {
 	e.add(DELETE, path, h, m...)
 }
 
 // Get adds a GET route > handler to the router.
-func (e *Echo) Get(path string, h Handler, m ...Middleware) {
+func (e *Echo) Get(path string, h interface{}, m ...Middleware) {
 	e.add(GET, path, h, m...)
 }
 
 // Head adds a HEAD route > handler to the router.
-func (e *Echo) Head(path string, h Handler, m ...Middleware) {
+func (e *Echo) Head(path string, h interface{}, m ...Middleware) {
 	e.add(HEAD, path, h, m...)
 }
 
 // Options adds an OPTIONS route > handler to the router.
-func (e *Echo) Options(path string, h Handler, m ...Middleware) {
+func (e *Echo) Options(path string, h interface{}, m ...Middleware) {
 	e.add(OPTIONS, path, h, m...)
 }
 
 // Patch adds a PATCH route > handler to the router.
-func (e *Echo) Patch(path string, h Handler, m ...Middleware) {
+func (e *Echo) Patch(path string, h interface{}, m ...Middleware) {
 	e.add(PATCH, path, h, m...)
 }
 
 // Post adds a POST route > handler to the router.
-func (e *Echo) Post(path string, h Handler, m ...Middleware) {
+func (e *Echo) Post(path string, h interface{}, m ...Middleware) {
 	e.add(POST, path, h, m...)
 }
 
 // Put adds a PUT route > handler to the router.
-func (e *Echo) Put(path string, h Handler, m ...Middleware) {
+func (e *Echo) Put(path string, h interface{}, m ...Middleware) {
 	e.add(PUT, path, h, m...)
 }
 
 // Trace adds a TRACE route > handler to the router.
-func (e *Echo) Trace(path string, h Handler, m ...Middleware) {
+func (e *Echo) Trace(path string, h interface{}, m ...Middleware) {
 	e.add(TRACE, path, h, m...)
 }
 
 // Any adds a route > handler to the router for all HTTP methods.
-func (e *Echo) Any(path string, handler Handler, middleware ...Middleware) {
+func (e *Echo) Any(path string, h interface{}, middleware ...Middleware) {
 	for _, m := range methods {
-		e.add(m, path, handler, middleware...)
+		e.add(m, path, h, middleware...)
 	}
 }
 
 // Match adds a route > handler to the router for multiple HTTP methods provided.
-func (e *Echo) Match(methods []string, path string, handler Handler, middleware ...Middleware) {
+func (e *Echo) Match(methods []string, path string, h interface{}, middleware ...Middleware) {
 	for _, m := range methods {
-		e.add(m, path, handler, middleware...)
+		e.add(m, path, h, middleware...)
 	}
 }
 
-func (e *Echo) add(method, path string, handler Handler, middleware ...Middleware) {
+func (e *Echo) add(method, path string, h interface{}, middleware ...Middleware) {
+	var handler Handler = WrapHandler(h)
+	if handler == nil {
+		return
+	}
 	var name string
 	if hn, ok := handler.(HandleNamer); ok {
 		name = hn.HandleName()
@@ -510,4 +514,44 @@ func handlerName(h interface{}) string {
 
 func Methods() []string {
 	return methods
+}
+
+func WrapHandler(h interface{}) Handler {
+	if v, ok := h.(HandlerFunc); ok {
+		return v
+	} else if v, ok := h.(Handler); ok {
+		return v
+	} else if v, ok := h.(func(Context) error); ok {
+		return HandlerFunc(v)
+	} else {
+		panic(`unknown handler`)
+	}
+	return nil
+}
+
+// WrapMiddleware wrap `echo.HandlerFunc` into `echo.MiddlewareFunc`.
+func WrapMiddleware(m interface{}) Middleware {
+	if h, ok := m.(MiddlewareFunc); ok {
+		return h
+	} else if h, ok := m.(Middleware); ok {
+		return h
+	} else if h, ok := m.(HandlerFunc); ok {
+		return WrapMiddlewareFromHandler(h)
+	} else if h, ok := m.(func(Context) error); ok {
+		return WrapMiddlewareFromHandler(HandlerFunc(h))
+	} else {
+		panic(`unknown middleware`)
+	}
+	return nil
+}
+
+func WrapMiddlewareFromHandler(h HandlerFunc) Middleware {
+	return MiddlewareFunc(func(next Handler) Handler {
+		return HandlerFunc(func(c Context) error {
+			if err := h.Handle(c); err != nil {
+				return err
+			}
+			return next.Handle(c)
+		})
+	})
 }

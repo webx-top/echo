@@ -16,13 +16,13 @@ func (g *Group) SetRenderer(r Renderer) {
 	g.echo.renderer = r
 }
 
-func (g *Group) Any(path string, h Handler, middleware ...Middleware) {
+func (g *Group) Any(path string, h interface{}, middleware ...Middleware) {
 	for _, m := range methods {
 		g.add(m, path, h, middleware...)
 	}
 }
 
-func (g *Group) Match(methods []string, path string, h Handler, middleware ...Middleware) {
+func (g *Group) Match(methods []string, path string, h interface{}, middleware ...Middleware) {
 	for _, m := range methods {
 		g.add(m, path, h, middleware...)
 	}
@@ -36,39 +36,39 @@ func (g *Group) PreUse(m ...Middleware) {
 	g.middleware = append(m, g.middleware...)
 }
 
-func (g *Group) Connect(path string, h Handler, m ...Middleware) {
+func (g *Group) Connect(path string, h interface{}, m ...Middleware) {
 	g.add(CONNECT, path, h, m...)
 }
 
-func (g *Group) Delete(path string, h Handler, m ...Middleware) {
+func (g *Group) Delete(path string, h interface{}, m ...Middleware) {
 	g.add(DELETE, path, h, m...)
 }
 
-func (g *Group) Get(path string, h Handler, m ...Middleware) {
+func (g *Group) Get(path string, h interface{}, m ...Middleware) {
 	g.add(GET, path, h, m...)
 }
 
-func (g *Group) Head(path string, h Handler, m ...Middleware) {
+func (g *Group) Head(path string, h interface{}, m ...Middleware) {
 	g.add(HEAD, path, h, m...)
 }
 
-func (g *Group) Options(path string, h Handler, m ...Middleware) {
+func (g *Group) Options(path string, h interface{}, m ...Middleware) {
 	g.add(OPTIONS, path, h, m...)
 }
 
-func (g *Group) Patch(path string, h Handler, m ...Middleware) {
+func (g *Group) Patch(path string, h interface{}, m ...Middleware) {
 	g.add(PATCH, path, h, m...)
 }
 
-func (g *Group) Post(path string, h Handler, m ...Middleware) {
+func (g *Group) Post(path string, h interface{}, m ...Middleware) {
 	g.add(POST, path, h, m...)
 }
 
-func (g *Group) Put(path string, h Handler, m ...Middleware) {
+func (g *Group) Put(path string, h interface{}, m ...Middleware) {
 	g.add(PUT, path, h, m...)
 }
 
-func (g *Group) Trace(path string, h Handler, m ...Middleware) {
+func (g *Group) Trace(path string, h interface{}, m ...Middleware) {
 	g.add(TRACE, path, h, m...)
 }
 
@@ -76,7 +76,11 @@ func (g *Group) Group(prefix string, m ...Middleware) *Group {
 	return g.echo.Group(g.prefix+prefix, m...)
 }
 
-func (g *Group) add(method, path string, handler Handler, middleware ...Middleware) {
+func (g *Group) add(method, path string, h interface{}, middleware ...Middleware) {
+	var handler Handler = WrapHandler(h)
+	if handler == nil {
+		return
+	}
 	path = g.prefix + path
 
 	var name string
