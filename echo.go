@@ -278,75 +278,81 @@ func (e *Echo) Debug() bool {
 }
 
 // Use adds handler to the middleware chain.
-func (e *Echo) Use(middleware ...Middleware) {
-	e.middleware = append(e.middleware, middleware...)
+func (e *Echo) Use(middleware ...interface{}) {
+	for _, m := range middleware {
+		e.middleware = append(e.middleware, WrapMiddleware(m))
+	}
 }
 
 // PreUse adds handler to the middleware chain.
-func (e *Echo) PreUse(middleware ...Middleware) {
-	e.middleware = append(middleware, e.middleware...)
+func (e *Echo) PreUse(middleware ...interface{}) {
+	middlewares := make([]Middleware, 0)
+	for _, m := range middleware {
+		middlewares = append(middlewares, WrapMiddleware(m))
+	}
+	e.middleware = append(middlewares, e.middleware...)
 }
 
 // Connect adds a CONNECT route > handler to the router.
-func (e *Echo) Connect(path string, h interface{}, m ...Middleware) {
+func (e *Echo) Connect(path string, h interface{}, m ...interface{}) {
 	e.add(CONNECT, path, h, m...)
 }
 
 // Delete adds a DELETE route > handler to the router.
-func (e *Echo) Delete(path string, h interface{}, m ...Middleware) {
+func (e *Echo) Delete(path string, h interface{}, m ...interface{}) {
 	e.add(DELETE, path, h, m...)
 }
 
 // Get adds a GET route > handler to the router.
-func (e *Echo) Get(path string, h interface{}, m ...Middleware) {
+func (e *Echo) Get(path string, h interface{}, m ...interface{}) {
 	e.add(GET, path, h, m...)
 }
 
 // Head adds a HEAD route > handler to the router.
-func (e *Echo) Head(path string, h interface{}, m ...Middleware) {
+func (e *Echo) Head(path string, h interface{}, m ...interface{}) {
 	e.add(HEAD, path, h, m...)
 }
 
 // Options adds an OPTIONS route > handler to the router.
-func (e *Echo) Options(path string, h interface{}, m ...Middleware) {
+func (e *Echo) Options(path string, h interface{}, m ...interface{}) {
 	e.add(OPTIONS, path, h, m...)
 }
 
 // Patch adds a PATCH route > handler to the router.
-func (e *Echo) Patch(path string, h interface{}, m ...Middleware) {
+func (e *Echo) Patch(path string, h interface{}, m ...interface{}) {
 	e.add(PATCH, path, h, m...)
 }
 
 // Post adds a POST route > handler to the router.
-func (e *Echo) Post(path string, h interface{}, m ...Middleware) {
+func (e *Echo) Post(path string, h interface{}, m ...interface{}) {
 	e.add(POST, path, h, m...)
 }
 
 // Put adds a PUT route > handler to the router.
-func (e *Echo) Put(path string, h interface{}, m ...Middleware) {
+func (e *Echo) Put(path string, h interface{}, m ...interface{}) {
 	e.add(PUT, path, h, m...)
 }
 
 // Trace adds a TRACE route > handler to the router.
-func (e *Echo) Trace(path string, h interface{}, m ...Middleware) {
+func (e *Echo) Trace(path string, h interface{}, m ...interface{}) {
 	e.add(TRACE, path, h, m...)
 }
 
 // Any adds a route > handler to the router for all HTTP methods.
-func (e *Echo) Any(path string, h interface{}, middleware ...Middleware) {
+func (e *Echo) Any(path string, h interface{}, middleware ...interface{}) {
 	for _, m := range methods {
 		e.add(m, path, h, middleware...)
 	}
 }
 
 // Match adds a route > handler to the router for multiple HTTP methods provided.
-func (e *Echo) Match(methods []string, path string, h interface{}, middleware ...Middleware) {
+func (e *Echo) Match(methods []string, path string, h interface{}, middleware ...interface{}) {
 	for _, m := range methods {
 		e.add(m, path, h, middleware...)
 	}
 }
 
-func (e *Echo) add(method, path string, h interface{}, middleware ...Middleware) {
+func (e *Echo) add(method, path string, h interface{}, middleware ...interface{}) {
 	var handler Handler = WrapHandler(h)
 	if handler == nil {
 		return
@@ -358,7 +364,8 @@ func (e *Echo) add(method, path string, h interface{}, middleware ...Middleware)
 		name = handlerName(handler)
 	}
 	for _, m := range middleware {
-		handler = m.Handle(handler)
+		mw := WrapMiddleware(m)
+		handler = mw.Handle(handler)
 	}
 	fpath, pnames := e.router.Add(method, path, HandlerFunc(func(c Context) error {
 		return handler.Handle(c)
@@ -380,7 +387,7 @@ func (e *Echo) add(method, path string, h interface{}, middleware ...Middleware)
 }
 
 // Group creates a new sub-router with prefix.
-func (e *Echo) Group(prefix string, m ...Middleware) (g *Group) {
+func (e *Echo) Group(prefix string, m ...interface{}) (g *Group) {
 	g = &Group{prefix: prefix, echo: e}
 	g.Use(m...)
 	return
@@ -541,6 +548,14 @@ func WrapMiddleware(m interface{}) Middleware {
 		return WrapMiddlewareFromHandler(h)
 	} else if h, ok := m.(func(Context) error); ok {
 		return WrapMiddlewareFromHandler(HandlerFunc(h))
+	} else if h, ok := m.(func(Handler) func(Context) error); ok {
+		return MiddlewareFunc(func(next Handler) Handler {
+			return HandlerFunc(h(next))
+		})
+	} else if h, ok := m.(func(Handler) HandlerFunc); ok {
+		return MiddlewareFunc(func(next Handler) Handler {
+			return h(next)
+		})
 	}
 	panic(`unknown middleware`)
 }

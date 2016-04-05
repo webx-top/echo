@@ -16,67 +16,73 @@ func (g *Group) SetRenderer(r Renderer) {
 	g.echo.renderer = r
 }
 
-func (g *Group) Any(path string, h interface{}, middleware ...Middleware) {
+func (g *Group) Any(path string, h interface{}, middleware ...interface{}) {
 	for _, m := range methods {
 		g.add(m, path, h, middleware...)
 	}
 }
 
-func (g *Group) Match(methods []string, path string, h interface{}, middleware ...Middleware) {
+func (g *Group) Match(methods []string, path string, h interface{}, middleware ...interface{}) {
 	for _, m := range methods {
 		g.add(m, path, h, middleware...)
 	}
 }
 
-func (g *Group) Use(m ...Middleware) {
-	g.middleware = append(g.middleware, m...)
+func (g *Group) Use(middleware ...interface{}) {
+	for _, m := range middleware {
+		g.middleware = append(g.middleware, WrapMiddleware(m))
+	}
 }
 
-func (g *Group) PreUse(m ...Middleware) {
-	g.middleware = append(m, g.middleware...)
+func (g *Group) PreUse(middleware ...interface{}) {
+	middlewares := make([]Middleware, 0)
+	for _, m := range middleware {
+		middlewares = append(middlewares, WrapMiddleware(m))
+	}
+	g.middleware = append(middlewares, g.middleware...)
 }
 
-func (g *Group) Connect(path string, h interface{}, m ...Middleware) {
+func (g *Group) Connect(path string, h interface{}, m ...interface{}) {
 	g.add(CONNECT, path, h, m...)
 }
 
-func (g *Group) Delete(path string, h interface{}, m ...Middleware) {
+func (g *Group) Delete(path string, h interface{}, m ...interface{}) {
 	g.add(DELETE, path, h, m...)
 }
 
-func (g *Group) Get(path string, h interface{}, m ...Middleware) {
+func (g *Group) Get(path string, h interface{}, m ...interface{}) {
 	g.add(GET, path, h, m...)
 }
 
-func (g *Group) Head(path string, h interface{}, m ...Middleware) {
+func (g *Group) Head(path string, h interface{}, m ...interface{}) {
 	g.add(HEAD, path, h, m...)
 }
 
-func (g *Group) Options(path string, h interface{}, m ...Middleware) {
+func (g *Group) Options(path string, h interface{}, m ...interface{}) {
 	g.add(OPTIONS, path, h, m...)
 }
 
-func (g *Group) Patch(path string, h interface{}, m ...Middleware) {
+func (g *Group) Patch(path string, h interface{}, m ...interface{}) {
 	g.add(PATCH, path, h, m...)
 }
 
-func (g *Group) Post(path string, h interface{}, m ...Middleware) {
+func (g *Group) Post(path string, h interface{}, m ...interface{}) {
 	g.add(POST, path, h, m...)
 }
 
-func (g *Group) Put(path string, h interface{}, m ...Middleware) {
+func (g *Group) Put(path string, h interface{}, m ...interface{}) {
 	g.add(PUT, path, h, m...)
 }
 
-func (g *Group) Trace(path string, h interface{}, m ...Middleware) {
+func (g *Group) Trace(path string, h interface{}, m ...interface{}) {
 	g.add(TRACE, path, h, m...)
 }
 
-func (g *Group) Group(prefix string, m ...Middleware) *Group {
+func (g *Group) Group(prefix string, m ...interface{}) *Group {
 	return g.echo.Group(g.prefix+prefix, m...)
 }
 
-func (g *Group) add(method, path string, h interface{}, middleware ...Middleware) {
+func (g *Group) add(method, path string, h interface{}, middleware ...interface{}) {
 	var handler Handler = WrapHandler(h)
 	if handler == nil {
 		return
@@ -90,10 +96,15 @@ func (g *Group) add(method, path string, h interface{}, middleware ...Middleware
 		name = handlerName(handler)
 	}
 
-	middleware = append(g.middleware, middleware...)
-	for _, m := range middleware {
+	for _, m := range g.middleware {
 		handler = m.Handle(handler)
 	}
+
+	for _, m := range middleware {
+		mw := WrapMiddleware(m)
+		handler = mw.Handle(handler)
+	}
+
 	fpath, pnames := g.echo.router.Add(method, path, HandlerFunc(func(c Context) error {
 		return handler.Handle(c)
 	}), g.echo)
