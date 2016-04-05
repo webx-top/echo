@@ -28,7 +28,7 @@ type (
 	}
 )
 
-func (b binder) Bind(i interface{}, c Context) (err error) {
+func (b *binder) Bind(i interface{}, c Context) (err error) {
 	r := c.Request()
 	body := r.Body()
 	if body == nil {
@@ -51,12 +51,12 @@ func (b binder) Bind(i interface{}, c Context) (err error) {
 }
 
 // StructMap function mapping params to controller's properties
-func (b binder) structMap(m interface{}, data map[string][]string) error {
+func (b *binder) structMap(m interface{}, data map[string][]string) error {
 	return NamedStructMap(b.Echo, m, data, ``)
 }
 
-// user[name][test]
-func SplitJson(s string) ([]string, error) {
+// SplitJSON user[name][test]
+func SplitJSON(s string) ([]string, error) {
 	res := make([]string, 0)
 	var begin, end int
 	var isleft bool
@@ -121,15 +121,15 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 		var err error
 		length := len(names)
 		if length == 1 && strings.HasSuffix(k, `]`) {
-			names, err = SplitJson(k)
+			names, err = SplitJSON(k)
 			if err != nil {
 				e.Logger().Warnf(`Unrecognize form key %v %v`, k, err)
 				continue
 			}
 			length = len(names)
 		}
-		var value reflect.Value = vc
-		var typev reflect.Type = tc
+		value := vc
+		typev := tc
 		for i, name := range names {
 			name = strings.Title(name)
 
@@ -307,12 +307,12 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 	return nil
 }
 
-// a struct implements this interface can be convert from request param to a struct
+// FromConversion a struct implements this interface can be convert from request param to a struct
 type FromConversion interface {
 	FromString(content string) error
 }
 
-// a struct implements this interface can be convert from struct to template variable
+// ToConversion a struct implements this interface can be convert from struct to template variable
 // Not Implemented
 type ToConversion interface {
 	ToString() string

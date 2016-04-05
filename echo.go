@@ -487,6 +487,9 @@ func (e *Echo) ServeHTTP(req engine.Request, res engine.Response) {
 func (e *Echo) Run(eng engine.Engine) {
 	eng.SetHandler(e)
 	eng.SetLogger(e.logger)
+	if e.Debug() {
+		e.logger.Debug("running in debug mode")
+	}
 	eng.Start()
 }
 
@@ -516,6 +519,7 @@ func Methods() []string {
 	return methods
 }
 
+// WrapHandler wrap `interface{}` into `echo.Handler`.
 func WrapHandler(h interface{}) Handler {
 	if v, ok := h.(HandlerFunc); ok {
 		return v
@@ -523,13 +527,11 @@ func WrapHandler(h interface{}) Handler {
 		return v
 	} else if v, ok := h.(func(Context) error); ok {
 		return HandlerFunc(v)
-	} else {
-		panic(`unknown handler`)
 	}
-	return nil
+	panic(`unknown handler`)
 }
 
-// WrapMiddleware wrap `echo.HandlerFunc` into `echo.MiddlewareFunc`.
+// WrapMiddleware wrap `interface{}` into `echo.Middleware`.
 func WrapMiddleware(m interface{}) Middleware {
 	if h, ok := m.(MiddlewareFunc); ok {
 		return h
@@ -539,12 +541,11 @@ func WrapMiddleware(m interface{}) Middleware {
 		return WrapMiddlewareFromHandler(h)
 	} else if h, ok := m.(func(Context) error); ok {
 		return WrapMiddlewareFromHandler(HandlerFunc(h))
-	} else {
-		panic(`unknown middleware`)
 	}
-	return nil
+	panic(`unknown middleware`)
 }
 
+// WrapMiddlewareFromHandler wrap `echo.HandlerFunc` into `echo.MiddlewareFunc`.
 func WrapMiddlewareFromHandler(h HandlerFunc) Middleware {
 	return MiddlewareFunc(func(next Handler) Handler {
 		return HandlerFunc(func(c Context) error {
