@@ -363,7 +363,7 @@ func (e *Echo) add(method, path string, h interface{}, middleware ...Middleware)
 	fpath, pnames := e.router.Add(method, path, HandlerFunc(func(c Context) error {
 		return handler.Handle(c)
 	}), e)
-	e.logger.Debugf(`ROUTE|[%v]%v -> %v`+"\n", method, fpath, name)
+	e.logger.Debugf(`ROUTE|[%v]%v -> %v`, method, fpath, name)
 	r := Route{
 		Method:  method,
 		Path:    path,
