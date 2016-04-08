@@ -22,7 +22,7 @@ const (
 func BasicAuth(fn BasicValidateFunc) echo.MiddlewareFunc {
 	return func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
-			auth := c.Request().Header().Get(echo.Authorization)
+			auth := c.Request().Header().Get(echo.HeaderAuthorization)
 			l := len(basic)
 
 			if len(auth) > l+1 && auth[:l] == basic {
@@ -39,7 +39,7 @@ func BasicAuth(fn BasicValidateFunc) echo.MiddlewareFunc {
 					}
 				}
 			}
-			c.Response().Header().Set(echo.WWWAuthenticate, basic+" realm=Restricted")
+			c.Response().Header().Set(echo.HeaderWWWAuthenticate, basic+" realm=Restricted")
 			return echo.NewHTTPError(http.StatusUnauthorized)
 		})
 	}

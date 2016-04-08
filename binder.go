@@ -36,15 +36,15 @@ func (b *binder) Bind(i interface{}, c Context) (err error) {
 		return
 	}
 	defer body.Close()
-	ct := r.Header().Get(ContentType)
+	ct := r.Header().Get(HeaderContentType)
 	err = ErrUnsupportedMediaType
-	if strings.HasPrefix(ct, ApplicationJSON) {
+	if strings.HasPrefix(ct, MIMEApplicationJSON) {
 		err = json.NewDecoder(body).Decode(i)
-	} else if strings.HasPrefix(ct, ApplicationXML) {
+	} else if strings.HasPrefix(ct, MIMEApplicationXML) {
 		err = xml.NewDecoder(body).Decode(i)
-	} else if strings.HasPrefix(ct, ApplicationForm) {
+	} else if strings.HasPrefix(ct, MIMEApplicationForm) {
 		err = b.structMap(i, r.PostForm().All())
-	} else if strings.Contains(ct, MultipartForm) {
+	} else if strings.Contains(ct, MIMEMultipartForm) {
 		err = b.structMap(i, r.Form().All())
 	}
 	return

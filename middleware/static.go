@@ -66,7 +66,7 @@ func Static(options ...*StaticOptions) echo.MiddlewareFunc {
 						}
 
 						// Create a directory index
-						w.Header().Set(echo.ContentType, echo.TextHTMLCharsetUTF8)
+						w.Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
 						if _, err = fmt.Fprintf(w, "<pre>\n"); err != nil {
 							return err
 						}
