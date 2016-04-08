@@ -565,6 +565,14 @@ func WrapMiddleware(m interface{}) Middleware {
 		return MiddlewareFunc(func(next Handler) Handler {
 			return h(next)
 		})
+	} else if h, ok := m.(func(HandlerFunc) HandlerFunc); ok {
+		return MiddlewareFunc(func(next Handler) Handler {
+			return h(next.Handle)
+		})
+	} else if h, ok := m.(func(func(Context) error) func(Context) error); ok {
+		return MiddlewareFunc(func(next Handler) Handler {
+			return HandlerFunc(h(next.Handle))
+		})
 	}
 	panic(`unknown middleware`)
 }
