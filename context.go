@@ -7,7 +7,6 @@ import (
 	"mime"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 
@@ -329,7 +328,7 @@ func (c *context) File(file string) error {
 
 	fi, _ := f.Stat()
 	if fi.IsDir() {
-		file = path.Join(file, "index.html")
+		file = filepath.Join(file, "index.html")
 		f, err = os.Open(file)
 		if err != nil {
 			return ErrNotFound
