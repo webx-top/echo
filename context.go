@@ -70,6 +70,7 @@ type (
 
 		SetFunc(string, interface{})
 		GetFunc(string) interface{}
+		ResetFuncs(map[string]interface{})
 		Funcs() map[string]interface{}
 		Reset(engine.Request, engine.Response)
 		Fetch(string, interface{}) ([]byte, error)
@@ -424,6 +425,10 @@ func (c *context) GetFunc(key string) interface{} {
 
 func (c *context) SetFunc(key string, val interface{}) {
 	c.funcs[key] = val
+}
+
+func (c *context) ResetFuncs(funcs map[string]interface{}) {
+	c.funcs = funcs
 }
 
 func (c *context) Funcs() map[string]interface{} {
