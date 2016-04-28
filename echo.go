@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/labstack/gommon/log"
+	"github.com/admpub/log"
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/logger"
 )
@@ -272,11 +272,11 @@ func (e *Echo) SetRenderer(r Renderer) {
 // SetDebug enable/disable debug mode.
 func (e *Echo) SetDebug(on bool) {
 	e.debug = on
-	if logger, ok := e.logger.(*log.Logger); ok {
+	if logger, ok := e.logger.(logger.LevelSetter); ok {
 		if on {
-			logger.SetLevel(log.DEBUG)
+			logger.SetLevel(`Debug`)
 		} else {
-			logger.SetLevel(log.INFO)
+			logger.SetLevel(`Info`)
 		}
 	}
 }

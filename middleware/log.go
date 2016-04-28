@@ -4,7 +4,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/labstack/gommon/color"
 	"github.com/webx-top/echo"
 )
 
@@ -23,7 +22,6 @@ func Log() echo.MiddlewareFunc {
 			} else {
 				remoteAddr, _, _ = net.SplitHostPort(remoteAddr)
 			}
-
 			start := time.Now()
 			if err := h.Handle(c); err != nil {
 				c.Error(err)
@@ -35,19 +33,8 @@ func Log() echo.MiddlewareFunc {
 				path = "/"
 			}
 			size := res.Size()
-
-			n := res.Status()
-			code := color.Green(n)
-			switch {
-			case n >= 500:
-				code = color.Red(n)
-			case n >= 400:
-				code = color.Yellow(n)
-			case n >= 300:
-				code = color.Cyan(n)
-			}
-
-			logger.Infof("%s %s %s %s %s %d", remoteAddr, method, path, code, stop.Sub(start), size)
+			code := res.Status()
+			logger.Infof("%s %s %s %v %s %d", remoteAddr, method, path, code, stop.Sub(start), size)
 			return nil
 		})
 	}

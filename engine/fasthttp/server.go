@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/admpub/fasthttp"
-	"github.com/labstack/gommon/log"
+	"github.com/admpub/log"
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/logger"
 )

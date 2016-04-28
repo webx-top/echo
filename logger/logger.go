@@ -18,4 +18,8 @@ type (
 		Fatal(...interface{})
 		Fatalf(string, ...interface{})
 	}
+
+	LevelSetter interface {
+		SetLevel(string)
+	}
 )
