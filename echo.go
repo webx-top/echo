@@ -167,12 +167,13 @@ var (
 	// Errors
 	//--------
 
-	ErrUnsupportedMediaType  = NewHTTPError(http.StatusUnsupportedMediaType)
-	ErrNotFound              = NewHTTPError(http.StatusNotFound)
-	ErrUnauthorized          = NewHTTPError(http.StatusUnauthorized)
-	ErrMethodNotAllowed      = NewHTTPError(http.StatusMethodNotAllowed)
-	ErrRendererNotRegistered = errors.New("renderer not registered")
-	ErrInvalidRedirectCode   = errors.New("invalid redirect status code")
+	ErrUnsupportedMediaType        = NewHTTPError(http.StatusUnsupportedMediaType)
+	ErrNotFound                    = NewHTTPError(http.StatusNotFound)
+	ErrUnauthorized                = NewHTTPError(http.StatusUnauthorized)
+	ErrStatusRequestEntityTooLarge = NewHTTPError(http.StatusRequestEntityTooLarge)
+	ErrMethodNotAllowed            = NewHTTPError(http.StatusMethodNotAllowed)
+	ErrRendererNotRegistered       = errors.New("renderer not registered")
+	ErrInvalidRedirectCode         = errors.New("invalid redirect status code")
 
 	//----------------
 	// Error handlers
