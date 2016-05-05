@@ -7,6 +7,7 @@ import (
 type (
 	Router struct {
 		tree   *node
+		static map[string]*methodHandler
 		routes []Route
 		nroute map[string][]int
 		echo   *Echo
@@ -42,11 +43,60 @@ const (
 	akind
 )
 
+func (m *methodHandler) addHandler(method string, h Handler) {
+	switch method {
+	case GET:
+		m.get = h
+	case POST:
+		m.post = h
+	case PUT:
+		m.put = h
+	case DELETE:
+		m.delete = h
+	case PATCH:
+		m.patch = h
+	case OPTIONS:
+		m.options = h
+	case HEAD:
+		m.head = h
+	case CONNECT:
+		m.connect = h
+	case TRACE:
+		m.trace = h
+	}
+}
+
+func (m *methodHandler) findHandler(method string) Handler {
+	switch method {
+	case GET:
+		return m.get
+	case POST:
+		return m.post
+	case PUT:
+		return m.put
+	case DELETE:
+		return m.delete
+	case PATCH:
+		return m.patch
+	case OPTIONS:
+		return m.options
+	case HEAD:
+		return m.head
+	case CONNECT:
+		return m.connect
+	case TRACE:
+		return m.trace
+	default:
+		return nil
+	}
+}
+
 func NewRouter(e *Echo) *Router {
 	return &Router{
 		tree: &node{
 			methodHandler: new(methodHandler),
 		},
+		static: map[string]*methodHandler{},
 		routes: []Route{},
 		nroute: map[string][]int{},
 		echo:   e,
@@ -101,7 +151,15 @@ func (r *Router) Add(method, path string, h Handler, e *Echo) (fpath string, pna
 		}
 	}
 
-	r.insert(method, path, h, skind, ppath, pnames, e)
+	//static route
+	if m, ok := r.static[path]; ok {
+		m.addHandler(method, h)
+	} else {
+		m = &methodHandler{}
+		m.addHandler(method, h)
+		r.static[path] = m
+	}
+	//r.insert(method, path, h, skind, ppath, pnames, e)
 	return
 }
 
@@ -237,51 +295,11 @@ func (n *node) findChildByKind(t kind) *node {
 }
 
 func (n *node) addHandler(method string, h Handler) {
-	switch method {
-	case GET:
-		n.methodHandler.get = h
-	case POST:
-		n.methodHandler.post = h
-	case PUT:
-		n.methodHandler.put = h
-	case DELETE:
-		n.methodHandler.delete = h
-	case PATCH:
-		n.methodHandler.patch = h
-	case OPTIONS:
-		n.methodHandler.options = h
-	case HEAD:
-		n.methodHandler.head = h
-	case CONNECT:
-		n.methodHandler.connect = h
-	case TRACE:
-		n.methodHandler.trace = h
-	}
+	n.methodHandler.addHandler(method, h)
 }
 
 func (n *node) findHandler(method string) Handler {
-	switch method {
-	case GET:
-		return n.methodHandler.get
-	case POST:
-		return n.methodHandler.post
-	case PUT:
-		return n.methodHandler.put
-	case DELETE:
-		return n.methodHandler.delete
-	case PATCH:
-		return n.methodHandler.patch
-	case OPTIONS:
-		return n.methodHandler.options
-	case HEAD:
-		return n.methodHandler.head
-	case CONNECT:
-		return n.methodHandler.connect
-	case TRACE:
-		return n.methodHandler.trace
-	default:
-		return nil
-	}
+	return n.methodHandler.findHandler(method)
 }
 
 func (n *node) check405() HandlerFunc {
@@ -296,6 +314,16 @@ func (n *node) check405() HandlerFunc {
 func (r *Router) Find(method, path string, context Context) {
 	ctx := context.Object()
 	cn := r.tree // Current node as root
+
+	if m, ok := r.static[path]; ok {
+		ctx.handler = m.findHandler(method)
+		ctx.path = path
+		ctx.pnames = []string{}
+		if ctx.handler == nil {
+			ctx.handler = cn.check405()
+		}
+		return
+	}
 
 	var (
 		search = path
