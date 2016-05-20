@@ -121,8 +121,10 @@ func (s *Server) Start() {
 	certfile := s.config.TLSCertfile
 	keyfile := s.config.TLSKeyfile
 	if certfile != "" && keyfile != "" {
+		s.logger.Info(`StandardHTTP is running at `, s.config.Address, ` [TLS]`)
 		s.logger.Fatal(s.server.ListenAndServeTLS(certfile, keyfile))
 	} else {
+		s.logger.Info(`StandardHTTP is running at `, s.config.Address)
 		s.logger.Fatal(s.server.ListenAndServe())
 	}
 }

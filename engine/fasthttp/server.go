@@ -124,9 +124,11 @@ func (s *Server) Start() {
 	addr := s.config.Address
 	certfile := s.config.TLSCertfile
 	keyfile := s.config.TLSKeyfile
-	if certfile != "" && keyfile != "" {
+	if certfile != `` && keyfile != `` {
+		s.logger.Info(`FastHTTP is running at `, addr, ` [TLS]`)
 		s.logger.Fatal(s.server.ListenAndServeTLS(addr, certfile, keyfile))
 	} else {
+		s.logger.Info(`FastHTTP is running at `, addr)
 		s.logger.Fatal(s.server.ListenAndServe(addr))
 	}
 }
