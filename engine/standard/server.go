@@ -11,14 +11,14 @@ import (
 
 type (
 	Server struct {
-		server  *http.Server
+		*http.Server
 		config  *engine.Config
 		handler engine.Handler
 		logger  logger.Logger
-		pool    *Pool
+		pool    *pool
 	}
 
-	Pool struct {
+	pool struct {
 		request        sync.Pool
 		response       sync.Pool
 		requestHeader  sync.Pool
@@ -43,12 +43,12 @@ func NewWithTLS(addr, certfile, keyfile string) *Server {
 
 func NewWithConfig(c *engine.Config) (s *Server) {
 	s = &Server{
-		server: &http.Server{
+		Server: &http.Server{
 			ReadTimeout: c.ReadTimeout,
 			Addr:        c.Address,
 		},
 		config: c,
-		pool: &Pool{
+		pool: &pool{
 			request: sync.Pool{
 				New: func() interface{} {
 					return &Request{}
@@ -76,10 +76,11 @@ func NewWithConfig(c *engine.Config) (s *Server) {
 			},
 		},
 		handler: engine.ClearHandler(engine.HandlerFunc(func(req engine.Request, res engine.Response) {
-			s.logger.Warn("handler not set")
+			s.logger.Error("handler not set, use `SetHandler()` to set it.")
 		})),
 		logger: log.New("echo"),
 	}
+	s.Handler = s
 	return
 }
 
@@ -91,40 +92,51 @@ func (s *Server) SetLogger(l logger.Logger) {
 	s.logger = l
 }
 
-func (s *Server) Start() {
-	s.server.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Request
-		req := s.pool.request.Get().(*Request)
-		reqHdr := s.pool.requestHeader.Get().(*Header)
-		reqHdr.reset(r.Header)
-		reqURL := s.pool.url.Get().(*URL)
-		reqURL.reset(r.URL)
-		req.reset(r, reqHdr, reqURL)
-		req.config = s.config
-
-		// Response
-		res := s.pool.response.Get().(*Response)
-		resHdr := s.pool.responseHeader.Get().(*Header)
-		resHdr.reset(w.Header())
-		res.reset(w, r, resHdr)
-		res.config = s.config
-
-		s.handler.ServeHTTP(req, res)
-
-		s.pool.request.Put(req)
-		s.pool.requestHeader.Put(reqHdr)
-		s.pool.url.Put(reqURL)
-		s.pool.response.Put(res)
-		s.pool.responseHeader.Put(resHdr)
-	})
-
-	certfile := s.config.TLSCertfile
-	keyfile := s.config.TLSKeyfile
-	if certfile != "" && keyfile != "" {
-		s.logger.Info(`StandardHTTP is running at `, s.config.Address, ` [TLS]`)
-		s.logger.Fatal(s.server.ListenAndServeTLS(certfile, keyfile))
-	} else {
-		s.logger.Info(`StandardHTTP is running at `, s.config.Address)
-		s.logger.Fatal(s.server.ListenAndServe())
+// Start implements `engine.Server#Start` function.
+func (s *Server) Start() error {
+	if s.config.Listener == nil {
+		return s.startDefaultListener()
 	}
+	return s.startCustomListener()
+}
+
+func (s *Server) startDefaultListener() error {
+	c := s.config
+	if c.TLSCertfile != `` && c.TLSKeyfile != `` {
+		s.logger.Info(`StandardHTTP is running at `, s.config.Address, ` [TLS]`)
+		return s.ListenAndServeTLS(c.TLSCertfile, c.TLSKeyfile)
+	}
+	s.logger.Info(`StandardHTTP is running at `, s.config.Address)
+	return s.ListenAndServe()
+}
+
+func (s *Server) startCustomListener() error {
+	return s.Serve(s.config.Listener)
+}
+
+// ServeHTTP implements `http.Handler` interface.
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Request
+	req := s.pool.request.Get().(*Request)
+	reqHdr := s.pool.requestHeader.Get().(*Header)
+	reqHdr.reset(r.Header)
+	reqURL := s.pool.url.Get().(*URL)
+	reqURL.reset(r.URL)
+	req.reset(r, reqHdr, reqURL)
+	req.config = s.config
+
+	// Response
+	res := s.pool.response.Get().(*Response)
+	resHdr := s.pool.responseHeader.Get().(*Header)
+	resHdr.reset(w.Header())
+	res.reset(w, r, resHdr)
+	res.config = s.config
+
+	s.handler.ServeHTTP(req, res)
+
+	s.pool.request.Put(req)
+	s.pool.requestHeader.Put(reqHdr)
+	s.pool.url.Put(reqURL)
+	s.pool.response.Put(res)
+	s.pool.responseHeader.Put(resHdr)
 }

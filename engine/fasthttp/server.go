@@ -13,14 +13,14 @@ import (
 
 type (
 	Server struct {
-		server  *fasthttp.Server
+		*fasthttp.Server
 		config  *engine.Config
 		handler engine.Handler
 		logger  logger.Logger
-		pool    *Pool
+		pool    *pool
 	}
 
-	Pool struct {
+	pool struct {
 		request        sync.Pool
 		response       sync.Pool
 		requestHeader  sync.Pool
@@ -45,7 +45,7 @@ func NewWithTLS(addr, certfile, keyfile string) *Server {
 
 func NewWithConfig(c *engine.Config) (s *Server) {
 	s = &Server{
-		server: &fasthttp.Server{
+		Server: &fasthttp.Server{
 			ReadTimeout:        c.ReadTimeout,
 			WriteTimeout:       c.WriteTimeout,
 			MaxConnsPerIP:      c.MaxConnsPerIP,
@@ -53,7 +53,7 @@ func NewWithConfig(c *engine.Config) (s *Server) {
 			MaxRequestBodySize: c.MaxRequestBodySize,
 		},
 		config: c,
-		pool: &Pool{
+		pool: &pool{
 			request: sync.Pool{
 				New: func() interface{} {
 					return &Request{}
@@ -81,10 +81,11 @@ func NewWithConfig(c *engine.Config) (s *Server) {
 			},
 		},
 		handler: engine.ClearHandler(engine.HandlerFunc(func(req engine.Request, res engine.Response) {
-			s.logger.Warn("handler not set")
+			s.logger.Error("handler not set, use `SetHandler()` to set it.")
 		})),
 		logger: log.New("echo"),
 	}
+	s.Handler = s.ServeHTTP
 	return
 }
 
@@ -96,39 +97,55 @@ func (s *Server) SetLogger(l logger.Logger) {
 	s.logger = l
 }
 
-func (s *Server) Start() {
-	//s.server.Logger = s.logger
-	s.server.Handler = func(c *fasthttp.RequestCtx) {
-		// Request
-		req := s.pool.request.Get().(*Request)
-		reqHdr := s.pool.requestHeader.Get().(*RequestHeader)
-		reqURL := s.pool.url.Get().(*URL)
-		reqHdr.reset(&c.Request.Header)
-		reqURL.reset(c.URI())
-		req.reset(c, reqHdr, reqURL)
-
-		// Response
-		res := s.pool.response.Get().(*Response)
-		resHdr := s.pool.responseHeader.Get().(*ResponseHeader)
-		resHdr.reset(&c.Response.Header)
-		res.reset(c, resHdr)
-
-		s.handler.ServeHTTP(req, res)
-
-		s.pool.request.Put(req)
-		s.pool.requestHeader.Put(reqHdr)
-		s.pool.url.Put(reqURL)
-		s.pool.response.Put(res)
-		s.pool.responseHeader.Put(resHdr)
+// Start implements `engine.Server#Start` function.
+func (s *Server) Start() error {
+	if s.config.Listener == nil {
+		return s.startDefaultListener()
 	}
-	addr := s.config.Address
-	certfile := s.config.TLSCertfile
-	keyfile := s.config.TLSKeyfile
-	if certfile != `` && keyfile != `` {
-		s.logger.Info(`FastHTTP is running at `, addr, ` [TLS]`)
-		s.logger.Fatal(s.server.ListenAndServeTLS(addr, certfile, keyfile))
-	} else {
-		s.logger.Info(`FastHTTP is running at `, addr)
-		s.logger.Fatal(s.server.ListenAndServe(addr))
+	return s.startCustomListener()
+
+}
+
+func (s *Server) startDefaultListener() error {
+	c := s.config
+	if c.TLSCertfile != `` && c.TLSKeyfile != `` {
+		s.logger.Info(`FastHTTP is running at `, c.Address, ` [TLS]`)
+		return s.ListenAndServeTLS(c.Address, c.TLSCertfile, c.TLSKeyfile)
 	}
+	s.logger.Info(`FastHTTP is running at `, c.Address)
+	return s.ListenAndServe(c.Address)
+}
+
+func (s *Server) startCustomListener() error {
+	c := s.config
+	if c.TLSCertfile != `` && c.TLSKeyfile != `` {
+		s.logger.Info(`FastHTTP is running at `, c.Listener.Addr(), ` [TLS]`)
+		return s.ServeTLS(c.Listener, c.TLSCertfile, c.TLSKeyfile)
+	}
+	s.logger.Info(`FastHTTP is running at `, c.Listener.Addr(), ` [TLS]`)
+	return s.Serve(c.Listener)
+}
+
+func (s *Server) ServeHTTP(c *fasthttp.RequestCtx) {
+	// Request
+	req := s.pool.request.Get().(*Request)
+	reqHdr := s.pool.requestHeader.Get().(*RequestHeader)
+	reqURL := s.pool.url.Get().(*URL)
+	reqHdr.reset(&c.Request.Header)
+	reqURL.reset(c.URI())
+	req.reset(c, reqHdr, reqURL)
+
+	// Response
+	res := s.pool.response.Get().(*Response)
+	resHdr := s.pool.responseHeader.Get().(*ResponseHeader)
+	resHdr.reset(&c.Response.Header)
+	res.reset(c, resHdr)
+
+	s.handler.ServeHTTP(req, res)
+
+	s.pool.request.Put(req)
+	s.pool.requestHeader.Put(reqHdr)
+	s.pool.url.Put(reqURL)
+	s.pool.response.Put(res)
+	s.pool.responseHeader.Put(resHdr)
 }
