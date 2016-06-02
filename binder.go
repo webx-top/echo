@@ -194,20 +194,40 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 					l = (v != `false` && v != `0` && v != ``)
 					tv.Set(reflect.ValueOf(l))
 				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
-					x, err := strconv.Atoi(v)
-					if err != nil {
-						e.Logger().Warnf(`arg %v as int: %v`, v, err)
-						break
+					dateformat := tagfast.Value(tc, f, `form_format`)
+					if dateformat != `` {
+						t, err := time.Parse(dateformat, v)
+						if err != nil {
+							e.Logger().Warnf(`arg %v as int: %v`, v, err)
+							break
+						}
+						l = int(t.Unix())
+					} else {
+						x, err := strconv.Atoi(v)
+						if err != nil {
+							e.Logger().Warnf(`arg %v as int: %v`, v, err)
+							break
+						}
+						l = x
 					}
-					l = x
 					tv.Set(reflect.ValueOf(l))
 				case reflect.Int64:
-					x, err := strconv.ParseInt(v, 10, 64)
-					if err != nil {
-						e.Logger().Warnf(`arg %v as int64: %v`, v, err)
-						break
+					dateformat := tagfast.Value(tc, f, `form_format`)
+					if dateformat != `` {
+						t, err := time.Parse(dateformat, v)
+						if err != nil {
+							e.Logger().Warnf(`arg %v as int64: %v`, v, err)
+							break
+						}
+						l = t.Unix()
+					} else {
+						x, err := strconv.ParseInt(v, 10, 64)
+						if err != nil {
+							e.Logger().Warnf(`arg %v as int64: %v`, v, err)
+							break
+						}
+						l = x
 					}
-					l = x
 					tv.Set(reflect.ValueOf(l))
 				case reflect.Float32, reflect.Float64:
 					x, err := strconv.ParseFloat(v, 64)
@@ -218,12 +238,22 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 					l = x
 					tv.Set(reflect.ValueOf(l))
 				case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-					x, err := strconv.ParseUint(v, 10, 64)
-					if err != nil {
-						e.Logger().Warnf(`arg %v as uint: %v`, v, err)
-						break
+					dateformat := tagfast.Value(tc, f, `form_format`)
+					if dateformat != `` {
+						t, err := time.Parse(dateformat, v)
+						if err != nil {
+							e.Logger().Warnf(`arg %v as uint: %v`, v, err)
+							break
+						}
+						l = uint64(t.Unix())
+					} else {
+						x, err := strconv.ParseUint(v, 10, 64)
+						if err != nil {
+							e.Logger().Warnf(`arg %v as uint: %v`, v, err)
+							break
+						}
+						l = x
 					}
-					l = x
 					tv.Set(reflect.ValueOf(l))
 				case reflect.Struct:
 					if tvf, ok := tv.Interface().(FromConversion); ok {
