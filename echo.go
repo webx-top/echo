@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -151,6 +152,8 @@ const (
 )
 
 var (
+	httpMethodRegexp = regexp.MustCompile(`[^A-Z]+`)
+
 	methods = []string{
 		CONNECT,
 		DELETE,
@@ -358,6 +361,10 @@ func (e *Echo) Any(path string, h interface{}, middleware ...interface{}) {
 	for _, m := range methods {
 		e.add(m, path, h, middleware...)
 	}
+}
+
+func (e *Echo) Route(methods string, path string, h interface{}, middleware ...interface{}) {
+	e.Match(httpMethodRegexp.Split(methods, -1), path, h, middleware...)
 }
 
 // Match adds a route > handler to the router for multiple HTTP methods provided.

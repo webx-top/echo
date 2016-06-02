@@ -22,6 +22,10 @@ func (g *Group) Any(path string, h interface{}, middleware ...interface{}) {
 	}
 }
 
+func (g *Group) Route(methods string, path string, h interface{}, middleware ...interface{}) {
+	g.Match(httpMethodRegexp.Split(methods, -1), path, h, middleware...)
+}
+
 func (g *Group) Match(methods []string, path string, h interface{}, middleware ...interface{}) {
 	for _, m := range methods {
 		g.add(m, path, h, middleware...)
