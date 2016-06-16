@@ -44,8 +44,9 @@ func NewWithTLS(addr, certfile, keyfile string) *Server {
 func NewWithConfig(c *engine.Config) (s *Server) {
 	s = &Server{
 		Server: &http.Server{
-			ReadTimeout: c.ReadTimeout,
-			Addr:        c.Address,
+			ReadTimeout:  c.ReadTimeout,
+			WriteTimeout: c.WriteTimeout,
+			Addr:         c.Address,
 		},
 		config: c,
 		pool: &pool{
