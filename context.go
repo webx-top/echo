@@ -15,14 +15,14 @@ import (
 
 	"bytes"
 
-	netContext "golang.org/x/net/context"
+	"golang.org/x/net/context"
 )
 
 type (
 	// Context represents context for the current request. It holds request and
 	// response objects, path parameters, data and registered handler.
 	Context interface {
-		netContext.Context
+		context.Context
 		Request() engine.Request
 		Response() engine.Response
 		Path() string
@@ -61,7 +61,7 @@ type (
 		Error(err error)
 		Handle(Context) error
 		Logger() logger.Logger
-		Object() *context
+		Object() *xContext
 
 		// ServeContent sends static content from `io.Reader` and handles caching
 		// via `If-Modified-Since` request header. It automatically sets `Content-Type`
@@ -77,18 +77,18 @@ type (
 		SetRenderer(Renderer)
 	}
 
-	context struct {
-		netContext netContext.Context
-		request    engine.Request
-		response   engine.Response
-		path       string
-		pnames     []string
-		pvalues    []string
-		store      store
-		handler    Handler
-		echo       *Echo
-		funcs      map[string]interface{}
-		renderer   Renderer
+	xContext struct {
+		context  context.Context
+		request  engine.Request
+		response engine.Response
+		path     string
+		pnames   []string
+		pvalues  []string
+		store    store
+		handler  Handler
+		echo     *Echo
+		funcs    map[string]interface{}
+		renderer Renderer
 	}
 
 	store map[string]interface{}
@@ -100,7 +100,8 @@ const (
 
 // NewContext creates a Context object.
 func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
-	return &context{
+	return &xContext{
+		context:  context.Background(),
 		request:  req,
 		response: res,
 		echo:     e,
@@ -111,51 +112,51 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 	}
 }
 
-func (c *context) NetContext() netContext.Context {
-	return c.netContext
+func (c *xContext) Context() context.Context {
+	return c.context
 }
 
-func (c *context) SetNetContext(ctx netContext.Context) {
-	c.netContext = ctx
+func (c *xContext) SetContext(ctx context.Context) {
+	c.context = ctx
 }
 
-func (c *context) Deadline() (deadline time.Time, ok bool) {
-	return c.netContext.Deadline()
+func (c *xContext) Deadline() (deadline time.Time, ok bool) {
+	return c.context.Deadline()
 }
 
-func (c *context) Done() <-chan struct{} {
-	return c.netContext.Done()
+func (c *xContext) Done() <-chan struct{} {
+	return c.context.Done()
 }
 
-func (c *context) Err() error {
-	return c.netContext.Err()
+func (c *xContext) Err() error {
+	return c.context.Err()
 }
 
-func (c *context) Value(key interface{}) interface{} {
-	return c.netContext.Value(key)
+func (c *xContext) Value(key interface{}) interface{} {
+	return c.context.Value(key)
 }
 
-func (c *context) Handle(ctx Context) error {
+func (c *xContext) Handle(ctx Context) error {
 	return c.handler.Handle(ctx)
 }
 
 // Request returns *http.Request.
-func (c *context) Request() engine.Request {
+func (c *xContext) Request() engine.Request {
 	return c.request
 }
 
 // Response returns *Response.
-func (c *context) Response() engine.Response {
+func (c *xContext) Response() engine.Response {
 	return c.response
 }
 
 // Path returns the registered path for the handler.
-func (c *context) Path() string {
+func (c *xContext) Path() string {
 	return c.path
 }
 
 // P returns path parameter by index.
-func (c *context) P(i int) (value string) {
+func (c *xContext) P(i int) (value string) {
 	l := len(c.pnames)
 	if i < l {
 		value = c.pvalues[i]
@@ -164,7 +165,7 @@ func (c *context) P(i int) (value string) {
 }
 
 // Param returns path parameter by name.
-func (c *context) Param(name string) (value string) {
+func (c *xContext) Param(name string) (value string) {
 	l := len(c.pnames)
 	for i, n := range c.pnames {
 		if n == name && i < l {
@@ -175,43 +176,43 @@ func (c *context) Param(name string) (value string) {
 	return
 }
 
-func (c *context) ParamNames() []string {
+func (c *xContext) ParamNames() []string {
 	return c.pnames
 }
 
 // Query returns query parameter by name.
-func (c *context) Query(name string) string {
+func (c *xContext) Query(name string) string {
 	return c.request.URL().QueryValue(name)
 }
 
-func (c *context) QueryValues(name string) []string {
+func (c *xContext) QueryValues(name string) []string {
 	return c.request.URL().QueryValues(name)
 }
 
-func (c *context) Queries() map[string][]string {
+func (c *xContext) Queries() map[string][]string {
 	return c.request.URL().Query()
 }
 
 // Form returns form parameter by name.
-func (c *context) Form(name string) string {
+func (c *xContext) Form(name string) string {
 	return c.request.FormValue(name)
 }
 
-func (c *context) FormValues(name string) []string {
+func (c *xContext) FormValues(name string) []string {
 	return c.request.Form().Gets(name)
 }
 
-func (c *context) Forms() map[string][]string {
+func (c *xContext) Forms() map[string][]string {
 	return c.request.Form().All()
 }
 
 // Get retrieves data from the context.
-func (c *context) Get(key string) interface{} {
+func (c *xContext) Get(key string) interface{} {
 	return c.store[key]
 }
 
 // Set saves data in the context.
-func (c *context) Set(key string, val interface{}) {
+func (c *xContext) Set(key string, val interface{}) {
 	if c.store == nil {
 		c.store = make(store)
 	}
@@ -220,13 +221,13 @@ func (c *context) Set(key string, val interface{}) {
 
 // Bind binds the request body into specified type `i`. The default binder does
 // it based on Content-Type header.
-func (c *context) Bind(i interface{}) error {
+func (c *xContext) Bind(i interface{}) error {
 	return c.echo.binder.Bind(i, c)
 }
 
 // Render renders a template with data and sends a text/html response with status
 // code. Templates can be registered using `Echo.SetRenderer()`.
-func (c *context) Render(code int, name string, data interface{}) (err error) {
+func (c *xContext) Render(code int, name string, data interface{}) (err error) {
 	b, err := c.Fetch(name, data)
 	if err != nil {
 		return
@@ -238,7 +239,7 @@ func (c *context) Render(code int, name string, data interface{}) (err error) {
 }
 
 // HTML sends an HTTP response with status code.
-func (c *context) HTML(code int, html string) (err error) {
+func (c *xContext) HTML(code int, html string) (err error) {
 	c.response.Header().Set(HeaderContentType, MIMETextHTMLCharsetUTF8)
 	c.response.WriteHeader(code)
 	_, err = c.response.Write([]byte(html))
@@ -246,7 +247,7 @@ func (c *context) HTML(code int, html string) (err error) {
 }
 
 // String sends a string response with status code.
-func (c *context) String(code int, s string) (err error) {
+func (c *xContext) String(code int, s string) (err error) {
 	c.response.Header().Set(HeaderContentType, MIMETextPlainCharsetUTF8)
 	c.response.WriteHeader(code)
 	_, err = c.response.Write([]byte(s))
@@ -254,7 +255,7 @@ func (c *context) String(code int, s string) (err error) {
 }
 
 // JSON sends a JSON response with status code.
-func (c *context) JSON(code int, i interface{}) (err error) {
+func (c *xContext) JSON(code int, i interface{}) (err error) {
 	var b []byte
 	if c.echo.Debug() {
 		b, err = json.MarshalIndent(i, "", "  ")
@@ -268,7 +269,7 @@ func (c *context) JSON(code int, i interface{}) (err error) {
 }
 
 // JSONBlob sends a JSON blob response with status code.
-func (c *context) JSONBlob(code int, b []byte) (err error) {
+func (c *xContext) JSONBlob(code int, b []byte) (err error) {
 	c.response.Header().Set(HeaderContentType, MIMEApplicationJSONCharsetUTF8)
 	c.response.WriteHeader(code)
 	_, err = c.response.Write(b)
@@ -277,7 +278,7 @@ func (c *context) JSONBlob(code int, b []byte) (err error) {
 
 // JSONP sends a JSONP response with status code. It uses `callback` to construct
 // the JSONP payload.
-func (c *context) JSONP(code int, callback string, i interface{}) (err error) {
+func (c *xContext) JSONP(code int, callback string, i interface{}) (err error) {
 	b, err := json.Marshal(i)
 	if err != nil {
 		return err
@@ -296,7 +297,7 @@ func (c *context) JSONP(code int, callback string, i interface{}) (err error) {
 }
 
 // XML sends an XML response with status code.
-func (c *context) XML(code int, i interface{}) (err error) {
+func (c *xContext) XML(code int, i interface{}) (err error) {
 	var b []byte
 	if c.echo.Debug() {
 		b, err = xml.MarshalIndent(i, "", "  ")
@@ -310,7 +311,7 @@ func (c *context) XML(code int, i interface{}) (err error) {
 }
 
 // XMLBlob sends a XML blob response with status code.
-func (c *context) XMLBlob(code int, b []byte) (err error) {
+func (c *xContext) XMLBlob(code int, b []byte) (err error) {
 	c.response.Header().Set(HeaderContentType, MIMEApplicationXMLCharsetUTF8)
 	c.response.WriteHeader(code)
 	if _, err = c.response.Write([]byte(xml.Header)); err != nil {
@@ -320,7 +321,7 @@ func (c *context) XMLBlob(code int, b []byte) (err error) {
 	return
 }
 
-func (c *context) File(file string) error {
+func (c *xContext) File(file string) error {
 	f, err := os.Open(file)
 	if err != nil {
 		return ErrNotFound
@@ -339,7 +340,7 @@ func (c *context) File(file string) error {
 	return c.ServeContent(f, fi.Name(), fi.ModTime())
 }
 
-func (c *context) Attachment(r io.ReadSeeker, name string) (err error) {
+func (c *xContext) Attachment(r io.ReadSeeker, name string) (err error) {
 	c.response.Header().Set(HeaderContentType, ContentTypeByExtension(name))
 	c.response.Header().Set(HeaderContentDisposition, "attachment; filename="+name)
 	c.response.WriteHeader(http.StatusOK)
@@ -348,13 +349,13 @@ func (c *context) Attachment(r io.ReadSeeker, name string) (err error) {
 }
 
 // NoContent sends a response with no body and a status code.
-func (c *context) NoContent(code int) error {
+func (c *xContext) NoContent(code int) error {
 	c.response.WriteHeader(code)
 	return nil
 }
 
 // Redirect redirects the request with status code.
-func (c *context) Redirect(code int, url string) error {
+func (c *xContext) Redirect(code int, url string) error {
 	if code < http.StatusMultipleChoices || code > http.StatusTemporaryRedirect {
 		return ErrInvalidRedirectCode
 	}
@@ -363,21 +364,21 @@ func (c *context) Redirect(code int, url string) error {
 }
 
 // Error invokes the registered HTTP error handler. Generally used by middleware.
-func (c *context) Error(err error) {
+func (c *xContext) Error(err error) {
 	c.echo.httpErrorHandler(err, c)
 }
 
 // Logger returns the `Logger` instance.
-func (c *context) Logger() logger.Logger {
+func (c *xContext) Logger() logger.Logger {
 	return c.echo.logger
 }
 
 // Object returns the `context` object.
-func (c *context) Object() *context {
+func (c *xContext) Object() *xContext {
 	return c
 }
 
-func (c *context) ServeContent(content io.ReadSeeker, name string, modtime time.Time) error {
+func (c *xContext) ServeContent(content io.ReadSeeker, name string, modtime time.Time) error {
 	rq := c.Request()
 	rs := c.Response()
 
@@ -405,12 +406,12 @@ func ContentTypeByExtension(name string) (t string) {
 }
 
 // Echo returns the `Echo` instance.
-func (c *context) Echo() *Echo {
+func (c *xContext) Echo() *Echo {
 	return c.echo
 }
 
-func (c *context) Reset(req engine.Request, res engine.Response) {
-	c.netContext = nil
+func (c *xContext) Reset(req engine.Request, res engine.Response) {
+	c.context = context.Background()
 	c.request = req
 	c.response = res
 	c.store = nil
@@ -419,23 +420,23 @@ func (c *context) Reset(req engine.Request, res engine.Response) {
 	c.handler = notFoundHandler
 }
 
-func (c *context) GetFunc(key string) interface{} {
+func (c *xContext) GetFunc(key string) interface{} {
 	return c.funcs[key]
 }
 
-func (c *context) SetFunc(key string, val interface{}) {
+func (c *xContext) SetFunc(key string, val interface{}) {
 	c.funcs[key] = val
 }
 
-func (c *context) ResetFuncs(funcs map[string]interface{}) {
+func (c *xContext) ResetFuncs(funcs map[string]interface{}) {
 	c.funcs = funcs
 }
 
-func (c *context) Funcs() map[string]interface{} {
+func (c *xContext) Funcs() map[string]interface{} {
 	return c.funcs
 }
 
-func (c *context) Fetch(name string, data interface{}) (b []byte, err error) {
+func (c *xContext) Fetch(name string, data interface{}) (b []byte, err error) {
 	if c.renderer == nil {
 		if c.echo.renderer == nil {
 			return nil, ErrRendererNotRegistered
@@ -452,6 +453,6 @@ func (c *context) Fetch(name string, data interface{}) (b []byte, err error) {
 }
 
 // SetRenderer registers an HTML template renderer.
-func (c *context) SetRenderer(r Renderer) {
+func (c *xContext) SetRenderer(r Renderer) {
 	c.renderer = r
 }
