@@ -1,6 +1,7 @@
 package echo
 
 import (
+	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"io"
@@ -12,9 +13,6 @@ import (
 
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/logger"
-
-	"bytes"
-
 	"golang.org/x/net/context"
 )
 
