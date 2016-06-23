@@ -1,24 +1,30 @@
-hash: 57f60c6f58e40de3ea10123144095336abe2a4024e256feea9721e4e89ad38be
-updated: 2016-02-07T21:37:59.770272986-08:00
+hash: 4b52fd0ab6e44ee544a70d3bc15ecadaedc208107d4bde0afa5d47f09703c6a9
+updated: 2016-06-23T13:53:24.9481989+08:00
 imports:
-- name: github.com/labstack/gommon
-  version: 28bf9248c3e81039c18bff6a1cf2a7f0841caf35
+- name: github.com/admpub/fasthttp
+  version: 15d3e053c4d8224c2b5f34d67153a40809a21db8
+- name: github.com/admpub/go-colortext
+  version: 511bcaf42ccd42c38aba7427b6673277bf19e2a1
+- name: github.com/admpub/log
+  version: 8ebfbafd0f46a2bbaa152b2fa8c07b2b5c139b3a
+- name: github.com/admpub/queueChan
+  version: 79908f7a499f379d32d1b1eabe1bf653129bb154
+- name: github.com/klauspost/compress
+  version: 14eb9c4951195779ecfbec34431a976de7335b0a
   subpackages:
-  - /color
-  - log
-- name: github.com/mattn/go-colorable
-  version: 4af63d73f5bea08b682ad2cd198b1e607afd6be0
-- name: github.com/mattn/go-isatty
-  version: 56b76bdf51f7708750eac80fa38b952bb9f32639
-- name: github.com/valyala/fasthttp
-  version: 338fe46307aad35771b73f3f146dec3851c23f7f
-- name: golang.org/x/crypto
-  version: 1f22c0103821b9390939b6776727195525381532
+  - flate
+  - gzip
+  - zlib
+- name: github.com/klauspost/cpuid
+  version: 09cded8978dc9e80714c4d85b0322337b0a1e5e0
+- name: github.com/klauspost/crc32
+  version: 19b0b332c9e4516a6370a0456e6182c3b5036720
+- name: github.com/webx-top/webx
+  version: 800783e939f407b66b20848589b41d2bb1aeb024
+  subpackages:
+  - lib/tagfast
 - name: golang.org/x/net
-  version: 7f88271ea9913b72aca44fa7fc8af919eacc17ce
-  subpackages:
-  - /context
-  - websocket
-- name: golang.org/x/text
-  version: 2ea5e055772cf5daa0b1478d6e88c8d0c3d4cb79
-devImports: []
+  version: bc3663df0ac92f928d419e31e0d2af22e683a5a2
+- name: golang.org/x/net/context
+  version: bc3663df0ac92f928d419e31e0d2af22e683a5a2
+testImports: []
