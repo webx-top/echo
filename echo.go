@@ -552,9 +552,11 @@ func Methods() []string {
 func WrapHandler(h interface{}) Handler {
 	if v, ok := h.(HandlerFunc); ok {
 		return v
-	} else if v, ok := h.(Handler); ok {
+	}
+	if v, ok := h.(Handler); ok {
 		return v
-	} else if v, ok := h.(func(Context) error); ok {
+	}
+	if v, ok := h.(func(Context) error); ok {
 		return HandlerFunc(v)
 	}
 	panic(`unknown handler`)
@@ -564,25 +566,35 @@ func WrapHandler(h interface{}) Handler {
 func WrapMiddleware(m interface{}) Middleware {
 	if h, ok := m.(MiddlewareFunc); ok {
 		return h
-	} else if h, ok := m.(Middleware); ok {
+	}
+	if h, ok := m.(Middleware); ok {
 		return h
-	} else if h, ok := m.(HandlerFunc); ok {
+	}
+	if h, ok := m.(HandlerFunc); ok {
 		return WrapMiddlewareFromHandler(h)
-	} else if h, ok := m.(func(Context) error); ok {
+	}
+	if h, ok := m.(func(Context) error); ok {
 		return WrapMiddlewareFromHandler(HandlerFunc(h))
-	} else if h, ok := m.(func(Handler) func(Context) error); ok {
+	}
+	if h, ok := m.(func(Handler) func(Context) error); ok {
 		return MiddlewareFunc(func(next Handler) Handler {
 			return HandlerFunc(h(next))
 		})
-	} else if h, ok := m.(func(Handler) HandlerFunc); ok {
+	}
+	if h, ok := m.(func(Handler) HandlerFunc); ok {
 		return MiddlewareFunc(func(next Handler) Handler {
 			return h(next)
 		})
-	} else if h, ok := m.(func(HandlerFunc) HandlerFunc); ok {
+	}
+	if h, ok := m.(func(HandlerFunc) HandlerFunc); ok {
 		return MiddlewareFunc(func(next Handler) Handler {
 			return h(next.Handle)
 		})
-	} else if h, ok := m.(func(func(Context) error) func(Context) error); ok {
+	}
+	if h, ok := m.(func(Handler) Handler); ok {
+		return MiddlewareFunc(h)
+	}
+	if h, ok := m.(func(func(Context) error) func(Context) error); ok {
 		return MiddlewareFunc(func(next Handler) Handler {
 			return HandlerFunc(h(next.Handle))
 		})
