@@ -1,5 +1,5 @@
 hash: 4b52fd0ab6e44ee544a70d3bc15ecadaedc208107d4bde0afa5d47f09703c6a9
-updated: 2016-06-23T13:53:24.9481989+08:00
+updated: 2016-06-27T18:23:03.6478698+08:00
 imports:
 - name: github.com/admpub/fasthttp
   version: 15d3e053c4d8224c2b5f34d67153a40809a21db8
