@@ -20,7 +20,7 @@ func (u *URL) SetPath(path string) {
 }
 
 func (u *URL) Path() string {
-	return string(u.url.Path())
+	return string(u.url.PathOriginal())
 }
 
 func (u *URL) QueryValue(name string) string {

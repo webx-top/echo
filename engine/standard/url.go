@@ -16,7 +16,7 @@ func (u *URL) SetPath(path string) {
 }
 
 func (u *URL) Path() string {
-	return u.url.Path
+	return u.url.EscapedPath()
 }
 
 func (u *URL) QueryValue(name string) string {
