@@ -28,13 +28,10 @@ func Log() echo.MiddlewareFunc {
 			}
 			stop := time.Now()
 			method := req.Method()
-			path := req.URL().Path()
-			if path == "" {
-				path = "/"
-			}
+			uri := req.URI()
 			size := res.Size()
 			code := res.Status()
-			logger.Infof("%s %s %s %v %s %d", remoteAddr, method, path, code, stop.Sub(start), size)
+			logger.Infof("%s %s %s %v %s %d", remoteAddr, method, uri, code, stop.Sub(start), size)
 			return nil
 		})
 	}
