@@ -2,6 +2,7 @@ package standard
 
 import (
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 
@@ -73,6 +74,11 @@ func (r *Request) URI() string {
 
 func (r *Request) Body() io.ReadCloser {
 	return r.request.Body
+}
+
+// SetBody implements `engine.Request#SetBody` function.
+func (r *Request) SetBody(reader io.Reader) {
+	r.request.Body = ioutil.NopCloser(reader)
 }
 
 func (r *Request) FormValue(name string) string {

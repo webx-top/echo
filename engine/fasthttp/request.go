@@ -67,6 +67,11 @@ func (r *Request) Body() io.ReadCloser {
 	return ioutil.NopCloser(bytes.NewBuffer(r.context.PostBody()))
 }
 
+// SetBody implements `engine.Request#SetBody` function.
+func (r *Request) SetBody(reader io.Reader) {
+	r.context.Request.SetBodyStream(reader, 0)
+}
+
 func (r *Request) FormValue(name string) string {
 	return string(r.context.FormValue(name))
 }
