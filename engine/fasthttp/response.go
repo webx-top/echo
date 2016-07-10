@@ -103,7 +103,9 @@ func (r *Response) Body() []byte {
 }
 
 func (r *Response) Redirect(url string, code int) {
-	r.context.Redirect(url, code)
+	//r.context.Redirect(url, code)  bug: missing port number
+	r.header.Set(`Location`, url)
+	r.WriteHeader(code)
 }
 
 func (r *Response) NotFound() {
