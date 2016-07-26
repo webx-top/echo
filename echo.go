@@ -213,7 +213,7 @@ func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 	e.SetBinder(&binder{Echo: e})
 
 	// Logger
-	e.logger = log.New("echo")
+	e.logger = log.GetLogger("echo")
 
 	return
 }
