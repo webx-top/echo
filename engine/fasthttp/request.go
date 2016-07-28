@@ -4,9 +4,11 @@ package fasthttp
 
 import (
 	"bytes"
+	"encoding/base64"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
+	"strings"
 
 	"github.com/admpub/fasthttp"
 	"github.com/webx-top/echo/engine"
@@ -139,4 +141,34 @@ func (r *Request) reset(c *fasthttp.RequestCtx, h engine.Header, u engine.URL) {
 	r.header = h
 	r.url = u
 	r.value = NewValue(r)
+}
+
+// BasicAuth returns the username and password provided in the request's
+// Authorization header, if the request uses HTTP Basic Authentication.
+// See RFC 2617, Section 2.
+func (r *Request) BasicAuth() (username, password string, ok bool) {
+	auth := r.Header().Get("Authorization")
+	if auth == "" {
+		return
+	}
+	return parseBasicAuth(auth)
+}
+
+// parseBasicAuth parses an HTTP Basic Authentication string.
+// "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==" returns ("Aladdin", "open sesame", true).
+func parseBasicAuth(auth string) (username, password string, ok bool) {
+	const prefix = "Basic "
+	if !strings.HasPrefix(auth, prefix) {
+		return
+	}
+	c, err := base64.StdEncoding.DecodeString(auth[len(prefix):])
+	if err != nil {
+		return
+	}
+	cs := string(c)
+	s := strings.IndexByte(cs, ':')
+	if s < 0 {
+		return
+	}
+	return cs[:s], cs[s+1:], true
 }

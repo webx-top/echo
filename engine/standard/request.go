@@ -153,3 +153,7 @@ func (r *Request) Scheme() string {
 	}
 	return `http`
 }
+
+func (r *Request) BasicAuth() (username, password string, ok bool) {
+	return r.request.BasicAuth()
+}

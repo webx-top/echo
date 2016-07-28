@@ -79,6 +79,8 @@ type (
 
 		// ContentLength returns the size of request's body.
 		Size() int64
+
+		BasicAuth() (string, string, bool)
 	}
 
 	// Response defines an interface for HTTP response.
