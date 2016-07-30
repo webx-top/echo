@@ -75,7 +75,8 @@ func (r *Request) SetBody(reader io.Reader) {
 }
 
 func (r *Request) FormValue(name string) string {
-	return string(r.context.FormValue(name))
+	//return string(r.context.FormValue(name))
+	return r.Form().Get(name)
 }
 
 func (r *Request) Form() engine.URLValuer {
