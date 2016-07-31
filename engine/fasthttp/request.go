@@ -88,7 +88,7 @@ func (r *Request) PostForm() engine.URLValuer {
 }
 
 func (r *Request) MultipartForm() *multipart.Form {
-	if string(r.context.Request.Header.ContentType()) != "multipart/form-data" {
+	if !strings.HasPrefix(string(r.context.Request.Header.ContentType()), "multipart/form-data") {
 		return nil
 	}
 	re, err := r.context.MultipartForm()
