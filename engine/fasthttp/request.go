@@ -8,9 +8,11 @@ import (
 	"io"
 	"io/ioutil"
 	"mime/multipart"
+	"net"
 	"strings"
 
 	"github.com/admpub/fasthttp"
+	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine"
 )
 
@@ -20,6 +22,7 @@ type (
 		url     engine.URL
 		header  engine.Header
 		value   *Value
+		realIP  string
 	}
 )
 
@@ -55,6 +58,22 @@ func (r *Request) Proto() string {
 
 func (r *Request) RemoteAddress() string {
 	return r.context.RemoteAddr().String()
+}
+
+// RealIP implements `engine.Request#RealIP` function.
+func (r *Request) RealIP() string {
+	if len(r.realIP) > 0 {
+		return r.realIP
+	}
+	r.realIP = r.RemoteAddress()
+	if ip := r.header.Get(echo.HeaderXForwardedFor); ip != "" {
+		r.realIP = ip
+	} else if ip := r.header.Get(echo.HeaderXRealIP); ip != "" {
+		r.realIP = ip
+	} else {
+		r.realIP, _, _ = net.SplitHostPort(r.realIP)
+	}
+	return r.realIP
 }
 
 func (r *Request) Method() string {
@@ -142,6 +161,7 @@ func (r *Request) reset(c *fasthttp.RequestCtx, h engine.Header, u engine.URL) {
 	r.header = h
 	r.url = u
 	r.value = NewValue(r)
+	r.realIP = ``
 }
 
 // BasicAuth returns the username and password provided in the request's

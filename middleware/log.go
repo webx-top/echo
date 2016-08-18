@@ -14,18 +14,12 @@ func Log() echo.MiddlewareFunc {
 			res := c.Response()
 			logger := c.Logger()
 
-			remoteAddr := req.RemoteAddress()
-			if ip := req.Header().Get(echo.HeaderXRealIP); ip != "" {
-				remoteAddr = ip
-			} else if ip = req.Header().Get(echo.HeaderXForwardedFor); ip != "" {
-				remoteAddr = ip
-			} else {
-				remoteAddr, _, _ = net.SplitHostPort(remoteAddr)
-			}
 			start := time.Now()
 			if err := h.Handle(c); err != nil {
 				c.Error(err)
 			}
+
+			remoteAddr := req.RealIP()
 			stop := time.Now()
 			method := req.Method()
 			uri := req.URI()
