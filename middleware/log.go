@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"net"
 	"time"
 
 	"github.com/webx-top/echo"
