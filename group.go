@@ -108,17 +108,19 @@ func (g *Group) add(method, path string, h interface{}, middleware ...interface{
 		mw := WrapMiddleware(m)
 		handler = mw.Handle(handler)
 	}
-
-	fpath, pnames := g.echo.router.Add(method, path, HandlerFunc(func(c Context) error {
+	hdl := HandlerFunc(func(c Context) error {
 		return handler.Handle(c)
-	}), g.echo)
+	})
+	fpath, pnames := g.echo.router.Add(method, path, hdl, g.echo)
 	g.echo.logger.Debugf(`Route: %7v %-30v -> %v`, method, fpath, name)
-	r := Route{
-		Method:  method,
-		Path:    path,
-		Handler: name,
-		Format:  fpath,
-		Params:  pnames,
+	r := &Route{
+		Method:      method,
+		Path:        path,
+		Handler:     hdl,
+		HandlerName: name,
+		Format:      fpath,
+		Params:      pnames,
+		Prefix:      g.prefix,
 	}
 	if _, ok := g.echo.router.nroute[name]; !ok {
 		g.echo.router.nroute[name] = []int{len(g.echo.router.routes)}
