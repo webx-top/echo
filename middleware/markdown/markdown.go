@@ -57,25 +57,15 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 			if !strings.HasPrefix(absFile, opts.Root) {
 				return next.Handle(c)
 			}
-			fp, err := os.Open(absFile)
+			fi, err := os.Stat(absFile)
 			if err != nil {
-				return err
-			}
-			fi, err := fp.Stat()
-			if err != nil {
-				fp.Close()
 				return err
 			}
 			w := c.Response()
 			if fi.IsDir() {
 				// Index file
 				indexFile := filepath.Join(absFile, opts.Index)
-				fp.Close()
-				fp, err = os.Open(indexFile)
-				if err == nil {
-					fi, err = fp.Stat()
-					defer fp.Close()
-				}
+				fi, err := os.Stat(indexFile)
 				if err != nil || fi.IsDir() {
 					if opts.Browse {
 						fs := http.Dir(opts.Root)
@@ -114,26 +104,32 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 					}
 					return echo.ErrNotFound
 				}
-			} else {
-				defer fp.Close()
+				absFile = indexFile
 			}
-			modtime := fi.ModTime()
-			if t, err := time.Parse(http.TimeFormat, c.Request().Header().Get(echo.HeaderIfModifiedSince)); err == nil && modtime.Before(t.Add(1*time.Second)) {
-				w.Header().Del(echo.HeaderContentType)
-				w.Header().Del(echo.HeaderContentLength)
-				return c.NoContent(http.StatusNotModified)
-			}
+			ext := strings.ToLower(filepath.Ext(fi.Name()))
+			switch ext {
+			case `.md`, `.markdown`:
+				modtime := fi.ModTime()
+				if t, err := time.Parse(http.TimeFormat, c.Request().Header().Get(echo.HeaderIfModifiedSince)); err == nil && modtime.Before(t.Add(1*time.Second)) {
+					w.Header().Del(echo.HeaderContentType)
+					w.Header().Del(echo.HeaderContentLength)
+					return c.NoContent(http.StatusNotModified)
+				}
+				b, err := ioutil.ReadFile(absFile)
+				if err != nil {
+					return err
+				}
+				b = md2html.MarkdownCommon(b)
+				b = opts.Preprocessor(c, b)
 
-			b, err := ioutil.ReadAll(fp)
-			if err != nil {
-				return err
+				w.Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
+				w.Header().Set(echo.HeaderLastModified, modtime.UTC().Format(http.TimeFormat))
+				w.WriteHeader(http.StatusOK)
+				_, err = w.Write(b)
+			default:
+				w.Header().Set(echo.HeaderContentType, echo.ContentTypeByExtension(ext))
+				w.ServeFile(absFile)
 			}
-			b = md2html.MarkdownCommon(b)
-			b = opts.Preprocessor(c, b)
-			w.Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
-			w.Header().Set(echo.HeaderLastModified, modtime.UTC().Format(http.TimeFormat))
-			w.WriteHeader(http.StatusOK)
-			_, err = w.Write(b)
 			return err
 		})
 	}
