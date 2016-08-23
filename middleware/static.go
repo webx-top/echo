@@ -85,9 +85,8 @@ func Static(options ...*StaticOptions) echo.MiddlewareFunc {
 						return err
 					}
 					return next.Handle(c)
-				} else {
-					absFile = indexFile
 				}
+				absFile = indexFile
 			}
 			w.ServeFile(absFile)
 			return nil
