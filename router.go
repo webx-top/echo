@@ -8,7 +8,7 @@ type (
 	Router struct {
 		tree   *node
 		static map[string]*methodHandler
-		routes []Route
+		routes []*Route
 		nroute map[string][]int
 		echo   *Echo
 	}
@@ -97,7 +97,7 @@ func NewRouter(e *Echo) *Router {
 			methodHandler: new(methodHandler),
 		},
 		static: map[string]*methodHandler{},
-		routes: []Route{},
+		routes: []*Route{},
 		nroute: map[string][]int{},
 		echo:   e,
 	}

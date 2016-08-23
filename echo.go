@@ -34,11 +34,13 @@ type (
 	}
 
 	Route struct {
-		Method  string
-		Path    string
-		Handler string
-		Format  string
-		Params  []string
+		Method      string
+		Path        string
+		Handler     Handler `json:"-" xml:"-"`
+		HandlerName string
+		Format      string
+		Params      []string
+		Prefix      string
 	}
 
 	HTTPError struct {
@@ -393,16 +395,18 @@ func (e *Echo) add(method, path string, h interface{}, middleware ...interface{}
 		mw := WrapMiddleware(m)
 		handler = mw.Handle(handler)
 	}
-	fpath, pnames := e.router.Add(method, path, HandlerFunc(func(c Context) error {
+	hdl := HandlerFunc(func(c Context) error {
 		return handler.Handle(c)
-	}), e)
+	})
+	fpath, pnames := e.router.Add(method, path, hdl, e)
 	e.logger.Debugf(`Route: %7v %-30v -> %v`, method, fpath, name)
-	r := Route{
-		Method:  method,
-		Path:    path,
-		Handler: name,
-		Format:  fpath,
-		Params:  pnames,
+	r := &Route{
+		Method:      method,
+		Path:        path,
+		Handler:     hdl,
+		HandlerName: name,
+		Format:      fpath,
+		Params:      pnames,
 	}
 	if _, ok := e.router.nroute[name]; !ok {
 		e.router.nroute[name] = []int{len(e.router.routes)}
@@ -410,6 +414,39 @@ func (e *Echo) add(method, path string, h interface{}, middleware ...interface{}
 		e.router.nroute[name] = append(e.router.nroute[name], len(e.router.routes))
 	}
 	e.router.routes = append(e.router.routes, r)
+}
+
+// RebuildRouter rebuild router
+func (e *Echo) RebuildRouter(args ...[]*Route) {
+	routes := e.router.routes
+	if len(args) > 0 {
+		routes = args[0]
+	}
+	e.router = NewRouter(e)
+	for index, r := range routes {
+		e.router.Add(r.Method, r.Path, r.Handler, e)
+
+		if _, ok := e.router.nroute[r.HandlerName]; !ok {
+			e.router.nroute[r.HandlerName] = []int{index}
+		} else {
+			e.router.nroute[r.HandlerName] = append(e.router.nroute[r.HandlerName], index)
+		}
+	}
+	e.router.routes = routes
+}
+
+// AppendRouter append router
+func (e *Echo) AppendRouter(routes []*Route) {
+	for index, r := range routes {
+		e.router.Add(r.Method, r.Path, r.Handler, e)
+		index = len(e.router.routes)
+		if _, ok := e.router.nroute[r.HandlerName]; !ok {
+			e.router.nroute[r.HandlerName] = []int{index}
+		} else {
+			e.router.nroute[r.HandlerName] = append(e.router.nroute[r.HandlerName], index)
+		}
+		e.router.routes = append(e.router.routes, r)
+	}
 }
 
 // Group creates a new sub-router with prefix.
@@ -483,7 +520,7 @@ func (e *Echo) URL(h interface{}, params ...interface{}) string {
 }
 
 // Routes returns the registered routes.
-func (e *Echo) Routes() []Route {
+func (e *Echo) Routes() []*Route {
 	return e.router.routes
 }
 
