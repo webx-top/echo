@@ -81,6 +81,10 @@ type (
 		Cookie(string, string) *Cookie
 		GetCookie(string) string
 		SetCookie(string, string, ...interface{})
+
+		InitSession(Session)
+		Session() Session
+		Flash(string) interface{}
 	}
 
 	xContext struct {
@@ -459,6 +463,21 @@ func (c *xContext) Fetch(name string, data interface{}) (b []byte, err error) {
 // SetRenderer registers an HTML template renderer.
 func (c *xContext) SetRenderer(r Renderer) {
 	c.renderer = r
+}
+
+func (c *xContext) InitSession(sess Session) {
+	c.Set(`session`, sess)
+}
+
+func (c *xContext) Session() Session {
+	return c.Get(`session`).(Session)
+}
+
+func (c *xContext) Flash(name string) (r interface{}) {
+	if v := c.Session().Flashes(name); len(v) > 0 {
+		r = v[0]
+	}
+	return r
 }
 
 func (c *xContext) SetCookieOptions(opts *CookieOptions) {

@@ -23,8 +23,13 @@ import (
 )
 
 type CookieOptions struct {
-	Prefix   string
-	Expires  int64
+	Prefix string
+
+	// MaxAge=0 means no 'Max-Age' attribute specified.
+	// MaxAge<0 means delete cookie now, equivalently 'Max-Age: 0'.
+	// MaxAge>0 means Max-Age attribute present and given in seconds.
+	MaxAge int
+
 	Path     string
 	Domain   string
 	Secure   bool
@@ -45,12 +50,11 @@ func NewCookie(name string, value string, opts ...*CookieOptions) *Cookie {
 			Value:    value,
 			Path:     opt.Path,
 			Domain:   opt.Domain,
-			MaxAge:   0,
+			MaxAge:   opt.MaxAge,
 			Secure:   opt.Secure,
 			HttpOnly: opt.HttpOnly,
 		},
 	}
-	cookie.Expires(opt.Expires)
 	return cookie
 }
 
