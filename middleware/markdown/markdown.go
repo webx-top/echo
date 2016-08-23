@@ -65,7 +65,7 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 			if fi.IsDir() {
 				// Index file
 				indexFile := filepath.Join(absFile, opts.Index)
-				fi, err := os.Stat(indexFile)
+				fi, err = os.Stat(indexFile)
 				if err != nil || fi.IsDir() {
 					if opts.Browse {
 						fs := http.Dir(opts.Root)

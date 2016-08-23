@@ -7,6 +7,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"time"
@@ -73,27 +74,31 @@ type (
 		Reset(engine.Request, engine.Response)
 		Fetch(string, interface{}) ([]byte, error)
 		SetRenderer(Renderer)
+
+		// Cookie
+		SetCookieOptions(*CookieOptions)
+		CookieOptions() *CookieOptions
+		Cookie(string, string) *Cookie
+		GetCookie(string) string
+		SetCookie(string, string, ...interface{})
 	}
 
 	xContext struct {
-		context  context.Context
-		request  engine.Request
-		response engine.Response
-		path     string
-		pnames   []string
-		pvalues  []string
-		store    store
-		handler  Handler
-		echo     *Echo
-		funcs    map[string]interface{}
-		renderer Renderer
+		context       context.Context
+		request       engine.Request
+		response      engine.Response
+		path          string
+		pnames        []string
+		pvalues       []string
+		store         store
+		handler       Handler
+		echo          *Echo
+		funcs         map[string]interface{}
+		renderer      Renderer
+		cookieOptions *CookieOptions
 	}
 
 	store map[string]interface{}
-)
-
-const (
-	indexPage = "index.html"
 )
 
 // NewContext creates a Context object.
@@ -416,6 +421,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.funcs = make(map[string]interface{})
 	c.renderer = nil
 	c.handler = notFoundHandler
+	c.cookieOptions = nil
 }
 
 func (c *xContext) GetFunc(key string) interface{} {
@@ -453,4 +459,62 @@ func (c *xContext) Fetch(name string, data interface{}) (b []byte, err error) {
 // SetRenderer registers an HTML template renderer.
 func (c *xContext) SetRenderer(r Renderer) {
 	c.renderer = r
+}
+
+func (c *xContext) SetCookieOptions(opts *CookieOptions) {
+	c.cookieOptions = opts
+}
+
+func (c *xContext) CookieOptions() *CookieOptions {
+	if c.cookieOptions == nil {
+		c.cookieOptions = &CookieOptions{}
+	}
+	return c.cookieOptions
+}
+
+func (c *xContext) Cookie(key string, value string) *Cookie {
+	return NewCookie(key, value, c.CookieOptions())
+}
+
+func (c *xContext) GetCookie(key string) string {
+	var val string
+	if v := c.Request().Cookie(c.CookieOptions().Prefix + key); v != `` {
+		val, _ = url.QueryUnescape(v)
+	}
+	return val
+}
+
+func (c *xContext) SetCookie(key string, val string, args ...interface{}) {
+	val = url.QueryEscape(val)
+	cookie := c.Cookie(key, val)
+	switch len(args) {
+	case 5:
+		httpOnly, _ := args[4].(bool)
+		cookie.HttpOnly(httpOnly)
+		fallthrough
+	case 4:
+		secure, _ := args[3].(bool)
+		cookie.Secure(secure)
+		fallthrough
+	case 3:
+		domain, _ := args[2].(string)
+		cookie.Domain(domain)
+		fallthrough
+	case 2:
+		ppath, _ := args[1].(string)
+		cookie.Path(ppath)
+		fallthrough
+	case 1:
+		var liftTime int64
+		switch args[0].(type) {
+		case int:
+			liftTime = int64(args[0].(int))
+		case int64:
+			liftTime = args[0].(int64)
+		case time.Duration:
+			liftTime = int64(args[0].(time.Duration).Seconds())
+		}
+		cookie.Expires(liftTime)
+	}
+	cookie.Send(c)
 }
