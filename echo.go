@@ -54,6 +54,8 @@ type (
 
 	MiddlewareFunc func(Handler) Handler
 
+	MiddlewareFuncd func(Handler) HandlerFunc
+
 	Handler interface {
 		Handle(Context) error
 	}
@@ -77,6 +79,12 @@ type (
 		Render(w io.Writer, name string, data interface{}, c Context) error
 	}
 )
+
+var _ MiddlewareFuncd = func(h Handler) HandlerFunc {
+	return func(c Context) error {
+		return h.Handle(c)
+	}
+}
 
 const (
 	// CONNECT HTTP method
@@ -221,6 +229,10 @@ func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 }
 
 func (m MiddlewareFunc) Handle(h Handler) Handler {
+	return m(h)
+}
+
+func (m MiddlewareFuncd) Handle(h Handler) Handler {
 	return m(h)
 }
 
@@ -606,6 +618,9 @@ func WrapHandler(h interface{}) Handler {
 // WrapMiddleware wrap `interface{}` into `echo.Middleware`.
 func WrapMiddleware(m interface{}) Middleware {
 	if h, ok := m.(MiddlewareFunc); ok {
+		return h
+	}
+	if h, ok := m.(MiddlewareFuncd); ok {
 		return h
 	}
 	if h, ok := m.(Middleware); ok {
