@@ -17,7 +17,7 @@
 */
 package echo
 
-var DefaultNopSession = &NopSession{}
+var DefaultNopSession Session = &NopSession{}
 
 // Options stores configuration for a session or session store.
 // Fields are a subset of http.Cookie fields.
