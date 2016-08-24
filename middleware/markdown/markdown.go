@@ -15,12 +15,13 @@ import (
 
 type (
 	Options struct {
-		Path         string `json:"path"` //UrlPath
-		Ext          string `json:"ext"`
-		Index        string `json:"index"`
-		Root         string `json:"root"`
-		Browse       bool   `json:"browse"`
-		Preprocessor func(echo.Context, []byte) []byte
+		Path               string   `json:"path"` //UrlPath
+		MarkdownExtensions []string `json:"markdownExtensions"`
+		Index              string   `json:"index"`
+		Root               string   `json:"root"`
+		Browse             bool     `json:"browse"`
+		Preprocessor       func(echo.Context, []byte) []byte
+		Filter             func(string) bool // true: ok; false: ignore
 	}
 )
 
@@ -33,11 +34,19 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 	if opts.Index == "" {
 		opts.Index = "SUMMARY.md"
 	}
+	if opts.MarkdownExtensions == nil {
+		opts.MarkdownExtensions = []string{`.md`, `.mdown`, `.markdown`}
+	}
 	opts.Root, _ = filepath.Abs(opts.Root)
 
 	if opts.Preprocessor == nil {
 		opts.Preprocessor = func(c echo.Context, b []byte) []byte {
 			return b
+		}
+	}
+	if opts.Filter == nil {
+		opts.Filter = func(string) bool {
+			return true
 		}
 	}
 
@@ -49,7 +58,7 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 			if len(file) < length || file[0:length] != opts.Path {
 				return next.Handle(c)
 			}
-			if len(opts.Ext) > 0 && !strings.HasSuffix(file, opts.Ext) {
+			if !opts.Filter(file) {
 				return next.Handle(c)
 			}
 			file = filepath.Clean(file[length:])
@@ -91,7 +100,7 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 								color = "#e91e63"
 								name += "/"
 							} else {
-								if len(opts.Ext) > 0 && !strings.HasSuffix(name, opts.Ext) {
+								if !opts.Filter(name) {
 									continue
 								}
 							}
@@ -107,8 +116,14 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 				absFile = indexFile
 			}
 			ext := strings.ToLower(filepath.Ext(fi.Name()))
-			switch ext {
-			case `.md`, `.markdown`:
+			isMarkdownDocument := false
+			for _, vext := range opts.MarkdownExtensions {
+				if ext == vext {
+					isMarkdownDocument = true
+					break
+				}
+			}
+			if isMarkdownDocument {
 				modtime := fi.ModTime()
 				if t, err := time.Parse(http.TimeFormat, c.Request().Header().Get(echo.HeaderIfModifiedSince)); err == nil && modtime.Before(t.Add(1*time.Second)) {
 					w.Header().Del(echo.HeaderContentType)
@@ -126,7 +141,7 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 				w.Header().Set(echo.HeaderLastModified, modtime.UTC().Format(http.TimeFormat))
 				w.WriteHeader(http.StatusOK)
 				_, err = w.Write(b)
-			default:
+			} else {
 				w.Header().Set(echo.HeaderContentType, echo.ContentTypeByExtension(ext))
 				w.ServeFile(absFile)
 			}
