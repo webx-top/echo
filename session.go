@@ -17,6 +17,8 @@
 */
 package echo
 
+var DefaultNopSession = &NopSession{}
+
 // Options stores configuration for a session or session store.
 // Fields are a subset of http.Cookie fields.
 type SessionOptions struct {
@@ -51,4 +53,47 @@ type Session interface {
 
 	// Save saves all sessions used during the current request.
 	Save() error
+}
+
+type NopSession struct {
+}
+
+func (n *NopSession) Get(_ string) interface{} {
+	return nil
+}
+
+func (n *NopSession) Set(_ string, _ interface{}) Session {
+	return n
+}
+
+func (n *NopSession) SetId(_ string) Session {
+	return n
+}
+
+func (n *NopSession) Id() string {
+	return ``
+}
+
+func (n *NopSession) Delete(_ string) Session {
+	return n
+}
+
+func (n *NopSession) Clear() Session {
+	return n
+}
+
+func (n *NopSession) AddFlash(_ interface{}, _ ...string) Session {
+	return n
+}
+
+func (n *NopSession) Flashes(_ ...string) []interface{} {
+	return []interface{}{}
+}
+
+func (n *NopSession) Options(_ SessionOptions) Session {
+	return n
+}
+
+func (n *NopSession) Save() error {
+	return nil
 }

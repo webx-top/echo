@@ -436,6 +436,7 @@ func (e *Echo) RebuildRouter(args ...[]*Route) {
 	}
 	e.router = NewRouter(e)
 	for index, r := range routes {
+		//e.logger.Debugf(`%p rebuild: %#v`, e, *r)
 		e.router.Add(r.Method, r.Path, r.Handler, e)
 
 		if _, ok := e.router.nroute[r.HandlerName]; !ok {
@@ -445,6 +446,7 @@ func (e *Echo) RebuildRouter(args ...[]*Route) {
 		}
 	}
 	e.router.routes = routes
+	e.head = nil
 }
 
 // AppendRouter append router
@@ -459,6 +461,7 @@ func (e *Echo) AppendRouter(routes []*Route) {
 		}
 		e.router.routes = append(e.router.routes, r)
 	}
+	e.head = nil
 }
 
 // Group creates a new sub-router with prefix.

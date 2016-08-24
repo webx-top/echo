@@ -470,7 +470,12 @@ func (c *xContext) InitSession(sess Session) {
 }
 
 func (c *xContext) Session() Session {
-	return c.Get(`session`).(Session)
+	sess, ok := c.Get(`session`).(Session)
+	if !ok {
+		sess = DefaultNopSession
+		c.Set(`session`, sess)
+	}
+	return sess
 }
 
 func (c *xContext) Flash(name string) (r interface{}) {
