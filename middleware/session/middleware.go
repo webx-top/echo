@@ -21,18 +21,12 @@ import (
 	"github.com/webx-top/echo"
 )
 
-type Sessionser interface {
-	InitSession(echo.Session)
-}
-
 func Sessions(name string, store Store) echo.MiddlewareFunc {
 	return echo.MiddlewareFunc(func(h echo.Handler) echo.Handler {
-		return echo.HandlerFunc(func(ctx echo.Context) error {
-			s := NewMySession(store, name, ctx)
-			if se, ok := ctx.(Sessionser); ok {
-				se.InitSession(s)
-			}
-			err := h.Handle(ctx)
+		return echo.HandlerFunc(func(c echo.Context) error {
+			s := NewMySession(store, name, c)
+			c.InitSession(s)
+			err := h.Handle(c)
 			s.Save()
 			return err
 		})
