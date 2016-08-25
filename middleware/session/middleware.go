@@ -21,19 +21,19 @@ import (
 	"github.com/webx-top/echo"
 )
 
-func Sessions(name string, store Store) echo.MiddlewareFunc {
-	return echo.MiddlewareFunc(func(h echo.Handler) echo.Handler {
-		return echo.HandlerFunc(func(c echo.Context) error {
+func Sessions(name string, store Store) echo.MiddlewareFuncd {
+	return func(h echo.Handler) echo.HandlerFunc {
+		return func(c echo.Context) error {
 			s := NewMySession(store, name, c)
 			c.InitSession(s)
 			err := h.Handle(c)
 			s.Save()
 			return err
-		})
-	})
+		}
+	}
 }
 
-func Middleware(options *echo.SessionOptions, setting interface{}) echo.MiddlewareFunc {
+func Middleware(options *echo.SessionOptions, setting interface{}) echo.MiddlewareFuncd {
 	store := StoreEngine(options, setting)
 	return Sessions(options.Name, store)
 }
