@@ -99,10 +99,9 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 							if d.IsDir() {
 								color = "#e91e63"
 								name += "/"
-							} else {
-								if !opts.Filter(name) {
-									continue
-								}
+							}
+							if !opts.Filter(name) {
+								continue
 							}
 							if _, err = fmt.Fprintf(w, "<a href=\"%s\" style=\"color: %s;\">%s</a>\n", name, color, name); err != nil {
 								return err
