@@ -133,8 +133,8 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 				if err != nil {
 					return err
 				}
-				b = md2html.MarkdownCommon(b)
 				b = opts.Preprocessor(c, b)
+				b = md2html.MarkdownCommon(b)
 
 				w.Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
 				w.Header().Set(echo.HeaderLastModified, modtime.UTC().Format(http.TimeFormat))
