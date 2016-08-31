@@ -66,9 +66,9 @@ func (r *Request) RealIP() string {
 		return r.realIP
 	}
 	r.realIP = r.RemoteAddress()
-	if ip := r.header.Get(echo.HeaderXForwardedFor); ip != "" {
+	if ip := r.header.Get(echo.HeaderXForwardedFor); len(ip) > 0 {
 		r.realIP = ip
-	} else if ip := r.header.Get(echo.HeaderXRealIP); ip != "" {
+	} else if ip := r.header.Get(echo.HeaderXRealIP); len(ip) > 0 {
 		r.realIP = ip
 	} else {
 		r.realIP, _, _ = net.SplitHostPort(r.realIP)
@@ -107,7 +107,7 @@ func (r *Request) PostForm() engine.URLValuer {
 }
 
 func (r *Request) MultipartForm() *multipart.Form {
-	if !strings.HasPrefix(string(r.context.Request.Header.ContentType()), "multipart/form-data") {
+	if !strings.HasPrefix(string(r.context.Request.Header.ContentType()), echo.MIMEMultipartForm) {
 		return nil
 	}
 	re, err := r.context.MultipartForm()
@@ -168,7 +168,7 @@ func (r *Request) reset(c *fasthttp.RequestCtx, h engine.Header, u engine.URL) {
 // Authorization header, if the request uses HTTP Basic Authentication.
 // See RFC 2617, Section 2.
 func (r *Request) BasicAuth() (username, password string, ok bool) {
-	auth := r.Header().Get("Authorization")
+	auth := r.Header().Get(echo.HeaderAuthorization)
 	if auth == "" {
 		return
 	}

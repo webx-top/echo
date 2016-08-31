@@ -69,9 +69,9 @@ func (r *Request) RealIP() string {
 		return r.realIP
 	}
 	r.realIP = r.RemoteAddress()
-	if ip := r.header.Get(echo.HeaderXForwardedFor); ip != "" {
+	if ip := r.header.Get(echo.HeaderXForwardedFor); len(ip) > 0 {
 		r.realIP = ip
-	} else if ip := r.header.Get(echo.HeaderXRealIP); ip != "" {
+	} else if ip := r.header.Get(echo.HeaderXRealIP); len(ip) > 0 {
 		r.realIP = ip
 	} else {
 		r.realIP, _, _ = net.SplitHostPort(r.realIP)
