@@ -68,7 +68,6 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 			}
 			fi, err := os.Stat(absFile)
 			if err != nil {
-				fmt.Println(err)
 				return echo.ErrNotFound
 			}
 			w := c.Response()
@@ -81,13 +80,11 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 						fs := http.Dir(filepath.Dir(absFile))
 						d, err := fs.Open(filepath.Base(absFile))
 						if err != nil {
-							fmt.Println(filepath.Base(absFile)+`:`, err)
 							return echo.ErrNotFound
 						}
 						defer d.Close()
 						dirs, err := d.Readdir(-1)
 						if err != nil {
-							fmt.Println(err)
 							return echo.ErrNotFound
 						}
 
@@ -149,7 +146,6 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 				}
 				b, err := ioutil.ReadFile(absFile)
 				if err != nil {
-					fmt.Println(absFile+`:`, err)
 					return echo.ErrNotFound
 				}
 				b = opts.Preprocessor(c, b)
