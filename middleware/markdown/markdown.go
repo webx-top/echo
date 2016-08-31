@@ -68,7 +68,8 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 			}
 			fi, err := os.Stat(absFile)
 			if err != nil {
-				return err
+				fmt.Println(err)
+				return echo.ErrNotFound
 			}
 			w := c.Response()
 			if fi.IsDir() {
@@ -77,20 +78,34 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 				fi, err = os.Stat(indexFile)
 				if err != nil || fi.IsDir() {
 					if opts.Browse {
-						fs := http.Dir(opts.Root)
-						d, err := fs.Open(file)
+						fs := http.Dir(filepath.Dir(absFile))
+						d, err := fs.Open(filepath.Base(absFile))
 						if err != nil {
+							fmt.Println(filepath.Base(absFile)+`:`, err)
 							return echo.ErrNotFound
 						}
 						defer d.Close()
 						dirs, err := d.Readdir(-1)
 						if err != nil {
-							return err
+							fmt.Println(err)
+							return echo.ErrNotFound
 						}
 
 						// Create a directory index
 						w.Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
-						if _, err = fmt.Fprintf(w, "<pre>\n"); err != nil {
+						if _, err = fmt.Fprintf(w, `<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>`+file+`</title>
+        <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible" />
+        <meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" name="viewport" />
+        <link href="/favicon.ico" rel="shortcut icon">
+    </head>
+    <body>`); err != nil {
+							return err
+						}
+						if _, err = fmt.Fprintf(w, "<ul id=\"fileList\">\n"); err != nil {
 							return err
 						}
 						for _, d := range dirs {
@@ -103,11 +118,14 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 							if !opts.Filter(name) {
 								continue
 							}
-							if _, err = fmt.Fprintf(w, "<a href=\"%s\" style=\"color: %s;\">%s</a>\n", name, color, name); err != nil {
+							if _, err = fmt.Fprintf(w, "<li><a href=\"%s\" style=\"color: %s;\">%s</a></li>\n", name, color, name); err != nil {
 								return err
 							}
 						}
-						_, err = fmt.Fprintf(w, "</pre>\n")
+						if _, err = fmt.Fprintf(w, "</ul>\n"); err != nil {
+							return err
+						}
+						_, err = fmt.Fprintf(w, "</body>\n</html>")
 						return err
 					}
 					return echo.ErrNotFound
@@ -131,7 +149,8 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 				}
 				b, err := ioutil.ReadFile(absFile)
 				if err != nil {
-					return err
+					fmt.Println(absFile+`:`, err)
+					return echo.ErrNotFound
 				}
 				b = opts.Preprocessor(c, b)
 				b = md2html.MarkdownCommon(b)
