@@ -157,6 +157,7 @@ type (
 	// URL defines an interface for HTTP request url.
 	URL interface {
 		SetPath(string)
+		RawPath() string
 		Path() string
 		QueryValue(string) string
 		QueryValues(string) []string

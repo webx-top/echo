@@ -19,8 +19,12 @@ func (u *URL) SetPath(path string) {
 	u.url.SetPath(path)
 }
 
-func (u *URL) Path() string {
+func (u *URL) RawPath() string {
 	return string(u.url.PathOriginal())
+}
+
+func (u *URL) Path() string {
+	return string(u.url.Path())
 }
 
 func (u *URL) QueryValue(name string) string {
