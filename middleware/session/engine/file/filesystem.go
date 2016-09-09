@@ -1,12 +1,37 @@
-package session
+package file
 
 import (
 	"github.com/admpub/sessions"
 	"github.com/webx-top/echo"
+	ss "github.com/webx-top/echo/middleware/session/engine"
 )
 
+func New(opts *FileOptions) FilesystemStore {
+	store := NewFilesystemStore(opts.SavePath, opts.KeyPairs...)
+	store.Options(*opts.SessionOptions)
+	return store
+}
+
+func Reg(store FilesystemStore, args ...string) {
+	name := `file`
+	if len(args) > 0 {
+		name = args[0]
+	}
+	ss.Reg(name, store)
+}
+
+func RegWithOptions(opts *FileOptions, args ...string) {
+	Reg(New(opts), args...)
+}
+
 type FilesystemStore interface {
-	Store
+	ss.Store
+}
+
+type FileOptions struct {
+	SavePath             string   `json:"savePath"`
+	KeyPairs             [][]byte `json:"keyPairs"`
+	*echo.SessionOptions `json:"session"`
 }
 
 // NewFilesystemStore returns a new FilesystemStore.

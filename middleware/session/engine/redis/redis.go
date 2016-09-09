@@ -1,13 +1,44 @@
-package session
+package redis
 
 import (
 	"github.com/admpub/redistore"
 	"github.com/admpub/sessions"
 	"github.com/webx-top/echo"
+	ss "github.com/webx-top/echo/middleware/session/engine"
 )
 
+func New(opts *RedisOptions) RedisStore {
+	store, err := NewRedisStore(opts)
+	if err != nil {
+		panic(err.Error())
+	}
+	store.Options(*opts.SessionOptions)
+	return store
+}
+
+func Reg(store RedisStore, args ...string) {
+	name := `redis`
+	if len(args) > 0 {
+		name = args[0]
+	}
+	ss.Reg(name, store)
+}
+
+func RegWithOptions(opts *RedisOptions, args ...string) {
+	Reg(New(opts), args...)
+}
+
 type RedisStore interface {
-	Store
+	ss.Store
+}
+
+type RedisOptions struct {
+	Size           int                  `json:"size"`
+	NetWork        string               `json:"network"`
+	Address        string               `json:"address"`
+	Password       string               `json:"password"`
+	KeyPairs       [][]byte             `json:"keyPairs"`
+	SessionOptions *echo.SessionOptions `json:"session"`
 }
 
 // size: maximum number of idle connections.
@@ -23,8 +54,8 @@ type RedisStore interface {
 //
 // It is recommended to use an authentication key with 32 or 64 bytes. The encryption key,
 // if set, must be either 16, 24, or 32 bytes to select AES-128, AES-192, or AES-256 modes.
-func NewRedisStore(size int, network, address, password string, keyPairs ...[]byte) (RedisStore, error) {
-	store, err := redistore.NewRediStore(size, network, address, password, keyPairs...)
+func NewRedisStore(opts *RedisOptions) (RedisStore, error) {
+	store, err := redistore.NewRediStore(opts.Size, opts.Network, opts.Address, opts.Password, opts.KeyPairs...)
 	if err != nil {
 		return nil, err
 	}

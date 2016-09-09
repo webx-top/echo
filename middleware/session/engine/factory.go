@@ -15,39 +15,46 @@
    limitations under the License.
 
 */
-package session
+package engine
 
 import (
-	codec "github.com/gorilla/securecookie"
 	"github.com/webx-top/echo"
-	ss "github.com/webx-top/echo/middleware/session/engine"
-	cookieStore "github.com/webx-top/echo/middleware/session/engine/cookie"
 )
 
 func NewSession(options *echo.SessionOptions, ctx echo.Context) echo.Session {
-	return ss.NewSession(options, ctx)
+	store := StoreEngine(options)
+	return NewMySession(store, options.Name, ctx)
 }
 
-type Store interface {
-	ss.Store
-}
-
-func NewMySession(store ss.Store, name string, ctx echo.Context) echo.Session {
-	return ss.NewMySession(store, name, ctx)
+func NewMySession(store Store, name string, ctx echo.Context) echo.Session {
+	return &Session{name, ctx, store, nil, false}
 }
 
 func StoreEngine(options *echo.SessionOptions) (store Store) {
-	store = ss.StoreEngine(options)
+	store = Get(options.Engine)
 	if store == nil {
-		cs := cookieStore.New(&cookieStore.CookieOptions{
-			KeyPairs: [][]byte{
-				[]byte(codec.GenerateRandomKey(32)),
-				[]byte(codec.GenerateRandomKey(32)),
-			},
-			SessionOptions: options,
-		})
-		cookieStore.Reg(cs)
-		store = cs
+		if options.Engine != `cookie` {
+			store = Get(`cookie`)
+		}
 	}
 	return
+}
+
+var stores = map[string]Store{}
+
+func Reg(name string, store Store) {
+	stores[name] = store
+}
+
+func Get(name string) Store {
+	if store, ok := stores[name]; ok {
+		return store
+	}
+	return nil
+}
+
+func Del(name string) {
+	if _, ok := stores[name]; ok {
+		delete(stores, name)
+	}
 }
