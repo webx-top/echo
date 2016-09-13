@@ -2,6 +2,7 @@ package session
 
 import (
 	"runtime"
+	"time"
 
 	"github.com/admpub/boltstore/reaper"
 	"github.com/admpub/boltstore/store"
@@ -31,21 +32,8 @@ func RegWithOptions(opts *BoltOptions, args ...string) {
 	Reg(New(opts), args...)
 }
 
-var boltDB *bolt.DB
-var onCloseBolt func() error
-
 type BoltStore interface {
 	ss.Store
-}
-
-func CloseBolt(boltDB *bolt.DB) {
-	if boltDB == nil {
-		return
-	}
-	boltDB.Close()
-	if onCloseBolt != nil {
-		onCloseBolt()
-	}
 }
 
 type BoltOptions struct {
@@ -55,22 +43,24 @@ type BoltOptions struct {
 	SessionOptions *echo.SessionOptions `json:"session"`
 }
 
-//./sessions.db
+// NewBoltStore ./sessions.db
 func NewBoltStore(opts *BoltOptions) (BoltStore, error) {
-	var err error
-	if boltDB == nil {
-		boltDB, err = bolt.Open(opts.File, 0666, nil)
-		if err != nil {
-			panic(err)
-		}
-		quiteC, doneC := reaper.Run(boltDB, reaper.Options{})
-		onCloseBolt = func() error {
-			// Invoke a reaper which checks and removes expired sessions periodically.
-			reaper.Quit(quiteC, doneC)
-			return nil
-		}
-		runtime.SetFinalizer(boltDB, CloseBolt)
+	db, err := bolt.Open(opts.File, 0666, nil)
+	if err != nil {
+		return nil, err
 	}
+	quiteC, doneC := reaper.Run(db, reaper.Options{
+		BucketName:    []byte(opts.BucketName),
+		CheckInterval: time.Duration(int64(opts.SessionOptions.MaxAge)) * time.Second,
+	})
+	runtime.SetFinalizer(db, func(boltDB *bolt.DB) {
+		if boltDB == nil {
+			return
+		}
+		boltDB.Close()
+		// Invoke a reaper which checks and removes expired sessions periodically.
+		reaper.Quit(quiteC, doneC)
+	})
 	config := store.Config{
 		SessionOptions: sessions.Options{
 			Path:     opts.SessionOptions.Path,
@@ -79,17 +69,19 @@ func NewBoltStore(opts *BoltOptions) (BoltStore, error) {
 			Secure:   opts.SessionOptions.Secure,
 			HttpOnly: opts.SessionOptions.HttpOnly,
 		},
-		DBOptions: store.Options{opts.BucketName},
+		DBOptions: store.Options{BucketName: []byte(opts.BucketName)},
 	}
-	stor, err := store.New(boltDB, config, opts.KeyPairs...)
+	stor, err := store.New(db, config, opts.KeyPairs...)
 	if err != nil {
 		return nil, err
 	}
-	return &boltStore{Store: stor, config: &config, keyPairs: opts.KeyPairs}, nil
+
+	return &boltStore{Store: stor, db: db, config: &config, keyPairs: opts.KeyPairs}, nil
 }
 
 type boltStore struct {
 	*store.Store
+	db       *bolt.DB
 	config   *store.Config
 	keyPairs [][]byte
 }
@@ -102,7 +94,7 @@ func (c *boltStore) Options(options echo.SessionOptions) {
 		Secure:   options.Secure,
 		HttpOnly: options.HttpOnly,
 	}
-	stor, err := store.New(boltDB, *c.config, c.keyPairs...)
+	stor, err := store.New(c.db, *c.config, c.keyPairs...)
 	if err != nil {
 		panic(err.Error())
 	}
