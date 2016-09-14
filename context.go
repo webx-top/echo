@@ -14,6 +14,7 @@ import (
 
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/logger"
+	"github.com/webx-top/echo/param"
 	"golang.org/x/net/context"
 )
 
@@ -85,6 +86,14 @@ type (
 		InitSession(Session)
 		Session() Session
 		Flash(string) interface{}
+
+		//with type action
+		Px(int) param.Param
+		Paramx(string) param.Param
+		Queryx(string) param.Param
+		Formx(string) param.Param
+		//string to param.Param
+		Atop(string) param.Param
 	}
 
 	xContext struct {
@@ -541,4 +550,24 @@ func (c *xContext) SetCookie(key string, val string, args ...interface{}) {
 		cookie.Expires(liftTime)
 	}
 	cookie.Send(c)
+}
+
+func (c *xContext) Px(n int) param.Param {
+	return param.Param(c.P(n))
+}
+
+func (c *xContext) Paramx(name string) param.Param {
+	return param.Param(c.Param(name))
+}
+
+func (c *xContext) Queryx(name string) param.Param {
+	return param.Param(c.Query(name))
+}
+
+func (c *xContext) Formx(name string) param.Param {
+	return param.Param(c.Form(name))
+}
+
+func (c *xContext) Atop(v string) param.Param {
+	return param.Param(v)
 }
