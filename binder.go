@@ -103,7 +103,7 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 		vc = vc.Elem()
 		tc = tc.Elem()
 	}
-	validator := validation.New()
+	var validator *validation.Validation
 	for k, t := range data {
 
 		if k == `` || k[0] == '_' {
@@ -334,6 +334,9 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 				}
 				valid := tagfast.Value(tc, f, `valid`)
 				if len(valid) > 0 {
+					if validator == nil {
+						validator = validation.New()
+					}
 					ok, err := validator.ValidSimple(name, fmt.Sprintf(`%v`, l), valid)
 					if !ok {
 						return validator.Errors[0]
