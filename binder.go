@@ -339,7 +339,7 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 					}
 					ok, err := validator.ValidSimple(name, fmt.Sprintf(`%v`, l), valid)
 					if !ok {
-						return validator.Errors[0]
+						return validator.Errors[0].WithField()
 					}
 					if err != nil {
 						e.Logger().Warn(err)
