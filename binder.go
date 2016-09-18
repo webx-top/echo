@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/webx-top/webx/lib/tagfast"
+	"github.com/webx-top/tagfast"
 )
 
 var DefaultHtmlFilter = func(v string) (r string) {
