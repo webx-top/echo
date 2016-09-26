@@ -23,13 +23,14 @@ type (
 	// Binder is the interface that wraps the Bind method.
 	Binder interface {
 		Bind(interface{}, Context) error
+		MustBind(interface{}, Context) error
 	}
 	binder struct {
 		*Echo
 	}
 )
 
-func (b *binder) Bind(i interface{}, c Context) (err error) {
+func (b *binder) MustBind(i interface{}, c Context) (err error) {
 	r := c.Request()
 	body := r.Body()
 	if body == nil {
@@ -47,6 +48,14 @@ func (b *binder) Bind(i interface{}, c Context) (err error) {
 		err = b.structMap(i, r.PostForm().All())
 	} else if strings.Contains(ct, MIMEMultipartForm) {
 		err = b.structMap(i, r.Form().All())
+	}
+	return
+}
+
+func (b *binder) Bind(i interface{}, c Context) (err error) {
+	err = b.MustBind(i, c)
+	if err == ErrUnsupportedMediaType {
+		err = nil
 	}
 	return
 }

@@ -46,6 +46,7 @@ type (
 		Set(string, interface{})
 		Get(string) interface{}
 		Bind(interface{}) error
+		MustBind(interface{}) error
 		Render(int, string, interface{}) error
 		HTML(int, string) error
 		String(int, string) error
@@ -239,6 +240,10 @@ func (c *xContext) Set(key string, val interface{}) {
 // it based on Content-Type header.
 func (c *xContext) Bind(i interface{}) error {
 	return c.echo.binder.Bind(i, c)
+}
+
+func (c *xContext) MustBind(i interface{}) error {
+	return c.echo.binder.MustBind(i, c)
 }
 
 // Render renders a template with data and sends a text/html response with status
