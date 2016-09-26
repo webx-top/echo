@@ -139,7 +139,7 @@ func (s *Server) startCustomListener() error {
 		s.logger.Info(`FastHTTP is running at `, c.Listener.Addr(), ` [TLS]`)
 		return s.ServeTLS(c.Listener, c.TLSCertFile, c.TLSKeyFile)
 	}
-	s.logger.Info(`FastHTTP is running at `, c.Listener.Addr(), ` [TLS]`)
+	s.logger.Info(`FastHTTP is running at `, c.Listener.Addr())
 	return s.Serve(c.Listener)
 }
 
