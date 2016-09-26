@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/webx-top/echo"
@@ -24,7 +25,7 @@ func Log() echo.MiddlewareFunc {
 			uri := req.URI()
 			size := res.Size()
 			code := res.Status()
-			logger.Infof("%s %s %s %v %s %d", remoteAddr, method, uri, code, stop.Sub(start), size)
+			logger.Info(remoteAddr + " " + method + " " + uri + " " + fmt.Sprint(code) + " " + stop.Sub(start).String() + " " + fmt.Sprint(size))
 			return nil
 		})
 	}
