@@ -34,11 +34,11 @@ func New(addr string) *Server {
 	return NewWithConfig(c)
 }
 
-func NewWithTLS(addr, certfile, keyfile string) *Server {
+func NewWithTLS(addr, certFile, keyFile string) *Server {
 	c := &engine.Config{
 		Address:     addr,
-		TLSCertfile: certfile,
-		TLSKeyfile:  keyfile,
+		TLSCertFile: certFile,
+		TLSKeyFile:  keyFile,
 	}
 	return NewWithConfig(c)
 }
@@ -106,11 +106,19 @@ func (s *Server) Start() error {
 
 }
 
+// Stop implements `engine.Server#Stop` function.
+func (s *Server) Stop() error {
+	if s.config.Listener == nil {
+		return nil
+	}
+	return s.config.Listener.Close()
+}
+
 func (s *Server) startDefaultListener() error {
 	c := s.config
-	if c.TLSCertfile != `` && c.TLSKeyfile != `` {
+	if len(c.TLSCertFile) > 0 && len(c.TLSKeyFile) > 0 {
 		s.logger.Info(`FastHTTP is running at `, c.Address, ` [TLS]`)
-		return s.ListenAndServeTLS(c.Address, c.TLSCertfile, c.TLSKeyfile)
+		return s.ListenAndServeTLS(c.Address, c.TLSCertFile, c.TLSKeyFile)
 	}
 	s.logger.Info(`FastHTTP is running at `, c.Address)
 	return s.ListenAndServe(c.Address)
@@ -118,9 +126,9 @@ func (s *Server) startDefaultListener() error {
 
 func (s *Server) startCustomListener() error {
 	c := s.config
-	if c.TLSCertfile != `` && c.TLSKeyfile != `` {
+	if len(c.TLSCertFile) > 0 && len(c.TLSKeyFile) > 0 {
 		s.logger.Info(`FastHTTP is running at `, c.Listener.Addr(), ` [TLS]`)
-		return s.ServeTLS(c.Listener, c.TLSCertfile, c.TLSKeyfile)
+		return s.ServeTLS(c.Listener, c.TLSCertFile, c.TLSKeyFile)
 	}
 	s.logger.Info(`FastHTTP is running at `, c.Listener.Addr(), ` [TLS]`)
 	return s.Serve(c.Listener)

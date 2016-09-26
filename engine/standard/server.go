@@ -1,8 +1,11 @@
 package standard
 
 import (
+	"crypto/tls"
+	"net"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/admpub/log"
 	"github.com/webx-top/echo/engine"
@@ -32,11 +35,11 @@ func New(addr string) *Server {
 	return NewWithConfig(c)
 }
 
-func NewWithTLS(addr, certfile, keyfile string) *Server {
+func NewWithTLS(addr, certFile, keyFile string) *Server {
 	c := &engine.Config{
 		Address:     addr,
-		TLSCertfile: certfile,
-		TLSKeyfile:  keyfile,
+		TLSCertFile: certFile,
+		TLSKeyFile:  keyFile,
 	}
 	return NewWithConfig(c)
 }
@@ -101,14 +104,47 @@ func (s *Server) Start() error {
 	return s.startCustomListener()
 }
 
-func (s *Server) startDefaultListener() error {
-	c := s.config
-	if c.TLSCertfile != `` && c.TLSKeyfile != `` {
-		s.logger.Info(`StandardHTTP is running at `, s.config.Address, ` [TLS]`)
-		return s.ListenAndServeTLS(c.TLSCertfile, c.TLSKeyfile)
+// Stop implements `engine.Server#Stop` function.
+func (s *Server) Stop() error {
+	if s.config.Listener == nil {
+		return nil
 	}
-	s.logger.Info(`StandardHTTP is running at `, s.config.Address)
-	return s.ListenAndServe()
+	return s.config.Listener.Close()
+}
+
+func (s *Server) startDefaultListener() error {
+	/*
+		c := s.config
+		if len(c.TLSCertFile) > 0 && len(c.TLSKeyFile) > 0 {
+			s.logger.Info(`StandardHTTP is running at `, s.config.Address, ` [TLS]`)
+			return s.ListenAndServeTLS(c.TLSCertFile, c.TLSKeyFile)
+		}
+		s.logger.Info(`StandardHTTP is running at `, s.config.Address)
+		return s.ListenAndServe()
+	*/
+	ln, err := net.Listen("tcp", s.config.Address)
+	if err != nil {
+		return err
+	}
+
+	if len(s.config.TLSCertFile) > 0 && len(s.config.TLSKeyFile) > 0 {
+		// TODO: https://github.com/golang/go/commit/d24f446a90ea94b87591bf16228d7d871fec3d92
+		config := &tls.Config{}
+		if !s.config.DisableHTTP2 {
+			config.NextProtos = append(config.NextProtos, "h2")
+		}
+		config.Certificates = make([]tls.Certificate, 1)
+		config.Certificates[0], err = tls.LoadX509KeyPair(s.config.TLSCertFile, s.config.TLSKeyFile)
+		if err != nil {
+			return err
+		}
+		s.logger.Info(`StandardHTTP is running at `, s.config.Address, ` [TLS]`)
+		s.config.Listener = tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, config)
+	} else {
+		s.logger.Info(`StandardHTTP is running at `, s.config.Address)
+		s.config.Listener = tcpKeepAliveListener{ln.(*net.TCPListener)}
+	}
+	return s.Serve(s.config.Listener)
 }
 
 func (s *Server) startCustomListener() error {
@@ -140,4 +176,22 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.pool.url.Put(reqURL)
 	s.pool.response.Put(res)
 	s.pool.responseHeader.Put(resHdr)
+}
+
+// tcpKeepAliveListener sets TCP keep-alive timeouts on accepted
+// connections. It's used by ListenAndServe and ListenAndServeTLS so
+// dead TCP connections (e.g. closing laptop mid-download) eventually
+// go away.
+type tcpKeepAliveListener struct {
+	*net.TCPListener
+}
+
+func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
+	tc, err := ln.AcceptTCP()
+	if err != nil {
+		return
+	}
+	tc.SetKeepAlive(true)
+	tc.SetKeepAlivePeriod(3 * time.Minute)
+	return tc, nil
 }

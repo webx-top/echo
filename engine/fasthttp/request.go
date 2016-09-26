@@ -175,6 +175,11 @@ func (r *Request) BasicAuth() (username, password string, ok bool) {
 	return parseBasicAuth(auth)
 }
 
+// SetHost implements `engine.Request#SetHost` function.
+func (r *Request) SetHost(host string) {
+	r.context.Request.SetHost(host)
+}
+
 // parseBasicAuth parses an HTTP Basic Authentication string.
 // "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==" returns ("Aladdin", "open sesame", true).
 func parseBasicAuth(auth string) (username, password string, ok bool) {

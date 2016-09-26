@@ -177,3 +177,8 @@ func (r *Request) Scheme() string {
 func (r *Request) BasicAuth() (username, password string, ok bool) {
 	return r.request.BasicAuth()
 }
+
+// SetHost implements `engine.Request#SetHost` function.
+func (r *Request) SetHost(host string) {
+	r.request.Host = host
+}

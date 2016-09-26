@@ -19,6 +19,7 @@ import (
 
 type (
 	Echo struct {
+		engine           engine.Engine
 		prefix           string
 		middleware       []Middleware
 		head             Handler
@@ -570,12 +571,21 @@ func (e *Echo) ServeHTTP(req engine.Request, res engine.Response) {
 
 // Run starts the HTTP engine.
 func (e *Echo) Run(eng engine.Engine) {
+	e.engine = eng
 	eng.SetHandler(e)
 	eng.SetLogger(e.logger)
 	if e.Debug() {
 		e.logger.Debug("running in debug mode")
 	}
 	eng.Start()
+}
+
+// Stop stops the HTTP server.
+func (e *Echo) Stop() error {
+	if e.engine == nil {
+		return nil
+	}
+	return e.engine.Stop()
 }
 
 func NewHTTPError(code int, msg ...string) *HTTPError {
