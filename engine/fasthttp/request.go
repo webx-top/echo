@@ -37,11 +37,11 @@ func NewRequest(c *fasthttp.RequestCtx) *Request {
 }
 
 func (r *Request) Host() string {
-	return string(r.context.Host())
+	return engine.Bytes2str(r.context.Host())
 }
 
 func (r *Request) URI() string {
-	return string(r.context.RequestURI())
+	return engine.Bytes2str(r.context.RequestURI())
 }
 
 func (r *Request) URL() engine.URL {
@@ -122,15 +122,15 @@ func (r *Request) IsTLS() bool {
 }
 
 func (r *Request) Cookie(key string) string {
-	return string(r.context.Request.Header.Cookie(key))
+	return engine.Bytes2str(r.context.Request.Header.Cookie(key))
 }
 
 func (r *Request) Referer() string {
-	return string(r.context.Referer())
+	return engine.Bytes2str(r.context.Referer())
 }
 
 func (r *Request) UserAgent() string {
-	return string(r.context.UserAgent())
+	return engine.Bytes2str(r.context.UserAgent())
 }
 
 func (r *Request) Object() interface{} {
@@ -148,7 +148,7 @@ func (r *Request) FormFile(key string) (multipart.File, *multipart.FileHeader, e
 }
 
 func (r *Request) Scheme() string {
-	return string(r.context.URI().Scheme())
+	return engine.Bytes2str(r.context.URI().Scheme())
 }
 
 // Size implements `engine.Request#ContentLength` function.

@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/admpub/fasthttp"
+	"github.com/webx-top/echo/engine"
 )
 
 type (
@@ -20,15 +21,15 @@ func (u *URL) SetPath(path string) {
 }
 
 func (u *URL) RawPath() string {
-	return string(u.url.PathOriginal())
+	return engine.Bytes2str(u.url.PathOriginal())
 }
 
 func (u *URL) Path() string {
-	return string(u.url.Path())
+	return engine.Bytes2str(u.url.Path())
 }
 
 func (u *URL) QueryValue(name string) string {
-	return string(u.url.QueryArgs().Peek(name))
+	return engine.Bytes2str(u.url.QueryArgs().Peek(name))
 }
 
 func (u *URL) QueryValues(name string) []string {
@@ -50,7 +51,7 @@ func (u *URL) Query() url.Values {
 }
 
 func (u *URL) RawQuery() string {
-	return string(u.url.QueryString())
+	return engine.Bytes2str(u.url.QueryString())
 }
 
 func (u *URL) Object() interface{} {

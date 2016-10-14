@@ -2,7 +2,10 @@
 
 package fasthttp
 
-import "github.com/admpub/fasthttp"
+import (
+	"github.com/admpub/fasthttp"
+	"github.com/webx-top/echo/engine"
+)
 
 type (
 	RequestHeader struct {
@@ -23,7 +26,7 @@ func (h *RequestHeader) Del(key string) {
 }
 
 func (h *RequestHeader) Get(key string) string {
-	return string(h.header.Peek(key))
+	return engine.Bytes2str(h.header.Peek(key))
 }
 
 func (h *RequestHeader) Set(key, val string) {
@@ -47,7 +50,7 @@ func (h *ResponseHeader) Del(key string) {
 }
 
 func (h *ResponseHeader) Get(key string) string {
-	return string(h.header.Peek(key))
+	return engine.Bytes2str(h.header.Peek(key))
 }
 
 func (h *ResponseHeader) Set(key, val string) {

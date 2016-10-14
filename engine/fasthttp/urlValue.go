@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/admpub/fasthttp"
+	"github.com/webx-top/echo/engine"
 )
 
 type UrlValue struct {
@@ -26,7 +27,7 @@ func (u *UrlValue) Del(key string) {
 
 func (u *UrlValue) Get(key string) string {
 	u.init()
-	return string(u.Args.Peek(key))
+	return engine.Bytes2str(u.Args.Peek(key))
 }
 
 func (u *UrlValue) Gets(key string) []string {
@@ -73,8 +74,8 @@ func (u *UrlValue) All() map[string][]string {
 	r := url.Values{}
 	u.init()
 	u.Args.VisitAll(func(k, v []byte) {
-		key := string(k)
-		r.Add(key, string(v))
+		key := engine.Bytes2str(k)
+		r.Add(key, engine.Bytes2str(v))
 	})
 	u.values = &r
 	return *u.values
