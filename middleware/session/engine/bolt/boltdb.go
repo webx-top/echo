@@ -9,6 +9,7 @@ import (
 	"github.com/admpub/sessions"
 	"github.com/boltdb/bolt"
 	"github.com/webx-top/echo"
+	"github.com/webx-top/echo/engine"
 	ss "github.com/webx-top/echo/middleware/session/engine"
 )
 
@@ -45,10 +46,6 @@ type BoltOptions struct {
 
 // NewBoltStore ./sessions.db
 func NewBoltStore(opts *BoltOptions) (BoltStore, error) {
-	db, err := bolt.Open(opts.File, 0666, nil)
-	if err != nil {
-		return nil, err
-	}
 	config := store.Config{
 		SessionOptions: sessions.Options{
 			Path:     opts.SessionOptions.Path,
@@ -59,28 +56,62 @@ func NewBoltStore(opts *BoltOptions) (BoltStore, error) {
 		},
 		DBOptions: store.Options{BucketName: []byte(opts.BucketName)},
 	}
-	stor, err := store.New(db, config, opts.KeyPairs...)
-	if err != nil {
-		return nil, err
+	b := &boltStore{
+		config:   &config,
+		keyPairs: opts.KeyPairs,
+		dbFile:   opts.File,
+		Storex: &Storex{
+			Store: &store.Store{},
+		},
 	}
-	b := &boltStore{Store: stor, db: db, config: &config, keyPairs: opts.KeyPairs}
-	b.quiteC, b.doneC = reaper.Run(db, reaper.Options{
-		BucketName:    []byte(opts.BucketName),
-		CheckInterval: time.Duration(int64(opts.SessionOptions.MaxAge)) * time.Second,
-	})
-	runtime.SetFinalizer(b, func(b *boltStore) {
-		b.Close()
-	})
+	b.Storex.b = b
 	return b, nil
 }
 
-type boltStore struct {
+type Storex struct {
 	*store.Store
-	db       *bolt.DB
+	db          *bolt.DB
+	b           *boltStore
+	initialized bool
+}
+
+func (s *Storex) Get(ctx echo.Context, name string) (*sessions.Session, error) {
+	if s.initialized == false {
+		err := s.b.Init()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return s.Store.Get(ctx, name)
+}
+
+func (s *Storex) New(r engine.Request, name string) (*sessions.Session, error) {
+	if s.initialized == false {
+		err := s.b.Init()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return s.Store.New(r, name)
+}
+
+func (s *Storex) Save(r engine.Request, w engine.Response, session *sessions.Session) error {
+	if s.initialized == false {
+		err := s.b.Init()
+		if err != nil {
+			return err
+		}
+	}
+	return s.Store.Save(r, w, session)
+}
+
+type boltStore struct {
+	*Storex
 	config   *store.Config
 	keyPairs [][]byte
 	quiteC   chan<- struct{}
 	doneC    <-chan struct{}
+	dbFile   string
 }
 
 func (c *boltStore) Options(options echo.SessionOptions) {
@@ -91,15 +122,45 @@ func (c *boltStore) Options(options echo.SessionOptions) {
 		Secure:   options.Secure,
 		HttpOnly: options.HttpOnly,
 	}
-	stor, err := store.New(c.db, *c.config, c.keyPairs...)
+	stor, err := store.New(c.Storex.db, *c.config, c.keyPairs...)
 	if err != nil {
 		panic(err.Error())
 	}
 	c.Store = stor
 }
 
-func (c *boltStore) Close() {
+func (c *boltStore) Close() error {
 	// Invoke a reaper which checks and removes expired sessions periodically.
-	reaper.Quit(c.quiteC, c.doneC)
-	c.db.Close()
+	if c.quiteC != nil && c.doneC != nil {
+		reaper.Quit(c.quiteC, c.doneC)
+	}
+
+	if c.Storex.db != nil {
+		c.Storex.db.Close()
+	}
+
+	return nil
+}
+
+func (b *boltStore) Init() error {
+	if b.Storex.db == nil {
+		var err error
+		b.Storex.db, err = bolt.Open(b.dbFile, 0666, nil)
+		if err != nil {
+			return err
+		}
+		b.Storex.Store, err = store.New(b.Storex.db, *b.config, b.keyPairs...)
+		if err != nil {
+			return err
+		}
+		b.quiteC, b.doneC = reaper.Run(b.Storex.db, reaper.Options{
+			BucketName:    b.config.DBOptions.BucketName,
+			CheckInterval: time.Duration(int64(b.config.SessionOptions.MaxAge)) * time.Second,
+		})
+		runtime.SetFinalizer(b, func(b *boltStore) {
+			b.Close()
+		})
+	}
+	b.Storex.initialized = true
+	return nil
 }
