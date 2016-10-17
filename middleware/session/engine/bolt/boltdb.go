@@ -1,4 +1,4 @@
-package session
+package bolt
 
 import (
 	"runtime"
@@ -49,18 +49,6 @@ func NewBoltStore(opts *BoltOptions) (BoltStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	quiteC, doneC := reaper.Run(db, reaper.Options{
-		BucketName:    []byte(opts.BucketName),
-		CheckInterval: time.Duration(int64(opts.SessionOptions.MaxAge)) * time.Second,
-	})
-	runtime.SetFinalizer(db, func(boltDB *bolt.DB) {
-		if boltDB == nil {
-			return
-		}
-		boltDB.Close()
-		// Invoke a reaper which checks and removes expired sessions periodically.
-		reaper.Quit(quiteC, doneC)
-	})
 	config := store.Config{
 		SessionOptions: sessions.Options{
 			Path:     opts.SessionOptions.Path,
@@ -75,8 +63,15 @@ func NewBoltStore(opts *BoltOptions) (BoltStore, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return &boltStore{Store: stor, db: db, config: &config, keyPairs: opts.KeyPairs}, nil
+	b := &boltStore{Store: stor, db: db, config: &config, keyPairs: opts.KeyPairs}
+	b.quiteC, b.doneC = reaper.Run(db, reaper.Options{
+		BucketName:    []byte(opts.BucketName),
+		CheckInterval: time.Duration(int64(opts.SessionOptions.MaxAge)) * time.Second,
+	})
+	runtime.SetFinalizer(b, func(b *boltStore) {
+		b.Close()
+	})
+	return b, nil
 }
 
 type boltStore struct {
@@ -84,6 +79,8 @@ type boltStore struct {
 	db       *bolt.DB
 	config   *store.Config
 	keyPairs [][]byte
+	quiteC   chan<- struct{}
+	doneC    <-chan struct{}
 }
 
 func (c *boltStore) Options(options echo.SessionOptions) {
@@ -99,4 +96,10 @@ func (c *boltStore) Options(options echo.SessionOptions) {
 		panic(err.Error())
 	}
 	c.Store = stor
+}
+
+func (c *boltStore) Close() {
+	// Invoke a reaper which checks and removes expired sessions periodically.
+	reaper.Quit(c.quiteC, c.doneC)
+	c.db.Close()
 }
