@@ -23,6 +23,7 @@ type (
 	// response objects, path parameters, data and registered handler.
 	Context interface {
 		context.Context
+		Translator
 		Request() engine.Request
 		Response() engine.Response
 		Path() string
@@ -84,20 +85,24 @@ type (
 		GetCookie(string) string
 		SetCookie(string, string, ...interface{})
 
-		InitSession(Session)
-		Session() Session
+		SetSessioner(Sessioner)
+		Session() Sessioner
 		Flash(string) interface{}
 
 		//with type action
-		Px(int) param.Param
-		Paramx(string) param.Param
-		Queryx(string) param.Param
-		Formx(string) param.Param
-		//string to param.Param
-		Atop(string) param.Param
+		Px(int) param.String
+		Stringx(string) param.String
+		Queryx(string) param.String
+		Formx(string) param.String
+		//string to param.String
+		Atop(string) param.String
+
+		SetTranslator(Translator)
 	}
 
 	xContext struct {
+		Translator
+		sessioner     Sessioner
 		context       context.Context
 		request       engine.Request
 		response      engine.Response
@@ -118,14 +123,16 @@ type (
 // NewContext creates a Context object.
 func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 	return &xContext{
-		context:  context.Background(),
-		request:  req,
-		response: res,
-		echo:     e,
-		pvalues:  make([]string, *e.maxParam),
-		store:    make(store),
-		handler:  notFoundHandler,
-		funcs:    make(map[string]interface{}),
+		Translator: DefaultNopTranslate,
+		context:    context.Background(),
+		request:    req,
+		response:   res,
+		echo:       e,
+		pvalues:    make([]string, *e.maxParam),
+		store:      make(store),
+		handler:    notFoundHandler,
+		funcs:      make(map[string]interface{}),
+		sessioner:  DefaultNopSession,
 	}
 }
 
@@ -431,7 +438,13 @@ func (c *xContext) Echo() *Echo {
 	return c.echo
 }
 
+func (c *xContext) SetTranslator(t Translator) {
+	c.Translator = t
+}
+
 func (c *xContext) Reset(req engine.Request, res engine.Response) {
+	c.Translator = DefaultNopTranslate
+	c.sessioner = DefaultNopSession
 	c.context = context.Background()
 	c.request = req
 	c.response = res
@@ -479,21 +492,16 @@ func (c *xContext) SetRenderer(r Renderer) {
 	c.renderer = r
 }
 
-func (c *xContext) InitSession(sess Session) {
-	c.Set(`session`, sess)
+func (c *xContext) SetSessioner(s Sessioner) {
+	c.sessioner = s
 }
 
-func (c *xContext) Session() Session {
-	sess, ok := c.Get(`session`).(Session)
-	if !ok {
-		sess = DefaultNopSession
-		c.Set(`session`, sess)
-	}
-	return sess
+func (c *xContext) Session() Sessioner {
+	return c.sessioner
 }
 
 func (c *xContext) Flash(name string) (r interface{}) {
-	if v := c.Session().Flashes(name); len(v) > 0 {
+	if v := c.sessioner.Flashes(name); len(v) > 0 {
 		r = v[0]
 	}
 	return r
@@ -557,22 +565,22 @@ func (c *xContext) SetCookie(key string, val string, args ...interface{}) {
 	cookie.Send(c)
 }
 
-func (c *xContext) Px(n int) param.Param {
-	return param.Param(c.P(n))
+func (c *xContext) Px(n int) param.String {
+	return param.String(c.P(n))
 }
 
-func (c *xContext) Paramx(name string) param.Param {
-	return param.Param(c.Param(name))
+func (c *xContext) Stringx(name string) param.String {
+	return param.String(c.Param(name))
 }
 
-func (c *xContext) Queryx(name string) param.Param {
-	return param.Param(c.Query(name))
+func (c *xContext) Queryx(name string) param.String {
+	return param.String(c.Query(name))
 }
 
-func (c *xContext) Formx(name string) param.Param {
-	return param.Param(c.Form(name))
+func (c *xContext) Formx(name string) param.String {
+	return param.String(c.Form(name))
 }
 
-func (c *xContext) Atop(v string) param.Param {
-	return param.Param(v)
+func (c *xContext) Atop(v string) param.String {
+	return param.String(v)
 }

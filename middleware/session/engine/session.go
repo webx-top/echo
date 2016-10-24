@@ -32,19 +32,19 @@ func (s *Session) Get(key string) interface{} {
 	return s.Session().Values[key]
 }
 
-func (s *Session) Set(key string, val interface{}) echo.Session {
+func (s *Session) Set(key string, val interface{}) echo.Sessioner {
 	s.Session().Values[key] = val
 	s.written = true
 	return s
 }
 
-func (s *Session) Delete(key string) echo.Session {
+func (s *Session) Delete(key string) echo.Sessioner {
 	delete(s.Session().Values, key)
 	s.written = true
 	return s
 }
 
-func (s *Session) Clear() echo.Session {
+func (s *Session) Clear() echo.Sessioner {
 	for key := range s.Session().Values {
 		if k, ok := key.(string); ok {
 			s.Delete(k)
@@ -53,7 +53,7 @@ func (s *Session) Clear() echo.Session {
 	return s
 }
 
-func (s *Session) AddFlash(value interface{}, vars ...string) echo.Session {
+func (s *Session) AddFlash(value interface{}, vars ...string) echo.Sessioner {
 	s.Session().AddFlash(value, vars...)
 	s.written = true
 	return s
@@ -64,7 +64,7 @@ func (s *Session) Flashes(vars ...string) []interface{} {
 	return s.Session().Flashes(vars...)
 }
 
-func (s *Session) Options(options echo.SessionOptions) echo.Session {
+func (s *Session) Options(options echo.SessionOptions) echo.Sessioner {
 	s.Session().Options = &sessions.Options{
 		Path:     options.Path,
 		Domain:   options.Domain,
@@ -76,7 +76,7 @@ func (s *Session) Options(options echo.SessionOptions) echo.Session {
 	return s
 }
 
-func (s *Session) SetId(id string) echo.Session {
+func (s *Session) SetId(id string) echo.Sessioner {
 	s.Session().ID = id
 	return s
 }

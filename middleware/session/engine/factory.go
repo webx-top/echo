@@ -21,12 +21,12 @@ import (
 	"github.com/webx-top/echo"
 )
 
-func NewSession(options *echo.SessionOptions, ctx echo.Context) echo.Session {
+func NewSession(options *echo.SessionOptions, ctx echo.Context) echo.Sessioner {
 	store := StoreEngine(options)
 	return NewMySession(store, options.Name, ctx)
 }
 
-func NewMySession(store Store, name string, ctx echo.Context) echo.Session {
+func NewMySession(store Store, name string, ctx echo.Context) echo.Sessioner {
 	return &Session{name, ctx, store, nil, false}
 }
 

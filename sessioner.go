@@ -17,7 +17,7 @@
 */
 package echo
 
-var DefaultNopSession Session = &NopSession{}
+var DefaultNopSession Sessioner = &NopSession{}
 
 // Options stores configuration for a session or session store.
 // Fields are a subset of http.Cookie fields.
@@ -29,27 +29,27 @@ type SessionOptions struct {
 
 // Wraps thinly gorilla-session methods.
 // Session stores the values and optional configuration for a session.
-type Session interface {
+type Sessioner interface {
 	// Get returns the session value associated to the given key.
 	Get(key string) interface{}
 	// Set sets the session value associated to the given key.
-	Set(key string, val interface{}) Session
-	SetId(id string) Session
+	Set(key string, val interface{}) Sessioner
+	SetId(id string) Sessioner
 	Id() string
 	// Delete removes the session value associated to the given key.
-	Delete(key string) Session
+	Delete(key string) Sessioner
 	// Clear deletes all values in the session.
-	Clear() Session
+	Clear() Sessioner
 	// AddFlash adds a flash message to the session.
 	// A single variadic argument is accepted, and it is optional: it defines the flash key.
 	// If not defined "_flash" is used by default.
-	AddFlash(value interface{}, vars ...string) Session
+	AddFlash(value interface{}, vars ...string) Sessioner
 	// Flashes returns a slice of flash messages from the session.
 	// A single variadic argument is accepted, and it is optional: it defines the flash key.
 	// If not defined "_flash" is used by default.
 	Flashes(vars ...string) []interface{}
 
-	Options(SessionOptions) Session
+	Options(SessionOptions) Sessioner
 
 	// Save saves all sessions used during the current request.
 	Save() error
@@ -62,11 +62,11 @@ func (n *NopSession) Get(_ string) interface{} {
 	return nil
 }
 
-func (n *NopSession) Set(_ string, _ interface{}) Session {
+func (n *NopSession) Set(_ string, _ interface{}) Sessioner {
 	return n
 }
 
-func (n *NopSession) SetId(_ string) Session {
+func (n *NopSession) SetId(_ string) Sessioner {
 	return n
 }
 
@@ -74,15 +74,15 @@ func (n *NopSession) Id() string {
 	return ``
 }
 
-func (n *NopSession) Delete(_ string) Session {
+func (n *NopSession) Delete(_ string) Sessioner {
 	return n
 }
 
-func (n *NopSession) Clear() Session {
+func (n *NopSession) Clear() Sessioner {
 	return n
 }
 
-func (n *NopSession) AddFlash(_ interface{}, _ ...string) Session {
+func (n *NopSession) AddFlash(_ interface{}, _ ...string) Sessioner {
 	return n
 }
 
@@ -90,7 +90,7 @@ func (n *NopSession) Flashes(_ ...string) []interface{} {
 	return []interface{}{}
 }
 
-func (n *NopSession) Options(_ SessionOptions) Session {
+func (n *NopSession) Options(_ SessionOptions) Sessioner {
 	return n
 }
 

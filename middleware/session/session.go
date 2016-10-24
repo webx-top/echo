@@ -24,7 +24,7 @@ import (
 	cookieStore "github.com/webx-top/echo/middleware/session/engine/cookie"
 )
 
-func NewSession(options *echo.SessionOptions, ctx echo.Context) echo.Session {
+func NewSession(options *echo.SessionOptions, ctx echo.Context) echo.Sessioner {
 	return ss.NewSession(options, ctx)
 }
 
@@ -32,7 +32,7 @@ type Store interface {
 	ss.Store
 }
 
-func NewMySession(store ss.Store, name string, ctx echo.Context) echo.Session {
+func NewMySession(store ss.Store, name string, ctx echo.Context) echo.Sessioner {
 	return ss.NewMySession(store, name, ctx)
 }
 
