@@ -89,12 +89,12 @@ type (
 		Flash(string) interface{}
 
 		//with type action
-		Px(int) param.Param
-		Paramx(string) param.Param
-		Queryx(string) param.Param
-		Formx(string) param.Param
-		//string to param.Param
-		Atop(string) param.Param
+		Px(int) param.String
+		Stringx(string) param.String
+		Queryx(string) param.String
+		Formx(string) param.String
+		//string to param.String
+		Atop(string) param.String
 	}
 
 	xContext struct {
@@ -557,22 +557,22 @@ func (c *xContext) SetCookie(key string, val string, args ...interface{}) {
 	cookie.Send(c)
 }
 
-func (c *xContext) Px(n int) param.Param {
-	return param.Param(c.P(n))
+func (c *xContext) Px(n int) param.String {
+	return param.String(c.P(n))
 }
 
-func (c *xContext) Paramx(name string) param.Param {
-	return param.Param(c.Param(name))
+func (c *xContext) Stringx(name string) param.String {
+	return param.String(c.Param(name))
 }
 
-func (c *xContext) Queryx(name string) param.Param {
-	return param.Param(c.Query(name))
+func (c *xContext) Queryx(name string) param.String {
+	return param.String(c.Query(name))
 }
 
-func (c *xContext) Formx(name string) param.Param {
-	return param.Param(c.Form(name))
+func (c *xContext) Formx(name string) param.String {
+	return param.String(c.Form(name))
 }
 
-func (c *xContext) Atop(v string) param.Param {
-	return param.Param(v)
+func (c *xContext) Atop(v string) param.String {
+	return param.String(v)
 }
