@@ -23,6 +23,7 @@ type (
 	// response objects, path parameters, data and registered handler.
 	Context interface {
 		context.Context
+		Translator
 		Request() engine.Request
 		Response() engine.Response
 		Path() string
@@ -95,9 +96,12 @@ type (
 		Formx(string) param.String
 		//string to param.String
 		Atop(string) param.String
+
+		SetTranslator(Translator)
 	}
 
 	xContext struct {
+		Translator
 		context       context.Context
 		request       engine.Request
 		response      engine.Response
@@ -118,14 +122,15 @@ type (
 // NewContext creates a Context object.
 func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 	return &xContext{
-		context:  context.Background(),
-		request:  req,
-		response: res,
-		echo:     e,
-		pvalues:  make([]string, *e.maxParam),
-		store:    make(store),
-		handler:  notFoundHandler,
-		funcs:    make(map[string]interface{}),
+		Translator: DefaultNopTranslate,
+		context:    context.Background(),
+		request:    req,
+		response:   res,
+		echo:       e,
+		pvalues:    make([]string, *e.maxParam),
+		store:      make(store),
+		handler:    notFoundHandler,
+		funcs:      make(map[string]interface{}),
 	}
 }
 
@@ -431,7 +436,12 @@ func (c *xContext) Echo() *Echo {
 	return c.echo
 }
 
+func (c *xContext) SetTranslator(t Translator) {
+	c.Translator = t
+}
+
 func (c *xContext) Reset(req engine.Request, res engine.Response) {
+	c.Translator = DefaultNopTranslate
 	c.context = context.Background()
 	c.request = req
 	c.response = res
