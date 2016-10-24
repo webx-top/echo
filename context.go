@@ -85,8 +85,8 @@ type (
 		GetCookie(string) string
 		SetCookie(string, string, ...interface{})
 
-		InitSession(Session)
-		Session() Session
+		SetSessioner(Sessioner)
+		Session() Sessioner
 		Flash(string) interface{}
 
 		//with type action
@@ -102,6 +102,7 @@ type (
 
 	xContext struct {
 		Translator
+		sessioner     Sessioner
 		context       context.Context
 		request       engine.Request
 		response      engine.Response
@@ -131,6 +132,7 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 		store:      make(store),
 		handler:    notFoundHandler,
 		funcs:      make(map[string]interface{}),
+		sessioner:  DefaultNopSession,
 	}
 }
 
@@ -442,6 +444,7 @@ func (c *xContext) SetTranslator(t Translator) {
 
 func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.Translator = DefaultNopTranslate
+	c.sessioner = DefaultNopSession
 	c.context = context.Background()
 	c.request = req
 	c.response = res
@@ -489,21 +492,16 @@ func (c *xContext) SetRenderer(r Renderer) {
 	c.renderer = r
 }
 
-func (c *xContext) InitSession(sess Session) {
-	c.Set(`session`, sess)
+func (c *xContext) SetSessioner(s Sessioner) {
+	c.sessioner = s
 }
 
-func (c *xContext) Session() Session {
-	sess, ok := c.Get(`session`).(Session)
-	if !ok {
-		sess = DefaultNopSession
-		c.Set(`session`, sess)
-	}
-	return sess
+func (c *xContext) Session() Sessioner {
+	return c.sessioner
 }
 
 func (c *xContext) Flash(name string) (r interface{}) {
-	if v := c.Session().Flashes(name); len(v) > 0 {
+	if v := c.sessioner.Flashes(name); len(v) > 0 {
 		r = v[0]
 	}
 	return r
