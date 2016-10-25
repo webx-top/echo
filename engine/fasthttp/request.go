@@ -20,12 +20,13 @@ import (
 
 type (
 	Request struct {
-		response *Response
-		context  *fasthttp.RequestCtx
-		url      engine.URL
-		header   engine.Header
-		value    *Value
-		realIP   string
+		response   *Response
+		context    *fasthttp.RequestCtx
+		url        engine.URL
+		header     engine.Header
+		value      *Value
+		realIP     string
+		stdRequest *http.Request
 	}
 )
 
@@ -167,6 +168,7 @@ func (r *Request) reset(res *Response, c *fasthttp.RequestCtx, h engine.Header, 
 	r.value = NewValue(r)
 	r.realIP = ``
 	r.response = res
+	r.stdRequest = nil
 }
 
 // BasicAuth returns the username and password provided in the request's
@@ -186,6 +188,9 @@ func (r *Request) SetHost(host string) {
 }
 
 func (r *Request) StdRequest() *http.Request {
+	if r.stdRequest != nil {
+		return r.stdRequest
+	}
 	var req http.Request
 	ctx := r.context
 	req.Method = r.Method()
@@ -216,7 +221,8 @@ func (r *Request) StdRequest() *http.Request {
 		r.response.Error("Internal Server Error")
 	}
 	req.URL = rURL
-	return &req
+	r.stdRequest = &req
+	return r.stdRequest
 }
 
 // parseBasicAuth parses an HTTP Basic Authentication string.

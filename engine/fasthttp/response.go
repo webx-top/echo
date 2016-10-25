@@ -19,13 +19,14 @@ var ErrAlreadyCommitted = errors.New(`response already committed`)
 
 type (
 	Response struct {
-		context   *fasthttp.RequestCtx
-		header    engine.Header
-		status    int
-		size      int64
-		committed bool
-		writer    io.Writer
-		logger    logger.Logger
+		context           *fasthttp.RequestCtx
+		header            engine.Header
+		status            int
+		size              int64
+		committed         bool
+		writer            io.Writer
+		logger            logger.Logger
+		stdResponseWriter http.ResponseWriter
 	}
 )
 
@@ -140,12 +141,17 @@ func (r *Response) reset(c *fasthttp.RequestCtx, h engine.Header) {
 	r.size = 0
 	r.committed = false
 	r.writer = c
+	r.stdResponseWriter = nil
 }
 
 func (r *Response) StdResponseWriter() http.ResponseWriter {
+	if r.stdResponseWriter != nil {
+		return r.stdResponseWriter
+	}
 	w := &netHTTPResponseWriter{
 		response: r,
 	}
+	r.stdResponseWriter = w
 	return w
 }
 
