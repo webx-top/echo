@@ -113,15 +113,6 @@ func (s *Server) Stop() error {
 }
 
 func (s *Server) startDefaultListener() error {
-	/*
-		c := s.config
-		if len(c.TLSCertFile) > 0 && len(c.TLSKeyFile) > 0 {
-			s.logger.Info(`StandardHTTP is running at `, s.config.Address, ` [TLS]`)
-			return s.ListenAndServeTLS(c.TLSCertFile, c.TLSKeyFile)
-		}
-		s.logger.Info(`StandardHTTP is running at `, s.config.Address)
-		return s.ListenAndServe()
-	*/
 	ln, err := net.Listen("tcp", s.config.Address)
 	if err != nil {
 		return err

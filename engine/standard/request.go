@@ -182,3 +182,7 @@ func (r *Request) BasicAuth() (username, password string, ok bool) {
 func (r *Request) SetHost(host string) {
 	r.request.Host = host
 }
+
+func (r *Request) StdRequest() *http.Request {
+	return r.request
+}

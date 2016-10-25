@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net"
+	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/admpub/fasthttp"
@@ -77,7 +79,7 @@ func (r *Request) RealIP() string {
 }
 
 func (r *Request) Method() string {
-	return string(r.context.Method())
+	return engine.Bytes2str(r.context.Method())
 }
 
 func (r *Request) SetMethod(method string) {
@@ -180,6 +182,41 @@ func (r *Request) SetHost(host string) {
 	r.context.Request.SetHost(host)
 }
 
+func (r *Request) StdRequest() *http.Request {
+	var req http.Request
+	ctx := r.context
+	body := ctx.PostBody()
+	req.Method = r.Method()
+	req.Proto = "HTTP/1.1"
+	req.ProtoMajor = 1
+	req.ProtoMinor = 1
+	req.RequestURI = r.URI()
+	req.ContentLength = int64(len(body))
+	req.Host = r.Host()
+	req.RemoteAddr = r.RemoteAddress()
+
+	hdr := make(http.Header)
+	ctx.Request.Header.VisitAll(func(k, v []byte) {
+		sk := engine.Bytes2str(k)
+		sv := engine.Bytes2str(v)
+		switch sk {
+		case "Transfer-Encoding":
+			req.TransferEncoding = append(req.TransferEncoding, sv)
+		default:
+			hdr.Set(sk, sv)
+		}
+	})
+	req.Header = hdr
+	req.Body = &netHTTPBody{body}
+	rURL, err := url.ParseRequestURI(req.RequestURI)
+	if err != nil {
+		ctx.Logger().Printf("cannot parse requestURI %q: %s", req.RequestURI, err)
+		ctx.Error("Internal Server Error", fasthttp.StatusInternalServerError)
+	}
+	req.URL = rURL
+	return &req
+}
+
 // parseBasicAuth parses an HTTP Basic Authentication string.
 // "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==" returns ("Aladdin", "open sesame", true).
 func parseBasicAuth(auth string) (username, password string, ok bool) {
@@ -197,4 +234,22 @@ func parseBasicAuth(auth string) (username, password string, ok bool) {
 		return
 	}
 	return cs[:s], cs[s+1:], true
+}
+
+type netHTTPBody struct {
+	b []byte
+}
+
+func (r *netHTTPBody) Read(p []byte) (int, error) {
+	if len(r.b) == 0 {
+		return 0, io.EOF
+	}
+	n := copy(p, r.b)
+	r.b = r.b[n:]
+	return n, nil
+}
+
+func (r *netHTTPBody) Close() error {
+	r.b = r.b[:0]
+	return nil
 }

@@ -128,3 +128,46 @@ func (r *Response) reset(c *fasthttp.RequestCtx, h engine.Header) {
 	r.committed = false
 	r.writer = c
 }
+
+func (r *Response) StdResponseWriter() http.ResponseWriter {
+	w := &netHTTPResponseWriter{
+		context: r.context,
+	}
+	return w
+}
+
+type netHTTPResponseWriter struct {
+	statusCode int
+	h          http.Header
+	body       []byte
+	context    *fasthttp.RequestCtx
+}
+
+func (w *netHTTPResponseWriter) StatusCode() int {
+	if w.statusCode == 0 {
+		return http.StatusOK
+	}
+	return w.statusCode
+}
+
+func (w *netHTTPResponseWriter) Header() http.Header {
+	if w.h == nil {
+		w.h = make(http.Header)
+	}
+	return w.h
+}
+
+func (w *netHTTPResponseWriter) WriteHeader(statusCode int) {
+	w.statusCode = statusCode
+	w.context.SetStatusCode(w.statusCode)
+	for k, vv := range w.Header() {
+		for _, v := range vv {
+			w.context.Response.Header.Set(k, v)
+		}
+	}
+}
+
+func (w *netHTTPResponseWriter) Write(p []byte) (int, error) {
+	w.body = append(w.body, p...)
+	return len(p), nil
+}

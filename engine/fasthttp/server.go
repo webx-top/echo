@@ -116,15 +116,6 @@ func (s *Server) Stop() error {
 }
 
 func (s *Server) startDefaultListener() error {
-	/*
-		c := s.config
-		if len(c.TLSCertFile) > 0 && len(c.TLSKeyFile) > 0 {
-			s.logger.Info(`FastHTTP is running at `, c.Address, ` [TLS]`)
-			return s.ListenAndServeTLS(c.Address, c.TLSCertFile, c.TLSKeyFile)
-		}
-		s.logger.Info(`FastHTTP is running at `, c.Address)
-		return s.ListenAndServe(c.Address)
-	*/
 	ln, err := net.Listen("tcp4", s.config.Address)
 	if err != nil {
 		return err

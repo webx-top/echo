@@ -89,6 +89,8 @@ type (
 		Size() int64
 
 		BasicAuth() (string, string, bool)
+
+		StdRequest() *http.Request
 	}
 
 	// Response defines an interface for HTTP response.
@@ -124,6 +126,8 @@ type (
 		NotFound()
 		SetCookie(*http.Cookie)
 		ServeFile(string)
+
+		StdResponseWriter() http.ResponseWriter
 	}
 
 	// Header defines an interface for HTTP header.

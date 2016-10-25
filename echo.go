@@ -625,6 +625,18 @@ func WrapHandler(h interface{}) Handler {
 	if v, ok := h.(func(Context) error); ok {
 		return HandlerFunc(v)
 	}
+	if v, ok := h.(http.Handler); ok {
+		return HandlerFunc(func(ctx Context) error {
+			v.ServeHTTP(ctx.Response().StdResponseWriter(), ctx.Request().StdRequest())
+			return nil
+		})
+	}
+	if v, ok := h.(func(http.ResponseWriter, *http.Request)); ok {
+		return HandlerFunc(func(ctx Context) error {
+			v(ctx.Response().StdResponseWriter(), ctx.Request().StdRequest())
+			return nil
+		})
+	}
 	panic(`unknown handler`)
 }
 

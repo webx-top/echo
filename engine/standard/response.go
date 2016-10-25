@@ -118,3 +118,7 @@ func (r *Response) SetCookie(cookie *http.Cookie) {
 func (r *Response) ServeFile(file string) {
 	http.ServeFile(r.response, r.request, file)
 }
+
+func (r *Response) StdResponseWriter() http.ResponseWriter {
+	return r.response
+}
