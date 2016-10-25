@@ -209,14 +209,14 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 						t, err := time.Parse(dateformat, v)
 						if err != nil {
 							e.Logger().Warnf(`arg %v as int: %v`, v, err)
-							break
+							l = int(0)
+						} else {
+							l = int(t.Unix())
 						}
-						l = int(t.Unix())
 					} else {
 						x, err := strconv.Atoi(v)
 						if err != nil {
 							e.Logger().Warnf(`arg %v as int: %v`, v, err)
-							break
 						}
 						l = x
 					}
@@ -227,14 +227,14 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 						t, err := time.Parse(dateformat, v)
 						if err != nil {
 							e.Logger().Warnf(`arg %v as int64: %v`, v, err)
-							break
+							l = int64(0)
+						} else {
+							l = t.Unix()
 						}
-						l = t.Unix()
 					} else {
 						x, err := strconv.ParseInt(v, 10, 64)
 						if err != nil {
 							e.Logger().Warnf(`arg %v as int64: %v`, v, err)
-							break
 						}
 						l = x
 					}
@@ -243,7 +243,6 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 					x, err := strconv.ParseFloat(v, 64)
 					if err != nil {
 						e.Logger().Warnf(`arg %v as float64: %v`, v, err)
-						break
 					}
 					l = x
 					tv.Set(reflect.ValueOf(l))
@@ -253,14 +252,14 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 						t, err := time.Parse(dateformat, v)
 						if err != nil {
 							e.Logger().Warnf(`arg %v as uint: %v`, v, err)
-							break
+							l = uint64(0)
+						} else {
+							l = uint64(t.Unix())
 						}
-						l = uint64(t.Unix())
 					} else {
 						x, err := strconv.ParseUint(v, 10, 64)
 						if err != nil {
 							e.Logger().Warnf(`arg %v as uint: %v`, v, err)
-							break
 						}
 						l = x
 					}
@@ -279,7 +278,6 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 								x, err = time.Parse(`2006-01-02`, v)
 								if err != nil {
 									e.Logger().Warnf(`unsupported time format %v, %v`, v, err)
-									break
 								}
 							}
 						}
@@ -335,7 +333,6 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 						}
 						if err != nil {
 							e.Logger().Warnf(`slice error: %v, %v`, name, err)
-							break
 						}
 					}
 				default:
