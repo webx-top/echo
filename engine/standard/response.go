@@ -79,6 +79,16 @@ func (r *Response) Object() interface{} {
 	return r.response
 }
 
+func (r *Response) Error(errMsg string, args ...int) {
+	if len(args) > 0 {
+		r.status = args[0]
+	} else {
+		r.status = http.StatusInternalServerError
+	}
+	r.response.Write(engine.Str2bytes(errMsg))
+	r.response.WriteHeader(r.status)
+}
+
 func (r *Response) reset(w http.ResponseWriter, req *http.Request, h engine.Header) {
 	r.response = w
 	r.request = req

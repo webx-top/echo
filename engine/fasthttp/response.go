@@ -3,6 +3,7 @@
 package fasthttp
 
 import (
+	"errors"
 	"io"
 	"net"
 	"net/http"
@@ -13,6 +14,8 @@ import (
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/logger"
 )
+
+var ErrAlreadyCommitted = errors.New(`response already committed`)
 
 type (
 	Response struct {
@@ -45,7 +48,7 @@ func (r *Response) Header() engine.Header {
 
 func (r *Response) WriteHeader(code int) {
 	if r.committed {
-		r.logger.Warn("response already committed")
+		r.logger.Warn(ErrAlreadyCommitted.Error())
 		return
 	}
 	r.status = code
@@ -120,6 +123,16 @@ func (r *Response) ServeFile(file string) {
 	fasthttp.ServeFile(r.context, file)
 }
 
+func (r *Response) Error(errMsg string, args ...int) {
+	if len(args) > 0 {
+		r.status = args[0]
+	} else {
+		r.status = fasthttp.StatusInternalServerError
+	}
+	r.Write(engine.Str2bytes(errMsg))
+	r.WriteHeader(r.status)
+}
+
 func (r *Response) reset(c *fasthttp.RequestCtx, h engine.Header) {
 	r.context = c
 	r.header = h
@@ -156,6 +169,9 @@ func (w *netHTTPResponseWriter) Header() http.Header {
 }
 
 func (w *netHTTPResponseWriter) WriteHeader(statusCode int) {
+	if w.response.committed {
+		return
+	}
 	w.response.WriteHeader(statusCode)
 	h := w.response.Header()
 	for k, vv := range w.Header() {
@@ -166,5 +182,8 @@ func (w *netHTTPResponseWriter) WriteHeader(statusCode int) {
 }
 
 func (w *netHTTPResponseWriter) Write(b []byte) (int, error) {
+	if w.response.committed {
+		return 0, ErrAlreadyCommitted
+	}
 	return w.response.Write(b)
 }

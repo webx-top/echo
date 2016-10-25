@@ -126,6 +126,7 @@ type (
 		NotFound()
 		SetCookie(*http.Cookie)
 		ServeFile(string)
+		Error(string, ...int)
 
 		StdResponseWriter() http.ResponseWriter
 	}
