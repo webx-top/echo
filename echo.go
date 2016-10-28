@@ -219,7 +219,6 @@ func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 	//----------
 	// Defaults
 	//----------
-
 	e.SetHTTPErrorHandler(e.DefaultHTTPErrorHandler)
 	e.SetBinder(&binder{Echo: e})
 
@@ -323,7 +322,7 @@ func (e *Echo) Use(middleware ...interface{}) {
 
 // PreUse adds handler to the middleware chain.
 func (e *Echo) PreUse(middleware ...interface{}) {
-	middlewares := make([]Middleware, 0)
+	var middlewares []Middleware
 	for _, m := range middleware {
 		middlewares = append(middlewares, WrapMiddleware(m))
 	}
@@ -394,7 +393,7 @@ func (e *Echo) Match(methods []string, path string, h interface{}, middleware ..
 }
 
 func (e *Echo) add(method, path string, h interface{}, middleware ...interface{}) {
-	var handler Handler = WrapHandler(h)
+	handler := WrapHandler(h)
 	if handler == nil {
 		return
 	}
@@ -474,8 +473,7 @@ func (e *Echo) Group(prefix string, m ...interface{}) (g *Group) {
 
 // URI generates a URI from handler.
 func (e *Echo) URI(handler interface{}, params ...interface{}) string {
-	uri := ``
-	var name string
+	var uri, name string
 	if h, ok := handler.(Handler); ok {
 		if hn, ok := h.(HandleNamer); ok {
 			name = hn.HandleName()

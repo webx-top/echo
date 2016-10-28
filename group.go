@@ -87,7 +87,7 @@ func (g *Group) Group(prefix string, m ...interface{}) *Group {
 }
 
 func (g *Group) add(method, path string, h interface{}, middleware ...interface{}) {
-	var handler Handler = WrapHandler(h)
+	handler := WrapHandler(h)
 	if handler == nil {
 		return
 	}

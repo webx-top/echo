@@ -67,7 +67,7 @@ func (b *binder) structMap(m interface{}, data map[string][]string) error {
 
 // SplitJSON user[name][test]
 func SplitJSON(s string) ([]string, error) {
-	res := make([]string, 0)
+	var res []string
 	var begin, end int
 	var isleft bool
 	for i, r := range s {
