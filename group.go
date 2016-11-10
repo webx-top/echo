@@ -100,14 +100,15 @@ func (g *Group) add(method, path string, h interface{}, middleware ...interface{
 		name = handlerName(handler)
 	}
 
-	for _, m := range g.middleware {
-		handler = m.Handle(handler)
-	}
-
 	for _, m := range middleware {
 		mw := WrapMiddleware(m)
 		handler = mw.Handle(handler)
 	}
+	
+	for _, m := range g.middleware {
+		handler = m.Handle(handler)
+	}
+
 	hdl := HandlerFunc(func(c Context) error {
 		return handler.Handle(c)
 	})
