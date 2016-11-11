@@ -635,6 +635,11 @@ func WrapHandler(h interface{}) Handler {
 			return nil
 		})
 	}
+	if v, ok := h.(func(http.ResponseWriter, *http.Request) error); ok {
+		return HandlerFunc(func(ctx Context) error {
+			return v(ctx.Response().StdResponseWriter(), ctx.Request().StdRequest())
+		})
+	}
 	panic(`unknown handler`)
 }
 
@@ -684,6 +689,9 @@ func WrapMiddleware(m interface{}) Middleware {
 	if v, ok := m.(func(http.ResponseWriter, *http.Request)); ok {
 		return WrapMiddlewareFromStdHandleFunc(v)
 	}
+	if v, ok := m.(func(http.ResponseWriter, *http.Request) error); ok {
+		return WrapMiddlewareFromStdHandleFuncd(v)
+	}
 	panic(`unknown middleware`)
 }
 
@@ -717,6 +725,17 @@ func WrapMiddlewareFromStdHandleFunc(h func(http.ResponseWriter, *http.Request))
 			h(c.Response().StdResponseWriter(), c.Request().StdRequest())
 			if c.Response().Committed() {
 				return nil
+			}
+			return next.Handle(c)
+		})
+	})
+}
+
+func WrapMiddlewareFromStdHandleFuncd(h func(http.ResponseWriter, *http.Request) error) Middleware {
+	return MiddlewareFunc(func(next Handler) Handler {
+		return HandlerFunc(func(c Context) error {
+			if err := h(c.Response().StdResponseWriter(), c.Request().StdRequest()); err != nil {
+				return err
 			}
 			return next.Handle(c)
 		})
