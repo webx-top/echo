@@ -8,8 +8,8 @@ import (
 	// "github.com/webx-top/echo/engine/fasthttp"
 	"github.com/admpub/websocket"
 	"github.com/webx-top/echo/engine/standard"
+	ws "github.com/webx-top/echo/handler/websocket"
 	mw "github.com/webx-top/echo/middleware"
-	ws "github.com/webx-top/echo/middleware/websocket"
 )
 
 var homeTemplate = template.Must(template.New("").Parse(`
