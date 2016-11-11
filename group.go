@@ -34,14 +34,14 @@ func (g *Group) Match(methods []string, path string, h interface{}, middleware .
 
 func (g *Group) Use(middleware ...interface{}) {
 	for _, m := range middleware {
-		g.middleware = append(g.middleware, WrapMiddleware(m))
+		g.middleware = append(g.middleware, g.echo.ValidMiddleware(m))
 	}
 }
 
 func (g *Group) PreUse(middleware ...interface{}) {
 	middlewares := make([]Middleware, 0)
 	for _, m := range middleware {
-		middlewares = append(middlewares, WrapMiddleware(m))
+		middlewares = append(middlewares, g.echo.ValidMiddleware(m))
 	}
 	g.middleware = append(middlewares, g.middleware...)
 }
@@ -101,10 +101,10 @@ func (g *Group) add(method, path string, h interface{}, middleware ...interface{
 	}
 
 	for _, m := range middleware {
-		mw := WrapMiddleware(m)
+		mw := g.echo.ValidMiddleware(m)
 		handler = mw.Handle(handler)
 	}
-	
+
 	for _, m := range g.middleware {
 		handler = m.Handle(handler)
 	}

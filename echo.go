@@ -19,19 +19,21 @@ import (
 
 type (
 	Echo struct {
-		engine           engine.Engine
-		prefix           string
-		middleware       []Middleware
-		head             Handler
-		maxParam         *int
-		notFoundHandler  HandlerFunc
-		httpErrorHandler HTTPErrorHandler
-		binder           Binder
-		renderer         Renderer
-		pool             sync.Pool
-		debug            bool
-		router           *Router
-		logger           logger.Logger
+		engine            engine.Engine
+		prefix            string
+		middleware        []Middleware
+		head              Handler
+		maxParam          *int
+		notFoundHandler   HandlerFunc
+		httpErrorHandler  HTTPErrorHandler
+		binder            Binder
+		renderer          Renderer
+		pool              sync.Pool
+		debug             bool
+		router            *Router
+		logger            logger.Logger
+		HandlerWrapper    func(interface{}) Handler
+		MiddlewareWrapper func(interface{}) Middleware
 	}
 
 	Route struct {
@@ -316,7 +318,7 @@ func (e *Echo) Debug() bool {
 // Use adds handler to the middleware chain.
 func (e *Echo) Use(middleware ...interface{}) {
 	for _, m := range middleware {
-		e.middleware = append(e.middleware, WrapMiddleware(m))
+		e.middleware = append(e.middleware, e.ValidMiddleware(m))
 	}
 }
 
@@ -324,7 +326,7 @@ func (e *Echo) Use(middleware ...interface{}) {
 func (e *Echo) PreUse(middleware ...interface{}) {
 	var middlewares []Middleware
 	for _, m := range middleware {
-		middlewares = append(middlewares, WrapMiddleware(m))
+		middlewares = append(middlewares, e.ValidMiddleware(m))
 	}
 	e.middleware = append(middlewares, e.middleware...)
 }
@@ -392,8 +394,28 @@ func (e *Echo) Match(methods []string, path string, h interface{}, middleware ..
 	}
 }
 
+func (e *Echo) ValidHandler(v interface{}) (h Handler) {
+	if e.HandlerWrapper != nil {
+		h = e.HandlerWrapper(v)
+		if h != nil {
+			return
+		}
+	}
+	return WrapHandler(v)
+}
+
+func (e *Echo) ValidMiddleware(v interface{}) (m Middleware) {
+	if e.MiddlewareWrapper != nil {
+		m = e.MiddlewareWrapper(v)
+		if m != nil {
+			return
+		}
+	}
+	return WrapMiddleware(v)
+}
+
 func (e *Echo) add(method, path string, h interface{}, middleware ...interface{}) {
-	handler := WrapHandler(h)
+	handler := e.ValidHandler(h)
 	if handler == nil {
 		return
 	}
@@ -404,7 +426,7 @@ func (e *Echo) add(method, path string, h interface{}, middleware ...interface{}
 		name = handlerName(handler)
 	}
 	for _, m := range middleware {
-		mw := WrapMiddleware(m)
+		mw := e.ValidMiddleware(m)
 		handler = mw.Handle(handler)
 	}
 	hdl := HandlerFunc(func(c Context) error {

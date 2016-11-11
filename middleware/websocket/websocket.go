@@ -18,56 +18,53 @@
 package websocket
 
 import (
-	"net/http"
-
 	"github.com/admpub/log"
 	"github.com/admpub/websocket"
 	"github.com/webx-top/echo"
 )
 
-type Options struct {
-	Path     string                      `json:"path"` //UrlPath
-	Upgrader *websocket.Upgrader         `json:"upgrader"`
-	Executer func(*websocket.Conn) error `json:"-"`
+var DefaultUpgrader = &websocket.Upgrader{}
+
+func HanderWrapper(v interface{}) echo.Handler {
+	if h, ok := v.(func(*websocket.Conn, echo.Context) error); ok {
+		return Websocket(h)
+	}
+	return nil
 }
 
-var DefaultOptions = &Options{
-	Path:     "/websocket/",
-	Upgrader: &websocket.Upgrader{},
-	Executer: func(c *websocket.Conn) error {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			return err
-		}
-		log.Info("Websocket recv: %s", message)
-		return c.WriteMessage(mt, message)
-	},
-}
-
-func Websocket(opts ...*Options) echo.Middleware {
-	var opt *Options
+func Websocket(executer func(*websocket.Conn, echo.Context) error, opts ...*websocket.Upgrader) echo.HandlerFunc {
+	var opt *websocket.Upgrader
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 	if opt == nil {
-		opt = DefaultOptions
+		opt = DefaultUpgrader
 	}
-	h := func(w http.ResponseWriter, r *http.Request) error {
-		c, err := opt.Upgrader.Upgrade(w, r, nil)
+	if executer == nil {
+		//Test mode
+		executer = func(c *websocket.Conn, ctx echo.Context) error {
+			mt, message, err := c.ReadMessage()
+			if err != nil {
+				return err
+			}
+			log.Infof("Websocket recv: %s", message)
+			return c.WriteMessage(mt, message)
+		}
+	}
+	h := func(ctx echo.Context) error {
+		w := ctx.Response().StdResponseWriter()
+		r := ctx.Request().StdRequest()
+		c, err := opt.Upgrade(w, r, nil)
 		if err != nil {
 			return err
 		}
 		defer c.Close()
 		for {
-			if err = opt.Executer(c); err != nil {
+			if err = executer(c, ctx); err != nil {
 				break
 			}
 		}
 		return err
 	}
-	return echo.MiddlewareFunc(func(next echo.Handler) echo.Handler {
-		return echo.HandlerFunc(func(c echo.Context) error {
-			return h(c.Response().StdResponseWriter(), c.Request().StdRequest())
-		})
-	})
+	return echo.HandlerFunc(h)
 }
