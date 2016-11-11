@@ -23,6 +23,11 @@ import (
 	"github.com/webx-top/echo"
 )
 
+type Handler interface {
+	Handle(*websocket.Conn, echo.Context) error
+	Upgrader() *websocket.Upgrader
+}
+
 var (
 	DefaultUpgrader = &websocket.Upgrader{}
 	DefaultExecuter = func(c *websocket.Conn, ctx echo.Context) (err error) {
@@ -44,6 +49,9 @@ var (
 func HanderWrapper(v interface{}) echo.Handler {
 	if h, ok := v.(func(*websocket.Conn, echo.Context) error); ok {
 		return Websocket(h)
+	}
+	if h, ok := v.(Handler); ok {
+		return Websocket(h.Handle, h.Upgrader())
 	}
 	return nil
 }
