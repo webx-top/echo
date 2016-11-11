@@ -117,17 +117,44 @@ func main() {
 		})
 		return nil
 	})
-	e.Get("/websocket", ws.Websocket(nil))
+	//e.Get("/websocket", ws.Websocket(nil))
 
 	e.HandlerWrapper = ws.HanderWrapper
 
+	e.Get("/websocket", func(c *websocket.Conn, ctx echo.Context) error {
+		//push(writer)
+		go func() {
+			var counter int
+			for {
+				if counter >= 10 { //测试只推10条
+					return
+				}
+				time.Sleep(5 * time.Second)
+				message := time.Now().String()
+				ctx.Logger().Info(`Push message: `, message)
+				if err := c.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
+					ctx.Logger().Error(`Push error: `, err.Error())
+					return
+				}
+				counter++
+			}
+		}()
+
+		//echo
+		ws.DefaultExecuter(c, ctx)
+		return nil
+	})
+
 	e.Get("/notice", func(c *websocket.Conn, ctx echo.Context) error {
-
-		time.Sleep(5 * time.Second)
-		message := time.Now().String()
-		ctx.Logger().Info(`Push message: `, message)
-
-		return c.WriteMessage(websocket.TextMessage, []byte(message))
+		for {
+			time.Sleep(5 * time.Second)
+			message := time.Now().String()
+			ctx.Logger().Info(`Push message: `, message)
+			if err := c.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 
 	// FastHTTP

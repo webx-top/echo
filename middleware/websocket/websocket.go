@@ -23,7 +23,23 @@ import (
 	"github.com/webx-top/echo"
 )
 
-var DefaultUpgrader = &websocket.Upgrader{}
+var (
+	DefaultUpgrader = &websocket.Upgrader{}
+	DefaultExecuter = func(c *websocket.Conn, ctx echo.Context) (err error) {
+		for {
+			mt, message, err := c.ReadMessage()
+			if err != nil {
+				return err
+			}
+			log.Infof("Websocket recv: %s", message)
+
+			if err = c.WriteMessage(mt, message); err != nil {
+				return err
+			}
+		}
+		return
+	}
+)
 
 func HanderWrapper(v interface{}) echo.Handler {
 	if h, ok := v.(func(*websocket.Conn, echo.Context) error); ok {
@@ -42,14 +58,7 @@ func Websocket(executer func(*websocket.Conn, echo.Context) error, opts ...*webs
 	}
 	if executer == nil {
 		//Test mode
-		executer = func(c *websocket.Conn, ctx echo.Context) error {
-			mt, message, err := c.ReadMessage()
-			if err != nil {
-				return err
-			}
-			log.Infof("Websocket recv: %s", message)
-			return c.WriteMessage(mt, message)
-		}
+		executer = DefaultExecuter
 	}
 	h := func(ctx echo.Context) error {
 		w := ctx.Response().StdResponseWriter()
@@ -59,12 +68,8 @@ func Websocket(executer func(*websocket.Conn, echo.Context) error, opts ...*webs
 			return err
 		}
 		defer c.Close()
-		for {
-			if err = executer(c, ctx); err != nil {
-				break
-			}
-		}
-		return err
+
+		return executer(c, ctx)
 	}
 	return echo.HandlerFunc(h)
 }
