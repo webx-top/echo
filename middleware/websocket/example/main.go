@@ -2,9 +2,11 @@ package main
 
 import (
 	"html/template"
+	"time"
 
 	"github.com/webx-top/echo"
 	// "github.com/webx-top/echo/engine/fasthttp"
+	"github.com/admpub/websocket"
 	"github.com/webx-top/echo/engine/standard"
 	mw "github.com/webx-top/echo/middleware"
 	ws "github.com/webx-top/echo/middleware/websocket"
@@ -31,7 +33,7 @@ window.addEventListener("load", function(evt) {
         if (ws) {
             return false;
         }
-        ws = new WebSocket("{{.}}");
+        ws = new WebSocket("{{.echo}}");
         ws.onopen = function(evt) {
             print("OPEN");
         }
@@ -65,6 +67,21 @@ window.addEventListener("load", function(evt) {
         return false;
     };
 
+    var wsn = new WebSocket("{{.notice}}");
+    var notice = document.getElementById("notice");
+    wsn.onopen = function(evt) {
+        notice.innerHTML = "[NOTICE] OPEN";
+    }
+    wsn.onclose = function(evt) {
+        notice.innerHTML = "[NOTICE] CLOSE";
+        wsn = null;
+    }
+    wsn.onmessage = function(evt) {
+        notice.innerHTML = "[NOTICE] RESPONSE: " + evt.data;
+    }
+    wsn.onerror = function(evt) {
+        notice.innerHTML = "[NOTICE] ERROR: " + evt.data;
+    }
 });
 </script>
 </head>
@@ -82,6 +99,7 @@ You can change the message and send multiple times.
 <button id="send">Send</button>
 </form>
 </td><td valign="top" width="50%">
+<div id="notice" style="color:red"></div>
 <div id="output"></div>
 </td></tr></table>
 </body>
@@ -93,10 +111,24 @@ func main() {
 	e.Use(mw.Log())
 
 	e.Get("/", func(c echo.Context) error {
-		homeTemplate.Execute(c.Response(), "ws://"+c.Request().Host()+"/websocket")
+		homeTemplate.Execute(c.Response(), map[string]string{
+			"echo":   "ws://" + c.Request().Host() + "/websocket",
+			"notice": "ws://" + c.Request().Host() + "/notice",
+		})
 		return nil
 	})
 	e.Get("/websocket", ws.Websocket(nil))
+
+	e.HandlerWrapper = ws.HanderWrapper
+
+	e.Get("/notice", func(c *websocket.Conn, ctx echo.Context) error {
+
+		time.Sleep(5 * time.Second)
+		message := time.Now().String()
+		ctx.Logger().Info(`Push message: `, message)
+
+		return c.WriteMessage(websocket.TextMessage, []byte(message))
+	})
 
 	// FastHTTP
 	// e.Run(fasthttp.New(":4444"))
