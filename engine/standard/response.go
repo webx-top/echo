@@ -28,7 +28,7 @@ func NewResponse(w http.ResponseWriter, r *http.Request, l logger.Logger) *Respo
 	return &Response{
 		response: w,
 		request:  r,
-		header:   &Header{w.Header()},
+		header:   &Header{header: w.Header()},
 		writer:   w,
 		logger:   l,
 	}
@@ -107,6 +107,7 @@ func (r *Response) Hijack(fn func(net.Conn)) {
 	}
 	_ = bufrw
 	fn(conn)
+	conn.Close()
 }
 
 func (r *Response) Body() []byte {

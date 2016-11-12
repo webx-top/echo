@@ -34,7 +34,7 @@ func NewRequest(c *fasthttp.RequestCtx) *Request {
 	req := &Request{
 		context: c,
 		url:     &URL{url: c.URI()},
-		header:  &RequestHeader{&c.Request.Header},
+		header:  &RequestHeader{header: &c.Request.Header, stdhdr: nil},
 	}
 	req.value = NewValue(req)
 	req.response = NewResponse(c)

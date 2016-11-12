@@ -33,7 +33,7 @@ type (
 func NewResponse(c *fasthttp.RequestCtx) *Response {
 	return &Response{
 		context: c,
-		header:  &ResponseHeader{&c.Response.Header},
+		header:  &ResponseHeader{header: &c.Response.Header, stdhdr: nil},
 		writer:  c,
 		logger:  log.New("echo"),
 	}

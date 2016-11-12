@@ -149,6 +149,8 @@ type (
 		Set(string, string)
 
 		Object() interface{}
+
+		Std() http.Header
 	}
 
 	// URLValuer Wrap url.Values

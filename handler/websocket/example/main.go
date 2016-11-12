@@ -4,9 +4,9 @@ import (
 	"html/template"
 	"time"
 
-	"github.com/webx-top/echo"
-	// "github.com/webx-top/echo/engine/fasthttp"
 	"github.com/admpub/websocket"
+	"github.com/webx-top/echo"
+	"github.com/webx-top/echo/engine/fasthttp"
 	"github.com/webx-top/echo/engine/standard"
 	ws "github.com/webx-top/echo/handler/websocket"
 	mw "github.com/webx-top/echo/middleware"
@@ -45,7 +45,11 @@ window.addEventListener("load", function(evt) {
             print("RESPONSE: " + evt.data);
         }
         ws.onerror = function(evt) {
-            print("ERROR: " + evt.data);
+            if (typeof(evt.data)!='undefined') {
+                print("ERROR: " + evt.data);
+            }else{
+                console.dir(evt);
+            }
         }
         return false;
     };
@@ -80,7 +84,7 @@ window.addEventListener("load", function(evt) {
         notice.innerHTML = "[NOTICE] RESPONSE: " + evt.data;
     }
     wsn.onerror = function(evt) {
-        notice.innerHTML = "[NOTICE] ERROR: " + evt.data;
+        notice.innerHTML = "[NOTICE] ERROR: " + (typeof(evt.data)!='undefined'?evt.data:evt);
     }
 });
 </script>
@@ -157,9 +161,14 @@ func main() {
 		return nil
 	})
 
-	// FastHTTP
-	// e.Run(fasthttp.New(":4444"))
+	switch `fast` {
+	case `fast`:
 
-	// Standard
-	e.Run(standard.New(":4444"))
+		// FastHTTP
+		e.Run(fasthttp.New(":4444"))
+
+	default:
+		// Standard
+		e.Run(standard.New(":4444"))
+	}
 }

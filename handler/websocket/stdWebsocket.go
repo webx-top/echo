@@ -18,25 +18,37 @@
 package websocket
 
 import (
+	"github.com/admpub/log"
 	"github.com/admpub/websocket"
 	"github.com/webx-top/echo"
 )
 
-type Handler interface {
+type StdHandler interface {
 	Handle(*websocket.Conn, echo.Context) error
-	Upgrader() *websocket.EchoUpgrader
+	Upgrader() *websocket.Upgrader
 }
 
 var (
-	DefaultUpgrader = &websocket.EchoUpgrader{}
+	DefaultStdUpgrader = &websocket.Upgrader{}
+	DefaultExecuter    = func(c *websocket.Conn, ctx echo.Context) (err error) {
+		for {
+			mt, message, err := c.ReadMessage()
+			if err != nil {
+				return err
+			}
+			log.Infof("Websocket recv: %s", message)
+
+			if err = c.WriteMessage(mt, message); err != nil {
+				return err
+			}
+		}
+		return
+	}
 )
 
-func HanderWrapper(v interface{}) echo.Handler {
+func StdHanderWrapper(v interface{}) echo.Handler {
 	if h, ok := v.(func(*websocket.Conn, echo.Context) error); ok {
-		return Websocket(h)
-	}
-	if h, ok := v.(Handler); ok {
-		return Websocket(h.Handle, h.Upgrader())
+		return StdWebsocket(h)
 	}
 	if h, ok := v.(StdHandler); ok {
 		return StdWebsocket(h.Handle, h.Upgrader())
@@ -44,23 +56,28 @@ func HanderWrapper(v interface{}) echo.Handler {
 	return nil
 }
 
-func Websocket(executer func(*websocket.Conn, echo.Context) error, opts ...*websocket.EchoUpgrader) echo.HandlerFunc {
-	var opt *websocket.EchoUpgrader
+func StdWebsocket(executer func(*websocket.Conn, echo.Context) error, opts ...*websocket.Upgrader) echo.HandlerFunc {
+	var opt *websocket.Upgrader
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 	if opt == nil {
-		opt = DefaultUpgrader
+		opt = DefaultStdUpgrader
 	}
 	if executer == nil {
 		//Test mode
 		executer = DefaultExecuter
 	}
-	h := func(ctx echo.Context) (err error) {
-		return opt.Upgrade(ctx, func(conn *websocket.Conn) error {
-			defer conn.Close()
-			return executer(conn, ctx)
-		}, nil)
+	h := func(ctx echo.Context) error {
+		w := ctx.Response().StdResponseWriter()
+		r := ctx.Request().StdRequest()
+		c, err := opt.Upgrade(w, r, nil)
+		if err != nil {
+			return err
+		}
+		defer c.Close()
+
+		return executer(c, ctx)
 	}
 	return echo.HandlerFunc(h)
 }

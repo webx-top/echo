@@ -3,6 +3,8 @@
 package fasthttp
 
 import (
+	"net/http"
+
 	"github.com/admpub/fasthttp"
 	"github.com/webx-top/echo/engine"
 )
@@ -10,10 +12,12 @@ import (
 type (
 	RequestHeader struct {
 		header *fasthttp.RequestHeader
+		stdhdr *http.Header
 	}
 
 	ResponseHeader struct {
 		header *fasthttp.ResponseHeader
+		stdhdr *http.Header
 	}
 )
 
@@ -45,6 +49,18 @@ func (h *RequestHeader) reset(hdr *fasthttp.RequestHeader) {
 	h.header = hdr
 }
 
+func (h *RequestHeader) Std() http.Header {
+	if h.stdhdr != nil {
+		return *h.stdhdr
+	}
+	hdr := http.Header{}
+	h.header.VisitAll(func(key, value []byte) {
+		hdr.Add(string(key), string(value))
+	})
+	h.stdhdr = &hdr
+	return hdr
+}
+
 func (h *ResponseHeader) Del(key string) {
 	h.header.Del(key)
 }
@@ -63,4 +79,16 @@ func (h *ResponseHeader) Object() interface{} {
 
 func (h *ResponseHeader) reset(hdr *fasthttp.ResponseHeader) {
 	h.header = hdr
+}
+
+func (h *ResponseHeader) Std() http.Header {
+	if h.stdhdr != nil {
+		return *h.stdhdr
+	}
+	hdr := http.Header{}
+	h.header.VisitAll(func(key, value []byte) {
+		hdr.Add(string(key), string(value))
+	})
+	h.stdhdr = &hdr
+	return hdr
 }

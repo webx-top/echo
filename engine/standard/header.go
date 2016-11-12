@@ -31,3 +31,7 @@ func (h *Header) reset(hdr http.Header) {
 func (h *Header) Object() interface{} {
 	return h.header
 }
+
+func (h *Header) Std() http.Header {
+	return h.header
+}
