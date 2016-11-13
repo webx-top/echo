@@ -91,6 +91,11 @@ func (r *Request) URI() string {
 	return r.request.RequestURI
 }
 
+// SetURI implements `engine.Request#SetURI` function.
+func (r *Request) SetURI(uri string) {
+	r.request.RequestURI = uri
+}
+
 func (r *Request) Body() io.ReadCloser {
 	return r.request.Body
 }

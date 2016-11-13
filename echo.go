@@ -146,13 +146,18 @@ const (
 	HeaderContentLength                 = "Content-Length"
 	HeaderContentType                   = "Content-Type"
 	HeaderIfModifiedSince               = "If-Modified-Since"
+	HeaderCookie                        = "Cookie"
+	HeaderSetCookie                     = "Set-Cookie"
 	HeaderLastModified                  = "Last-Modified"
 	HeaderLocation                      = "Location"
 	HeaderUpgrade                       = "Upgrade"
 	HeaderVary                          = "Vary"
 	HeaderWWWAuthenticate               = "WWW-Authenticate"
+	HeaderXForwardedProto               = "X-Forwarded-Proto"
+	HeaderXHTTPMethodOverride           = "X-HTTP-Method-Override"
 	HeaderXForwardedFor                 = "X-Forwarded-For"
 	HeaderXRealIP                       = "X-Real-IP"
+	HeaderServer                        = "Server"
 	HeaderOrigin                        = "Origin"
 	HeaderAccessControlRequestMethod    = "Access-Control-Request-Method"
 	HeaderAccessControlRequestHeaders   = "Access-Control-Request-Headers"
@@ -162,6 +167,14 @@ const (
 	HeaderAccessControlAllowCredentials = "Access-Control-Allow-Credentials"
 	HeaderAccessControlExposeHeaders    = "Access-Control-Expose-Headers"
 	HeaderAccessControlMaxAge           = "Access-Control-Max-Age"
+
+	// Security
+	HeaderStrictTransportSecurity = "Strict-Transport-Security"
+	HeaderXContentTypeOptions     = "X-Content-Type-Options"
+	HeaderXXSSProtection          = "X-XSS-Protection"
+	HeaderXFrameOptions           = "X-Frame-Options"
+	HeaderContentSecurityPolicy   = "Content-Security-Policy"
+	HeaderXCSRFToken              = "X-CSRF-Token"
 )
 
 var (

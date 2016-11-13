@@ -49,6 +49,11 @@ func (r *Request) URI() string {
 	return engine.Bytes2str(r.context.RequestURI())
 }
 
+// SetURI implements `engine.Request#SetURI` function.
+func (r *Request) SetURI(uri string) {
+	r.context.Request.Header.SetRequestURI(uri)
+}
+
 func (r *Request) URL() engine.URL {
 	return r.url
 }

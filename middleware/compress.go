@@ -15,9 +15,27 @@ import (
 )
 
 type (
+	// GzipConfig defines the config for Gzip middleware.
+	GzipConfig struct {
+		// Skipper defines a function to skip middleware.
+		Skipper Skipper `json:"-"`
+
+		// Gzip compression level.
+		// Optional. Default value -1.
+		Level int `json:"level"`
+	}
+
 	gzipWriter struct {
 		io.Writer
 		engine.Response
+	}
+)
+
+var (
+	// DefaultGzipConfig is the default Gzip middleware config.
+	DefaultGzipConfig = &GzipConfig{
+		Skipper: defaultSkipper,
+		Level:   -1,
 	}
 )
 
@@ -49,31 +67,60 @@ var writerPool = sync.Pool{
 // Gzip returns a middleware which compresses HTTP response using gzip compression
 // scheme.
 func Gzip() echo.MiddlewareFunc {
+	return GzipWithConfig(DefaultGzipConfig)
+}
+
+// GzipWithConfig return Gzip middleware with config.
+// See: `Gzip()`.
+func GzipWithConfig(config *GzipConfig) echo.MiddlewareFunc {
+	// Defaults
+	if config.Skipper == nil {
+		config.Skipper = DefaultGzipConfig.Skipper
+	}
+	if config.Level == 0 {
+		config.Level = DefaultGzipConfig.Level
+	}
+
+	pool := gzipPool(config)
+	scheme := `gzip`
+
 	return func(h echo.Handler) echo.Handler {
-		scheme := `gzip`
 		return echo.HandlerFunc(func(c echo.Context) error {
-			c.Response().Header().Add(echo.HeaderVary, echo.HeaderAcceptEncoding)
+			if config.Skipper(c) {
+				return h.Handle(c)
+			}
+			resp := c.Response()
+			resp.Header().Add(echo.HeaderVary, echo.HeaderAcceptEncoding)
 			if strings.Contains(c.Request().Header().Get(echo.HeaderAcceptEncoding), scheme) {
-				rw := c.Response().Writer()
-				w := writerPool.Get().(*gzip.Writer)
+				rw := resp.Writer()
+				w := pool.Get().(*gzip.Writer)
 				w.Reset(rw)
 				defer func() {
-					if c.Response().Size() == 0 {
+					if resp.Size() == 0 {
 						// We have to reset response to it's pristine state when
 						// nothing is written to body or error is returned.
 						// See issue #424, #407.
-						c.Response().SetWriter(rw)
-						c.Response().Header().Del(echo.HeaderContentEncoding)
+						resp.SetWriter(rw)
+						resp.Header().Del(echo.HeaderContentEncoding)
 						w.Reset(ioutil.Discard)
 					}
 					w.Close()
-					writerPool.Put(w)
+					pool.Put(w)
 				}()
-				gw := gzipWriter{Writer: w, Response: c.Response()}
-				c.Response().Header().Set(echo.HeaderContentEncoding, scheme)
-				c.Response().SetWriter(gw)
+				gw := gzipWriter{Writer: w, Response: resp}
+				resp.Header().Set(echo.HeaderContentEncoding, scheme)
+				resp.SetWriter(gw)
 			}
 			return h.Handle(c)
 		})
+	}
+}
+
+func gzipPool(config *GzipConfig) sync.Pool {
+	return sync.Pool{
+		New: func() interface{} {
+			w, _ := gzip.NewWriterLevel(ioutil.Discard, config.Level)
+			return w
+		},
 	}
 }

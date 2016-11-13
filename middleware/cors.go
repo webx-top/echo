@@ -11,6 +11,9 @@ import (
 type (
 	// CORSConfig defines the config for CORS middleware.
 	CORSConfig struct {
+		// Skipper defines a function to skip middleware.
+		Skipper Skipper
+
 		// AllowOrigin defines a list of origins that may access the resource.
 		// Optional with default value as []string{"*"}.
 		AllowOrigins []string
@@ -47,6 +50,7 @@ type (
 var (
 	// DefaultCORSConfig is the default CORS middleware config.
 	DefaultCORSConfig = CORSConfig{
+		Skipper:      defaultSkipper,
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.POST, echo.DELETE},
 	}
@@ -62,12 +66,16 @@ func CORS() echo.MiddlewareFunc {
 // See `CORS()`.
 func CORSWithConfig(config CORSConfig) echo.MiddlewareFunc {
 	// Defaults
+	if config.Skipper == nil {
+		config.Skipper = DefaultCORSConfig.Skipper
+	}
 	if len(config.AllowOrigins) == 0 {
 		config.AllowOrigins = DefaultCORSConfig.AllowOrigins
 	}
 	if len(config.AllowMethods) == 0 {
 		config.AllowMethods = DefaultCORSConfig.AllowMethods
 	}
+	allowOrigins := strings.Join(config.AllowOrigins, ",")
 	allowMethods := strings.Join(config.AllowMethods, ",")
 	allowHeaders := strings.Join(config.AllowHeaders, ",")
 	exposeHeaders := strings.Join(config.ExposeHeaders, ",")
@@ -75,26 +83,16 @@ func CORSWithConfig(config CORSConfig) echo.MiddlewareFunc {
 
 	return func(next echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
-			rq := c.Request()
-			origin := c.Request().Header().Get(echo.HeaderOrigin)
+			if config.Skipper(c) {
+				return next.Handle(c)
+			}
+			req := c.Request()
 			header := c.Response().Header()
 
-			// Check allowed origins
-			allowedOrigin := ""
-			for _, o := range config.AllowOrigins {
-				if o == "*" || o == origin {
-					allowedOrigin = o
-					break
-				}
-			}
-
 			// Simple request
-			if rq.Method() != echo.OPTIONS {
+			if req.Method() != echo.OPTIONS {
 				header.Add(echo.HeaderVary, echo.HeaderOrigin)
-				if origin == "" || allowedOrigin == "" {
-					return next.Handle(c)
-				}
-				header.Set(echo.HeaderAccessControlAllowOrigin, allowedOrigin)
+				header.Set(echo.HeaderAccessControlAllowOrigin, allowOrigins)
 				if config.AllowCredentials {
 					header.Set(echo.HeaderAccessControlAllowCredentials, "true")
 				}
@@ -108,10 +106,7 @@ func CORSWithConfig(config CORSConfig) echo.MiddlewareFunc {
 			header.Add(echo.HeaderVary, echo.HeaderOrigin)
 			header.Add(echo.HeaderVary, echo.HeaderAccessControlRequestMethod)
 			header.Add(echo.HeaderVary, echo.HeaderAccessControlRequestHeaders)
-			if origin == "" || allowedOrigin == "" {
-				return next.Handle(c)
-			}
-			header.Set(echo.HeaderAccessControlAllowOrigin, allowedOrigin)
+			header.Set(echo.HeaderAccessControlAllowOrigin, allowOrigins)
 			header.Set(echo.HeaderAccessControlAllowMethods, allowMethods)
 			if config.AllowCredentials {
 				header.Set(echo.HeaderAccessControlAllowCredentials, "true")
@@ -119,7 +114,7 @@ func CORSWithConfig(config CORSConfig) echo.MiddlewareFunc {
 			if allowHeaders != "" {
 				header.Set(echo.HeaderAccessControlAllowHeaders, allowHeaders)
 			} else {
-				h := rq.Header().Get(echo.HeaderAccessControlRequestHeaders)
+				h := req.Header().Get(echo.HeaderAccessControlRequestHeaders)
 				if h != "" {
 					header.Set(echo.HeaderAccessControlAllowHeaders, h)
 				}
