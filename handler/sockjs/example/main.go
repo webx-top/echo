@@ -126,7 +126,7 @@ func main() {
 
 	switch `` {
 	case `fast`:
-
+		panic(`Unimplemented`)
 		// FastHTTP
 		e.Run(fasthttp.New(":4444"))
 
