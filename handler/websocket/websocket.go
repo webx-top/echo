@@ -22,6 +22,12 @@ import (
 	"github.com/webx-top/echo"
 )
 
+type Options struct {
+	Handle   func(*websocket.Conn, echo.Context) error
+	Upgrader *websocket.EchoUpgrader
+	Validate func(echo.Context) error
+}
+
 type Handler interface {
 	Handle(*websocket.Conn, echo.Context) error
 	Upgrader() *websocket.EchoUpgrader
@@ -39,8 +45,20 @@ func HanderWrapper(v interface{}) echo.Handler {
 	if h, ok := v.(Handler); ok {
 		return Websocket(h.Handle, h.Validate, h.Upgrader())
 	}
+	if h, ok := v.(Options); ok {
+		return Websocket(h.Handle, h.Validate, h.Upgrader)
+	}
+	if h, ok := v.(*Options); ok {
+		return Websocket(h.Handle, h.Validate, h.Upgrader)
+	}
 	if h, ok := v.(StdHandler); ok {
 		return StdWebsocket(h.Handle, h.Validate, h.Upgrader())
+	}
+	if h, ok := v.(StdOptions); ok {
+		return StdWebsocket(h.Handle, h.Validate, h.Upgrader)
+	}
+	if h, ok := v.(*StdOptions); ok {
+		return StdWebsocket(h.Handle, h.Validate, h.Upgrader)
 	}
 	return nil
 }
