@@ -26,6 +26,7 @@ import (
 type StdHandler interface {
 	Handle(*websocket.Conn, echo.Context) error
 	Upgrader() *websocket.Upgrader
+	Validate(echo.Context) error
 }
 
 var (
@@ -48,15 +49,15 @@ var (
 
 func StdHanderWrapper(v interface{}) echo.Handler {
 	if h, ok := v.(func(*websocket.Conn, echo.Context) error); ok {
-		return StdWebsocket(h)
+		return StdWebsocket(h, nil)
 	}
 	if h, ok := v.(StdHandler); ok {
-		return StdWebsocket(h.Handle, h.Upgrader())
+		return StdWebsocket(h.Handle, h.Validate, h.Upgrader())
 	}
 	return nil
 }
 
-func StdWebsocket(executer func(*websocket.Conn, echo.Context) error, opts ...*websocket.Upgrader) echo.HandlerFunc {
+func StdWebsocket(executer func(*websocket.Conn, echo.Context) error, validate func(echo.Context) error, opts ...*websocket.Upgrader) echo.HandlerFunc {
 	var opt *websocket.Upgrader
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -69,6 +70,11 @@ func StdWebsocket(executer func(*websocket.Conn, echo.Context) error, opts ...*w
 		executer = DefaultExecuter
 	}
 	h := func(ctx echo.Context) error {
+		if validate != nil {
+			if err := validate(ctx); err != nil {
+				return err
+			}
+		}
 		w := ctx.Response().StdResponseWriter()
 		r := ctx.Request().StdRequest()
 		c, err := opt.Upgrade(w, r, nil)

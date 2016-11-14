@@ -25,6 +25,7 @@ import (
 type Handler interface {
 	Handle(*websocket.Conn, echo.Context) error
 	Upgrader() *websocket.EchoUpgrader
+	Validate(echo.Context) error
 }
 
 var (
@@ -33,18 +34,18 @@ var (
 
 func HanderWrapper(v interface{}) echo.Handler {
 	if h, ok := v.(func(*websocket.Conn, echo.Context) error); ok {
-		return Websocket(h)
+		return Websocket(h, nil)
 	}
 	if h, ok := v.(Handler); ok {
-		return Websocket(h.Handle, h.Upgrader())
+		return Websocket(h.Handle, h.Validate, h.Upgrader())
 	}
 	if h, ok := v.(StdHandler); ok {
-		return StdWebsocket(h.Handle, h.Upgrader())
+		return StdWebsocket(h.Handle, h.Validate, h.Upgrader())
 	}
 	return nil
 }
 
-func Websocket(executer func(*websocket.Conn, echo.Context) error, opts ...*websocket.EchoUpgrader) echo.HandlerFunc {
+func Websocket(executer func(*websocket.Conn, echo.Context) error, validate func(echo.Context) error, opts ...*websocket.EchoUpgrader) echo.HandlerFunc {
 	var opt *websocket.EchoUpgrader
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -57,6 +58,11 @@ func Websocket(executer func(*websocket.Conn, echo.Context) error, opts ...*webs
 		executer = DefaultExecuter
 	}
 	h := func(ctx echo.Context) (err error) {
+		if validate != nil {
+			if err = validate(ctx); err != nil {
+				return
+			}
+		}
 		return opt.Upgrade(ctx, func(conn *websocket.Conn) error {
 			defer conn.Close()
 			return executer(conn, ctx)
