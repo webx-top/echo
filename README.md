@@ -180,7 +180,7 @@ e.Use(mw.Static(&mw.StaticOptions{
 
 ```go
 // Root level middleware
-e.Use(middleware.Logger())
+e.Use(middleware.Log())
 e.Use(middleware.Recover())
 
 // Group level middleware
