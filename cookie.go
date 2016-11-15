@@ -60,15 +60,6 @@ func NewCookie(name string, value string, opts ...*CookieOptions) *Cookie {
 
 type Cookie struct {
 	cookie *http.Cookie
-	/*
-		Name:     name,
-		Value:    value,
-		Path:     path,
-		Domain:   domain,
-		MaxAge:   0,
-		Secure:   secure,
-		HttpOnly: httpOnly,
-	*/
 }
 
 func (c *Cookie) Path(p string) *Cookie {
@@ -106,5 +97,5 @@ func (c *Cookie) HttpOnly(p bool) *Cookie {
 }
 
 func (c *Cookie) Send(ctx Context) {
-	ctx.Response().Header().Set("Set-Cookie", c.cookie.String())
+	ctx.Response().Header().Set(HeaderSetCookie, c.cookie.String())
 }
