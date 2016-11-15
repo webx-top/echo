@@ -1,5 +1,338 @@
 # Echo
-A fast and unfancy micro web framework for Go.
+#### Echo is a fast and unfancy web framework for Go (Golang). Up to 10x faster than the rest.
+
+## Features
+
+- Optimized HTTP router which smartly prioritize routes.
+- Build robust and scalable RESTful APIs.
+- Run with standard HTTP server or FastHTTP server.
+- Group APIs.
+- Extensible middleware framework.
+- Define middleware at root, group or route level.
+- Handy functions to send variety of HTTP responses.
+- Centralized HTTP error handling.
+- Template rendering with any template engine.
+- Define your format for the logger.
+- Highly customizable.
+
+## Quick Start
+
+### Installation
+
+```sh
+$ go get github.com/webx-top/echo
+```
+
+### Hello, World!
+
+Create `server.go`
+
+```go
+package main
+
+import (
+	"net/http"
+	"github.com/webx-top/echo"
+	"github.com/webx-top/echo/engine/standard"
+)
+
+func main() {
+	e := echo.New()
+	e.Get("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello, World!")
+	})
+	e.Run(standard.New(":1323"))
+}
+```
+
+Start server
+
+```sh
+$ go run server.go
+```
+
+Browse to [http://localhost:1323](http://localhost:1323) and you should see
+Hello, World! on the page.
+
+### Routing
+
+```go
+e.Post("/users", saveUser)
+e.Get("/users/:id", getUser)
+e.Put("/users/:id", updateUser)
+e.Delete("/users/:id", deleteUser)
+```
+
+### Path Parameters
+
+```go
+func getUser(c echo.Context) error {
+	// User ID from path `users/:id`
+	id := c.Param("id")
+}
+```
+
+### Query Parameters
+
+`/show?team=x-men&member=wolverine`
+
+```go
+func show(c echo.Context) error {
+	// Get team and member from the query string
+	team := c.Query("team")
+	member := c.Query("member")
+}
+```
+
+### Form `application/x-www-form-urlencoded`
+
+`POST` `/save`
+
+name | value
+:--- | :---
+name | Joe Smith
+email | joe@labstack.com
+
+
+```go
+func save(c echo.Context) error {
+	// Get name and email
+	name := c.Form("name")
+	email := c.Form("email")
+}
+```
+
+### Form `multipart/form-data`
+
+`POST` `/save`
+
+name | value
+:--- | :---
+name | Joe Smith
+email | joe@labstack.com
+avatar | avatar
+
+```go
+func save(c echo.Context) error {
+	// Get name and email
+	name := c.Form("name")
+	email := c.Form("email")
+
+	//------------
+	// Get avatar
+	//------------
+
+	src, fileHeader, err := c.FormFile("avatar")
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	// Destination
+	file, err := os.Create(fileHeader.Filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Copy
+	if _, err = io.Copy(file, src); err != nil {
+		return err
+	}
+}
+```
+
+### Handling Request
+
+- Bind `JSON` or `XML` payload into Go struct based on `Content-Type` request header.
+- Render response as `JSON` or `XML` with status code.
+
+```go
+type User struct {
+	Name  string `json:"name" xml:"name"`
+	Email string `json:"email" xml:"email"`
+}
+
+e.Post("/users", func(c echo.Context) error {
+	u := new(User)
+	if err := c.MustBind(u); err != nil {
+		return err
+	}
+	return c.JSON(http.StatusCreated, u)
+	// or
+	// return c.XML(http.StatusCreated, u)
+})
+```
+
+### Static Content
+
+Server any file from static directory for path `/static/*`.
+
+```go
+e.Use(mw.Static(&mw.StaticOptions{
+	Root:"static", //存放静态文件的物理路径
+	Path:"/static/", //网址访问静态文件的路径
+	Browse:true, //是否在首页显示文件列表
+}))
+```
+
+### Middleware
+
+```go
+// Root level middleware
+e.Use(middleware.Logger())
+e.Use(middleware.Recover())
+
+// Group level middleware
+g := e.Group("/admin")
+g.Use(middleware.BasicAuth(func(username, password string) bool {
+	if username == "joe" && password == "secret" {
+		return true
+	}
+	return false
+}))
+
+// Route level middleware
+track := func(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		println("request to /users")
+		return next(c)
+	}
+}
+e.Get("/users", func(c echo.Context) error {
+	return c.String(http.StatusOK, "/users")
+}, track)
+```
+
+### Cookie
+```go
+e.Get("/setcookie", func(c echo.Context) error {
+	c.SetCookie("uid","1")
+	return c.String(http.StatusOK, "/setcookie: uid="+c.GetCookie("uid"))
+})
+```
+
+### Session
+```go
+...
+import (
+	...
+	"github.com/webx-top/echo/middleware/session"
+	//boltStore "github.com/webx-top/echo/middleware/session/engine/bolt"
+	cookieStore "github.com/webx-top/echo/middleware/session/engine/cookie"
+)
+...
+sessionOptions := &echo.SessionOptions{
+	Engine: `cookie`,
+	Name:   `SESSIONID`,
+	CookieOptions: &echo.CookieOptions{
+		Path:     `/`,
+		Domain:   ``,
+		MaxAge:   0,
+		Secure:   false,
+		HttpOnly: true,
+	},
+}
+
+cookieStore.RegWithOptions(&cookieStore.CookieOptions{
+	KeyPairs: [][]byte{
+		[]byte(`123456789012345678901234567890ab`),
+	},
+	SessionOptions: sessionOptions,
+})
+
+e.Use(session.Middleware(sessionOptions))
+
+e.Get("/session", func(c echo.Context) error {
+	c.Session().Set("uid",1)
+	return c.String(http.StatusOK, fmt.Sprintf("/session: uid=%v",c.Session().Get("uid")))
+})
+```
+
+### Websocket
+```go
+...
+import (
+	...
+	"github.com/admpub/websocket"
+	"github.com/webx-top/echo"
+	ws "github.com/webx-top/echo/handler/websocket"
+)
+...
+
+e.HandlerWrapper = ws.HanderWrapper
+
+e.Get("/websocket", func(c *websocket.Conn, ctx echo.Context) error {
+	//push(writer)
+	go func() {
+		var counter int
+		for {
+			if counter >= 10 { //测试只推10条
+				return
+			}
+			time.Sleep(5 * time.Second)
+			message := time.Now().String()
+			ctx.Logger().Info(`Push message: `, message)
+			if err := c.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
+				ctx.Logger().Error(`Push error: `, err.Error())
+				return
+			}
+			counter++
+		}
+	}()
+
+	//echo
+	ws.DefaultExecuter(c, ctx)
+	return nil
+})
+```
+[More...](https://github.com/webx-top/echo/blob/master/handler/websocket/example/main.go)
+
+### Sockjs
+```go
+...
+import (
+	...
+	"github.com/webx-top/echo"
+	"github.com/admpub/sockjs-go/sockjs"
+	ws "github.com/webx-top/echo/handler/sockjs"
+)
+...
+
+e.HandlerWrapper = ws.HanderWrapper
+
+options := ws.Options{
+	Handle: func(c sockjs.Session) error {
+		//push(writer)
+		go func() {
+			var counter int
+			for {
+				if counter >= 10 { //测试只推10条
+					return
+				}
+				time.Sleep(5 * time.Second)
+				message := time.Now().String()
+				log.Info(`Push message: `, message)
+				if err := c.Send(message); err != nil {
+					log.Error(`Push error: `, err.Error())
+					return
+				}
+				counter++
+			}
+		}()
+
+		//echo
+		ws.DefaultExecuter(c)
+		return nil
+	},
+	Options: sockjs.DefaultOptions,
+	Prefix:  "/websocket",
+}
+options.Wrapper(e)
+```
+[More...](https://github.com/webx-top/echo/blob/master/handler/sockjs/example/main.go)
+
+### Other Example
 
 ```go
 package main
@@ -38,3 +371,13 @@ func main() {
 ```
 
 [See other examples...](https://github.com/admpub/echo-example/blob/master/_v2/main.go)
+
+## Credits
+- [Vishal Rana](https://github.com/vishr) - Author
+- [Hank Shen](https://github.com/admpub) - Author
+- [Nitin Rana](https://github.com/nr17) - Consultant
+- [Contributors](https://github.com/webx-top/echo/graphs/contributors)
+
+## License
+
+[MIT](https://github.com/webx-top/echo/blob/master/LICENSE)

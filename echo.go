@@ -335,6 +335,11 @@ func (e *Echo) Use(middleware ...interface{}) {
 	}
 }
 
+// Pre is alias
+func (e *Echo) Pre(middleware ...interface{}) {
+	e.PreUse(middleware...)
+}
+
 // PreUse adds handler to the middleware chain.
 func (e *Echo) PreUse(middleware ...interface{}) {
 	var middlewares []Middleware

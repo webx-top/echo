@@ -38,6 +38,10 @@ func (g *Group) Use(middleware ...interface{}) {
 	}
 }
 
+func (g *Group) Pre(middleware ...interface{}) {
+	g.PreUse(middleware...)
+}
+
 func (g *Group) PreUse(middleware ...interface{}) {
 	middlewares := make([]Middleware, 0)
 	for _, m := range middleware {
