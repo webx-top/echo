@@ -1,4 +1,4 @@
-package ginhydra
+package hydra
 
 import (
     "fmt"
