@@ -400,8 +400,8 @@ Middleware  | Import path | Description
 ## Handler Wrapper list
 Wrapper     | Import path | Description
 :-----------|:------------|:-----------
-Websocket   |github.com/webx-top/echo/hander/websocket | [Example](https://github.com/webx-top/echo/blob/master/handler/websocket/example/main.go)
-Sockjs      |github.com/webx-top/echo/hander/sockjs | [Example](https://github.com/webx-top/echo/blob/master/handler/sockjs/example/main.go)
+Websocket   |github.com/webx-top/echo/handler/websocket | [Example](https://github.com/webx-top/echo/blob/master/handler/websocket/example/main.go)
+Sockjs      |github.com/webx-top/echo/handler/sockjs | [Example](https://github.com/webx-top/echo/blob/master/handler/sockjs/example/main.go)
 
 ## Credits
 - [Vishal Rana](https://github.com/vishr) - Author
