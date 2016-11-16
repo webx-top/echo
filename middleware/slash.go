@@ -8,7 +8,7 @@ type (
 	// TrailingSlashConfig defines the config for TrailingSlash middleware.
 	TrailingSlashConfig struct {
 		// Skipper defines a function to skip middleware.
-		Skipper Skipper `json:"-"`
+		Skipper echo.Skipper `json:"-"`
 
 		// Status code to be used when redirecting the request.
 		// Optional, but when provided the request is redirected using this code.
@@ -19,7 +19,7 @@ type (
 var (
 	// DefaultTrailingSlashConfig is the default TrailingSlash middleware config.
 	DefaultTrailingSlashConfig = TrailingSlashConfig{
-		Skipper: defaultSkipper,
+		Skipper: echo.DefaultSkipper,
 	}
 )
 

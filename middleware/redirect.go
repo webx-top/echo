@@ -10,7 +10,7 @@ type (
 	// RedirectConfig defines the config for Redirect middleware.
 	RedirectConfig struct {
 		// Skipper defines a function to skip middleware.
-		Skipper Skipper `json:"-"`
+		Skipper echo.Skipper `json:"-"`
 
 		// Status code to be used when redirecting the request.
 		// Optional. Default value http.StatusMovedPermanently.
@@ -21,13 +21,13 @@ type (
 var (
 	// DefaultRedirectConfig is the default Redirect middleware config.
 	DefaultRedirectConfig = RedirectConfig{
-		Skipper: defaultSkipper,
+		Skipper: echo.DefaultSkipper,
 		Code:    http.StatusMovedPermanently,
 	}
 )
 
 // HTTPSRedirect redirects HTTP requests to HTTPS.
-// For example, http://labstack.com will be redirect to https://labstack.com.
+// For example, http://webx.top will be redirect to https://webx.top.
 //
 // Usage `Echo#Pre(HTTPSRedirect())`
 func HTTPSRedirect() echo.MiddlewareFuncd {
@@ -63,7 +63,7 @@ func HTTPSRedirectWithConfig(config RedirectConfig) echo.MiddlewareFuncd {
 }
 
 // HTTPSWWWRedirect redirects HTTP requests to WWW HTTPS.
-// For example, http://labstack.com will be redirect to https://www.labstack.com.
+// For example, http://webx.top will be redirect to https://www.webx.top.
 //
 // Usage `Echo#Pre(HTTPSWWWRedirect())`
 func HTTPSWWWRedirect() echo.MiddlewareFuncd {
@@ -99,7 +99,7 @@ func HTTPSWWWRedirectWithConfig(config RedirectConfig) echo.MiddlewareFuncd {
 }
 
 // WWWRedirect redirects non WWW requests to WWW.
-// For example, http://labstack.com will be redirect to http://www.labstack.com.
+// For example, http://webx.top will be redirect to http://www.webx.top.
 //
 // Usage `Echo#Pre(WWWRedirect())`
 func WWWRedirect() echo.MiddlewareFuncd {
@@ -136,7 +136,7 @@ func WWWRedirectWithConfig(config RedirectConfig) echo.MiddlewareFuncd {
 }
 
 // NonWWWRedirect redirects WWW requests to non WWW.
-// For example, http://www.labstack.com will be redirect to http://labstack.com.
+// For example, http://www.webx.top will be redirect to http://webx.top.
 //
 // Usage `Echo#Pre(NonWWWRedirect())`
 func NonWWWRedirect() echo.MiddlewareFuncd {

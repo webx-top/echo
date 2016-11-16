@@ -15,7 +15,7 @@ type (
 	// JWTConfig defines the config for JWT middleware.
 	JWTConfig struct {
 		// Skipper defines a function to skip middleware.
-		Skipper Skipper `json:"-"`
+		Skipper echo.Skipper `json:"-"`
 
 		// Signing key to validate token.
 		// Required.
@@ -60,7 +60,7 @@ const (
 var (
 	// DefaultJWTConfig is the default JWT auth middleware config.
 	DefaultJWTConfig = JWTConfig{
-		Skipper:       defaultSkipper,
+		Skipper:       echo.DefaultSkipper,
 		SigningMethod: AlgorithmHS256,
 		ContextKey:    "user",
 		TokenLookup:   "header:" + echo.HeaderAuthorization,

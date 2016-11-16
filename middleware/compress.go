@@ -18,7 +18,7 @@ type (
 	// GzipConfig defines the config for Gzip middleware.
 	GzipConfig struct {
 		// Skipper defines a function to skip middleware.
-		Skipper Skipper `json:"-"`
+		Skipper echo.Skipper `json:"-"`
 
 		// Gzip compression level.
 		// Optional. Default value -1.
@@ -34,7 +34,7 @@ type (
 var (
 	// DefaultGzipConfig is the default Gzip middleware config.
 	DefaultGzipConfig = &GzipConfig{
-		Skipper: defaultSkipper,
+		Skipper: echo.DefaultSkipper,
 		Level:   -1,
 	}
 )

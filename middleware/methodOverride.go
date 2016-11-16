@@ -6,7 +6,7 @@ type (
 	// MethodOverrideConfig defines the config for MethodOverride middleware.
 	MethodOverrideConfig struct {
 		// Skipper defines a function to skip middleware.
-		Skipper Skipper
+		Skipper echo.Skipper
 
 		// Getter is a function that gets overridden method from the request.
 		// Optional. Default values MethodFromHeader(echo.HeaderXHTTPMethodOverride).
@@ -20,7 +20,7 @@ type (
 var (
 	// DefaultMethodOverrideConfig is the default MethodOverride middleware config.
 	DefaultMethodOverrideConfig = MethodOverrideConfig{
-		Skipper: defaultSkipper,
+		Skipper: echo.DefaultSkipper,
 		Getter:  MethodFromHeader(echo.HeaderXHTTPMethodOverride),
 	}
 )

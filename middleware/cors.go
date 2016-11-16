@@ -12,7 +12,7 @@ type (
 	// CORSConfig defines the config for CORS middleware.
 	CORSConfig struct {
 		// Skipper defines a function to skip middleware.
-		Skipper Skipper
+		Skipper echo.Skipper
 
 		// AllowOrigin defines a list of origins that may access the resource.
 		// Optional with default value as []string{"*"}.
@@ -50,7 +50,7 @@ type (
 var (
 	// DefaultCORSConfig is the default CORS middleware config.
 	DefaultCORSConfig = CORSConfig{
-		Skipper:      defaultSkipper,
+		Skipper:      echo.DefaultSkipper,
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.POST, echo.DELETE},
 	}

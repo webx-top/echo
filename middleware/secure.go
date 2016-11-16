@@ -10,7 +10,7 @@ type (
 	// SecureConfig defines the config for Secure middleware.
 	SecureConfig struct {
 		// Skipper defines a function to skip middleware.
-		Skipper Skipper `json:"-"`
+		Skipper echo.Skipper `json:"-"`
 
 		// XSSProtection provides protection against cross-site scripting attack (XSS)
 		// by setting the `X-XSS-Protection` header.
@@ -59,7 +59,7 @@ type (
 var (
 	// DefaultSecureConfig is the default Secure middleware config.
 	DefaultSecureConfig = SecureConfig{
-		Skipper:            defaultSkipper,
+		Skipper:            echo.DefaultSkipper,
 		XSSProtection:      "1; mode=block",
 		ContentTypeNosniff: "nosniff",
 		XFrameOptions:      "SAMEORIGIN",

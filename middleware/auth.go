@@ -19,12 +19,12 @@ const (
 //
 // For valid credentials it calls the next handler.
 // For invalid credentials, it sends "401 - Unauthorized" response.
-func BasicAuth(fn BasicValidateFunc, skipper ...Skipper) echo.MiddlewareFunc {
-	var isSkiped Skipper
+func BasicAuth(fn BasicValidateFunc, skipper ...echo.Skipper) echo.MiddlewareFunc {
+	var isSkiped echo.Skipper
 	if len(skipper) > 0 {
 		isSkiped = skipper[0]
 	} else {
-		isSkiped = defaultSkipper
+		isSkiped = echo.DefaultSkipper
 	}
 	return func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {

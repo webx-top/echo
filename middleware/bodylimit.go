@@ -13,7 +13,7 @@ type (
 	// BodyLimitConfig defines the config for body limit middleware.
 	BodyLimitConfig struct {
 		// Skipper defines a function to skip middleware.
-		Skipper Skipper `json:"-"`
+		Skipper echo.Skipper `json:"-"`
 
 		// Maximum allowed size for a request body, it can be specified
 		// as `4x` or `4xB`, where x is one of the multiple from K, M, G, T or P.
@@ -45,7 +45,7 @@ func BodyLimit(limit string) echo.MiddlewareFunc {
 // See: `BodyLimit()`.
 func BodyLimitWithConfig(config BodyLimitConfig) echo.MiddlewareFunc {
 	if config.Skipper == nil {
-		config.Skipper = defaultSkipper
+		config.Skipper = echo.DefaultSkipper
 	}
 	limit, err := bytes.Parse(config.Limit)
 	if err != nil {

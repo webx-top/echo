@@ -14,7 +14,7 @@ type (
 	// CSRFConfig defines the config for CSRF middleware.
 	CSRFConfig struct {
 		// Skipper defines a function to skip middleware.
-		Skipper Skipper `json:"-"`
+		Skipper echo.Skipper `json:"-"`
 
 		// TokenLength is the length of the generated token.
 		TokenLength uint8 `json:"token_length"`
@@ -66,7 +66,7 @@ type (
 var (
 	// DefaultCSRFConfig is the default CSRF middleware config.
 	DefaultCSRFConfig = CSRFConfig{
-		Skipper:      defaultSkipper,
+		Skipper:      echo.DefaultSkipper,
 		TokenLength:  32,
 		TokenLookup:  "header:" + echo.HeaderXCSRFToken,
 		ContextKey:   "csrf",

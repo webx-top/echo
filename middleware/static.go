@@ -13,7 +13,7 @@ import (
 type (
 	StaticOptions struct {
 		// Skipper defines a function to skip middleware.
-		Skipper Skipper `json:"-"`
+		Skipper echo.Skipper `json:"-"`
 
 		Path   string `json:"path"` //UrlPath
 		Root   string `json:"root"`
@@ -32,7 +32,7 @@ func Static(options ...*StaticOptions) echo.MiddlewareFunc {
 		opts.Index = "index.html"
 	}
 	if opts.Skipper == nil {
-		opts.Skipper = defaultSkipper
+		opts.Skipper = echo.DefaultSkipper
 	}
 
 	opts.Root, _ = filepath.Abs(opts.Root)
