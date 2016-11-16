@@ -62,7 +62,7 @@ func ScopesRequired(opt interface{},scopes ...string) echo.MiddlewareFunc {
 		panic(err.Error())
 	}
     if DefaultClient == nil {
-        DefaultClient = client
+        DefaultClient = hc
     }
     if skipper == nil {
         skipper = echo.DefaultSkipper
