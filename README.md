@@ -372,6 +372,37 @@ func main() {
 
 [See other examples...](https://github.com/admpub/echo-example/blob/master/_v2/main.go)
 
+## Middleware list
+Middleware  | Import path | Description
+:-----------|:------------|:-----------
+[BasicAuth](https://github.com/webx-top/echo/blob/master/middleware/auth.go)  | github.com/webx-top/echo/middleware |HTTP basic authentication
+[BodyLimit](https://github.com/webx-top/echo/blob/master/middleware/bodylimit.go)  | github.com/webx-top/echo/middleware |Limit request body
+[Gzip](https://github.com/webx-top/echo/blob/master/middleware/compress.go)  | github.com/webx-top/echo/middleware |Send gzip HTTP response
+[Secure](https://github.com/webx-top/echo/blob/master/middleware/secure.go)  | github.com/webx-top/echo/middleware |Protection against attacks
+[CORS](https://github.com/webx-top/echo/blob/master/middleware/cors.go)  | github.com/webx-top/echo/middleware |Cross-Origin Resource Sharing
+[CSRF](https://github.com/webx-top/echo/blob/master/middleware/csrf.go)  | github.com/webx-top/echo/middleware |Cross-Site Request Forgery
+[Log](https://github.com/webx-top/echo/blob/master/middleware/log.go)  | github.com/webx-top/echo/middleware |Log HTTP requests
+[MethodOverride](https://github.com/webx-top/echo/blob/master/middleware/methodOverride.go)  | github.com/webx-top/echo/middleware |Override request method
+[Recover](https://github.com/webx-top/echo/blob/master/middleware/recover.go)  | github.com/webx-top/echo/middleware |Recover from panics
+[HTTPSRedirect](https://github.com/webx-top/echo/blob/master/middleware/redirect.go)  | github.com/webx-top/echo/middleware |Redirect HTTP requests to HTTPS
+[HTTPSWWWRedirect](https://github.com/webx-top/echo/blob/master/middleware/redirect.go)  | github.com/webx-top/echo/middleware |Redirect HTTP requests to WWW HTTPS
+[WWWRedirect](https://github.com/webx-top/echo/blob/master/middleware/redirect.go)  | github.com/webx-top/echo/middleware |Redirect non WWW requests to WWW
+[NonWWWRedirect](https://github.com/webx-top/echo/blob/master/middleware/redirect.go)  | github.com/webx-top/echo/middleware |Redirect WWW requests to non WWW
+[AddTrailingSlash](https://github.com/webx-top/echo/blob/master/middleware/slash.go)  | github.com/webx-top/echo/middleware |Add trailing slash to the request URI
+[RemoveTrailingSlash](https://github.com/webx-top/echo/blob/master/middleware/slash.go)  | github.com/webx-top/echo/middleware |Remove trailing slash from the request URI
+[Static](https://github.com/webx-top/echo/blob/master/middleware/static.go)  | github.com/webx-top/echo/middleware |Serve static files
+[Session](https://github.com/webx-top/echo/blob/master/middleware/session/middleware.go)  | github.com/webx-top/echo/middleware/session |
+[JWT](https://github.com/webx-top/echo/blob/master/middleware/jwt/jwt.go)  | github.com/webx-top/echo/middleware/jwt |JWT authentication
+[Hydra](https://github.com/webx-top/echo/blob/master/middleware/hydra/hydra.go)  | github.com/webx-top/echo/middleware/hydra |
+[Markdown](https://github.com/webx-top/echo/blob/master/middleware/markdown/markdown.go)  | github.com/webx-top/echo/middleware/markdown |Markdown rendering
+[ReverseProxy](https://github.com/webx-top/reverseproxy/blob/master/middleware.go)  | github.com/webx-top/reverseproxy |Reverse proxy
+
+## Handler Wrapper list
+Wrapper     | Import path | Description
+:-----------|:------------|:-----------
+Websocket   |github.com/webx-top/echo/hander/websocket | [Example](https://github.com/webx-top/echo/blob/master/handler/websocket/example/main.go)
+Sockjs      |github.com/webx-top/echo/hander/sockjs | [Example](https://github.com/webx-top/echo/blob/master/handler/sockjs/example/main.go)
+
 ## Credits
 - [Vishal Rana](https://github.com/vishr) - Author
 - [Hank Shen](https://github.com/admpub) - Author
