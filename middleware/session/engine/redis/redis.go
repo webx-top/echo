@@ -34,7 +34,7 @@ type RedisStore interface {
 
 type RedisOptions struct {
 	Size           int                  `json:"size"`
-	NetWork        string               `json:"network"`
+	Network        string               `json:"network"`
 	Address        string               `json:"address"`
 	Password       string               `json:"password"`
 	KeyPairs       [][]byte             `json:"keyPairs"`
