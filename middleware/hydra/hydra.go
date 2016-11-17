@@ -3,9 +3,10 @@ package hydra
 import (
 	"fmt"
 
-	hydraClient "github.com/ory-am/hydra/client"
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/hydra/firewall"
 	hydraSDK "github.com/ory-am/hydra/sdk"
+	"github.com/ory-am/ladon"
 	"github.com/webx-top/echo"
 )
 
@@ -15,7 +16,7 @@ type Options struct {
 	Skipper      echo.Skipper
 	ClientID     string
 	ClientSecret string
-	ClientURL    string
+	ClusterURL   string
 }
 
 func Connect(val Options) (hc *hydraSDK.Client, err error) {
@@ -27,11 +28,7 @@ func Connect(val Options) (hc *hydraSDK.Client, err error) {
 	return
 }
 
-func NewClient(hc *hydraSDK.Client, clientConfig *hydraClient.Client) (*hydraClient.Client, error) {
-	return hc.Clients.CreateClient(clientConfig)
-}
-
-func GetClient(hc *hydraSDK.Client, id string) (*hydraClient.Client, error) {
+func GetClient(hc *hydraSDK.Client, id string) (fosite.Client, error) {
 	return hc.Clients.GetClient(id)
 }
 
@@ -40,7 +37,15 @@ func GetContext(c echo.Context) *firewall.Context {
 	return ctx
 }
 
-func ScopesRequired(opt interface{}, scopes ...string) echo.MiddlewareFunc {
+func NewTokenAccessRequest(resource string, action string, context map[string]interface{}) *firewall.TokenAccessRequest {
+	return &firewall.TokenAccessRequest{
+		Resource: resource,
+		Action:   action,
+		Context:  ladon.Context(context),
+	}
+}
+
+func ScopesRequired(opt interface{}, tokenAccessRequest *firewall.TokenAccessRequest, scopes ...string) echo.MiddlewareFunc {
 	var hc *hydraSDK.Client
 	var err error
 	var skipper echo.Skipper
@@ -67,13 +72,20 @@ func ScopesRequired(opt interface{}, scopes ...string) echo.MiddlewareFunc {
 	if skipper == nil {
 		skipper = echo.DefaultSkipper
 	}
-
+	if tokenAccessRequest == nil {
+		tokenAccessRequest = NewTokenAccessRequest("matrix", "create", map[string]interface{}{})
+	}
 	return func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
 			if skipper(c) {
 				return h.Handle(c)
 			}
-			ctx, err := hc.Warden.TokenValid(c, hc.Warden.TokenFromRequest(c.Request().StdRequest()), scopes...)
+			ctx, err := hc.Warden.TokenAllowed(
+				c,
+				hc.Warden.TokenFromRequest(c.Request().StdRequest()),
+				tokenAccessRequest,
+				scopes...,
+			)
 			if err != nil {
 				return err
 			}
