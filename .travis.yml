@@ -12,4 +12,4 @@ script:
     - go test -coverprofile=echo.coverprofile
     - go test -coverprofile=middleware.coverprofile ./middleware
     - $HOME/gopath/bin/gover
-    - $HOME/gopath/bin/goveralls -service=travis-ci
+#    - $HOME/gopath/bin/goveralls -coverprofile=gover.coverprofile -service=travis-ci
