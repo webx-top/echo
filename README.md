@@ -299,8 +299,6 @@ import (
 )
 ...
 
-e.HandlerWrapper = ws.HanderWrapper
-
 options := ws.Options{
 	Handle: func(c sockjs.Session) error {
 		//push(writer)

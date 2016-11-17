@@ -27,6 +27,11 @@ type StdOptions struct {
 	Handle   func(*websocket.Conn, echo.Context) error
 	Upgrader *websocket.Upgrader
 	Validate func(echo.Context) error
+	Prefix   string
+}
+
+func (o StdOptions) Wrapper(e *echo.Echo) {
+	e.Any(o.Prefix, StdWebsocket(o.Handle, o.Validate, o.Upgrader))
 }
 
 type StdHandler interface {

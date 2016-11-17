@@ -75,9 +75,6 @@ func main() {
 		})
 		return nil
 	})
-	//e.Get("/websocket", ws.Websocket(nil))
-
-	e.HandlerWrapper = ws.HanderWrapper
 
 	options := ws.Options{
 		Handle: func(c sockjs.Session) error {

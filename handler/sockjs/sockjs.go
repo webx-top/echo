@@ -16,7 +16,7 @@ type Options struct {
 }
 
 func (o Options) Wrapper(e *echo.Echo) {
-	e.Any(strings.TrimRight(o.Prefix, "/")+"/*", o)
+	e.Any(strings.TrimRight(o.Prefix, "/")+"/*", Websocket(o.Prefix, o.Handle, o.Validate, o.Options))
 }
 
 type Handler interface {
