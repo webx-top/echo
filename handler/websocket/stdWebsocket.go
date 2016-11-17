@@ -54,7 +54,6 @@ var (
 				return err
 			}
 		}
-		return
 	}
 )
 

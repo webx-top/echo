@@ -37,7 +37,6 @@ var DefaultExecuter = func(session sockjs.Session) error {
 			return err
 		}
 	}
-	return nil
 }
 
 func HanderWrapper(v interface{}) echo.Handler {
