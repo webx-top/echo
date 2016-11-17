@@ -31,7 +31,7 @@ func main(){
 
 	// Use the middleware
  	e := echo.New()
-	e.Get("/", handler, hydraMW.ScopesRequired(hc, "scope1", "scope2"))
+	e.Get("/", handler, hydraMW.ScopesRequired(hc, nil, "scope1", "scope2"))
 	e.Run(standard.New(":4444"))
 }
 ```
