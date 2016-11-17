@@ -144,7 +144,8 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 					w.Header().Del(echo.HeaderContentLength)
 					return c.NoContent(http.StatusNotModified)
 				}
-				b, err := ioutil.ReadFile(absFile)
+				var b []byte
+				b, err = ioutil.ReadFile(absFile)
 				if err != nil {
 					return echo.ErrNotFound
 				}
