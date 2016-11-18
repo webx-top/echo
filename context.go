@@ -32,6 +32,9 @@ type (
 
 		// ParamNames returns path parameter names.
 		ParamNames() []string
+		SetParamNames(...string)
+		ParamValues() []string
+		SetParamValues(values ...string)
 
 		// Queries returns the query parameters as map. It is an alias for `engine.URL#Query()`.
 		Queries() map[string][]string
@@ -202,6 +205,18 @@ func (c *xContext) Param(name string) (value string) {
 
 func (c *xContext) ParamNames() []string {
 	return c.pnames
+}
+
+func (c *xContext) SetParamNames(names ...string) {
+	c.pnames = names
+}
+
+func (c *xContext) ParamValues() []string {
+	return c.pvalues
+}
+
+func (c *xContext) SetParamValues(values ...string) {
+	c.pvalues = values
 }
 
 // Query returns query parameter by name.

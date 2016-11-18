@@ -17,6 +17,10 @@
 */
 package echo
 
+import (
+	"fmt"
+)
+
 var DefaultNopSession Sessioner = &NopSession{}
 
 // Options stores configuration for a session or session store.
@@ -58,23 +62,28 @@ type Sessioner interface {
 type NopSession struct {
 }
 
-func (n *NopSession) Get(_ string) interface{} {
+func (n *NopSession) Get(name string) interface{} {
+	fmt.Println(`NopSession#Get:`, name)
 	return nil
 }
 
-func (n *NopSession) Set(_ string, _ interface{}) Sessioner {
+func (n *NopSession) Set(name string, value interface{}) Sessioner {
+	fmt.Println(`NopSession#Set:`, name, `Value:`, value)
 	return n
 }
 
-func (n *NopSession) SetId(_ string) Sessioner {
+func (n *NopSession) SetId(id string) Sessioner {
+	fmt.Println(`NopSession#SetId:`, id)
 	return n
 }
 
 func (n *NopSession) Id() string {
+	fmt.Println(`NopSession#Id()`)
 	return ``
 }
 
-func (n *NopSession) Delete(_ string) Sessioner {
+func (n *NopSession) Delete(name string) Sessioner {
+	fmt.Println(`NopSession#Delete:`, name)
 	return n
 }
 

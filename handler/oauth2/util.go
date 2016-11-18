@@ -11,7 +11,7 @@ import (
 
 // SessionName is the key used to access the session store.
 // we could use the echo's sessions default, but this session should be not confict with the cookie session name defined by the sessions manager
-const SessionName = "echoGothSession"
+const SessionName = "EchoGothSession"
 
 // GothParams used to convert the context.URLParams to goth's params
 type GothParams map[string][]string
@@ -74,7 +74,7 @@ yourself, but that's entirely up to you.
 */
 func GetAuthURL(ctx echo.Context) (string, error) {
 	if ctx.Session() == nil {
-		fmt.Println("You have to enable iris sessions")
+		fmt.Println("You have to enable sessions")
 	}
 
 	providerName, err := GetProviderName(ctx)
@@ -95,9 +95,8 @@ func GetAuthURL(ctx echo.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
+	//fmt.Println(sess.Marshal())
 	ctx.Session().Set(SessionName, sess.Marshal())
-
 	return url, nil
 }
 
@@ -106,12 +105,11 @@ CompleteUserAuth does what it says on the tin. It completes the authentication
 process and fetches all of the basic information about the user from the provider.
 It expects to be able to get the name of the provider from the named parameters
 as either "provider" or url query parameter ":provider".
-See https://github.com/iris-contrib/gothic/blob/master/_example_low_level/main.go to see this in action.
 */
 var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 
 	if ctx.Session() == nil {
-		fmt.Println("You have to enable iris sessions")
+		fmt.Println("You have to enable sessions")
 	}
 
 	providerName, err := GetProviderName(ctx)

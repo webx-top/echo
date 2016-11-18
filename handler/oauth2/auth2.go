@@ -10,7 +10,6 @@ import (
 // OAuth is a plugin which helps you to use OAuth/OAuth2 apis from famous websites
 type OAuth struct {
 	Config          Config
-	URLPrefix       string
 	successHandlers []interface{}
 	failHandler     echo.HTTPErrorHandler
 }
@@ -29,7 +28,7 @@ func (p *OAuth) Success(handlersFn ...interface{}) {
 
 // Fail registers handler which fires when the user failed to logged in
 // underhood it justs registers an error handler to the StatusUnauthorized(400 status code), same as 'iris.OnError(400,handler)'
-func (p *OAuth) Fail(handler echo.HandlerFunc) {
+func (p *OAuth) Fail(handler echo.HTTPErrorHandler) {
 	p.failHandler = handler
 }
 
@@ -40,22 +39,22 @@ func (p *OAuth) User(ctx echo.Context) (u goth.User) {
 	return ctx.Get(p.Config.ContextKey).(goth.User)
 }
 
-// PreBuild plugin in order to register the oauth route
+// Wrapper register the oauth route
 func (p *OAuth) Wrapper(e *echo.Echo) {
-	oauthProviders := p.Config.GenerateProviders(p.URLPrefix)
+	oauthProviders := p.Config.GenerateProviders(``)
 	if len(oauthProviders) > 0 {
 		goth.UseProviders(oauthProviders...)
 		// set the mux path to handle the registered providers
-		e.Get(p.Config.Path+"/:provider", func(ctx echo.Context) {
+		e.Get(p.Config.Path+"/login/:provider", func(ctx echo.Context) error {
 			err := BeginAuthHandler(ctx)
 			if err != nil {
-				e.Logger.Error("[OAUTH2] Error: " + err.Error())
+				e.Logger().Error("[OAUTH2] Error: " + err.Error())
 			}
+			return err
 		})
-		//println("registered " + p.Config.Path + "/:provider")
 
 		authMiddleware := func(h echo.Handler) echo.Handler {
-			return echo.HandlerFunc(func(ctx echo.Context) {
+			return echo.HandlerFunc(func(ctx echo.Context) error {
 				user, err := CompleteUserAuth(ctx)
 				if err != nil {
 					return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
@@ -65,15 +64,15 @@ func (p *OAuth) Wrapper(e *echo.Echo) {
 			})
 		}
 
-		p.successHandlers = append([]echo.HandlerFunc{authMiddleware}, p.successHandlers...)
-		var handlers []interface{}
+		p.successHandlers = append([]interface{}{authMiddleware}, p.successHandlers...)
+		var middlewares []interface{}
 		for i := len(p.successHandlers) - 1; i >= 0; i-- {
-			handlers = append(handlers, p.successHandlers[i])
+			middlewares = append(middlewares, p.successHandlers[i])
 		}
-		e.Get(p.Config.Path+"/:provider/callback", handlers...)
+		e.Get(p.Config.Path+"/callback/:provider", middlewares[0], middlewares[1:]...)
 		// register the error handler
 		if p.failHandler != nil {
-			s.SetHTTPErrorHandler(p.failHandler)
+			e.SetHTTPErrorHandler(p.failHandler)
 		}
 	}
 }

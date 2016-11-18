@@ -326,12 +326,13 @@ func (r *Router) Find(method, path string, context Context) {
 	}
 
 	var (
-		search = path
-		c      *node  // Child node
-		n      int    // Param counter
-		nk     kind   // Next kind
-		nn     *node  // Next node
-		ns     string // Next search
+		search  = path
+		c       *node  // Child node
+		n       int    // Param counter
+		nk      kind   // Next kind
+		nn      *node  // Next node
+		ns      string // Next search
+		pvalues = context.ParamValues()
 	)
 
 	// Search order static > param > any
@@ -378,7 +379,7 @@ func (r *Router) Find(method, path string, context Context) {
 		// Static node
 		if c = cn.findChild(search[0], skind); c != nil {
 			// Save next
-			if cn.label == '/' {
+			if cn.prefix[len(cn.prefix)-1] == '/' {
 				nk = pkind
 				nn = cn
 				ns = search
@@ -391,12 +392,12 @@ func (r *Router) Find(method, path string, context Context) {
 	Param:
 		if c = cn.findChildByKind(pkind); c != nil {
 
-			if len(ctx.pvalues) == n {
+			if len(pvalues) == n {
 				continue
 			}
 
 			// Save next
-			if cn.label == '/' {
+			if cn.prefix[len(cn.prefix)-1] == '/' {
 				nk = akind
 				nn = cn
 				ns = search
@@ -406,7 +407,7 @@ func (r *Router) Find(method, path string, context Context) {
 			i, l := 0, len(search)
 			for ; i < l && search[i] != '/'; i++ {
 			}
-			ctx.pvalues[n] = search[:i]
+			pvalues[n] = search[:i]
 			n++
 			search = search[i:]
 			continue
@@ -428,7 +429,7 @@ func (r *Router) Find(method, path string, context Context) {
 			// Not found
 			return
 		}
-		ctx.pvalues[len(cn.pnames)-1] = search
+		pvalues[len(cn.pnames)-1] = search
 		goto End
 	}
 
@@ -446,10 +447,12 @@ End:
 		if cn = cn.findChildByKind(akind); cn == nil {
 			return
 		}
-		ctx.pvalues[len(cn.pnames)-1] = ""
 		if ctx.handler = cn.findHandler(method); ctx.handler == nil {
 			ctx.handler = cn.check405()
 		}
+		ctx.path = cn.ppath
+		ctx.pnames = cn.pnames
+		pvalues[len(cn.pnames)-1] = ""
 	}
 	return
 }
