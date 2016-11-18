@@ -390,9 +390,9 @@ Middleware  | Import path | Description
 [AddTrailingSlash](https://github.com/webx-top/echo/blob/master/middleware/slash.go)  | github.com/webx-top/echo/middleware |Add trailing slash to the request URI
 [RemoveTrailingSlash](https://github.com/webx-top/echo/blob/master/middleware/slash.go)  | github.com/webx-top/echo/middleware |Remove trailing slash from the request URI
 [Static](https://github.com/webx-top/echo/blob/master/middleware/static.go)  | github.com/webx-top/echo/middleware |Serve static files
-[Session](https://github.com/webx-top/echo/blob/master/middleware/session/middleware.go)  | github.com/webx-top/echo/middleware/session |
+[Session](https://github.com/webx-top/echo/blob/master/middleware/session/middleware.go)  | github.com/webx-top/echo/middleware/session | Sessions Manager
 [JWT](https://github.com/webx-top/echo/blob/master/middleware/jwt/jwt.go)  | github.com/webx-top/echo/middleware/jwt |JWT authentication
-[Hydra](https://github.com/webx-top/echo/blob/master/middleware/hydra/hydra.go)  | github.com/webx-top/echo/middleware/hydra |
+[Hydra](https://github.com/webx-top/echo/blob/master/middleware/hydra/hydra.go)  | github.com/webx-top/echo/middleware/hydra | It uses [Hydra](https://github.com/ory-am/hydra)'s API to extract and validate auth token.
 [Markdown](https://github.com/webx-top/echo/blob/master/middleware/markdown/markdown.go)  | github.com/webx-top/echo/middleware/markdown |Markdown rendering
 [ReverseProxy](https://github.com/webx-top/reverseproxy/blob/master/middleware.go)  | github.com/webx-top/reverseproxy |Reverse proxy
 
