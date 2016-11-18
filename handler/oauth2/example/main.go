@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 
 	"github.com/webx-top/echo"
@@ -49,15 +50,20 @@ func main() {
 	e.Use(session.Middleware(sessionOptions))
 
 	e.Get("/", func(c echo.Context) error {
-		return c.String(200, `Hello world.`)
+		return c.HTML(200, `Login: <a href="/oauth/login/github" target="_blank">github</a>`)
 	})
 
-	options := oauth2.New(oauth2.Config{
+	options := oauth2.New(`http://www.coscms.com`, oauth2.Config{
 		GithubKey:    `9b168a10a77fbcafcdcf`,
 		GithubSecret: `929bbf6136084052faf4f5768c14af805173ac27`,
 	})
 	options.Success(func(ctx echo.Context) error {
-		return ctx.String(200, `OK`)
+		user := options.User(ctx)
+		b, e := json.MarshalIndent(user, "", "  ")
+		if e != nil {
+			return e
+		}
+		return ctx.String(200, string(b))
 	})
 	options.Wrapper(e)
 

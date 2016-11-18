@@ -10,15 +10,16 @@ import (
 // OAuth is a plugin which helps you to use OAuth/OAuth2 apis from famous websites
 type OAuth struct {
 	Config          Config
+	HostURL         string
 	successHandlers []interface{}
 	failHandler     echo.HTTPErrorHandler
 }
 
 // New returns a new OAuth plugin
 // receives one parameter of type 'Config'
-func New(cfg Config) *OAuth {
+func New(hostURL string, cfg Config) *OAuth {
 	c := DefaultConfig().MergeSingle(cfg)
-	return &OAuth{Config: c}
+	return &OAuth{Config: c, HostURL: hostURL}
 }
 
 // Success registers handler(s) which fires when the user logged in successfully
@@ -41,7 +42,7 @@ func (p *OAuth) User(ctx echo.Context) (u goth.User) {
 
 // Wrapper register the oauth route
 func (p *OAuth) Wrapper(e *echo.Echo) {
-	oauthProviders := p.Config.GenerateProviders("")
+	oauthProviders := p.Config.GenerateProviders(p.HostURL)
 	if len(oauthProviders) > 0 {
 		goth.UseProviders(oauthProviders...)
 		// set the mux path to handle the registered providers

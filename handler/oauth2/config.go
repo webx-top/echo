@@ -133,7 +133,7 @@ func (c Config) MergeSingle(cfg Config) (config Config) {
 func (c Config) GenerateProviders(vhost string) (providers []goth.Provider) {
 
 	getCallbackURL := func(providerName string) string {
-		return vhost + c.Path + "/" + providerName + "/callback"
+		return vhost + c.Path + "/callback/" + providerName
 	}
 
 	//we could use a map but that's easier for the users because of code completion of their IDEs/editors
