@@ -90,6 +90,10 @@ func (g *Group) Group(prefix string, m ...interface{}) *Group {
 	return g.echo.Group(g.prefix+prefix, m...)
 }
 
+func (g *Group) Prefix() string {
+	return g.prefix
+}
+
 func (g *Group) add(method, path string, h interface{}, middleware ...interface{}) {
 	handler := WrapHandler(h)
 	if handler == nil {

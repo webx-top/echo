@@ -41,7 +41,7 @@ func (p *OAuth) User(ctx echo.Context) (u goth.User) {
 
 // Wrapper register the oauth route
 func (p *OAuth) Wrapper(e *echo.Echo) {
-	oauthProviders := p.Config.GenerateProviders(``)
+	oauthProviders := p.Config.GenerateProviders("")
 	if len(oauthProviders) > 0 {
 		goth.UseProviders(oauthProviders...)
 		// set the mux path to handle the registered providers

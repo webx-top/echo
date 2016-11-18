@@ -245,7 +245,7 @@ cookieStore.RegWithOptions(&cookieStore.CookieOptions{
 e.Use(session.Middleware(sessionOptions))
 
 e.Get("/session", func(c echo.Context) error {
-	c.Session().Set("uid",1)
+	c.Session().Set("uid",1).Save()
 	return c.String(http.StatusOK, fmt.Sprintf("/session: uid=%v",c.Session().Get("uid")))
 })
 ```

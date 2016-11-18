@@ -432,6 +432,10 @@ func (e *Echo) ValidMiddleware(v interface{}) (m Middleware) {
 	return WrapMiddleware(v)
 }
 
+func (e *Echo) Prefix() string {
+	return e.prefix
+}
+
 func (e *Echo) add(method, path string, h interface{}, middleware ...interface{}) {
 	handler := e.ValidHandler(h)
 	if handler == nil {
