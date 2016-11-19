@@ -3,6 +3,7 @@
 ## 特点
 1. 支持继承
 2. 支持包含子模板
+3. 支持golang原生模板语法（详细用法可参阅[golang模板语法简明教程](http://www.admpub.com/blog/post-221.html)）
 
 ## 模板继承
 用于模板继承的标签有：Block、Extend、Super
