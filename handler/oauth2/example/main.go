@@ -50,7 +50,7 @@ func main() {
 	e.Use(session.Middleware(sessionOptions))
 
 	e.Get("/", func(c echo.Context) error {
-		return c.HTML(200, `Login: <a href="/oauth/login/github" target="_blank">github</a>`)
+		return c.HTML(`Login: <a href="/oauth/login/github" target="_blank">github</a>`)
 	})
 
 	options := oauth2.New(`http://www.coscms.com`, oauth2.Config{
@@ -63,7 +63,7 @@ func main() {
 		if e != nil {
 			return e
 		}
-		return ctx.String(200, string(b))
+		return ctx.String(string(b))
 	})
 	options.Wrapper(e)
 

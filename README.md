@@ -197,11 +197,11 @@ g.Use(middleware.BasicAuth(func(username, password string) bool {
 track := func(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		println("request to /users")
-		return next(c)
+		return next.Handle(c)
 	}
 }
 e.Get("/users", func(c echo.Context) error {
-	return c.String(http.StatusOK, "/users")
+	return c.String("/users", http.StatusOK)
 }, track)
 ```
 
@@ -209,7 +209,7 @@ e.Get("/users", func(c echo.Context) error {
 ```go
 e.Get("/setcookie", func(c echo.Context) error {
 	c.SetCookie("uid","1")
-	return c.String(http.StatusOK, "/setcookie: uid="+c.GetCookie("uid"))
+	return c.String("/setcookie: uid="+c.GetCookie("uid"), http.StatusOK)
 })
 ```
 
@@ -246,7 +246,7 @@ e.Use(session.Middleware(sessionOptions))
 
 e.Get("/session", func(c echo.Context) error {
 	c.Session().Set("uid",1).Save()
-	return c.String(http.StatusOK, fmt.Sprintf("/session: uid=%v",c.Session().Get("uid")))
+	return c.String(fmt.Sprintf("/session: uid=%v",c.Session().Get("uid")))
 })
 ```
 
