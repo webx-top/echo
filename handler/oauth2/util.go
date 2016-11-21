@@ -3,7 +3,6 @@ package oauth2
 import (
 	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/markbates/goth"
 	"github.com/webx-top/echo"
@@ -40,7 +39,7 @@ func BeginAuthHandler(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(400, err.Error())
 	}
-	return ctx.Redirect(http.StatusFound, url)
+	return ctx.Redirect(url)
 }
 
 // SetState sets the state string associated with the given request.
