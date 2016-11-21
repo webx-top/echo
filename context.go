@@ -504,6 +504,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.handler = notFoundHandler
 	c.cookieOptions = nil
 
+	c.SetFunc(`Lang`, c.Lang)
 	c.SetFunc(`T`, c.T)
 	c.SetFunc(`Cookie`, c.Cookie)
 	c.SetFunc(`Session`, c.Session)
@@ -516,6 +517,14 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.SetFunc(`URL`, req.URL)
 	c.SetFunc(`Header`, req.Header)
 	c.SetFunc(`Flash`, c.Flash)
+	for name, function := range DefaultFuncMap {
+		c.SetFunc(name, function)
+	}
+	if c.echo.FuncMap != nil {
+		for name, function := range c.echo.FuncMap {
+			c.SetFunc(name, function)
+		}
+	}
 }
 
 func (c *xContext) GetFunc(key string) interface{} {

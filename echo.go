@@ -34,6 +34,7 @@ type (
 		logger            logger.Logger
 		HandlerWrapper    func(interface{}) Handler
 		MiddlewareWrapper func(interface{}) Middleware
+		FuncMap           map[string]interface{}
 	}
 
 	Route struct {
