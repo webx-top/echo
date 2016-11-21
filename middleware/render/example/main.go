@@ -24,7 +24,7 @@ func main() {
 	e.Get("/", func(c echo.Context) error {
 
 		// It uses template file ./template/index.html
-		return c.Render(200, `index`, map[string]interface{}{
+		return c.Render(`index`, map[string]interface{}{
 			"Name": "Webx",
 		})
 	})
