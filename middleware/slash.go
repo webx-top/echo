@@ -58,7 +58,7 @@ func AddTrailingSlashWithConfig(config TrailingSlashConfig) echo.MiddlewareFuncd
 
 				// Redirect
 				if config.RedirectCode != 0 {
-					return c.Redirect(config.RedirectCode, uri)
+					return c.Redirect(uri, config.RedirectCode)
 				}
 
 				// Forward
@@ -106,7 +106,7 @@ func RemoveTrailingSlashWithConfig(config TrailingSlashConfig) echo.MiddlewareFu
 
 				// Redirect
 				if config.RedirectCode != 0 {
-					return c.Redirect(config.RedirectCode, uri)
+					return c.Redirect(uri, config.RedirectCode)
 				}
 
 				// Forward

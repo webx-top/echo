@@ -285,7 +285,11 @@ func (e *Echo) DefaultHTTPErrorHandler(err error, c Context) {
 		if c.Request().Method() == HEAD {
 			c.NoContent(code)
 		} else {
-			c.String(code, msg)
+			if code > 0 {
+				c.String(msg, code)
+			} else {
+				c.String(msg)
+			}
 		}
 	}
 	e.logger.Debug(err)

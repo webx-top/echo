@@ -50,18 +50,18 @@ type (
 		Get(string) interface{}
 		Bind(interface{}) error
 		MustBind(interface{}) error
-		Render(int, string, interface{}) error
-		HTML(int, string) error
-		String(int, string) error
-		JSON(int, interface{}) error
-		JSONBlob(int, []byte) error
-		JSONP(int, string, interface{}) error
-		XML(int, interface{}) error
-		XMLBlob(int, []byte) error
+		Render(string, interface{}, ...int) error
+		HTML(string, ...int) error
+		String(string, ...int) error
+		JSON(interface{}, ...int) error
+		JSONBlob([]byte, ...int) error
+		JSONP(string, interface{}, ...int) error
+		XML(interface{}, ...int) error
+		XMLBlob([]byte, ...int) error
 		File(string) error
 		Attachment(io.ReadSeeker, string) error
-		NoContent(int) error
-		Redirect(int, string) error
+		NoContent(...int) error
+		Redirect(string, ...int) error
 		Error(err error)
 		Handle(Context) error
 		Logger() logger.Logger
@@ -273,7 +273,11 @@ func (c *xContext) MustBind(i interface{}) error {
 
 // Render renders a template with data and sends a text/html response with status
 // code. Templates can be registered using `Echo.SetRenderer()`.
-func (c *xContext) Render(code int, name string, data interface{}) (err error) {
+func (c *xContext) Render(name string, data interface{}, codes ...int) (err error) {
+	code := http.StatusOK
+	if len(codes) > 0 {
+		code = codes[0]
+	}
 	b, err := c.Fetch(name, data)
 	if err != nil {
 		return
@@ -285,7 +289,11 @@ func (c *xContext) Render(code int, name string, data interface{}) (err error) {
 }
 
 // HTML sends an HTTP response with status code.
-func (c *xContext) HTML(code int, html string) (err error) {
+func (c *xContext) HTML(html string, codes ...int) (err error) {
+	code := http.StatusOK
+	if len(codes) > 0 {
+		code = codes[0]
+	}
 	c.response.Header().Set(HeaderContentType, MIMETextHTMLCharsetUTF8)
 	c.response.WriteHeader(code)
 	_, err = c.response.Write([]byte(html))
@@ -293,7 +301,11 @@ func (c *xContext) HTML(code int, html string) (err error) {
 }
 
 // String sends a string response with status code.
-func (c *xContext) String(code int, s string) (err error) {
+func (c *xContext) String(s string, codes ...int) (err error) {
+	code := http.StatusOK
+	if len(codes) > 0 {
+		code = codes[0]
+	}
 	c.response.Header().Set(HeaderContentType, MIMETextPlainCharsetUTF8)
 	c.response.WriteHeader(code)
 	_, err = c.response.Write([]byte(s))
@@ -301,7 +313,7 @@ func (c *xContext) String(code int, s string) (err error) {
 }
 
 // JSON sends a JSON response with status code.
-func (c *xContext) JSON(code int, i interface{}) (err error) {
+func (c *xContext) JSON(i interface{}, codes ...int) (err error) {
 	var b []byte
 	if c.echo.Debug() {
 		b, err = json.MarshalIndent(i, "", "  ")
@@ -311,11 +323,15 @@ func (c *xContext) JSON(code int, i interface{}) (err error) {
 	if err != nil {
 		return err
 	}
-	return c.JSONBlob(code, b)
+	return c.JSONBlob(b, codes...)
 }
 
 // JSONBlob sends a JSON blob response with status code.
-func (c *xContext) JSONBlob(code int, b []byte) (err error) {
+func (c *xContext) JSONBlob(b []byte, codes ...int) (err error) {
+	code := http.StatusOK
+	if len(codes) > 0 {
+		code = codes[0]
+	}
 	c.response.Header().Set(HeaderContentType, MIMEApplicationJSONCharsetUTF8)
 	c.response.WriteHeader(code)
 	_, err = c.response.Write(b)
@@ -324,7 +340,11 @@ func (c *xContext) JSONBlob(code int, b []byte) (err error) {
 
 // JSONP sends a JSONP response with status code. It uses `callback` to construct
 // the JSONP payload.
-func (c *xContext) JSONP(code int, callback string, i interface{}) (err error) {
+func (c *xContext) JSONP(callback string, i interface{}, codes ...int) (err error) {
+	code := http.StatusOK
+	if len(codes) > 0 {
+		code = codes[0]
+	}
 	b, err := json.Marshal(i)
 	if err != nil {
 		return err
@@ -343,7 +363,7 @@ func (c *xContext) JSONP(code int, callback string, i interface{}) (err error) {
 }
 
 // XML sends an XML response with status code.
-func (c *xContext) XML(code int, i interface{}) (err error) {
+func (c *xContext) XML(i interface{}, codes ...int) (err error) {
 	var b []byte
 	if c.echo.Debug() {
 		b, err = xml.MarshalIndent(i, "", "  ")
@@ -353,11 +373,15 @@ func (c *xContext) XML(code int, i interface{}) (err error) {
 	if err != nil {
 		return err
 	}
-	return c.XMLBlob(code, b)
+	return c.XMLBlob(b, codes...)
 }
 
 // XMLBlob sends a XML blob response with status code.
-func (c *xContext) XMLBlob(code int, b []byte) (err error) {
+func (c *xContext) XMLBlob(b []byte, codes ...int) (err error) {
+	code := http.StatusOK
+	if len(codes) > 0 {
+		code = codes[0]
+	}
 	c.response.Header().Set(HeaderContentType, MIMEApplicationXMLCharsetUTF8)
 	c.response.WriteHeader(code)
 	if _, err = c.response.Write([]byte(xml.Header)); err != nil {
@@ -395,13 +419,21 @@ func (c *xContext) Attachment(r io.ReadSeeker, name string) (err error) {
 }
 
 // NoContent sends a response with no body and a status code.
-func (c *xContext) NoContent(code int) error {
+func (c *xContext) NoContent(codes ...int) error {
+	code := http.StatusOK
+	if len(codes) > 0 {
+		code = codes[0]
+	}
 	c.response.WriteHeader(code)
 	return nil
 }
 
 // Redirect redirects the request with status code.
-func (c *xContext) Redirect(code int, url string) error {
+func (c *xContext) Redirect(url string, codes ...int) error {
+	code := http.StatusFound
+	if len(codes) > 0 {
+		code = codes[0]
+	}
 	if code < http.StatusMultipleChoices || code > http.StatusTemporaryRedirect {
 		return ErrInvalidRedirectCode
 	}

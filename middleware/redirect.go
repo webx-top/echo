@@ -55,7 +55,7 @@ func HTTPSRedirectWithConfig(config RedirectConfig) echo.MiddlewareFuncd {
 			if !req.IsTLS() {
 				host := req.Host()
 				uri := req.URI()
-				return c.Redirect(config.Code, "https://"+host+uri)
+				return c.Redirect("https://"+host+uri, config.Code)
 			}
 			return next.Handle(c)
 		}
@@ -91,7 +91,7 @@ func HTTPSWWWRedirectWithConfig(config RedirectConfig) echo.MiddlewareFuncd {
 			host := req.Host()
 			uri := req.URI()
 			if !req.IsTLS() && host[:4] != "www." {
-				return c.Redirect(http.StatusMovedPermanently, "https://www."+host+uri)
+				return c.Redirect("https://www."+host+uri, http.StatusMovedPermanently)
 			}
 			return next.Handle(c)
 		}
@@ -128,7 +128,7 @@ func WWWRedirectWithConfig(config RedirectConfig) echo.MiddlewareFuncd {
 			host := req.Host()
 			if host[:4] != "www." {
 				uri := req.URI()
-				return c.Redirect(http.StatusMovedPermanently, scheme+"://www."+host+uri)
+				return c.Redirect(scheme+"://www."+host+uri, http.StatusMovedPermanently)
 			}
 			return next.Handle(c)
 		}
@@ -164,7 +164,7 @@ func NonWWWRedirectWithConfig(config RedirectConfig) echo.MiddlewareFuncd {
 			host := req.Host()
 			if host[:4] == "www." {
 				uri := req.URI()
-				return c.Redirect(http.StatusMovedPermanently, scheme+"://"+host[4:]+uri)
+				return c.Redirect(scheme+"://"+host[4:]+uri, http.StatusMovedPermanently)
 			}
 			return next.Handle(c)
 		}
