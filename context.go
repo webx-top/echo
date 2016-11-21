@@ -66,6 +66,7 @@ type (
 		Handle(Context) error
 		Logger() logger.Logger
 		Object() *xContext
+		Echo() *Echo
 
 		// ServeContent sends static content from `io.Reader` and handles caching
 		// via `If-Modified-Since` request header. It automatically sets `Content-Type`
@@ -503,28 +504,6 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.renderer = nil
 	c.handler = notFoundHandler
 	c.cookieOptions = nil
-
-	c.SetFunc(`Lang`, c.Lang)
-	c.SetFunc(`T`, c.T)
-	c.SetFunc(`Cookie`, c.Cookie)
-	c.SetFunc(`Session`, c.Session)
-	c.SetFunc(`Query`, c.Query)
-	c.SetFunc(`Form`, c.Form)
-	c.SetFunc(`QueryValues`, c.QueryValues)
-	c.SetFunc(`FormValues`, c.FormValues)
-	c.SetFunc(`Param`, c.Param)
-	c.SetFunc(`Atop`, c.Atop)
-	c.SetFunc(`URL`, req.URL)
-	c.SetFunc(`Header`, req.Header)
-	c.SetFunc(`Flash`, c.Flash)
-	for name, function := range DefaultFuncMap {
-		c.SetFunc(name, function)
-	}
-	if c.echo.FuncMap != nil {
-		for name, function := range c.echo.FuncMap {
-			c.SetFunc(name, function)
-		}
-	}
 }
 
 func (c *xContext) GetFunc(key string) interface{} {
