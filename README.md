@@ -40,7 +40,7 @@ import (
 func main() {
 	e := echo.New()
 	e.Get("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
+		return c.String("Hello, World!", http.StatusOK)
 	})
 	e.Run(standard.New(":1323"))
 }
@@ -159,9 +159,9 @@ e.Post("/users", func(c echo.Context) error {
 	if err := c.MustBind(u); err != nil {
 		return err
 	}
-	return c.JSON(http.StatusCreated, u)
+	return c.JSON(u, http.StatusCreated)
 	// or
-	// return c.XML(http.StatusCreated, u)
+	// return c.XML(u, http.StatusCreated)
 })
 ```
 
@@ -350,10 +350,10 @@ func main() {
 	e.Use(mw.Log())
 
 	e.Get("/", func(c echo.Context) error {
-		return c.String(200, "Hello, World!")
+		return c.String("Hello, World!")
 	})
 	e.Get("/echo/:name", func(c echo.Context) error {
-		return c.String(200, "Echo " + c.Param("name"))
+		return c.String("Echo " + c.Param("name"))
 	})
 	
 	e.Get("/std", func(w http.ResponseWriter, r *http.Request) {

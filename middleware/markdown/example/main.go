@@ -21,7 +21,7 @@ func main() {
 	}))
 
 	e.Get("/", echo.HandlerFunc(func(c echo.Context) error {
-		return c.String(200, "Hello, World!")
+		return c.String("Hello, World!")
 	}))
 
 	// FastHTTP
