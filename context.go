@@ -7,7 +7,6 @@ import (
 	"io"
 	"mime"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"time"
@@ -84,7 +83,8 @@ type (
 		// Cookie
 		SetCookieOptions(*CookieOptions)
 		CookieOptions() *CookieOptions
-		Cookie(string, string) *Cookie
+		NewCookie(string, string) *Cookie
+		Cookie() Cookier
 		GetCookie(string) string
 		SetCookie(string, string, ...interface{})
 
@@ -94,7 +94,7 @@ type (
 
 		//with type action
 		Px(int) param.String
-		Stringx(string) param.String
+		Paramx(string) param.String
 		Queryx(string) param.String
 		Formx(string) param.String
 		//string to param.String
@@ -106,6 +106,7 @@ type (
 	xContext struct {
 		Translator
 		sessioner     Sessioner
+		cookier       Cookier
 		context       context.Context
 		request       engine.Request
 		response      engine.Response
@@ -125,7 +126,7 @@ type (
 
 // NewContext creates a Context object.
 func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
-	return &xContext{
+	c := &xContext{
 		Translator: DefaultNopTranslate,
 		context:    context.Background(),
 		request:    req,
@@ -137,6 +138,8 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 		funcs:      make(map[string]interface{}),
 		sessioner:  DefaultNopSession,
 	}
+	c.cookier = NewCookier(c)
+	return c
 }
 
 func (c *xContext) Context() context.Context {
@@ -468,6 +471,19 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.renderer = nil
 	c.handler = notFoundHandler
 	c.cookieOptions = nil
+
+	c.SetFunc(`T`, c.T)
+	c.SetFunc(`Cookie`, c.Cookie)
+	c.SetFunc(`Session`, c.Session)
+	c.SetFunc(`Query`, c.Query)
+	c.SetFunc(`Form`, c.Form)
+	c.SetFunc(`QueryValues`, c.QueryValues)
+	c.SetFunc(`FormValues`, c.FormValues)
+	c.SetFunc(`Param`, c.Param)
+	c.SetFunc(`Atop`, c.Atop)
+	c.SetFunc(`URL`, req.URL)
+	c.SetFunc(`Header`, req.Header)
+	c.SetFunc(`Flash`, c.Flash)
 }
 
 func (c *xContext) GetFunc(key string) interface{} {
@@ -533,58 +549,27 @@ func (c *xContext) CookieOptions() *CookieOptions {
 	return c.cookieOptions
 }
 
-func (c *xContext) Cookie(key string, value string) *Cookie {
+func (c *xContext) NewCookie(key string, value string) *Cookie {
 	return NewCookie(key, value, c.CookieOptions())
 }
 
+func (c *xContext) Cookie() Cookier {
+	return c.cookier
+}
+
 func (c *xContext) GetCookie(key string) string {
-	var val string
-	if v := c.Request().Cookie(c.CookieOptions().Prefix + key); v != `` {
-		val, _ = url.QueryUnescape(v)
-	}
-	return val
+	return c.cookier.Get(key)
 }
 
 func (c *xContext) SetCookie(key string, val string, args ...interface{}) {
-	val = url.QueryEscape(val)
-	cookie := c.Cookie(key, val)
-	switch len(args) {
-	case 5:
-		httpOnly, _ := args[4].(bool)
-		cookie.HttpOnly(httpOnly)
-		fallthrough
-	case 4:
-		secure, _ := args[3].(bool)
-		cookie.Secure(secure)
-		fallthrough
-	case 3:
-		domain, _ := args[2].(string)
-		cookie.Domain(domain)
-		fallthrough
-	case 2:
-		ppath, _ := args[1].(string)
-		cookie.Path(ppath)
-		fallthrough
-	case 1:
-		var liftTime int64
-		switch args[0].(type) {
-		case int:
-			liftTime = int64(args[0].(int))
-		case int64:
-			liftTime = args[0].(int64)
-		case time.Duration:
-			liftTime = int64(args[0].(time.Duration).Seconds())
-		}
-		cookie.Expires(liftTime)
-	}
-	cookie.Send(c)
+	c.cookier.Set(key, val, args...)
 }
 
 func (c *xContext) Px(n int) param.String {
 	return param.String(c.P(n))
 }
 
-func (c *xContext) Stringx(name string) param.String {
+func (c *xContext) Paramx(name string) param.String {
 	return param.String(c.Param(name))
 }
 

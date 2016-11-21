@@ -19,6 +19,7 @@ package echo
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -34,6 +35,17 @@ type CookieOptions struct {
 	Domain   string
 	Secure   bool
 	HttpOnly bool
+}
+
+type Cookier interface {
+	Get(key string) string
+	Set(key string, val string, args ...interface{})
+}
+
+func NewCookier(ctx Context) Cookier {
+	return &cookie{
+		context: ctx,
+	}
 }
 
 func NewCookie(name string, value string, opts ...*CookieOptions) *Cookie {
@@ -98,4 +110,51 @@ func (c *Cookie) HttpOnly(p bool) *Cookie {
 
 func (c *Cookie) Send(ctx Context) {
 	ctx.Response().Header().Set(HeaderSetCookie, c.cookie.String())
+}
+
+type cookie struct {
+	context Context
+}
+
+func (c *cookie) Get(key string) string {
+	var val string
+	if v := c.context.Request().Cookie(c.context.CookieOptions().Prefix + key); v != `` {
+		val, _ = url.QueryUnescape(v)
+	}
+	return val
+}
+
+func (c *cookie) Set(key string, val string, args ...interface{}) {
+	val = url.QueryEscape(val)
+	cookie := NewCookie(key, val, c.context.CookieOptions())
+	switch len(args) {
+	case 5:
+		httpOnly, _ := args[4].(bool)
+		cookie.HttpOnly(httpOnly)
+		fallthrough
+	case 4:
+		secure, _ := args[3].(bool)
+		cookie.Secure(secure)
+		fallthrough
+	case 3:
+		domain, _ := args[2].(string)
+		cookie.Domain(domain)
+		fallthrough
+	case 2:
+		ppath, _ := args[1].(string)
+		cookie.Path(ppath)
+		fallthrough
+	case 1:
+		var liftTime int64
+		switch args[0].(type) {
+		case int:
+			liftTime = int64(args[0].(int))
+		case int64:
+			liftTime = args[0].(int64)
+		case time.Duration:
+			liftTime = int64(args[0].(time.Duration).Seconds())
+		}
+		cookie.Expires(liftTime)
+	}
+	cookie.Send(c.context)
 }
