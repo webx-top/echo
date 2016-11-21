@@ -1,44 +1,25 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en-us">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta charset="UTF-8">
     <title>Echo by webx-top</title>
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/github-dark.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script src="javascripts/respond.js"></script>
-    <!--[if lt IE 9]>
-      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <!--[if lt IE 8]>
-    <link rel="stylesheet" href="stylesheets/ie.css">
-    <![endif]-->
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
   </head>
   <body>
-      <div id="header">
-        <nav>
-          <li class="fork"><a href="https://github.com/webx-top/echo">View On GitHub</a></li>
-          <li class="downloads"><a href="https://github.com/webx-top/echo/zipball/master">ZIP</a></li>
-          <li class="downloads"><a href="https://github.com/webx-top/echo/tarball/master">TAR</a></li>
-          <li class="title">DOWNLOADS</li>
-        </nav>
-      </div><!-- end header -->
+    <section class="page-header">
+      <h1 class="project-name">Echo</h1>
+      <h2 class="project-tagline">FastHTTP &amp; net/http dual-engine web framework. Echo v2 enhanced version.</h2>
+      <a href="https://github.com/webx-top/echo" class="btn">View on GitHub</a>
+      <a href="https://github.com/webx-top/echo/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/webx-top/echo/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
 
-    <div class="wrapper">
-
-      <section>
-        <div id="title">
-          <h1>Echo</h1>
-          <p>FastHTTP &amp; net/http dual-engine web framework. Echo v2 enhanced version.</p>
-          <hr>
-          <span class="credits left">Project maintained by <a href="https://github.com/webx-top">webx-top</a></span>
-          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
-        </div>
-
-        <h1>
+    <section class="main-content">
+      <h1>
 <a id="echo" class="anchor" href="#echo" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Echo</h1>
 
 <p><a href="https://travis-ci.org/webx-top/echo"><img src="https://travis-ci.org/webx-top/echo.svg?branch=master" alt="Build Status"></a> <a href="https://goreportcard.com/report/github.com/webx-top/echo"><img src="https://goreportcard.com/badge/github.com/webx-top/echo" alt="Go Report Card"></a></p>
@@ -87,7 +68,7 @@
 <span class="pl-k">func</span> <span class="pl-en">main</span>() {
     <span class="pl-smi">e</span> <span class="pl-k">:=</span> echo.<span class="pl-c1">New</span>()
     e.<span class="pl-c1">Get</span>(<span class="pl-s"><span class="pl-pds">"</span>/<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(c echo.<span class="pl-smi">Context</span>) <span class="pl-k">error</span> {
-        <span class="pl-k">return</span> c.<span class="pl-c1">String</span>(http.<span class="pl-smi">StatusOK</span>, <span class="pl-s"><span class="pl-pds">"</span>Hello, World!<span class="pl-pds">"</span></span>)
+        <span class="pl-k">return</span> c.<span class="pl-c1">String</span>(<span class="pl-s"><span class="pl-pds">"</span>Hello, World!<span class="pl-pds">"</span></span>, http.<span class="pl-smi">StatusOK</span>)
     })
     e.<span class="pl-c1">Run</span>(standard.<span class="pl-c1">New</span>(<span class="pl-s"><span class="pl-pds">"</span>:1323<span class="pl-pds">"</span></span>))
 }</pre></div>
@@ -232,9 +213,9 @@ e.<span class="pl-c1">Post</span>(<span class="pl-s"><span class="pl-pds">"</spa
     <span class="pl-k">if</span> <span class="pl-smi">err</span> <span class="pl-k">:=</span> c.<span class="pl-c1">MustBind</span>(u); err != <span class="pl-c1">nil</span> {
         <span class="pl-k">return</span> err
     }
-    <span class="pl-k">return</span> c.<span class="pl-c1">JSON</span>(http.<span class="pl-smi">StatusCreated</span>, u)
+    <span class="pl-k">return</span> c.<span class="pl-c1">JSON</span>(u, http.<span class="pl-smi">StatusCreated</span>)
     <span class="pl-c">// or</span>
-    <span class="pl-c">// return c.XML(http.StatusCreated, u)</span>
+    <span class="pl-c">// return c.XML(u, http.StatusCreated)</span>
 })</pre></div>
 
 <h3>
@@ -268,11 +249,11 @@ g.<span class="pl-c1">Use</span>(middleware.<span class="pl-c1">BasicAuth</span>
 <span class="pl-smi">track</span> <span class="pl-k">:=</span> <span class="pl-c1">func</span>(next echo.<span class="pl-smi">HandlerFunc</span>) echo.<span class="pl-smi">HandlerFunc</span> {
     <span class="pl-k">return</span> <span class="pl-c1">func</span>(c echo.<span class="pl-smi">Context</span>) <span class="pl-k">error</span> {
         <span class="pl-c1">println</span>(<span class="pl-s"><span class="pl-pds">"</span>request to /users<span class="pl-pds">"</span></span>)
-        <span class="pl-k">return</span> <span class="pl-c1">next</span>(c)
+        <span class="pl-k">return</span> next.<span class="pl-c1">Handle</span>(c)
     }
 }
 e.<span class="pl-c1">Get</span>(<span class="pl-s"><span class="pl-pds">"</span>/users<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(c echo.<span class="pl-smi">Context</span>) <span class="pl-k">error</span> {
-    <span class="pl-k">return</span> c.<span class="pl-c1">String</span>(http.<span class="pl-smi">StatusOK</span>, <span class="pl-s"><span class="pl-pds">"</span>/users<span class="pl-pds">"</span></span>)
+    <span class="pl-k">return</span> c.<span class="pl-c1">String</span>(<span class="pl-s"><span class="pl-pds">"</span>/users<span class="pl-pds">"</span></span>, http.<span class="pl-smi">StatusOK</span>)
 }, track)</pre></div>
 
 <h3>
@@ -280,7 +261,7 @@ e.<span class="pl-c1">Get</span>(<span class="pl-s"><span class="pl-pds">"</span
 
 <div class="highlight highlight-source-go"><pre>e.<span class="pl-c1">Get</span>(<span class="pl-s"><span class="pl-pds">"</span>/setcookie<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(c echo.<span class="pl-smi">Context</span>) <span class="pl-k">error</span> {
     c.<span class="pl-c1">SetCookie</span>(<span class="pl-s"><span class="pl-pds">"</span>uid<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>1<span class="pl-pds">"</span></span>)
-    <span class="pl-k">return</span> c.<span class="pl-c1">String</span>(http.<span class="pl-smi">StatusOK</span>, <span class="pl-s"><span class="pl-pds">"</span>/setcookie: uid=<span class="pl-pds">"</span></span>+c.<span class="pl-c1">GetCookie</span>(<span class="pl-s"><span class="pl-pds">"</span>uid<span class="pl-pds">"</span></span>))
+    <span class="pl-k">return</span> c.<span class="pl-c1">String</span>(<span class="pl-s"><span class="pl-pds">"</span>/setcookie: uid=<span class="pl-pds">"</span></span>+c.<span class="pl-c1">GetCookie</span>(<span class="pl-s"><span class="pl-pds">"</span>uid<span class="pl-pds">"</span></span>), http.<span class="pl-smi">StatusOK</span>)
 })</pre></div>
 
 <h3>
@@ -317,7 +298,7 @@ e.<span class="pl-c1">Use</span>(session.<span class="pl-c1">Middleware</span>(s
 
 e.<span class="pl-c1">Get</span>(<span class="pl-s"><span class="pl-pds">"</span>/session<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(c echo.<span class="pl-smi">Context</span>) <span class="pl-k">error</span> {
     c.<span class="pl-c1">Session</span>().<span class="pl-c1">Set</span>(<span class="pl-s"><span class="pl-pds">"</span>uid<span class="pl-pds">"</span></span>,<span class="pl-c1">1</span>).<span class="pl-c1">Save</span>()
-    <span class="pl-k">return</span> c.<span class="pl-c1">String</span>(http.<span class="pl-smi">StatusOK</span>, fmt.<span class="pl-c1">Sprintf</span>(<span class="pl-s"><span class="pl-pds">"</span>/session: uid=<span class="pl-c1">%v</span><span class="pl-pds">"</span></span>,c.<span class="pl-c1">Session</span>().<span class="pl-c1">Get</span>(<span class="pl-s"><span class="pl-pds">"</span>uid<span class="pl-pds">"</span></span>)))
+    <span class="pl-k">return</span> c.<span class="pl-c1">String</span>(fmt.<span class="pl-c1">Sprintf</span>(<span class="pl-s"><span class="pl-pds">"</span>/session: uid=<span class="pl-c1">%v</span><span class="pl-pds">"</span></span>,c.<span class="pl-c1">Session</span>().<span class="pl-c1">Get</span>(<span class="pl-s"><span class="pl-pds">"</span>uid<span class="pl-pds">"</span></span>)))
 })</pre></div>
 
 <h3>
@@ -422,10 +403,10 @@ options.<span class="pl-c1">Wrapper</span>(e)</pre></div>
     e.<span class="pl-c1">Use</span>(mw.<span class="pl-c1">Log</span>())
 
     e.<span class="pl-c1">Get</span>(<span class="pl-s"><span class="pl-pds">"</span>/<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(c echo.<span class="pl-smi">Context</span>) <span class="pl-k">error</span> {
-        <span class="pl-k">return</span> c.<span class="pl-c1">String</span>(<span class="pl-c1">200</span>, <span class="pl-s"><span class="pl-pds">"</span>Hello, World!<span class="pl-pds">"</span></span>)
+        <span class="pl-k">return</span> c.<span class="pl-c1">String</span>(<span class="pl-s"><span class="pl-pds">"</span>Hello, World!<span class="pl-pds">"</span></span>)
     })
     e.<span class="pl-c1">Get</span>(<span class="pl-s"><span class="pl-pds">"</span>/echo/:name<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(c echo.<span class="pl-smi">Context</span>) <span class="pl-k">error</span> {
-        <span class="pl-k">return</span> c.<span class="pl-c1">String</span>(<span class="pl-c1">200</span>, <span class="pl-s"><span class="pl-pds">"</span>Echo <span class="pl-pds">"</span></span> + c.<span class="pl-c1">Param</span>(<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>))
+        <span class="pl-k">return</span> c.<span class="pl-c1">String</span>(<span class="pl-s"><span class="pl-pds">"</span>Echo <span class="pl-pds">"</span></span> + c.<span class="pl-c1">Param</span>(<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>))
     })
 
     e.<span class="pl-c1">Get</span>(<span class="pl-s"><span class="pl-pds">"</span>/std<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(w http.<span class="pl-smi">ResponseWriter</span>, r *http.<span class="pl-smi">Request</span>) {
@@ -614,10 +595,15 @@ options.<span class="pl-c1">Wrapper</span>(e)</pre></div>
 <a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
 
 <p><a href="https://github.com/webx-top/echo/blob/master/LICENSE">MIT</a></p>
-      </section>
 
-    </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-    
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/webx-top/echo">Echo</a> is maintained by <a href="https://github.com/webx-top">webx-top</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
   </body>
 </html>
