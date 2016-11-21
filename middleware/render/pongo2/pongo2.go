@@ -41,6 +41,11 @@ func init() {
 }
 
 func New(templateDir string, args ...logger.Logger) Driver {
+	var err error
+	templateDir, err = filepath.Abs(templateDir)
+	if err != nil {
+		panic(err.Error())
+	}
 	a := &Pongo2{
 		templateDir:       templateDir,
 		ext:               `.html`,

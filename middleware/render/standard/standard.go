@@ -44,6 +44,11 @@ import (
 var Debug = false
 
 func New(templateDir string, args ...logger.Logger) Driver {
+	var err error
+	templateDir, err = filepath.Abs(templateDir)
+	if err != nil {
+		panic(err.Error())
+	}
 	t := &Standard{
 		CachedRelation:    make(map[string]*CcRel),
 		TemplateDir:       templateDir,
