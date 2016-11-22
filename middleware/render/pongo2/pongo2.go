@@ -49,14 +49,13 @@ func New(templateDir string, args ...logger.Logger) Driver {
 	a := &Pongo2{
 		templateDir:       templateDir,
 		ext:               `.html`,
-		logger:            log.New("tplex"),
 		fileEvents:        make([]func(string), 0),
 		contentProcessors: make([]func([]byte) []byte, 0),
 	}
 	if len(args) > 0 {
 		a.logger = args[0]
 	} else {
-		a.logger = log.New("tplex")
+		a.logger = log.New("render-pongo2")
 	}
 	a.templateDir, _ = filepath.Abs(templateDir)
 	return a

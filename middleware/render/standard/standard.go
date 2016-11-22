@@ -66,7 +66,7 @@ func New(templateDir string, args ...logger.Logger) Driver {
 	if len(args) > 0 {
 		t.logger = args[0]
 	} else {
-		t.logger = log.New("tplex")
+		t.logger = log.New("render-standard")
 	}
 	t.InitRegexp()
 	return t
