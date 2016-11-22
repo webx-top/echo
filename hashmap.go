@@ -29,3 +29,29 @@ func (h H) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	}
 	return nil
 }
+
+// ToData conversion to *Data
+func (h H) ToData() *Data {
+	var info, zone, data interface{}
+	if v, y := h["Data"]; y {
+		data = v
+	}
+	if v, y := h["Zone"]; y {
+		zone = v
+	}
+	if v, y := h["Info"]; y {
+		info = v
+	}
+	var code int
+	if v, y := h["Code"]; y {
+		if c, y := v.(int); y {
+			code = c
+		}
+	}
+	return &Data{
+		Code: code,
+		Info: info,
+		Zone: zone,
+		Data: data,
+	}
+}

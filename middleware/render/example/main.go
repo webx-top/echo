@@ -29,6 +29,22 @@ func main() {
 		})
 	})
 
+	// try visit: http://localhost:8080/api or http://localhost:8080/api?format=xml or
+	// http://localhost:8080/api?format=json or
+	// http://localhost:8080/api?format=jsonp&callback=f
+	g := e.Group("/api", render.AutoOutput(nil))
+	{
+		g.Get("", func(c echo.Context) error {
+			c.Set("data", c.NewData().SetCode(1).SetData(echo.H{
+				"Name": "Webx",
+			}))
+
+			// It uses template file ./template/index.html
+			c.Set("tmpl", "index")
+			return nil
+		})
+	}
+
 	switch `` {
 	case `fast`:
 		// FastHTTP

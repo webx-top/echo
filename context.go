@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/webx-top/echo/engine"
@@ -102,24 +104,56 @@ type (
 		Atop(string) param.String
 
 		SetTranslator(Translator)
+
+		Header(string) string
+		IsAjax() bool
+		Method() string
+		Format() string
+		IsPost() bool
+		IsGet() bool
+		IsPut() bool
+		IsDel() bool
+		IsHead() bool
+		IsPatch() bool
+		IsOptions() bool
+		IsSecure() bool
+		IsWebsocket() bool
+		IsUpload() bool
+		ResolveContentType() string
+		WithFormatExtension(bool)
+		ResolveFormat() string
+		Protocol() string
+		Site() string
+		Scheme() string
+		Domain() string
+		Host() string
+		Proxy() []string
+		Referer() string
+		Port() int
+		SetCode(int)
+		Code() int
+		NewData(...interface{}) *Data
 	}
 
 	xContext struct {
 		Translator
-		sessioner     Sessioner
-		cookier       Cookier
-		context       context.Context
-		request       engine.Request
-		response      engine.Response
-		path          string
-		pnames        []string
-		pvalues       []string
-		store         store
-		handler       Handler
-		echo          *Echo
-		funcs         map[string]interface{}
-		renderer      Renderer
-		cookieOptions *CookieOptions
+		sessioner           Sessioner
+		cookier             Cookier
+		context             context.Context
+		request             engine.Request
+		response            engine.Response
+		path                string
+		pnames              []string
+		pvalues             []string
+		store               store
+		handler             Handler
+		echo                *Echo
+		funcs               map[string]interface{}
+		renderer            Renderer
+		cookieOptions       *CookieOptions
+		withFormatExtension bool
+		format              string
+		code                int
 	}
 
 	store map[string]interface{}
@@ -275,40 +309,46 @@ func (c *xContext) MustBind(i interface{}) error {
 // Render renders a template with data and sends a text/html response with status
 // code. Templates can be registered using `Echo.SetRenderer()`.
 func (c *xContext) Render(name string, data interface{}, codes ...int) (err error) {
-	code := http.StatusOK
 	if len(codes) > 0 {
-		code = codes[0]
+		c.code = codes[0]
+	}
+	if c.code == 0 {
+		c.code = http.StatusOK
 	}
 	b, err := c.Fetch(name, data)
 	if err != nil {
 		return
 	}
 	c.response.Header().Set(HeaderContentType, MIMETextHTMLCharsetUTF8)
-	c.response.WriteHeader(code)
+	c.response.WriteHeader(c.code)
 	_, err = c.response.Write(b)
 	return
 }
 
 // HTML sends an HTTP response with status code.
 func (c *xContext) HTML(html string, codes ...int) (err error) {
-	code := http.StatusOK
 	if len(codes) > 0 {
-		code = codes[0]
+		c.code = codes[0]
+	}
+	if c.code == 0 {
+		c.code = http.StatusOK
 	}
 	c.response.Header().Set(HeaderContentType, MIMETextHTMLCharsetUTF8)
-	c.response.WriteHeader(code)
+	c.response.WriteHeader(c.code)
 	_, err = c.response.Write([]byte(html))
 	return
 }
 
 // String sends a string response with status code.
 func (c *xContext) String(s string, codes ...int) (err error) {
-	code := http.StatusOK
 	if len(codes) > 0 {
-		code = codes[0]
+		c.code = codes[0]
+	}
+	if c.code == 0 {
+		c.code = http.StatusOK
 	}
 	c.response.Header().Set(HeaderContentType, MIMETextPlainCharsetUTF8)
-	c.response.WriteHeader(code)
+	c.response.WriteHeader(c.code)
 	_, err = c.response.Write([]byte(s))
 	return
 }
@@ -329,12 +369,14 @@ func (c *xContext) JSON(i interface{}, codes ...int) (err error) {
 
 // JSONBlob sends a JSON blob response with status code.
 func (c *xContext) JSONBlob(b []byte, codes ...int) (err error) {
-	code := http.StatusOK
 	if len(codes) > 0 {
-		code = codes[0]
+		c.code = codes[0]
+	}
+	if c.code == 0 {
+		c.code = http.StatusOK
 	}
 	c.response.Header().Set(HeaderContentType, MIMEApplicationJSONCharsetUTF8)
-	c.response.WriteHeader(code)
+	c.response.WriteHeader(c.code)
 	_, err = c.response.Write(b)
 	return
 }
@@ -342,16 +384,18 @@ func (c *xContext) JSONBlob(b []byte, codes ...int) (err error) {
 // JSONP sends a JSONP response with status code. It uses `callback` to construct
 // the JSONP payload.
 func (c *xContext) JSONP(callback string, i interface{}, codes ...int) (err error) {
-	code := http.StatusOK
 	if len(codes) > 0 {
-		code = codes[0]
+		c.code = codes[0]
+	}
+	if c.code == 0 {
+		c.code = http.StatusOK
 	}
 	b, err := json.Marshal(i)
 	if err != nil {
 		return err
 	}
 	c.response.Header().Set(HeaderContentType, MIMEApplicationJavaScriptCharsetUTF8)
-	c.response.WriteHeader(code)
+	c.response.WriteHeader(c.code)
 
 	if _, err = c.response.Write([]byte(callback + "(")); err != nil {
 		return
@@ -379,12 +423,14 @@ func (c *xContext) XML(i interface{}, codes ...int) (err error) {
 
 // XMLBlob sends a XML blob response with status code.
 func (c *xContext) XMLBlob(b []byte, codes ...int) (err error) {
-	code := http.StatusOK
 	if len(codes) > 0 {
-		code = codes[0]
+		c.code = codes[0]
+	}
+	if c.code == 0 {
+		c.code = http.StatusOK
 	}
 	c.response.Header().Set(HeaderContentType, MIMEApplicationXMLCharsetUTF8)
-	c.response.WriteHeader(code)
+	c.response.WriteHeader(c.code)
 	if _, err = c.response.Write([]byte(xml.Header)); err != nil {
 		return
 	}
@@ -421,11 +467,13 @@ func (c *xContext) Attachment(r io.ReadSeeker, name string) (err error) {
 
 // NoContent sends a response with no body and a status code.
 func (c *xContext) NoContent(codes ...int) error {
-	code := http.StatusOK
 	if len(codes) > 0 {
-		code = codes[0]
+		c.code = codes[0]
 	}
-	c.response.WriteHeader(code)
+	if c.code == 0 {
+		c.code = http.StatusOK
+	}
+	c.response.WriteHeader(c.code)
 	return nil
 }
 
@@ -478,7 +526,7 @@ func (c *xContext) ServeContent(content io.ReadSeeker, name string, modtime time
 // its extension. It returns `application/octet-stream` incase MIME type is not
 // found.
 func ContentTypeByExtension(name string) (t string) {
-	if t = mime.TypeByExtension(filepath.Ext(name)); t == "" {
+	if t = mime.TypeByExtension(filepath.Ext(name)); len(t) == 0 {
 		t = MIMEOctetStream
 	}
 	return
@@ -504,6 +552,9 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.renderer = nil
 	c.handler = notFoundHandler
 	c.cookieOptions = nil
+	c.withFormatExtension = false
+	c.format = ""
+	c.code = 0
 }
 
 func (c *xContext) GetFunc(key string) interface{} {
@@ -603,4 +654,221 @@ func (c *xContext) Formx(name string) param.String {
 
 func (c *xContext) Atop(v string) param.String {
 	return param.String(v)
+}
+
+func (c *xContext) Header(name string) string {
+	return c.Request().Header().Get(name)
+}
+
+func (c *xContext) IsAjax() bool {
+	return c.Header(`X-Requested-With`) == `XMLHttpRequest`
+}
+
+func (c *xContext) Method() string {
+	return c.Request().Method()
+}
+
+func (c *xContext) Format() string {
+	if len(c.format) == 0 {
+		c.format = c.ResolveFormat()
+	}
+	return c.format
+}
+
+// IsPost CREATE：在服务器新建一个资源
+func (c *xContext) IsPost() bool {
+	return c.Method() == POST
+}
+
+// IsGet SELECT：从服务器取出资源（一项或多项）
+func (c *xContext) IsGet() bool {
+	return c.Method() == GET
+}
+
+// IsPut UPDATE：在服务器更新资源（客户端提供改变后的完整资源）
+func (c *xContext) IsPut() bool {
+	return c.Method() == PUT
+}
+
+// IsDel DELETE：从服务器删除资源
+func (c *xContext) IsDel() bool {
+	return c.Method() == DELETE
+}
+
+// IsHead 获取资源的元数据
+func (c *xContext) IsHead() bool {
+	return c.Method() == HEAD
+}
+
+//IsPatch UPDATE：在服务器更新资源（客户端提供改变的属性）
+func (c *xContext) IsPatch() bool {
+	return c.Method() == PATCH
+}
+
+// IsOptions 获取信息，关于资源的哪些属性是客户端可以改变的
+func (c *xContext) IsOptions() bool {
+	return c.Method() == OPTIONS
+}
+
+func (c *xContext) IsSecure() bool {
+	return c.Scheme() == `https`
+}
+
+// IsWebsocket returns boolean of this request is in webSocket.
+func (c *xContext) IsWebsocket() bool {
+	return c.Header(`Upgrade`) == `websocket`
+}
+
+// IsUpload returns boolean of whether file uploads in this request or not..
+func (c *xContext) IsUpload() bool {
+	return strings.Contains(c.Header(`Content-Type`), `multipart/form-data`)
+}
+
+// ResolveContentType Get the content type.
+// e.g. From `multipart/form-data; boundary=--` to `multipart/form-data`
+// If none is specified, returns `text/html` by default.
+func (c *xContext) ResolveContentType() string {
+	contentType := c.Header(`Content-Type`)
+	if len(contentType) == 0 {
+		return `text/html`
+	}
+	return strings.ToLower(strings.TrimSpace(strings.SplitN(contentType, `;`, 2)[0]))
+}
+
+func (c *xContext) WithFormatExtension(on bool) {
+	c.withFormatExtension = on
+}
+
+// ResolveFormat maps the request's Accept MIME type declaration to
+// a Request.Format attribute, specifically `html`, `xml`, `json`, or `txt`,
+// returning a default of `html` when Accept header cannot be mapped to a
+// value above.
+func (c *xContext) ResolveFormat() string {
+	if format := c.Query(`format`); len(format) > 0 {
+		return format
+	}
+	if c.withFormatExtension {
+		urlPath := c.Request().URL().Path()
+		if pos := strings.LastIndex(urlPath, `.`); pos > -1 {
+			return strings.ToLower(urlPath[pos+1:])
+		}
+	}
+
+	accept := c.Header(`Accept`)
+	switch {
+	case accept == ``,
+		strings.HasPrefix(accept, `*/*`), // */
+		strings.HasPrefix(accept, `application/xhtml`),
+		strings.HasPrefix(accept, `text/html`):
+		return `html`
+	case strings.HasPrefix(accept, `application/json`),
+		strings.HasPrefix(accept, `text/javascript`),
+		strings.HasPrefix(accept, `application/javascript`):
+		return `json`
+	case strings.HasPrefix(accept, `application/xml`),
+		strings.HasPrefix(accept, `text/xml`):
+		return `xml`
+	case strings.HasPrefix(accept, `text/plain`):
+		return `text`
+	}
+	return `html`
+}
+
+// Protocol returns request protocol name, such as HTTP/1.1 .
+func (c *xContext) Protocol() string {
+	return c.Request().Proto()
+}
+
+// Site returns base site url as scheme://domain type.
+func (c *xContext) Site() string {
+	return c.Scheme() + `://` + c.Domain()
+}
+
+// Scheme returns request scheme as `http` or `https`.
+func (c *xContext) Scheme() string {
+	if c.Request().Scheme() != `` {
+		return c.Request().Scheme()
+	}
+	if c.Request().IsTLS() == false {
+		return `http`
+	}
+	return `https`
+}
+
+// Domain returns host name.
+// Alias of Host method.
+func (c *xContext) Domain() string {
+	return c.Host()
+}
+
+// Host returns host name.
+// if no host info in request, return localhost.
+func (c *xContext) Host() string {
+	host := c.Request().Host()
+	if len(host) > 0 {
+		delim := `:`
+		if host[0] == '[' {
+			host = strings.TrimPrefix(host, `[`)
+			delim = `]:`
+		}
+		hostParts := strings.SplitN(host, delim, 2)
+		if len(hostParts) > 0 {
+			return hostParts[0]
+		}
+		return host
+	}
+	return `localhost`
+}
+
+// Proxy returns proxy client ips slice.
+func (c *xContext) Proxy() []string {
+	if ips := c.Header(`X-Forwarded-For`); len(ips) > 0 {
+		return strings.Split(ips, `,`)
+	}
+	return []string{}
+}
+
+// Referer returns http referer header.
+func (c *xContext) Referer() string {
+	return c.Header(`Referer`)
+}
+
+// Port returns request client port.
+// when error or empty, return 80.
+func (c *xContext) Port() int {
+	host := c.Request().Host()
+	delim := `:`
+	if len(host) > 0 && host[0] == '[' {
+		delim = `]:`
+	}
+	parts := strings.SplitN(host, delim, 2)
+	if len(parts) > 1 {
+		port, _ := strconv.Atoi(parts[1])
+		return port
+	}
+	return 80
+}
+
+func (c *xContext) SetCode(code int) {
+	c.code = code
+}
+
+func (c *xContext) Code() int {
+	return c.code
+}
+
+func (c *xContext) NewData(args ...interface{}) *Data {
+	length := len(args)
+	if length > 1 {
+		if code, ok := args[0].(int); ok {
+			return NewData(code, args[1:]...)
+		}
+	} else if length == 1 {
+		if code, ok := args[0].(int); ok {
+			return NewData(code)
+		} else if mapd, ok := args[0].(H); ok {
+			return mapd.ToData()
+		}
+	}
+	return &Data{}
 }

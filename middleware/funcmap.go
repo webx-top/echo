@@ -29,13 +29,13 @@ func FuncMap(funcMap map[string]interface{}, skipper ...echo.Skipper) echo.Middl
 			c.SetFunc(`URL`, req.URL)
 			c.SetFunc(`Header`, req.Header)
 			c.SetFunc(`Flash`, c.Flash)
-			if funcMap != nil {
-				for name, function := range funcMap {
+			if c.Echo().FuncMap != nil {
+				for name, function := range c.Echo().FuncMap {
 					c.SetFunc(name, function)
 				}
 			}
-			if c.Echo().FuncMap != nil {
-				for name, function := range c.Echo().FuncMap {
+			if funcMap != nil {
+				for name, function := range funcMap {
 					c.SetFunc(name, function)
 				}
 			}

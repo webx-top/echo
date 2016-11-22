@@ -105,7 +105,7 @@ func (g *Group) add(method, path string, h interface{}, middleware ...interface{
 	if hn, ok := handler.(HandleNamer); ok {
 		name = hn.HandleName()
 	} else {
-		name = handlerName(handler)
+		name = HandlerName(handler)
 	}
 
 	for _, m := range middleware {
