@@ -65,13 +65,29 @@ func Output(format string, c echo.Context) error {
 		}
 		data := c.Get(DefaultDataKey)
 		if v, y := data.(*echo.Data); y {
+			SetFuncs(c, v)
 			return c.Render(tmpl, v.Data)
 		}
-		if v, y := data.(echo.H); y {
-			return c.Render(tmpl, v.ToData())
+		if h, y := data.(echo.H); y {
+			v := h.ToData()
+			SetFuncs(c, v)
+			return c.Render(tmpl, v.Data)
 		}
 		return c.Render(tmpl, data)
 	}
+}
+
+// SetFuncs register template function
+func SetFuncs(c echo.Context, v *echo.Data) {
+	c.SetFunc(`Info`, func() interface{} {
+		return v.Info
+	})
+	c.SetFunc(`Code`, func() interface{} {
+		return v.Code
+	})
+	c.SetFunc(`Zone`, func() interface{} {
+		return v.Zone
+	})
 }
 
 // OutputError Outputs the specified format
