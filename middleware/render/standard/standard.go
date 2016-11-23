@@ -72,9 +72,21 @@ func New(templateDir string, args ...logger.Logger) Driver {
 	return t
 }
 
+type tplInfo struct {
+	Template *htmlTpl.Template
+	Blocks   map[string]struct{}
+}
+
+func NewTplInfo(t *htmlTpl.Template) *tplInfo {
+	return &tplInfo{
+		Template: t,
+		Blocks:   map[string]struct{}{},
+	}
+}
+
 type CcRel struct {
 	Rel map[string]uint8
-	Tpl [2]*htmlTpl.Template //0是独立模板；1是子模板
+	Tpl [2]*tplInfo //0是独立模板；1是子模板
 }
 
 type Standard struct {
@@ -248,8 +260,9 @@ func (self *Standard) parse(tmplName string, funcMap htmlTpl.FuncMap) (tmpl *htm
 		cachedKey = tmplName[1:]
 	}
 	rel, ok := self.CachedRelation[cachedKey]
-	if ok && rel.Tpl[0] != nil {
-		tmpl = rel.Tpl[0]
+	if ok && rel.Tpl[0].Template != nil {
+		tmpl = rel.Tpl[0].Template
+		funcMap = setFunc(rel.Tpl[0], funcMap)
 		tmpl.Funcs(funcMap)
 		if self.Debug {
 			fmt.Println(`Using the template object to be cached:`, tmplName)
@@ -265,13 +278,14 @@ func (self *Standard) parse(tmplName string, funcMap htmlTpl.FuncMap) (tmpl *htm
 	}
 	t := htmlTpl.New(tmplName)
 	t.Delims(self.DelimLeft, self.DelimRight)
-	t.Funcs(funcMap)
 	if rel == nil {
 		rel = &CcRel{
 			Rel: map[string]uint8{cachedKey: 0},
-			Tpl: [2]*htmlTpl.Template{},
+			Tpl: [2]*tplInfo{NewTplInfo(nil), NewTplInfo(nil)},
 		}
 	}
+	funcMap = setFunc(rel.Tpl[0], funcMap)
+	t.Funcs(funcMap)
 	self.echo(`Read not cached template content:`, tmplName)
 	b, err := self.RawContent(tmplName)
 	if err != nil {
@@ -298,15 +312,14 @@ func (self *Standard) parse(tmplName string, funcMap htmlTpl.FuncMap) (tmpl *htm
 		if err != nil {
 			tmpl, _ = t.Parse(err.Error())
 			return
-		} else {
-			content = string(b)
 		}
+		content = string(b)
 		content = self.ParseExtend(content, &extcs, passObject, &subcs)
 
 		if v, ok := self.CachedRelation[extFile]; !ok {
 			self.CachedRelation[extFile] = &CcRel{
 				Rel: map[string]uint8{cachedKey: 0},
-				Tpl: [2]*htmlTpl.Template{},
+				Tpl: [2]*tplInfo{NewTplInfo(nil), NewTplInfo(nil)},
 			}
 		} else if _, ok := v.Rel[cachedKey]; !ok {
 			self.CachedRelation[extFile].Rel[cachedKey] = 0
@@ -322,9 +335,9 @@ func (self *Standard) parse(tmplName string, funcMap htmlTpl.FuncMap) (tmpl *htm
 	}
 	for name, subc := range subcs {
 		v, ok := self.CachedRelation[name]
-		if ok && v.Tpl[1] != nil {
+		if ok && v.Tpl[1].Template != nil {
 			self.CachedRelation[name].Rel[cachedKey] = 0
-			tmpl.AddParseTree(name, self.CachedRelation[name].Tpl[1].Tree)
+			tmpl.AddParseTree(name, self.CachedRelation[name].Tpl[1].Template.Tree)
 			continue
 		}
 		var t *htmlTpl.Template
@@ -340,11 +353,11 @@ func (self *Standard) parse(tmplName string, funcMap htmlTpl.FuncMap) (tmpl *htm
 
 		if ok {
 			self.CachedRelation[name].Rel[cachedKey] = 0
-			self.CachedRelation[name].Tpl[1] = t
+			self.CachedRelation[name].Tpl[1].Template = t
 		} else {
 			self.CachedRelation[name] = &CcRel{
 				Rel: map[string]uint8{cachedKey: 0},
-				Tpl: [2]*htmlTpl.Template{nil, t},
+				Tpl: [2]*tplInfo{NewTplInfo(nil), NewTplInfo(t)},
 			}
 		}
 
@@ -360,9 +373,10 @@ func (self *Standard) parse(tmplName string, funcMap htmlTpl.FuncMap) (tmpl *htm
 				t.Parse(fmt.Sprintf("Parse Block %v err: %v", name, err))
 			}
 		}
+		rel.Tpl[0].Blocks[name] = struct{}{}
 	}
 
-	rel.Tpl[0] = tmpl
+	rel.Tpl[0].Template = tmpl
 	self.CachedRelation[cachedKey] = rel
 	return
 }
@@ -402,8 +416,8 @@ func (self *Standard) ParseExtend(content string, extcs *map[string]string, pass
 	if self.SuperTag != "" {
 		superTag = self.Tag(self.SuperTag)
 	}
-	var rec map[string]uint8 = make(map[string]uint8)
-	var sup map[string]string = make(map[string]string)
+	rec := make(map[string]uint8)
+	sup := make(map[string]string)
 	for _, v := range matches {
 		matched := v[0]
 		blockName := v[1]
@@ -444,7 +458,8 @@ func (self *Standard) ParseExtend(content string, extcs *map[string]string, pass
 			content = strings.Replace(content, matched, innerStr, 1)
 		}
 	}
-	for k, _ := range *extcs {
+	//只保留layout中存在的Block
+	for k := range *extcs {
 		if _, ok := rec[k]; !ok {
 			delete(*extcs, k)
 		}
@@ -520,4 +535,27 @@ func (self *Standard) Close() {
 	if self.TemplateMgr != nil {
 		self.TemplateMgr.Close()
 	}
+}
+
+func setFunc(tplInf *tplInfo, funcMap htmlTpl.FuncMap) htmlTpl.FuncMap {
+	if funcMap == nil {
+		funcMap = htmlTpl.FuncMap{}
+	}
+	funcMap["hasBlock"] = func(blocks ...string) bool {
+		for _, blockName := range blocks {
+			if _, ok := tplInf.Blocks[blockName]; !ok {
+				return false
+			}
+		}
+		return true
+	}
+	funcMap["hasAnyBlock"] = func(blocks ...string) bool {
+		for _, blockName := range blocks {
+			if _, ok := tplInf.Blocks[blockName]; ok {
+				return true
+			}
+		}
+		return false
+	}
+	return funcMap
 }

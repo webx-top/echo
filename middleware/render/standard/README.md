@@ -4,6 +4,9 @@
 1. 支持继承
 2. 支持包含子模板
 3. 支持golang原生模板语法（详细用法可参阅[golang模板语法简明教程](http://www.admpub.com/blog/post-221.html)）
+4. 自动注册模板函数 `hasBlock(blocks ...string) bool` 和 `hasAnyBlock(blocks ...string) bool`
+	* `hasBlock(blocks ...string) bool` - 是否在扩展模板中设置了指定名称的Block
+	* `hasAnyBlock(blocks ...string) bool`  - 是否在扩展模板中设置了指定名称中的任意一个Block
 
 ## 模板继承
 用于模板继承的标签有：Block、Extend、Super
