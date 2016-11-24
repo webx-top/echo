@@ -117,8 +117,10 @@ func (s *Server) startDefaultListener() error {
 	if err != nil {
 		return err
 	}
-
-	if len(s.config.TLSCertFile) > 0 && len(s.config.TLSKeyFile) > 0 {
+	if s.config.TLSConfig != nil {
+		s.logger.Info(`StandardHTTP is running at `, s.config.Address, ` [TLS]`)
+		s.config.Listener = tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, s.config.TLSConfig)
+	} else if len(s.config.TLSCertFile) > 0 && len(s.config.TLSKeyFile) > 0 {
 		// TODO: https://github.com/golang/go/commit/d24f446a90ea94b87591bf16228d7d871fec3d92
 		config := &tls.Config{}
 		if !s.config.DisableHTTP2 {

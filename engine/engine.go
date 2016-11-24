@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"crypto/tls"
 	"io"
 	"mime/multipart"
 	"net"
@@ -182,8 +183,9 @@ type (
 
 	// Config defines engine configuration.
 	Config struct {
-		Address            string        // TCP address to listen on.
-		Listener           net.Listener  // Custom `net.Listener`. If set, server accepts connections on it.
+		Address            string       // TCP address to listen on.
+		Listener           net.Listener // Custom `net.Listener`. If set, server accepts connections on it.
+		TLSConfig          *tls.Config
 		TLSCertFile        string        // TLS certificate file path.
 		TLSKeyFile         string        // TLS key file path.
 		DisableHTTP2       bool          // Disables HTTP/2.

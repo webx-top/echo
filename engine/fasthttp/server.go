@@ -3,6 +3,7 @@
 package fasthttp
 
 import (
+	"crypto/tls"
 	"net"
 	"sync"
 
@@ -120,13 +121,18 @@ func (s *Server) startDefaultListener() error {
 	if err != nil {
 		return err
 	}
-	s.config.Listener = ln
+	if s.config.TLSConfig != nil {
+		s.logger.Info(`StandardHTTP is running at `, s.config.Address, ` [TLS]`)
+		s.config.Listener = tls.NewListener(ln, s.config.TLSConfig)
+	} else {
+		s.config.Listener = ln
+	}
 	return s.startCustomListener()
 }
 
 func (s *Server) startCustomListener() error {
 	c := s.config
-	if len(c.TLSCertFile) > 0 && len(c.TLSKeyFile) > 0 {
+	if c.TLSConfig == nil && len(c.TLSCertFile) > 0 && len(c.TLSKeyFile) > 0 {
 		s.logger.Info(`FastHTTP is running at `, c.Listener.Addr(), ` [TLS]`)
 		return s.ServeTLS(c.Listener, c.TLSCertFile, c.TLSKeyFile)
 	}
