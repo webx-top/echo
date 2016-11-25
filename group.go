@@ -34,6 +34,7 @@ func (g *Group) Match(methods []string, path string, h interface{}, middleware .
 
 func (g *Group) Use(middleware ...interface{}) {
 	for _, m := range middleware {
+		g.echo.ValidMiddleware(m)
 		g.middleware = append(g.middleware, m)
 	}
 }
@@ -45,6 +46,7 @@ func (g *Group) Pre(middleware ...interface{}) {
 func (g *Group) PreUse(middleware ...interface{}) {
 	middlewares := make([]interface{}, 0)
 	for _, m := range middleware {
+		g.echo.ValidMiddleware(m)
 		middlewares = append(middlewares, m)
 	}
 	g.middleware = append(middlewares, g.middleware...)

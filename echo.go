@@ -354,7 +354,8 @@ func (e *Echo) Debug() bool {
 // Use adds handler to the middleware chain.
 func (e *Echo) Use(middleware ...interface{}) {
 	for _, m := range middleware {
-		e.middleware = append(e.middleware, e.ValidMiddleware(m))
+		e.ValidMiddleware(m)
+		e.middleware = append(e.middleware, m)
 	}
 }
 
@@ -367,6 +368,7 @@ func (e *Echo) Pre(middleware ...interface{}) {
 func (e *Echo) PreUse(middleware ...interface{}) {
 	var middlewares []interface{}
 	for _, m := range middleware {
+		e.ValidMiddleware(m)
 		middlewares = append(middlewares, m)
 	}
 	e.middleware = append(middlewares, e.middleware...)
