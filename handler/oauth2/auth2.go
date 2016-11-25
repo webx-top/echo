@@ -66,11 +66,14 @@ func (p *OAuth) Wrapper(e *echo.Echo) {
 		}
 
 		p.successHandlers = append([]interface{}{authMiddleware}, p.successHandlers...)
-		var middlewares []interface{}
-		for i := len(p.successHandlers) - 1; i >= 0; i-- {
-			middlewares = append(middlewares, p.successHandlers[i])
+		lastIndex := len(p.successHandlers) - 1
+		if lastIndex == 0 {
+			e.Get(p.Config.Path+"/callback/:provider", func(ctx echo.Context) error {
+				return ctx.String(`Success Handler is not set`)
+			}, p.successHandlers...)
+		} else {
+			e.Get(p.Config.Path+"/callback/:provider", p.successHandlers[lastIndex], p.successHandlers[0:lastIndex]...)
 		}
-		e.Get(p.Config.Path+"/callback/:provider", middlewares[0], middlewares[1:]...)
 		// register the error handler
 		if p.failHandler != nil {
 			e.SetHTTPErrorHandler(p.failHandler)

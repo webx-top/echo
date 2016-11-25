@@ -305,10 +305,10 @@ func (n *node) findHandler(method string) Handler {
 func (n *node) check405() HandlerFunc {
 	for _, m := range methods {
 		if h := n.findHandler(m); h != nil {
-			return methodNotAllowedHandler
+			return MethodNotAllowedHandler
 		}
 	}
-	return notFoundHandler
+	return NotFoundHandler
 }
 
 func (r *Router) Find(method, path string, context Context) {

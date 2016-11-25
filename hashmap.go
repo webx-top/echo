@@ -1,8 +1,6 @@
 package echo
 
-import (
-	"encoding/xml"
-)
+import "encoding/xml"
 
 type H map[string]interface{}
 
@@ -53,5 +51,25 @@ func (h H) ToData() *Data {
 		Info: info,
 		Zone: zone,
 		Data: data,
+	}
+}
+
+func (h H) DeepMerge(source H) {
+	for k, value := range source {
+		var (
+			destinationValue interface{}
+			ok               bool
+		)
+		if destinationValue, ok = h[k]; !ok {
+			h[k] = value
+			continue
+		}
+		sourceM, sourceOk := value.(H)
+		destinationM, destinationOk := destinationValue.(H)
+		if sourceOk && sourceOk == destinationOk {
+			destinationM.DeepMerge(sourceM)
+		} else {
+			h[k] = value
+		}
 	}
 }

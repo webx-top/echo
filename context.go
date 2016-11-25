@@ -169,7 +169,7 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 		echo:       e,
 		pvalues:    make([]string, *e.maxParam),
 		store:      make(store),
-		handler:    notFoundHandler,
+		handler:    NotFoundHandler,
 		funcs:      make(map[string]interface{}),
 		sessioner:  DefaultNopSession,
 	}
@@ -550,7 +550,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.store = nil
 	c.funcs = make(map[string]interface{})
 	c.renderer = nil
-	c.handler = notFoundHandler
+	c.handler = NotFoundHandler
 	c.cookieOptions = nil
 	c.withFormatExtension = false
 	c.format = ""

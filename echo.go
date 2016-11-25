@@ -21,7 +21,7 @@ type (
 	Echo struct {
 		engine            engine.Engine
 		prefix            string
-		middleware        []Middleware
+		middleware        []interface{}
 		head              Handler
 		maxParam          *int
 		notFoundHandler   HandlerFunc
@@ -32,6 +32,7 @@ type (
 		debug             bool
 		router            *Router
 		logger            logger.Logger
+		meta              map[string]H
 		HandlerWrapper    func(interface{}) Handler
 		MiddlewareWrapper func(interface{}) Middleware
 		FuncMap           map[string]interface{}
@@ -45,6 +46,7 @@ type (
 		Format      string
 		Params      []string
 		Prefix      string
+		Meta        H
 	}
 
 	HTTPError struct {
@@ -83,12 +85,6 @@ type (
 		Render(w io.Writer, name string, data interface{}, c Context) error
 	}
 )
-
-var _ MiddlewareFuncd = func(h Handler) HandlerFunc {
-	return func(c Context) error {
-		return h.Handle(c)
-	}
-}
 
 const (
 	// CONNECT HTTP method
@@ -209,13 +205,19 @@ var (
 	// Error handlers
 	//----------------
 
-	notFoundHandler = HandlerFunc(func(c Context) error {
+	NotFoundHandler = HandlerFunc(func(c Context) error {
 		return ErrNotFound
 	})
 
-	methodNotAllowedHandler = HandlerFunc(func(c Context) error {
+	MethodNotAllowedHandler = HandlerFunc(func(c Context) error {
 		return ErrMethodNotAllowed
 	})
+
+	_ MiddlewareFuncd = func(h Handler) HandlerFunc {
+		return func(c Context) error {
+			return h.Handle(c)
+		}
+	}
 )
 
 // New creates an instance of Echo.
@@ -231,6 +233,7 @@ func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 		return fn(e)
 	}
 	e.router = NewRouter(e)
+	e.meta = map[string]H{}
 
 	//----------
 	// Defaults
@@ -248,12 +251,27 @@ func (m MiddlewareFunc) Handle(h Handler) Handler {
 	return m(h)
 }
 
+func (m MiddlewareFunc) SetMeta(e *Echo, meta H) MiddlewareFunc {
+	e.meta[HandlerName(m)] = meta
+	return m
+}
+
 func (m MiddlewareFuncd) Handle(h Handler) Handler {
 	return m(h)
 }
 
+func (m MiddlewareFuncd) SetMeta(e *Echo, meta H) MiddlewareFuncd {
+	e.meta[HandlerName(m)] = meta
+	return m
+}
+
 func (h HandlerFunc) Handle(c Context) error {
 	return h(c)
+}
+
+func (h HandlerFunc) SetMeta(e *Echo, meta H) HandlerFunc {
+	e.meta[HandlerName(h)] = meta
+	return h
 }
 
 // Router returns router.
@@ -347,9 +365,9 @@ func (e *Echo) Pre(middleware ...interface{}) {
 
 // PreUse adds handler to the middleware chain.
 func (e *Echo) PreUse(middleware ...interface{}) {
-	var middlewares []Middleware
+	var middlewares []interface{}
 	for _, m := range middleware {
-		middlewares = append(middlewares, e.ValidMiddleware(m))
+		middlewares = append(middlewares, m)
 	}
 	e.middleware = append(middlewares, e.middleware...)
 }
@@ -452,10 +470,14 @@ func (e *Echo) add(method, path string, h interface{}, middleware ...interface{}
 	} else {
 		name = HandlerName(handler)
 	}
-	for _, m := range middleware {
+	meta := H{}
+	for i := len(middleware) - 1; i >= 0; i-- {
+		m := middleware[i]
+		e.addMeta(meta, HandlerName(m))
 		mw := e.ValidMiddleware(m)
 		handler = mw.Handle(handler)
 	}
+	e.addMeta(meta, name)
 	hdl := HandlerFunc(func(c Context) error {
 		return handler.Handle(c)
 	})
@@ -468,6 +490,7 @@ func (e *Echo) add(method, path string, h interface{}, middleware ...interface{}
 		HandlerName: name,
 		Format:      fpath,
 		Params:      pnames,
+		Meta:        meta,
 	}
 	if _, ok := e.router.nroute[name]; !ok {
 		e.router.nroute[name] = []int{len(e.router.routes)}
@@ -475,6 +498,26 @@ func (e *Echo) add(method, path string, h interface{}, middleware ...interface{}
 		e.router.nroute[name] = append(e.router.nroute[name], len(e.router.routes))
 	}
 	e.router.routes = append(e.router.routes, r)
+}
+
+func (e *Echo) addMeta(meta H, handler string) {
+	if m, ok := e.meta[handler]; ok {
+		meta.DeepMerge(m)
+	}
+}
+
+// Add meta information about endpoint
+func (e *Echo) MetaMiddleware(m H, middleware interface{}) interface{} {
+	name := HandlerName(middleware)
+	e.meta[name] = m
+	return middleware
+}
+
+// Add meta information about endpoint
+func (e *Echo) MetaHandler(m H, handler interface{}) interface{} {
+	name := HandlerName(handler)
+	e.meta[name] = m
+	return handler
 }
 
 // RebuildRouter rebuild router
@@ -599,7 +642,7 @@ func (e *Echo) chainMiddleware() {
 	}
 	e.head = e.router.Handle(nil)
 	for i := len(e.middleware) - 1; i >= 0; i-- {
-		e.head = e.middleware[i].Handle(e.head)
+		e.head = e.ValidMiddleware(e.middleware[i]).Handle(e.head)
 	}
 }
 

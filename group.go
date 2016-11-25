@@ -3,7 +3,7 @@ package echo
 type (
 	Group struct {
 		prefix     string
-		middleware []Middleware
+		middleware []interface{}
 		echo       *Echo
 	}
 )
@@ -34,7 +34,7 @@ func (g *Group) Match(methods []string, path string, h interface{}, middleware .
 
 func (g *Group) Use(middleware ...interface{}) {
 	for _, m := range middleware {
-		g.middleware = append(g.middleware, g.echo.ValidMiddleware(m))
+		g.middleware = append(g.middleware, m)
 	}
 }
 
@@ -43,9 +43,9 @@ func (g *Group) Pre(middleware ...interface{}) {
 }
 
 func (g *Group) PreUse(middleware ...interface{}) {
-	middlewares := make([]Middleware, 0)
+	middlewares := make([]interface{}, 0)
 	for _, m := range middleware {
-		middlewares = append(middlewares, g.echo.ValidMiddleware(m))
+		middlewares = append(middlewares, m)
 	}
 	g.middleware = append(middlewares, g.middleware...)
 }
@@ -95,46 +95,12 @@ func (g *Group) Prefix() string {
 }
 
 func (g *Group) add(method, path string, h interface{}, middleware ...interface{}) {
-	handler := WrapHandler(h)
-	if handler == nil {
-		return
-	}
-	path = g.prefix + path
+	// Combine into a new slice to avoid accidentally passing the same slice for
+	// multiple routes, which would lead to later add() calls overwriting the
+	// middleware from earlier calls.
+	m := []interface{}{}
+	m = append(m, g.middleware...)
+	m = append(m, middleware...)
 
-	var name string
-	if hn, ok := handler.(HandleNamer); ok {
-		name = hn.HandleName()
-	} else {
-		name = HandlerName(handler)
-	}
-
-	for _, m := range middleware {
-		mw := g.echo.ValidMiddleware(m)
-		handler = mw.Handle(handler)
-	}
-
-	for _, m := range g.middleware {
-		handler = m.Handle(handler)
-	}
-
-	hdl := HandlerFunc(func(c Context) error {
-		return handler.Handle(c)
-	})
-	fpath, pnames := g.echo.router.Add(method, path, hdl, g.echo)
-	g.echo.logger.Debugf(`Route: %7v %-30v -> %v`, method, fpath, name)
-	r := &Route{
-		Method:      method,
-		Path:        path,
-		Handler:     hdl,
-		HandlerName: name,
-		Format:      fpath,
-		Params:      pnames,
-		Prefix:      g.prefix,
-	}
-	if _, ok := g.echo.router.nroute[name]; !ok {
-		g.echo.router.nroute[name] = []int{len(g.echo.router.routes)}
-	} else {
-		g.echo.router.nroute[name] = append(g.echo.router.nroute[name], len(g.echo.router.routes))
-	}
-	g.echo.router.routes = append(g.echo.router.routes, r)
+	g.echo.add(method, g.prefix+path, h, m...)
 }
