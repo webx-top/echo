@@ -50,7 +50,7 @@ type (
 
 		Set(string, interface{})
 		Get(string) interface{}
-		Stored() map[string]interface{}
+		Stored() store
 		Bind(interface{}) error
 		MustBind(interface{}) error
 		Render(string, interface{}, ...int) error
@@ -159,6 +159,18 @@ type (
 
 	store map[string]interface{}
 )
+
+func (s store) Set(key string, value interface{}) store {
+	s[key] = value
+	return s
+}
+
+func (s store) Get(key string) interface{} {
+	if v, y := s[key]; y {
+		return v
+	}
+	return nil
+}
 
 // NewContext creates a Context object.
 func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
@@ -297,7 +309,7 @@ func (c *xContext) Set(key string, val interface{}) {
 	c.store[key] = val
 }
 
-func (c *xContext) Stored() map[string]interface{} {
+func (c *xContext) Stored() store {
 	return c.store
 }
 
