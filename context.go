@@ -303,9 +303,6 @@ func (c *xContext) Get(key string) interface{} {
 
 // Set saves data in the context.
 func (c *xContext) Set(key string, val interface{}) {
-	if c.store == nil {
-		c.store = make(store)
-	}
 	c.store[key] = val
 }
 
@@ -564,7 +561,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.context = context.Background()
 	c.request = req
 	c.response = res
-	c.store = nil
+	c.store = make(store)
 	c.funcs = make(map[string]interface{})
 	c.renderer = nil
 	c.handler = NotFoundHandler
