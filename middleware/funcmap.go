@@ -17,6 +17,7 @@ func FuncMap(funcMap map[string]interface{}, skipper ...echo.Skipper) echo.Middl
 
 			c.SetFunc(`Lang`, c.Lang)
 			c.SetFunc(`T`, c.T)
+			c.SetFunc(`Stored`, c.Stored)
 			c.SetFunc(`Cookie`, c.Cookie)
 			c.SetFunc(`Session`, c.Session)
 			c.SetFunc(`Query`, c.Query)

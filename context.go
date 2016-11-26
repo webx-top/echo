@@ -50,6 +50,7 @@ type (
 
 		Set(string, interface{})
 		Get(string) interface{}
+		Stored() map[string]interface{}
 		Bind(interface{}) error
 		MustBind(interface{}) error
 		Render(string, interface{}, ...int) error
@@ -294,6 +295,10 @@ func (c *xContext) Set(key string, val interface{}) {
 		c.store = make(store)
 	}
 	c.store[key] = val
+}
+
+func (c *xContext) Stored() map[string]interface{} {
+	return c.store
 }
 
 // Bind binds the request body into specified type `i`. The default binder does
