@@ -390,12 +390,16 @@ Middleware  | Import path | Description
 [AddTrailingSlash](https://github.com/webx-top/echo/blob/master/middleware/slash.go)  | github.com/webx-top/echo/middleware |Add trailing slash to the request URI
 [RemoveTrailingSlash](https://github.com/webx-top/echo/blob/master/middleware/slash.go)  | github.com/webx-top/echo/middleware |Remove trailing slash from the request URI
 [Static](https://github.com/webx-top/echo/blob/master/middleware/static.go)  | github.com/webx-top/echo/middleware |Serve static files
+[MaxAllowed](https://github.com/webx-top/echo/blob/master/middleware/limit.go) | github.com/webx-top/echo/middleware | MaxAllowed limits simultaneous requests; can help with high traffic load
+[RateLimit](https://github.com/webx-top/echo/tree/master/middleware/ratelimit) | github.com/webx-top/echo/middleware/ratelimit | Rate limiting HTTP requests
+[Language](https://github.com/webx-top/echo/tree/master/middleware/language) | github.com/webx-top/echo/middleware/language | Multi-language support
 [Session](https://github.com/webx-top/echo/blob/master/middleware/session/middleware.go)  | github.com/webx-top/echo/middleware/session | Sessions Manager
-[JWT](https://github.com/webx-top/echo/blob/master/middleware/jwt/jwt.go)  | github.com/webx-top/echo/middleware/jwt |JWT authentication
+[JWT](https://github.com/webx-top/echo/blob/master/middleware/jwt/jwt.go)  | github.com/webx-top/echo/middleware/jwt | JWT authentication
 [Hydra](https://github.com/webx-top/echo/blob/master/middleware/hydra/hydra.go)  | github.com/webx-top/echo/middleware/hydra | It uses [Hydra](https://github.com/ory-am/hydra)'s API to extract and validate auth token.
-[Markdown](https://github.com/webx-top/echo/blob/master/middleware/markdown/markdown.go)  | github.com/webx-top/echo/middleware/markdown |Markdown rendering
-[Render](https://github.com/webx-top/echo/blob/master/middleware/render/middleware.go)  | github.com/webx-top/echo/middleware/render |HTML template rendering
-[ReverseProxy](https://github.com/webx-top/reverseproxy/blob/master/middleware.go)  | github.com/webx-top/reverseproxy |Reverse proxy
+[Markdown](https://github.com/webx-top/echo/blob/master/middleware/markdown/markdown.go)  | github.com/webx-top/echo/middleware/markdown | Markdown rendering
+[Render](https://github.com/webx-top/echo/blob/master/middleware/render/middleware.go)  | github.com/webx-top/echo/middleware/render | HTML template rendering
+[ReverseProxy](https://github.com/webx-top/reverseproxy/blob/master/middleware.go)  | github.com/webx-top/reverseproxy | Reverse proxy
+
 
 ## Handler Wrapper list
 Wrapper     | Import path | Description
@@ -403,6 +407,7 @@ Wrapper     | Import path | Description
 Websocket   |github.com/webx-top/echo/handler/websocket | [Example](https://github.com/webx-top/echo/blob/master/handler/websocket/example/main.go)
 Sockjs      |github.com/webx-top/echo/handler/sockjs | [Example](https://github.com/webx-top/echo/blob/master/handler/sockjs/example/main.go)
 Oauth2      |github.com/webx-top/echo/handler/oauth2 | [Example](https://github.com/webx-top/echo/blob/master/handler/oauth2/example/main.go)
+Pprof      |github.com/webx-top/echo/handler/pprof | -
 
 ## Credits
 - [Vishal Rana](https://github.com/vishr) - Author
