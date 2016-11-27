@@ -15,23 +15,13 @@
    limitations under the License.
 
 */
-package session
+package language
 
-import "github.com/webx-top/echo"
-
-func Sessions(name string, store Store) echo.MiddlewareFuncd {
-	return func(h echo.Handler) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			s := NewMySession(store, name, c)
-			c.SetSessioner(s)
-			err := h.Handle(c)
-			s.Save()
-			return err
-		}
-	}
-}
-
-func Middleware(options *echo.SessionOptions) echo.MiddlewareFuncd {
-	store := StoreEngine(options)
-	return Sessions(options.Name, store)
+type Config struct {
+	Default      string
+	Fallback     string
+	AllList      []string
+	RulesPath    []string
+	MessagesPath []string
+	Reload       bool
 }

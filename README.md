@@ -412,4 +412,4 @@ Oauth2      |github.com/webx-top/echo/handler/oauth2 | [Example](https://github.
 
 ## License
 
-[MIT](https://github.com/webx-top/echo/blob/master/LICENSE)
+[Apache 2](https://github.com/webx-top/echo/blob/master/LICENSE)
