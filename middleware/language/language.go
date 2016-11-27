@@ -25,13 +25,16 @@ import (
 	"github.com/webx-top/echo/engine"
 )
 
-const LANG_KEY = `webx:language`
+var (
+	LangVarName = `lang`
+	DefaultLang = `zh-cn`
+)
 
 func New() *Language {
 	return &Language{
 		List:     make(map[string]bool),
 		Index:    make([]string, 0),
-		Default:  "zh-cn",
+		Default:  DefaultLang,
 		uaRegexp: regexp.MustCompile(`;q=[0-9.]+`),
 	}
 }
@@ -51,7 +54,9 @@ func (a *Language) Init(c *Config) {
 		}
 	} else {
 		a.Set(c.Default, true, true)
-		a.Set(`en`, true)
+		if c.Default != `en` {
+			a.Set(`en`, true)
+		}
 	}
 	a.I18n = NewI18n(c)
 	if c.Reload {
@@ -120,12 +125,12 @@ func (a *Language) DetectUA(r engine.Request) string {
 func (a *Language) Middleware() echo.MiddlewareFunc {
 	return echo.MiddlewareFunc(func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
-			lang := c.Query(`lang`)
+			lang := c.Query(LangVarName)
 			hasCookie := false
 			if !a.Valid(lang) {
 				lang = a.DetectURI(c.Response(), c.Request())
 				if !a.Valid(lang) {
-					lang = c.GetCookie(`lang`)
+					lang = c.GetCookie(LangVarName)
 					if !a.Valid(lang) {
 						lang = a.DetectUA(c.Request())
 					} else {
@@ -134,7 +139,7 @@ func (a *Language) Middleware() echo.MiddlewareFunc {
 				}
 			}
 			if !hasCookie {
-				c.SetCookie(`lang`, lang)
+				c.SetCookie(LangVarName, lang)
 			}
 			c.SetTranslator(NewTranslate(lang, a.I18n))
 			return h.Handle(c)
