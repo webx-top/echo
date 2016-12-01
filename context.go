@@ -610,11 +610,7 @@ func (c *xContext) SetSessionOptions(opts *SessionOptions) {
 
 func (c *xContext) SessionOptions() *SessionOptions {
 	if c.sessionOptions == nil {
-		c.sessionOptions = &SessionOptions{
-			Engine:        `cookie`,
-			Name:          `SID`,
-			CookieOptions: &CookieOptions{},
-		}
+		c.sessionOptions = DefaultSessionOptions
 	}
 	return c.sessionOptions
 }
