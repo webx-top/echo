@@ -19,10 +19,11 @@ package session
 
 import "github.com/webx-top/echo"
 
-func Sessions(name string, store Store) echo.MiddlewareFuncd {
+func Sessions(options *echo.SessionOptions, store Store) echo.MiddlewareFuncd {
 	return func(h echo.Handler) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			s := NewMySession(store, name, c)
+			c.SetSessionOptions(options)
+			s := NewMySession(store, options.Name, c)
 			c.SetSessioner(s)
 			err := h.Handle(c)
 			s.Save()
@@ -33,5 +34,5 @@ func Sessions(name string, store Store) echo.MiddlewareFuncd {
 
 func Middleware(options *echo.SessionOptions) echo.MiddlewareFuncd {
 	store := StoreEngine(options)
-	return Sessions(options.Name, store)
+	return Sessions(options, store)
 }
