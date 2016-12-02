@@ -30,7 +30,7 @@ type StdOptions struct {
 	Prefix   string
 }
 
-func (o StdOptions) Wrapper(e *echo.Echo) {
+func (o StdOptions) Wrapper(e echo.RouteRegister) {
 	e.Any(o.Prefix, StdWebsocket(o.Handle, o.Validate, o.Upgrader))
 }
 
