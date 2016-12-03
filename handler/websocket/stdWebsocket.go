@@ -31,6 +31,9 @@ type StdOptions struct {
 }
 
 func (o StdOptions) Wrapper(e echo.RouteRegister) {
+	if o.Upgrader == nil {
+		o.Upgrader = DefaultStdUpgrader
+	}
 	e.Any(o.Prefix, StdWebsocket(o.Handle, o.Validate, o.Upgrader))
 }
 
