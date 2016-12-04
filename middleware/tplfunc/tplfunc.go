@@ -50,7 +50,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"TotalRunTime":    com.TotalRunTime,  //运行时长(从启动服务时算起)
 	"CaptchaForm":     CaptchaForm,       //验证码图片
 	"FormatByte":      com.FormatByte,    //字节转为适合理解的格式
-	"FriendlyTime":    com.FriendlyTime,
+	"FriendlyTime":    FriendlyTime,
 	"FormatPastTime":  com.FormatPastTime, //以前距离现在多长时间
 	"DateFormat":      com.DateFormat,
 	"DateFormatShort": com.DateFormatShort,
@@ -360,4 +360,26 @@ func IsEmpty(a interface{}) bool {
 
 func NotEmpty(a interface{}) bool {
 	return !IsEmpty(a)
+}
+
+func FriendlyTime(t interface{}, args ...string) string {
+	if v, y := t.(time.Duration); y {
+		return com.FriendlyTime(v, args...)
+	}
+	if v, y := t.(int64); y {
+		return com.FriendlyTime(time.Duration(v), args...)
+	}
+	if v, y := t.(int); y {
+		return com.FriendlyTime(time.Duration(v), args...)
+	}
+	if v, y := t.(uint); y {
+		return com.FriendlyTime(time.Duration(v), args...)
+	}
+	if v, y := t.(int32); y {
+		return com.FriendlyTime(time.Duration(v), args...)
+	}
+	if v, y := t.(uint32); y {
+		return com.FriendlyTime(time.Duration(v), args...)
+	}
+	return com.FriendlyTime(time.Duration(com.Int64(t)), args...)
 }
