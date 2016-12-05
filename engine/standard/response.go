@@ -108,6 +108,7 @@ func (r *Response) Hijack(fn func(net.Conn)) {
 	_ = bufrw
 	fn(conn)
 	conn.Close()
+	r.committed = true
 }
 
 func (r *Response) Body() []byte {
@@ -116,10 +117,12 @@ func (r *Response) Body() []byte {
 
 func (r *Response) Redirect(url string, code int) {
 	http.Redirect(r.response, r.request, url, code)
+	r.committed = true
 }
 
 func (r *Response) NotFound() {
 	http.Error(r.response, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	r.committed = true
 }
 
 func (r *Response) SetCookie(cookie *http.Cookie) {
@@ -128,6 +131,7 @@ func (r *Response) SetCookie(cookie *http.Cookie) {
 
 func (r *Response) ServeFile(file string) {
 	http.ServeFile(r.response, r.request, file)
+	r.committed = true
 }
 
 func (r *Response) StdResponseWriter() http.ResponseWriter {
