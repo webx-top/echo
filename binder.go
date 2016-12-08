@@ -46,9 +46,9 @@ func (b *binder) MustBind(i interface{}, c Context, filter ...FormDataFilter) (e
 	} else if strings.HasPrefix(ct, MIMEApplicationXML) {
 		err = xml.NewDecoder(body).Decode(i)
 	} else if strings.HasPrefix(ct, MIMEApplicationForm) {
-		err = b.structMap(i, r.PostForm().All())
+		err = b.structMap(i, r.PostForm().All(), filter...)
 	} else if strings.Contains(ct, MIMEMultipartForm) {
-		err = b.structMap(i, r.Form().All())
+		err = b.structMap(i, r.Form().All(), filter...)
 	}
 	return
 }
