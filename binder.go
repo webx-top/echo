@@ -261,19 +261,42 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 				tv.Set(reflect.ValueOf(l))
 			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 				dateformat := tagfast.Value(tc, f, `form_format`)
+				var x uint64
+				var bitSize int
+				switch k {
+				case reflect.Uint8:
+					bitSize = 8
+				case reflect.Uint16:
+					bitSize = 16
+				case reflect.Uint32:
+					bitSize = 32
+				default:
+					bitSize = 64
+				}
 				if dateformat != `` {
 					t, err := time.Parse(dateformat, v)
 					if err != nil {
 						e.Logger().Warnf(`arg %v as uint: %v`, v, err)
-						l = uint64(0)
+						x = uint64(0)
 					} else {
-						l = uint64(t.Unix())
+						x = uint64(t.Unix())
 					}
 				} else {
-					x, err := strconv.ParseUint(v, 10, 64)
+					x, err = strconv.ParseUint(v, 10, bitSize)
 					if err != nil {
 						e.Logger().Warnf(`arg %v as uint: %v`, v, err)
 					}
+				}
+				switch k {
+				case reflect.Uint:
+					l = uint(x)
+				case reflect.Uint8:
+					l = uint8(x)
+				case reflect.Uint16:
+					l = uint16(x)
+				case reflect.Uint32:
+					l = uint32(x)
+				default:
 					l = x
 				}
 				tv.Set(reflect.ValueOf(l))
