@@ -23,15 +23,15 @@ var DefaultHtmlFilter = func(v string) (r string) {
 type (
 	// Binder is the interface that wraps the Bind method.
 	Binder interface {
-		Bind(interface{}, Context) error
-		MustBind(interface{}, Context) error
+		Bind(interface{}, Context, ...FormDataFilter) error
+		MustBind(interface{}, Context, ...FormDataFilter) error
 	}
 	binder struct {
 		*Echo
 	}
 )
 
-func (b *binder) MustBind(i interface{}, c Context) (err error) {
+func (b *binder) MustBind(i interface{}, c Context, filter ...FormDataFilter) (err error) {
 	r := c.Request()
 	body := r.Body()
 	if body == nil {
@@ -53,8 +53,8 @@ func (b *binder) MustBind(i interface{}, c Context) (err error) {
 	return
 }
 
-func (b *binder) Bind(i interface{}, c Context) (err error) {
-	err = b.MustBind(i, c)
+func (b *binder) Bind(i interface{}, c Context, filter ...FormDataFilter) (err error) {
+	err = b.MustBind(i, c, filter...)
 	if err == ErrUnsupportedMediaType {
 		err = nil
 	}
@@ -62,8 +62,8 @@ func (b *binder) Bind(i interface{}, c Context) (err error) {
 }
 
 // StructMap function mapping params to controller's properties
-func (b *binder) structMap(m interface{}, data map[string][]string) error {
-	return NamedStructMap(b.Echo, m, data, ``)
+func (b *binder) structMap(m interface{}, data map[string][]string, filter ...FormDataFilter) error {
+	return NamedStructMap(b.Echo, m, data, ``, filter...)
 }
 
 // SplitJSON user[name][test]
@@ -103,7 +103,7 @@ func SplitJSON(s string) ([]string, error) {
 	return res, nil
 }
 
-func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName string) error {
+func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName string, filterArgs ...FormDataFilter) error {
 	vc := reflect.ValueOf(m)
 	tc := reflect.TypeOf(m)
 
@@ -114,8 +114,12 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 		tc = tc.Elem()
 	}
 	var validator *validation.Validation
+	filter := DefaultNopFilter
+	if len(filterArgs) > 0 {
+		filter = filterArgs[0]
+	}
 	for k, t := range data {
-
+		k, t = filter(k, t)
 		if k == `` || k[0] == '_' {
 			continue
 		}
@@ -369,9 +373,15 @@ type ToConversion interface {
 	ToString() string
 }
 
-type FieldNameFormatter func(topName, fieldName string) string
+type (
+	FieldNameFormatter func(topName, fieldName string) string
+	FormDataFilter     func(key string, values []string) (string, []string)
+)
 
 var (
+	DefaultNopFilter FormDataFilter = func(k string, v []string) (string, []string) {
+		return k, v
+	}
 	DefaultFieldNameFormatter FieldNameFormatter = func(topName, fieldName string) string {
 		var fName string
 		if len(topName) == 0 {
