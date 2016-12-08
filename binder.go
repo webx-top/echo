@@ -416,6 +416,9 @@ func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter
 		fTyp := tc.Field(i)
 
 		fName := fieldNameFormatter(topName, fTyp.Name)
+		if !fVal.CanInterface() {
+			continue
+		}
 		switch fTyp.Type.String() {
 		case "time.Time":
 			if t, y := fVal.Interface().(time.Time); y {
