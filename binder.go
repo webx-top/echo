@@ -179,187 +179,189 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 				if tagfast.Value(tc, f, `form_options`) == `-` {
 					break
 				}
-			} else {
-				if value.Kind() != reflect.Struct {
-					e.Logger().Warnf(`arg error, value %v kind is %v`, name, value.Kind())
-					break
-				}
-				tv := value.FieldByName(name)
-				if !tv.IsValid() {
-					break
-				}
-				if !tv.CanSet() {
-					e.Logger().Warnf(`can not set %v to %v`, k, tv)
-					break
-				}
-				f, _ := typev.FieldByName(name)
-				if tagfast.Value(tc, f, `form_options`) == `-` {
-					break
-				}
-				if tv.Kind() == reflect.Ptr {
-					tv.Set(reflect.New(tv.Type().Elem()))
-					tv = tv.Elem()
-				}
+				continue
+			}
 
-				var l interface{}
-				switch k := tv.Kind(); k {
-				case reflect.String:
-					switch tagfast.Value(tc, f, `form_filter`) {
-					case `html`:
-						v = DefaultHtmlFilter(v)
-					}
-					l = v
-					tv.Set(reflect.ValueOf(l))
-				case reflect.Bool:
-					l = (v != `false` && v != `0` && v != ``)
-					tv.Set(reflect.ValueOf(l))
-				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
-					dateformat := tagfast.Value(tc, f, `form_format`)
-					if dateformat != `` {
-						t, err := time.Parse(dateformat, v)
-						if err != nil {
-							e.Logger().Warnf(`arg %v as int: %v`, v, err)
-							l = int(0)
-						} else {
-							l = int(t.Unix())
-						}
-					} else {
-						x, err := strconv.Atoi(v)
-						if err != nil {
-							e.Logger().Warnf(`arg %v as int: %v`, v, err)
-						}
-						l = x
-					}
-					tv.Set(reflect.ValueOf(l))
-				case reflect.Int64:
-					dateformat := tagfast.Value(tc, f, `form_format`)
-					if dateformat != `` {
-						t, err := time.Parse(dateformat, v)
-						if err != nil {
-							e.Logger().Warnf(`arg %v as int64: %v`, v, err)
-							l = int64(0)
-						} else {
-							l = t.Unix()
-						}
-					} else {
-						x, err := strconv.ParseInt(v, 10, 64)
-						if err != nil {
-							e.Logger().Warnf(`arg %v as int64: %v`, v, err)
-						}
-						l = x
-					}
-					tv.Set(reflect.ValueOf(l))
-				case reflect.Float32, reflect.Float64:
-					x, err := strconv.ParseFloat(v, 64)
+			//最后一个元素
+			if value.Kind() != reflect.Struct {
+				e.Logger().Warnf(`arg error, value %v kind is %v`, name, value.Kind())
+				break
+			}
+			tv := value.FieldByName(name)
+			if !tv.IsValid() {
+				break
+			}
+			if !tv.CanSet() {
+				e.Logger().Warnf(`can not set %v to %v`, k, tv)
+				break
+			}
+			f, _ := typev.FieldByName(name)
+			if tagfast.Value(tc, f, `form_options`) == `-` {
+				break
+			}
+			if tv.Kind() == reflect.Ptr {
+				tv.Set(reflect.New(tv.Type().Elem()))
+				tv = tv.Elem()
+			}
+
+			var l interface{}
+			switch k := tv.Kind(); k {
+			case reflect.String:
+				switch tagfast.Value(tc, f, `form_filter`) {
+				case `html`:
+					v = DefaultHtmlFilter(v)
+				}
+				l = v
+				tv.Set(reflect.ValueOf(l))
+			case reflect.Bool:
+				l = (v != `false` && v != `0` && v != ``)
+				tv.Set(reflect.ValueOf(l))
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+				dateformat := tagfast.Value(tc, f, `form_format`)
+				if dateformat != `` {
+					t, err := time.Parse(dateformat, v)
 					if err != nil {
-						e.Logger().Warnf(`arg %v as float64: %v`, v, err)
+						e.Logger().Warnf(`arg %v as int: %v`, v, err)
+						l = int(0)
+					} else {
+						l = int(t.Unix())
+					}
+				} else {
+					x, err := strconv.Atoi(v)
+					if err != nil {
+						e.Logger().Warnf(`arg %v as int: %v`, v, err)
+					}
+					l = x
+				}
+				tv.Set(reflect.ValueOf(l))
+			case reflect.Int64:
+				dateformat := tagfast.Value(tc, f, `form_format`)
+				if dateformat != `` {
+					t, err := time.Parse(dateformat, v)
+					if err != nil {
+						e.Logger().Warnf(`arg %v as int64: %v`, v, err)
+						l = int64(0)
+					} else {
+						l = t.Unix()
+					}
+				} else {
+					x, err := strconv.ParseInt(v, 10, 64)
+					if err != nil {
+						e.Logger().Warnf(`arg %v as int64: %v`, v, err)
+					}
+					l = x
+				}
+				tv.Set(reflect.ValueOf(l))
+			case reflect.Float32, reflect.Float64:
+				x, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					e.Logger().Warnf(`arg %v as float64: %v`, v, err)
+				}
+				l = x
+				tv.Set(reflect.ValueOf(l))
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				dateformat := tagfast.Value(tc, f, `form_format`)
+				if dateformat != `` {
+					t, err := time.Parse(dateformat, v)
+					if err != nil {
+						e.Logger().Warnf(`arg %v as uint: %v`, v, err)
+						l = uint64(0)
+					} else {
+						l = uint64(t.Unix())
+					}
+				} else {
+					x, err := strconv.ParseUint(v, 10, 64)
+					if err != nil {
+						e.Logger().Warnf(`arg %v as uint: %v`, v, err)
+					}
+					l = x
+				}
+				tv.Set(reflect.ValueOf(l))
+			case reflect.Struct:
+				if tvf, ok := tv.Interface().(FromConversion); ok {
+					err := tvf.FromString(v)
+					if err != nil {
+						e.Logger().Warnf(`struct %v invoke FromString faild`, tvf)
+					}
+				} else if tv.Type().String() == `time.Time` {
+					x, err := time.Parse(`2006-01-02 15:04:05.000 -0700`, v)
+					if err != nil {
+						x, err = time.Parse(`2006-01-02 15:04:05`, v)
+						if err != nil {
+							x, err = time.Parse(`2006-01-02`, v)
+							if err != nil {
+								e.Logger().Warnf(`unsupported time format %v, %v`, v, err)
+							}
+						}
 					}
 					l = x
 					tv.Set(reflect.ValueOf(l))
-				case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-					dateformat := tagfast.Value(tc, f, `form_format`)
-					if dateformat != `` {
-						t, err := time.Parse(dateformat, v)
-						if err != nil {
-							e.Logger().Warnf(`arg %v as uint: %v`, v, err)
-							l = uint64(0)
-						} else {
-							l = uint64(t.Unix())
-						}
-					} else {
-						x, err := strconv.ParseUint(v, 10, 64)
-						if err != nil {
-							e.Logger().Warnf(`arg %v as uint: %v`, v, err)
-						}
-						l = x
-					}
-					tv.Set(reflect.ValueOf(l))
-				case reflect.Struct:
-					if tvf, ok := tv.Interface().(FromConversion); ok {
-						err := tvf.FromString(v)
-						if err != nil {
-							e.Logger().Warnf(`struct %v invoke FromString faild`, tvf)
-						}
-					} else if tv.Type().String() == `time.Time` {
-						x, err := time.Parse(`2006-01-02 15:04:05.000 -0700`, v)
-						if err != nil {
-							x, err = time.Parse(`2006-01-02 15:04:05`, v)
-							if err != nil {
-								x, err = time.Parse(`2006-01-02`, v)
-								if err != nil {
-									e.Logger().Warnf(`unsupported time format %v, %v`, v, err)
-								}
-							}
-						}
-						l = x
-						tv.Set(reflect.ValueOf(l))
-					} else {
-						e.Logger().Warn(`can not set an struct which is not implement Fromconversion interface`)
-					}
-				case reflect.Ptr:
-					e.Logger().Warn(`can not set an ptr of ptr`)
-				case reflect.Slice, reflect.Array:
-					tt := tv.Type().Elem()
-					tk := tt.Kind()
-
-					if tv.IsNil() {
-						tv.Set(reflect.MakeSlice(tv.Type(), len(t), len(t)))
-					}
-
-					for i, s := range t {
-						var err error
-						switch tk {
-						case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int8, reflect.Int64:
-							var v int64
-							v, err = strconv.ParseInt(s, 10, tt.Bits())
-							if err == nil {
-								tv.Index(i).SetInt(v)
-							}
-						case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-							var v uint64
-							v, err = strconv.ParseUint(s, 10, tt.Bits())
-							if err == nil {
-								tv.Index(i).SetUint(v)
-							}
-						case reflect.Float32, reflect.Float64:
-							var v float64
-							v, err = strconv.ParseFloat(s, tt.Bits())
-							if err == nil {
-								tv.Index(i).SetFloat(v)
-							}
-						case reflect.Bool:
-							var v bool
-							v, err = strconv.ParseBool(s)
-							if err == nil {
-								tv.Index(i).SetBool(v)
-							}
-						case reflect.String:
-							tv.Index(i).SetString(s)
-						case reflect.Complex64, reflect.Complex128:
-							// TODO:
-							err = fmt.Errorf(`unsupported slice element type %v`, tk.String())
-						default:
-							err = fmt.Errorf(`unsupported slice element type %v`, tk.String())
-						}
-						if err != nil {
-							e.Logger().Warnf(`slice error: %v, %v`, name, err)
-						}
-					}
-				default:
-					break
+				} else {
+					e.Logger().Warn(`can not set an struct which is not implement Fromconversion interface`)
 				}
-				valid := tagfast.Value(tc, f, `valid`)
-				if len(valid) > 0 {
-					if validator == nil {
-						validator = validation.New()
-					}
-					ok, err := validator.ValidSimple(name, fmt.Sprintf(`%v`, l), valid)
-					if !ok {
-						return validator.Errors[0].WithField()
+			case reflect.Ptr:
+				e.Logger().Warn(`can not set an ptr of ptr`)
+			case reflect.Slice, reflect.Array:
+				tt := tv.Type().Elem()
+				tk := tt.Kind()
+
+				if tv.IsNil() {
+					tv.Set(reflect.MakeSlice(tv.Type(), len(t), len(t)))
+				}
+
+				for i, s := range t {
+					var err error
+					switch tk {
+					case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int8, reflect.Int64:
+						var v int64
+						v, err = strconv.ParseInt(s, 10, tt.Bits())
+						if err == nil {
+							tv.Index(i).SetInt(v)
+						}
+					case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+						var v uint64
+						v, err = strconv.ParseUint(s, 10, tt.Bits())
+						if err == nil {
+							tv.Index(i).SetUint(v)
+						}
+					case reflect.Float32, reflect.Float64:
+						var v float64
+						v, err = strconv.ParseFloat(s, tt.Bits())
+						if err == nil {
+							tv.Index(i).SetFloat(v)
+						}
+					case reflect.Bool:
+						var v bool
+						v, err = strconv.ParseBool(s)
+						if err == nil {
+							tv.Index(i).SetBool(v)
+						}
+					case reflect.String:
+						tv.Index(i).SetString(s)
+					case reflect.Complex64, reflect.Complex128:
+						// TODO:
+						err = fmt.Errorf(`unsupported slice element type %v`, tk.String())
+					default:
+						err = fmt.Errorf(`unsupported slice element type %v`, tk.String())
 					}
 					if err != nil {
-						e.Logger().Warn(err)
+						e.Logger().Warnf(`slice error: %v, %v`, name, err)
 					}
+				}
+			default:
+				break
+			}
+			valid := tagfast.Value(tc, f, `valid`)
+			if len(valid) > 0 {
+				if validator == nil {
+					validator = validation.New()
+				}
+				ok, err := validator.ValidSimple(name, fmt.Sprintf(`%v`, l), valid)
+				if !ok {
+					return validator.Errors[0].WithField()
+				}
+				if err != nil {
+					e.Logger().Warn(err)
 				}
 			}
 		}
