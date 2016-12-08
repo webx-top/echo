@@ -418,7 +418,7 @@ func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter
 		fTyp := tc.Field(i)
 
 		fName := fieldNameFormatter(topName, fTyp.Name)
-		if !fVal.CanInterface() {
+		if !fVal.CanInterface() || len(fName) == 0 {
 			continue
 		}
 		switch fTyp.Type.String() {
