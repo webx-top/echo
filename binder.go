@@ -113,10 +113,15 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 		vc = vc.Elem()
 		tc = tc.Elem()
 	}
-	var validator *validation.Validation
-	filter := DefaultNopFilter
+	var (
+		validator *validation.Validation
+		filter    FormDataFilter
+	)
 	if len(filterArgs) > 0 {
 		filter = filterArgs[0]
+	}
+	if filter == nil {
+		filter = DefaultNopFilter
 	}
 	for k, t := range data {
 		k, t = filter(k, t)
