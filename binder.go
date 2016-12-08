@@ -369,8 +369,10 @@ type ToConversion interface {
 	ToString() string
 }
 
+type FieldNameFormatter func(topName, fieldName string) string
+
 var (
-	DefaultFieldNameFormatter = func(topName, fieldName string) string {
+	DefaultFieldNameFormatter FieldNameFormatter = func(topName, fieldName string) string {
 		var fName string
 		if len(topName) == 0 {
 			fName = fieldName
@@ -379,7 +381,7 @@ var (
 		}
 		return fName
 	}
-	LowerCaseFirstFieldNameFormatter = func(topName, fieldName string) string {
+	LowerCaseFirstLetter FieldNameFormatter = func(topName, fieldName string) string {
 		var fName string
 		s := []rune(fieldName)
 		if len(s) > 0 {
@@ -395,7 +397,7 @@ var (
 	}
 )
 
-func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter func(string, string) string) {
+func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter FieldNameFormatter) {
 	vc := reflect.ValueOf(m)
 	tc := reflect.TypeOf(m)
 
