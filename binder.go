@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/webx-top/tagfast"
 	"github.com/webx-top/validation"
@@ -366,4 +367,69 @@ type FromConversion interface {
 // Not Implemented
 type ToConversion interface {
 	ToString() string
+}
+
+var (
+	DefaultFieldNameFormatter = func(topName, fieldName string) string {
+		var fName string
+		if len(topName) == 0 {
+			fName = fieldName
+		} else {
+			fName = topName + "." + fieldName
+		}
+		return fName
+	}
+	LowerCaseFirstFieldNameFormatter = func(topName, fieldName string) string {
+		var fName string
+		s := []rune(fieldName)
+		if len(s) > 0 {
+			s[0] = unicode.ToLower(s[0])
+			fieldName = string(s)
+		}
+		if len(topName) == 0 {
+			fName = fieldName
+		} else {
+			fName = topName + "." + fieldName
+		}
+		return fName
+	}
+)
+
+func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter func(string, string) string) {
+	vc := reflect.ValueOf(m)
+	tc := reflect.TypeOf(m)
+
+	switch tc.Kind() {
+	case reflect.Struct:
+	case reflect.Ptr:
+		vc = vc.Elem()
+		tc = tc.Elem()
+	}
+	l := tc.NumField()
+	f := ctx.Request().Form()
+	if fieldNameFormatter == nil {
+		fieldNameFormatter = DefaultFieldNameFormatter
+	}
+
+	for i := 0; i < l; i++ {
+		fVal := vc.Field(i)
+		fTyp := tc.Field(i)
+
+		fName := fieldNameFormatter(topName, fTyp.Name)
+		switch fTyp.Type.String() {
+		case "time.Time":
+			if t, y := fVal.Interface().(time.Time); y {
+				dateformat := tagfast.Value(tc, fTyp, `form_format`)
+				if dateformat != `` {
+					f.Add(fName, t.Format(dateformat))
+				} else {
+					f.Add(fName, t.Format(`2006-01-02 15:04:05`))
+				}
+			}
+		case "struct":
+			StructToForm(ctx, fVal.Interface(), fName, fieldNameFormatter)
+		default:
+			f.Add(fName, fmt.Sprint(fVal.Interface()))
+		}
+	}
 }
