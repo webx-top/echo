@@ -124,15 +124,14 @@ func (a *Wrapper) wrapHandler(h HandlerFunc, ctl string, act string) func(echo.C
 	a.ControllerName = ctl
 	if a.beforeHandler != nil && a.afterHandler != nil {
 		return func(ctx echo.Context) error {
-			ex, ok := ctx.(ExitChecker)
-			if c, y := ctx.(StaticIniter); y {
-				if err := c.Init(a, act); err != nil {
+			if a.Module.ContextInitial != nil {
+				if err, exit := a.Module.ContextInitial(ctx, a, nil, act); err != nil {
 					return err
-				}
-				if ok && ex.IsExit() {
+				} else if exit {
 					return nil
 				}
 			}
+			ex, ok := ctx.(ExitChecker)
 			if err := a.beforeHandler(ctx); err != nil {
 				return err
 			}
@@ -150,15 +149,14 @@ func (a *Wrapper) wrapHandler(h HandlerFunc, ctl string, act string) func(echo.C
 	}
 	if a.beforeHandler != nil {
 		return func(ctx echo.Context) error {
-			ex, ok := ctx.(ExitChecker)
-			if c, y := ctx.(StaticIniter); y {
-				if err := c.Init(a, act); err != nil {
+			if a.Module.ContextInitial != nil {
+				if err, exit := a.Module.ContextInitial(ctx, a, nil, act); err != nil {
 					return err
-				}
-				if ok && ex.IsExit() {
+				} else if exit {
 					return nil
 				}
 			}
+			ex, ok := ctx.(ExitChecker)
 			if err := a.beforeHandler(ctx); err != nil {
 				return err
 			}
@@ -170,15 +168,14 @@ func (a *Wrapper) wrapHandler(h HandlerFunc, ctl string, act string) func(echo.C
 	}
 	if a.afterHandler != nil {
 		return func(ctx echo.Context) error {
-			ex, ok := ctx.(ExitChecker)
-			if c, y := ctx.(StaticIniter); y {
-				if err := c.Init(a, act); err != nil {
+			if a.Module.ContextInitial != nil {
+				if err, exit := a.Module.ContextInitial(ctx, a, nil, act); err != nil {
 					return err
-				}
-				if ok && ex.IsExit() {
+				} else if exit {
 					return nil
 				}
 			}
+			ex, ok := ctx.(ExitChecker)
 			if err := h(ctx); err != nil {
 				return err
 			}
@@ -189,12 +186,10 @@ func (a *Wrapper) wrapHandler(h HandlerFunc, ctl string, act string) func(echo.C
 		}
 	}
 	return func(ctx echo.Context) error {
-		ex, ok := ctx.(ExitChecker)
-		if c, y := ctx.(StaticIniter); y {
-			if err := c.Init(a, act); err != nil {
+		if a.Module.ContextInitial != nil {
+			if err, exit := a.Module.ContextInitial(ctx, a, nil, act); err != nil {
 				return err
-			}
-			if ok && ex.IsExit() {
+			} else if exit {
 				return nil
 			}
 		}
