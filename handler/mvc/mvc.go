@@ -38,6 +38,10 @@ import (
 )
 
 func New(name string, middlewares ...interface{}) (s *MVC) {
+	return NewWithContext(name, nil, middlewares...)
+}
+
+func NewWithContext(name string, newContext func(*echo.Echo) echo.Context, middlewares ...interface{}) (s *MVC) {
 	s = &MVC{
 		Name:          name,
 		moduleHosts:   make(map[string]*Module),
@@ -74,9 +78,12 @@ func New(name string, middlewares ...interface{}) (s *MVC) {
 			Path:     `/`,
 		},
 	}
-	s.InitContext = func(e *echo.Echo) echo.Context {
-		return echo.NewContext(nil, nil, e)
+	if newContext == nil {
+		newContext = func(e *echo.Echo) echo.Context {
+			return echo.NewContext(nil, nil, e)
+		}
 	}
+	s.InitContext = newContext
 	s.Core = echo.NewWithContext(s.InitContext)
 	s.Core.Use(s.DefaultMiddlewares...)
 
