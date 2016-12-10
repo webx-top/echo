@@ -299,6 +299,23 @@ func (s *MVC) Module(args ...string) *Module {
 	return s.NewModule(name)
 }
 
+func (s *MVC) SetSessionOptions(sessionOptions *echo.SessionOptions) *MVC {
+	if sessionOptions.CookieOptions == nil {
+		sessionOptions.CookieOptions = &echo.CookieOptions{
+			Path:     `/`,
+			HttpOnly: true,
+		}
+	}
+	if sessionOptions.Name == `` {
+		sessionOptions.Name = `GOSID`
+	}
+	if sessionOptions.Engine == `` {
+		sessionOptions.Engine = `cookie`
+	}
+	s.SessionOptions = sessionOptions
+	return s
+}
+
 // ModuleOk 获取模块实例
 func (s *MVC) ModuleOk(args ...string) (app *Module, ok bool) {
 	name := s.RootAppName
