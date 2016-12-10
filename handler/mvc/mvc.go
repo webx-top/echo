@@ -130,11 +130,11 @@ func (s *MVC) ServeHTTP(r engine.Request, w engine.Response) {
 	}
 }
 
-// SetDomain 为app设置域名
+// SetDomain 为模块设置域名
 func (s *MVC) SetDomain(name string, domain string) *MVC {
 	a, ok := s.moduleNames[name]
 	if !ok {
-		s.Core.Logger().Warn(`not found app: `, name)
+		s.Core.Logger().Warn(`Module does not exist: `, name)
 		return s
 	}
 	if len(domain) == 0 { // 取消域名，加入到Core的Group中
@@ -471,9 +471,6 @@ func (s *MVC) Run(args ...interface{}) {
 			eng = fasthttp.New(`:80`)
 		}
 	}
-	defer func() {
-		s.GoEvent(`webx.serverExit`, func(_ bool) {})
-	}()
 	s.Core.Logger().Infof(`Server "%v" has been launched.`, s.Name)
 
 	eng.SetHandler(s)
@@ -481,4 +478,5 @@ func (s *MVC) Run(args ...interface{}) {
 	eng.Start()
 
 	s.Core.Logger().Infof(`Server "%v" has been closed.`, s.Name)
+	s.GoEvent(`mvc.serverExit`, func(_ bool) {})
 }
