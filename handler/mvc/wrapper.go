@@ -33,6 +33,9 @@ var (
 	IsMapper          = func(t reflect.Type) bool {
 		return t == mapperType
 	}
+	DefaultContextInitial = func(ctx echo.Context, wrp *Wrapper, controller interface{}, actionName string) (err error, exit bool) {
+		return
+	}
 )
 
 // 结构体中定义路由的字段类型
@@ -377,25 +380,20 @@ func (a *Wrapper) execute(c echo.Context, k string, e reflect.Type, u *URLs, act
 	}
 	return a.Exec(c, e, action)
 }
-
 func (a *Wrapper) Exec(ctx echo.Context, t reflect.Type, action string) error {
 	v := reflect.New(t)
 	ac := v.Interface()
-	ex, ok := ctx.(ExitChecker)
-	if c, y := ctx.(StaticIniter); y {
-		if err := c.Init(a, action); err != nil {
+	if a.Module.ContextInitial != nil {
+		if err, exit := a.Module.ContextInitial(ctx, a, ac, action); err != nil {
 			return err
-		}
-		if ok && ex.IsExit() {
+		} else if exit {
 			return nil
 		}
 	}
 	if err := ac.(Initer).Init(ctx); err != nil {
 		return err
 	}
-	if !ok {
-		ex, ok = ac.(ExitChecker)
-	}
+	ex, ok := ac.(ExitChecker)
 	if ok && ex.IsExit() {
 		return nil
 	}

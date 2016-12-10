@@ -83,8 +83,8 @@ func NewWithContext(name string, newContext func(*echo.Echo) echo.Context, middl
 			return echo.NewContext(nil, nil, e)
 		}
 	}
-	s.InitContext = newContext
-	s.Core = echo.NewWithContext(s.InitContext)
+	s.ContextCreator = newContext
+	s.Core = echo.NewWithContext(s.ContextCreator)
 	s.Core.Use(s.DefaultMiddlewares...)
 
 	s.URLs = NewURLs(name, s)
@@ -105,11 +105,12 @@ type MVC struct {
 	URLs               *URLs
 	DefaultMiddlewares []interface{} `json:"-" xml:"-"`
 	SessionOptions     *echo.SessionOptions
-	Renderer           driver.Driver                 `json:"-" xml:"-"`
-	FuncMap            map[string]interface{}        `json:"-" xml:"-"`
-	InitContext        func(*echo.Echo) echo.Context `json:"-" xml:"-"`
-	moduleHosts        map[string]*Module            //域名关联
-	moduleNames        map[string]*Module            //名称关联
+	Renderer           driver.Driver                                                                                          `json:"-" xml:"-"`
+	FuncMap            map[string]interface{}                                                                                 `json:"-" xml:"-"`
+	ContextCreator     func(*echo.Echo) echo.Context                                                                          `json:"-" xml:"-"`
+	ContextInitial     func(ctx echo.Context, wrp *Wrapper, controller interface{}, actionName string) (err error, exit bool) `json:"-" xml:"-"`
+	moduleHosts        map[string]*Module                                                                                     //域名关联
+	moduleNames        map[string]*Module                                                                                     //名称关联
 	rootDir            string
 	theme              string
 }
@@ -213,7 +214,7 @@ func (s *MVC) SetDomain(name string, domain string) *MVC {
 	}
 	a.Domain = domain
 	a.Group = nil
-	e := echo.NewWithContext(s.InitContext)
+	e := echo.NewWithContext(s.ContextCreator)
 	e.Use(s.DefaultMiddlewares...)
 	e.Use(a.Middlewares...)
 	s.Core.RebuildRouter(coreRoutes)

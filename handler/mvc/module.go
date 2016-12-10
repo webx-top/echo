@@ -58,7 +58,7 @@ func NewModule(name string, domain string, s *MVC, middlewares ...interface{}) (
 		a.Group = s.Core.Group(prefix)
 		a.Group.Use(middlewares...)
 	} else {
-		e := echo.NewWithContext(s.InitContext)
+		e := echo.NewWithContext(s.ContextCreator)
 		e.Use(s.DefaultMiddlewares...)
 		e.Use(middlewares...)
 		a.Handler = e
