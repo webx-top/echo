@@ -114,12 +114,10 @@ type Wrapper struct {
 	Controller     interface{}        `json:"-" xml:"-"`
 	RouteRegister  echo.RouteRegister `json:"-" xml:"-"`
 	Module         *Module            `json:"-" xml:"-"`
-	ModuleName     string
 	ControllerName string
 }
 
 func (a *Wrapper) wrapHandler(h HandlerFunc, ctl string, act string) func(echo.Context) error {
-	a.ModuleName = a.Module.Name
 	a.ControllerName = ctl
 	if a.beforeHandler != nil && a.afterHandler != nil {
 		return func(ctx echo.Context) error {
@@ -234,7 +232,7 @@ func (a *Wrapper) RouteTags() {
 	} else {
 		ctl = com.LowerCaseFirst(e.Name())
 	}
-
+	a.ControllerName = ctl
 	for i := 0; i < e.NumField(); i++ {
 		f := e.Field(i)
 		if !IsMapper(f.Type) {
@@ -440,7 +438,7 @@ func (a *Wrapper) RouteMethods() {
 	} else {
 		ctl = com.LowerCaseFirst(e.Name())
 	}
-
+	a.ControllerName = ctl
 	for i := t.NumMethod() - 1; i >= 0; i-- {
 		m := t.Method(i)
 		name := m.Name
