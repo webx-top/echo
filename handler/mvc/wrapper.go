@@ -30,11 +30,10 @@ var (
 	mapperType        = reflect.TypeOf(Mapper{})
 	methodSuffixRegex = regexp.MustCompile(`(?:_(?:` + strings.Join(echo.Methods(), `|`) + `))+$`)
 	routeTagRegex     = regexp.MustCompile(`^[A-Z.]+(\|[A-Z]+)*$`)
+	IsMapper          = func(t reflect.Type) bool {
+		return t == mapperType
+	}
 )
-
-func IsMapper(t reflect.Type) bool {
-	return t == mapperType
-}
 
 // 结构体中定义路由的字段类型
 type Mapper struct{}
@@ -238,7 +237,7 @@ func (a *Wrapper) RouteTags() {
 
 	for i := 0; i < e.NumField(); i++ {
 		f := e.Field(i)
-		if f.Type != mapperType {
+		if !IsMapper(f.Type) {
 			continue
 		}
 		name := strings.Title(f.Name)

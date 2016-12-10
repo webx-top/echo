@@ -47,7 +47,7 @@ func New(name string, middlewares ...interface{}) (s *MVC) {
 		MaxUploadSize: 10 * 1024 * 1024,
 		StaticDir:     `assets`,
 		RootAppName:   `base`,
-		FuncMap:       tplfunc.TplFuncMap,
+		FuncMap:       tplfunc.New(),
 		RouteTagName:  `webx`,
 	}
 	mwNum := len(middlewares)
