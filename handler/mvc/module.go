@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/webx-top/echo"
-	renderConfig "github.com/webx-top/echo/middleware/render/config"
+	"github.com/webx-top/echo/middleware/render"
 	"github.com/webx-top/echo/middleware/render/driver"
 )
 
@@ -191,7 +191,7 @@ func (a *Module) Use(args ...interface{}) *Module {
 }
 
 // InitRenderer 初始化渲染接口(用于单独对app指定renderer，如不指定，默认会使用Server中Renderer)
-func (a *Module) InitRenderer(conf *renderConfig.Template, funcMap map[string]interface{}) *Module {
+func (a *Module) InitRenderer(conf *render.Config, funcMap map[string]interface{}) *Module {
 	a.Renderer = a.MVC.NewRenderer(conf, a, funcMap)
 	return a
 }

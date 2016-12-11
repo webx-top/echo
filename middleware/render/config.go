@@ -1,8 +1,8 @@
-package config
+package render
 
 import "strings"
 
-type Template struct {
+type Config struct {
 	Theme        string
 	Engine       string
 	Style        string
@@ -10,7 +10,7 @@ type Template struct {
 	ParseStrings map[string]string
 }
 
-func (t *Template) Parser() func([]byte) []byte {
+func (t *Config) Parser() func([]byte) []byte {
 	if t.ParseStrings == nil {
 		return nil
 	}

@@ -32,7 +32,6 @@ import (
 	"github.com/webx-top/echo/handler/mvc/static/resource"
 	mw "github.com/webx-top/echo/middleware"
 	"github.com/webx-top/echo/middleware/render"
-	renderConfig "github.com/webx-top/echo/middleware/render/config"
 	"github.com/webx-top/echo/middleware/render/driver"
 	"github.com/webx-top/echo/middleware/tplfunc"
 )
@@ -246,7 +245,7 @@ func (s *MVC) NewModule(name string, middlewares ...interface{}) *Module {
 }
 
 // NewRenderer 新建渲染接口
-func (s *MVC) NewRenderer(conf *renderConfig.Template, a *Module, funcMap map[string]interface{}) driver.Driver {
+func (s *MVC) NewRenderer(conf *render.Config, a *Module, funcMap map[string]interface{}) driver.Driver {
 	themeAbsPath := s.ThemeDir(conf.Theme)
 	staticUrlPath := `/assets`
 	if a != nil && len(a.Name) > 0 {
@@ -264,7 +263,7 @@ func (s *MVC) NewRenderer(conf *renderConfig.Template, a *Module, funcMap map[st
 }
 
 // NewTemplateEngine 新建模板引擎实例
-func (s *MVC) NewTemplateEngine(tmplPath string, conf *renderConfig.Template) driver.Driver {
+func (s *MVC) NewTemplateEngine(tmplPath string, conf *render.Config) driver.Driver {
 	if tmplPath == `` {
 		tmplPath = s.ThemeDir()
 	}
@@ -274,7 +273,7 @@ func (s *MVC) NewTemplateEngine(tmplPath string, conf *renderConfig.Template) dr
 }
 
 // 重置模板引擎
-func (s *MVC) resetRenderer(conf *renderConfig.Template) *MVC {
+func (s *MVC) resetRenderer(conf *render.Config) *MVC {
 	if s.Renderer != nil {
 		s.Renderer.Close()
 	}
@@ -379,7 +378,7 @@ func (s *MVC) Theme() string {
 }
 
 // SetTheme 设置模板主题
-func (s *MVC) SetTheme(conf *renderConfig.Template) *MVC {
+func (s *MVC) SetTheme(conf *render.Config) *MVC {
 	if conf.Theme == `admin` {
 		return s
 	}
