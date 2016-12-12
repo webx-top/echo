@@ -122,7 +122,8 @@ func save(c echo.Context) error {
 	//------------
 	// Get avatar
 	//------------
-	return c.SaveUploadedFile("avatar","./")
+	_, err := c.SaveUploadedFile("avatar","./")
+	return err
 }
 ```
 
