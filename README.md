@@ -122,24 +122,7 @@ func save(c echo.Context) error {
 	//------------
 	// Get avatar
 	//------------
-
-	src, fileHeader, err := c.FormFile("avatar")
-	if err != nil {
-		return err
-	}
-	defer src.Close()
-
-	// Destination
-	file, err := os.Create(fileHeader.Filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// Copy
-	if _, err = io.Copy(file, src); err != nil {
-		return err
-	}
+	return c.SaveUploadedFile("avatar","./")
 }
 ```
 
