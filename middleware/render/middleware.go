@@ -119,7 +119,7 @@ func OutputError(err error, format string, c echo.Context) error {
 	return Output(format, c)
 }
 
-func DataErrorHandler(templates map[int]string, formatRender ...func(string, echo.Context) error) echo.HTTPErrorHandler {
+func HTTPErrorHandler(templates map[int]string, formatRender ...func(string, echo.Context) error) echo.HTTPErrorHandler {
 	if templates == nil {
 		templates = make(map[int]string)
 	}
