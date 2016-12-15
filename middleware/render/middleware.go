@@ -123,6 +123,7 @@ func HTTPErrorHandler(templates map[int]string, formatRender ...func(string, ech
 	if templates == nil {
 		templates = make(map[int]string)
 	}
+	tmplNum := len(templates)
 	var output func(string, echo.Context) error
 	if len(formatRender) > 0 {
 		output = formatRender[0]
@@ -141,24 +142,33 @@ func HTTPErrorHandler(templates map[int]string, formatRender ...func(string, ech
 			msg = err.Error()
 		}
 		if !c.Response().Committed() {
-			if c.Request().Method() == echo.HEAD {
+			switch {
+			case c.Request().Method() == echo.HEAD:
 				c.NoContent(code)
-			} else if t, y := templates[code]; y {
-				c.Set(DefaultDataKey, msg)
-				c.Set(DefaultTmplKey, t)
-				if err := output(c.Format(), c); err != nil {
-					msg += "\n" + err.Error()
-					if code > 0 {
-						c.String(msg, code)
-					} else {
-						c.String(msg)
-					}
-					c.Echo().Logger().Error(err)
+			case tmplNum > 0:
+				t, y := templates[code]
+				if !y && code != 0 && tmplNum > 1 {
+					t, y = templates[0]
 				}
-			} else if code > 0 {
-				c.String(msg, code)
-			} else {
-				c.String(msg)
+				if y {
+					c.Set(DefaultDataKey, msg)
+					c.Set(DefaultTmplKey, t)
+					if err := output(c.Format(), c); err != nil {
+						msg += "\n" + err.Error()
+						y = false
+						c.Echo().Logger().Error(err)
+					}
+				}
+				if y {
+					break
+				}
+				fallthrough
+			default:
+				if code > 0 {
+					c.String(msg, code)
+				} else {
+					c.String(msg)
+				}
 			}
 		}
 		c.Echo().Logger().Debug(err)
