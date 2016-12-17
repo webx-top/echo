@@ -13,9 +13,13 @@ func (d *Data) Error() string {
 	return fmt.Sprintf(`%v`, d.Info)
 }
 
-func (d *Data) SetError(err error) *Data {
+func (d *Data) SetError(err error, args ...int) *Data {
 	if err != nil {
-		d.Code = 0
+		if len(args) > 0 {
+			d.Code = args[0]
+		} else {
+			d.Code = 0
+		}
 		d.Info = err.Error()
 	} else {
 		d.Code = 1
@@ -45,6 +49,8 @@ func (d *Data) SetData(data interface{}, args ...int) *Data {
 	d.Data = data
 	if len(args) > 0 {
 		d.Code = args[0]
+	} else {
+		d.Code = 1
 	}
 	return d
 }
