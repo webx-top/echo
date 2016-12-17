@@ -175,10 +175,6 @@ func (s store) Set(key string, value interface{}) store {
 	return s
 }
 
-func (s store) ASet(key string, value interface{}) {
-	s[key] = value
-}
-
 func (s store) Get(key string) interface{} {
 	if v, y := s[key]; y {
 		return v
