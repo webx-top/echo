@@ -303,8 +303,8 @@ func (self *Standard) parse(tmplName string, funcMap htmlTpl.FuncMap) (tmpl *htm
 	}
 	m := self.extTagRegex.FindAllStringSubmatch(content, 1)
 	for i := 0; i < 10 && len(m) > 0; i++ {
-		self.ParseBlock(content, &subcs, &extcs)
 		self.ParseDefine(content, &subcs)
+		self.ParseBlock(content, &subcs, &extcs)
 		extFile := m[0][1] + self.Ext
 		passObject := m[0][2]
 		extFile = self.TemplatePath(extFile)
