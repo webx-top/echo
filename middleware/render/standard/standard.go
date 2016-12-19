@@ -58,7 +58,6 @@ func New(templateDir string, args ...logger.Logger) Driver {
 		ExtendTag:         "Extend",
 		BlockTag:          "Block",
 		SuperTag:          "Super",
-		DefineTag:         "Define",
 		Ext:               ".html",
 		Debug:             Debug,
 		fileEvents:        make([]func(string), 0),
@@ -100,13 +99,11 @@ type Standard struct {
 	incTagRegex        *regexp.Regexp
 	extTagRegex        *regexp.Regexp
 	blkTagRegex        *regexp.Regexp
-	defTagRegex        *regexp.Regexp
 	cachedRegexIdent   string
 	IncludeTag         string
 	ExtendTag          string
 	BlockTag           string
 	SuperTag           string
-	DefineTag          string
 	Ext                string
 	TemplatePathParser func(string) string
 	Debug              bool
@@ -218,7 +215,6 @@ func (self *Standard) InitRegexp() {
 	self.incTagRegex = regexp.MustCompile(left + self.IncludeTag + `[\s]+"([^"]+)"(?:[\s]+([^` + rfirst + `]+))?[\s]*` + right)
 	self.extTagRegex = regexp.MustCompile(left + self.ExtendTag + `[\s]+"([^"]+)"(?:[\s]+([^` + rfirst + `]+))?[\s]*` + right)
 	self.blkTagRegex = regexp.MustCompile(`(?s)` + left + self.BlockTag + `[\s]+"([^"]+)"[\s]*` + right + `(.*?)` + left + `\/` + self.BlockTag + right)
-	self.defTagRegex = regexp.MustCompile(`(?s)` + left + self.DefineTag + `[\s]+"([^"]+)"[\s]*` + right + `(.*?)` + left + `\/` + self.DefineTag + right)
 }
 
 // Render HTML
@@ -303,7 +299,6 @@ func (self *Standard) parse(tmplName string, funcMap htmlTpl.FuncMap) (tmpl *htm
 	}
 	m := self.extTagRegex.FindAllStringSubmatch(content, 1)
 	for i := 0; i < 10 && len(m) > 0; i++ {
-		self.ParseDefine(content, &subcs)
 		self.ParseBlock(content, &subcs, &extcs)
 		extFile := m[0][1] + self.Ext
 		passObject := m[0][2]
@@ -411,15 +406,6 @@ func (self *Standard) ParseBlock(content string, subcs *map[string]string, extcs
 	}
 }
 
-func (self *Standard) ParseDefine(content string, subcs *map[string]string) {
-	matches := self.defTagRegex.FindAllStringSubmatch(content, -1)
-	for _, v := range matches {
-		name := v[1]
-		content := v[2]
-		(*subcs)[name] = self.ContainsSubTpl(content, subcs)
-	}
-}
-
 func (self *Standard) ParseExtend(content string, extcs *map[string]string, passObject string, subcs *map[string]string) (string, [][]string) {
 	m := self.extTagRegex.FindAllStringSubmatch(content, 1)
 	hasParent := len(m) > 0
@@ -506,7 +492,6 @@ func (self *Standard) ContainsSubTpl(content string, subcs *map[string]string) s
 			}
 			str := string(b)
 			(*subcs)[tmplFile] = "" //先登记，避免死循环
-			self.ParseDefine(str, subcs)
 			str = self.ContainsSubTpl(str, subcs)
 			(*subcs)[tmplFile] = str
 			//}

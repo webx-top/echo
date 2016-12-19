@@ -8,7 +8,6 @@
 	* `hasBlock(blocks ...string) bool` - 是否在扩展模板中设置了指定名称的Block
 	* `hasAnyBlock(blocks ...string) bool`  - 是否在扩展模板中设置了指定名称中的任意一个Block
 5. 支持多重继承
-6. 增加Define标签。现在可以在子模板中使用`{{Define "name"}}内容{{/Define}}`，然后就可以在使用{{template "name" .}}引用这个片段
 
 ## 模板继承
 用于模板继承的标签有：Block、Extend、Super
