@@ -37,7 +37,7 @@ func (o Options) Wrapper(e echo.RouteRegister) {
 		o.AudioLangs = []string{`zh`, `ru`, `en`}
 	}
 	if len(o.Prefix) == 0 {
-		o.Prefix = `captcha`
+		o.Prefix = `/captcha`
 	} else {
 		o.Prefix = strings.TrimRight(o.Prefix, "/")
 	}
