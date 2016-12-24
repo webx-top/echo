@@ -20,7 +20,6 @@ package tplfunc
 import (
 	"fmt"
 	"html/template"
-	"net/http"
 	"path/filepath"
 	"strings"
 	"time"
@@ -165,8 +164,9 @@ func CaptchaForm(args ...string) template.HTML {
 }
 
 //CaptchaVerify 验证码验证
-func CaptchaVerify(captchaSolution string, r *http.Request) bool {
-	captchaId := r.FormValue("captchaId")
+func CaptchaVerify(captchaSolution string, idGet func(string) string) bool {
+	//captchaId := r.FormValue("captchaId")
+	captchaId := idGet("captchaId")
 	if !captcha.VerifyString(captchaId, captchaSolution) {
 		return false
 	}
