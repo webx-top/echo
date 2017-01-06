@@ -182,6 +182,9 @@ func (self *Standard) Init(cached ...bool) {
 }
 
 func (self *Standard) SetManager(mgr driver.Manager) {
+	if self.TemplateMgr != nil {
+		self.TemplateMgr.Close()
+	}
 	self.TemplateMgr = mgr
 }
 

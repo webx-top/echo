@@ -160,6 +160,9 @@ func (a *Pongo2) Init(cached ...bool) {
 }
 
 func (a *Pongo2) SetManager(mgr driver.Manager) {
+	if a.Mgr != nil {
+		a.Mgr.Close()
+	}
 	a.Mgr = mgr
 }
 
