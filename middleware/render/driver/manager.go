@@ -18,43 +18,14 @@
 package driver
 
 import (
-	"io"
-
-	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/logger"
 )
 
-type Driver interface {
-	//初始化模板引擎
-	Init(...bool)
-
-	//获取模板根路径
-	TmplDir() string
-	SetLogger(logger.Logger)
-	Logger() logger.Logger
-
-	//设置模板内容预处理器
-	SetContentProcessor(fn func([]byte) []byte)
-	SetManager(Manager)
-
-	//设置模板函数
-	SetFuncMap(func() map[string]interface{})
-
-	//渲染模板
-	Render(io.Writer, string, interface{}, echo.Context) error
-
-	//获取模板渲染后的结果
-	Fetch(string, interface{}, map[string]interface{}) string
-
-	//读取模板原始内容
-	RawContent(string) ([]byte, error)
-
-	//模板目录监控事件
-	MonitorEvent(func(string))
-
-	//清除模板对象缓存
-	ClearCache()
-
-	//关闭并停用模板引擎
+type Manager interface {
 	Close()
+	SetOnChangeCallback(func(name, typ, event string))
+	SetLogger(logger.Logger)
+	ClearCache()
+	GetTemplate(string) ([]byte, error)
+	Init(logger logger.Logger, rootDir string, reload bool, allows ...string)
 }
