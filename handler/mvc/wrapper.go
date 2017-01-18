@@ -22,7 +22,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 )
 
@@ -224,10 +223,10 @@ func (a *Wrapper) RouteTags() {
 	//github.com/webx-top/{Project}/app/{Module}/controller.(*Index).
 
 	var ctl string
-	if a.Module.URLConvert {
-		ctl = com.SnakeCase(e.Name())
+	if a.Module.URLConvert != nil {
+		ctl = a.Module.URLConvert(e.Name())
 	} else {
-		ctl = com.LowerCaseFirst(e.Name())
+		ctl = e.Name()
 	}
 	a.ControllerName = ctl
 	for i := 0; i < e.NumField(); i++ {
@@ -276,10 +275,10 @@ func (a *Wrapper) RouteTags() {
 			}
 		}
 		if len(p) == 0 {
-			if a.Module.URLConvert {
-				p = `/` + com.SnakeCase(f.Name)
+			if a.Module.URLConvert != nil {
+				p = `/` + a.Module.URLConvert(name)
 			} else {
-				p = `/` + f.Name
+				p = `/` + name
 			}
 		}
 		var ppath string
@@ -425,10 +424,10 @@ func (a *Wrapper) RouteMethods() {
 	ctlPath := e.PkgPath() + `.(*` + e.Name() + `).`
 	//github.com/webx-top/{Project}/app/{Module}/controller.(*Index).
 	var ctl string
-	if a.Module.URLConvert {
-		ctl = com.SnakeCase(e.Name())
+	if a.Module.URLConvert != nil {
+		ctl = a.Module.URLConvert(e.Name())
 	} else {
-		ctl = com.LowerCaseFirst(e.Name())
+		ctl = e.Name()
 	}
 	a.ControllerName = ctl
 	for i := t.NumMethod() - 1; i >= 0; i-- {
@@ -442,10 +441,10 @@ func (a *Wrapper) RouteMethods() {
 		if strings.HasSuffix(name, `_ANY`) {
 			name = strings.TrimSuffix(name, `_ANY`)
 			var pp string
-			if a.Module.URLConvert {
-				pp = com.SnakeCase(name)
+			if a.Module.URLConvert != nil {
+				pp = a.Module.URLConvert(name)
 			} else {
-				pp = com.LowerCaseFirst(name)
+				pp = name
 			}
 			ppath := `/` + ctl + `/` + pp
 			k := ctlPath + name + `-fm`
@@ -461,10 +460,10 @@ func (a *Wrapper) RouteMethods() {
 		methods := strings.Split(strings.TrimPrefix(matches[0], `_`), `_`)
 		name = strings.TrimSuffix(name, matches[0])
 		var pp string
-		if a.Module.URLConvert {
-			pp = com.SnakeCase(name)
+		if a.Module.URLConvert != nil {
+			pp = a.Module.URLConvert(name)
 		} else {
-			pp = com.LowerCaseFirst(name)
+			pp = name
 		}
 		ppath := `/` + ctl + `/` + pp
 		k := ctlPath + name + `-fm`
