@@ -83,8 +83,6 @@ type AllowFormat interface {
 	AllowFormat(urlPath string, extension string) bool
 }
 
-type HandlerFunc func(echo.Context) error
-
 func NewHandler(h func(echo.Context) error, name string) *Handler {
 	return &Handler{
 		name:   name,
@@ -107,8 +105,8 @@ func (h *Handler) HandleName() string {
 
 type Wrapper struct {
 	// 静态实例中的行为
-	beforeHandler HandlerFunc
-	afterHandler  HandlerFunc
+	beforeHandler echo.HandlerFunc
+	afterHandler  echo.HandlerFunc
 	// 动态实例中的行为状态
 	hasBefore bool
 	hasMain   bool
@@ -120,7 +118,8 @@ type Wrapper struct {
 	ControllerName string
 }
 
-func (a *Wrapper) wrapHandler(h HandlerFunc, ctl string, act string) func(echo.Context) error {
+func (a *Wrapper) wrapHandler(v interface{}, ctl string, act string) func(echo.Context) error {
+	h := a.Module.Core.ValidHandler(v)
 	a.ControllerName = ctl
 	if a.beforeHandler != nil && a.afterHandler != nil {
 		return func(ctx echo.Context) error {
@@ -138,7 +137,7 @@ func (a *Wrapper) wrapHandler(h HandlerFunc, ctl string, act string) func(echo.C
 			if ok && ex.IsExit() {
 				return nil
 			}
-			if err := h(ctx); err != nil {
+			if err := h.Handle(ctx); err != nil {
 				return err
 			}
 			if ok && ex.IsExit() {
@@ -163,7 +162,7 @@ func (a *Wrapper) wrapHandler(h HandlerFunc, ctl string, act string) func(echo.C
 			if ok && ex.IsExit() {
 				return nil
 			}
-			return h(ctx)
+			return h.Handle(ctx)
 		}
 	}
 	if a.afterHandler != nil {
@@ -176,7 +175,7 @@ func (a *Wrapper) wrapHandler(h HandlerFunc, ctl string, act string) func(echo.C
 				}
 			}
 			ex, ok := ctx.(ExitChecker)
-			if err := h(ctx); err != nil {
+			if err := h.Handle(ctx); err != nil {
 				return err
 			}
 			if ok && ex.IsExit() {
@@ -193,7 +192,7 @@ func (a *Wrapper) wrapHandler(h HandlerFunc, ctl string, act string) func(echo.C
 				return nil
 			}
 		}
-		return h(ctx)
+		return h.Handle(ctx)
 	}
 }
 
@@ -203,7 +202,7 @@ func (a *Wrapper) HandleName(h interface{}) string {
 
 // Register 路由注册方案1：注册函数(可匿名)或静态实例的成员函数
 // 例如：Register(`/index`,Index.Index,"GET","POST")
-func (a *Wrapper) Register(p string, h HandlerFunc, methods ...string) *Wrapper {
+func (a *Wrapper) Register(p string, h interface{}, methods ...string) *Wrapper {
 	if len(methods) < 1 {
 		methods = append(methods, "GET")
 	}
