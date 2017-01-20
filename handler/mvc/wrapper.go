@@ -37,35 +37,35 @@ var (
 	}
 )
 
-// 结构体中定义路由的字段类型
+//Mapper 结构体中定义路由的字段类型
 type Mapper struct{}
 
-// 静态实例中的前置行为
+//BeforeHandler 静态实例中的前置行为
 type BeforeHandler interface {
 	Before(echo.Context) error
 }
 
-// 静态实例中的后置行为
+//AfterHandler 静态实例中的后置行为
 type AfterHandler interface {
 	After(echo.Context) error
 }
 
-// 动态实例中的初始化行为
+//Initer 动态实例中的初始化行为
 type Initer interface {
 	Init(echo.Context) error
 }
 
-// 动态实例中的前置行为
+//Before 动态实例中的前置行为
 type Before interface {
 	Before() error
 }
 
-// 动态实例中的行为入口
+//Main 动态实例中的行为入口
 type Main interface {
 	Main() error
 }
 
-// 动态实例中的后置行为
+//After 动态实例中的后置行为
 type After interface {
 	After() error
 }
