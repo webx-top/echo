@@ -14,3 +14,4 @@ node_modules
 /handler/oauth2/example/*.exe
 /handler/oauth2/example/session.db
 /handler/oauth2/example/session.db.lock
+/middleware/render/sse/test/*.exe

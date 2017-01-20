@@ -64,6 +64,7 @@ type (
 		JSONP(string, interface{}, ...int) error
 		XML(interface{}, ...int) error
 		XMLBlob([]byte, ...int) error
+		Stream(func(io.Writer) bool)
 		File(string) error
 		Attachment(io.ReadSeeker, string) error
 		NoContent(...int) error
@@ -426,6 +427,23 @@ func (c *xContext) XMLBlob(b []byte, codes ...int) (err error) {
 	b = []byte(xml.Header + string(b))
 	err = c.Blob(b, codes...)
 	return
+}
+
+func (c *xContext) Stream(step func(w io.Writer) bool) {
+	w := c.response.StdResponseWriter()
+	clientGone := w.(http.CloseNotifier).CloseNotify()
+	for {
+		select {
+		case <-clientGone:
+			return
+		default:
+			keepOpen := step(w)
+			w.(http.Flusher).Flush()
+			if !keepOpen {
+				return
+			}
+		}
+	}
 }
 
 func (c *xContext) File(file string) error {
