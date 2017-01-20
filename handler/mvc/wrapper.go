@@ -213,7 +213,7 @@ func (a *Wrapper) Register(p string, h interface{}, methods ...string) *Wrapper 
 // RouteTags 路由注册方案2：从动态实例内Mapper类型字段标签中获取路由信息
 func (a *Wrapper) RouteTags() {
 	if _, y := a.Controller.(Initer); !y {
-		a.Module.Core.Logger().Infof(`%T is no method Init(echo.Context), skiped.`, a.Controller)
+		a.Module.Core.Logger().Infof(`%T is no method Init(echo.Context)error, skiped.`, a.Controller)
 		return
 	}
 	t := reflect.TypeOf(a.Controller)
@@ -416,7 +416,7 @@ func (a *Wrapper) Exec(ctx echo.Context, t reflect.Type, action string) error {
 // RouteMethods 路由注册方案3：自动注册动态实例内带HTTP方法名后缀的成员函数作为路由
 func (a *Wrapper) RouteMethods() {
 	if _, valid := a.Controller.(Initer); !valid {
-		a.Module.Core.Logger().Infof(`%T is no method Init(echo.Context), skiped.`, a.Controller)
+		a.Module.Core.Logger().Infof(`%T is no method Init(echo.Context)error, skiped.`, a.Controller)
 		return
 	}
 	t := reflect.TypeOf(a.Controller)
