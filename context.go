@@ -430,20 +430,7 @@ func (c *xContext) XMLBlob(b []byte, codes ...int) (err error) {
 }
 
 func (c *xContext) Stream(step func(w io.Writer) bool) {
-	w := c.response.StdResponseWriter()
-	clientGone := w.(http.CloseNotifier).CloseNotify()
-	for {
-		select {
-		case <-clientGone:
-			return
-		default:
-			keepOpen := step(w)
-			w.(http.Flusher).Flush()
-			if !keepOpen {
-				return
-			}
-		}
-	}
+	c.response.Stream(step)
 }
 
 func (c *xContext) File(file string) error {

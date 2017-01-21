@@ -1,0 +1,3 @@
+go build
+test
+pause

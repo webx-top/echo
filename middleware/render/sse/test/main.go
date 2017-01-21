@@ -6,14 +6,15 @@ import (
 	"math/rand"
 
 	"github.com/webx-top/echo"
+	"github.com/webx-top/echo/engine/fasthttp"
 	"github.com/webx-top/echo/engine/standard"
-	//"github.com/webx-top/echo/engine/fasthttp"
 	mw "github.com/webx-top/echo/middleware"
 	"github.com/webx-top/echo/middleware/render"
 	_ "github.com/webx-top/echo/middleware/render/sse"
 )
 
 func main() {
+	engine := `1`
 	e := echo.New()
 	e.Use(mw.Log(), mw.Recover())
 	e.Use(render.Middleware(render.New(`sse`, ``)))
@@ -22,9 +23,11 @@ func main() {
 	e.Post("/room/:roomid", roomPOST)
 	e.Delete("/room/:roomid", roomDELETE)
 	e.Get("/stream/:roomid", stream)
-
-	e.Run(standard.New(":8080"))
-	//e.Run(fasthttp.New(":8080")) //not implemented
+	if len(engine) == 0 {
+		e.Run(standard.New(":8080"))
+	} else {
+		e.Run(fasthttp.New(":8080"))
+	}
 }
 
 func stream(c echo.Context) error {
@@ -33,7 +36,14 @@ func stream(c echo.Context) error {
 	defer closeListener(roomid, listener)
 
 	c.Stream(func(w io.Writer) bool {
-		c.Render("message", <-listener)
+		b, e := c.Fetch("message", <-listener)
+		if e != nil {
+			return false
+		}
+		_, e = w.Write(b)
+		if e != nil {
+			return false
+		}
 		return true
 	})
 	return nil

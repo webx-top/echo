@@ -2,7 +2,6 @@ package sse
 
 import (
 	"io"
-	"net/http"
 
 	"github.com/admpub/sse"
 	"github.com/webx-top/echo"
@@ -29,9 +28,10 @@ type ServerSentEvents struct {
 }
 
 func (s *ServerSentEvents) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
-	resp := c.Response()
-	resp.Header().Set(echo.HeaderContentType, MIMEEventStream)
-	resp.WriteHeader(http.StatusOK)
+	hdr := c.Response().Header()
+	hdr.Set(echo.HeaderContentType, MIMEEventStream)
+	hdr.Set(`Cache-Control`, `no-cache`)
+	hdr.Set(`Connection`, `keep-alive`)
 	if v, y := data.(sse.Event); y {
 		return sse.Encode(w, v)
 	}
