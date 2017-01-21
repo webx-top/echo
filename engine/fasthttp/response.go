@@ -132,22 +132,9 @@ func (r *Response) ServeFile(file string) {
 }
 
 func (r *Response) Stream(step func(io.Writer) bool) {
-	cb := func(w *bufio.Writer) {
-		/*
-			for {
-				keepOpen := step(w)
-				if !keepOpen {
-					return
-				}
-
-				if err := w.Flush(); err != nil {
-					r.logger.Error(err)
-					return
-				}
-			}
-		*/
-	}
-	r.context.SetBodyStreamWriter(cb)
+	r.context.SetBodyStreamWriter(func(w *bufio.Writer) {
+		//TODO
+	})
 }
 
 func (r *Response) Error(errMsg string, args ...int) {

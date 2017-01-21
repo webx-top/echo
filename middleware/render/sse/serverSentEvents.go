@@ -9,8 +9,6 @@ import (
 	"github.com/webx-top/echo/middleware/render/driver"
 )
 
-const MIMEEventStream = "text/event-stream"
-
 func init() {
 	render.Reg(`sse`, func(_ string) driver.Driver {
 		return New()
@@ -28,10 +26,6 @@ type ServerSentEvents struct {
 }
 
 func (s *ServerSentEvents) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
-	hdr := c.Response().Header()
-	hdr.Set(echo.HeaderContentType, MIMEEventStream)
-	hdr.Set(`Cache-Control`, `no-cache`)
-	hdr.Set(`Connection`, `keep-alive`)
 	if v, y := data.(sse.Event); y {
 		return sse.Encode(w, v)
 	}

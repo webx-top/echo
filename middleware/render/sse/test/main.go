@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"math/rand"
 
 	"github.com/webx-top/echo"
@@ -14,7 +13,7 @@ import (
 )
 
 func main() {
-	engine := `1`
+	engine := ``
 	e := echo.New()
 	e.Use(mw.Log(), mw.Recover())
 	e.Use(render.Middleware(render.New(`sse`, ``)))
@@ -34,19 +33,7 @@ func stream(c echo.Context) error {
 	roomid := c.Param("roomid")
 	listener := openListener(roomid)
 	defer closeListener(roomid, listener)
-
-	c.Stream(func(w io.Writer) bool {
-		b, e := c.Fetch("message", <-listener)
-		if e != nil {
-			return false
-		}
-		_, e = w.Write(b)
-		if e != nil {
-			return false
-		}
-		return true
-	})
-	return nil
+	return c.SSEvent("message", listener)
 }
 
 func roomGET(c echo.Context) error {
