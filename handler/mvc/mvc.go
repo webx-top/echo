@@ -43,18 +43,18 @@ func New(name string, middlewares ...interface{}) (s *MVC) {
 
 func NewWithContext(name string, newContext func(*echo.Echo) echo.Context, middlewares ...interface{}) (s *MVC) {
 	s = &MVC{
-		Name:          name,
-		moduleHosts:   make(map[string]*Module),
-		moduleNames:   make(map[string]*Module),
-		TemplateDir:   `template`,
-		URL:           `/`,
-		MaxUploadSize: 10 * 1024 * 1024,
-		StaticDir:     `assets`,
-		RootAppName:   `base`,
-		FuncMap:       tplfunc.New(),
-		RouteTagName:  `webx`,
-		URLConvert:    LowerCaseFirst,
-		URLRecovery:   UpperCaseFirst,
+		Name:           name,
+		moduleHosts:    make(map[string]*Module),
+		moduleNames:    make(map[string]*Module),
+		TemplateDir:    `template`,
+		URL:            `/`,
+		MaxUploadSize:  10 * 1024 * 1024,
+		StaticDir:      `assets`,
+		RootModuleName: `base`,
+		FuncMap:        tplfunc.New(),
+		RouteTagName:   `webx`,
+		URLConvert:     LowerCaseFirst,
+		URLRecovery:    UpperCaseFirst,
 	}
 	mwNum := len(middlewares)
 	if mwNum == 1 && middlewares[0] == nil {
@@ -116,7 +116,7 @@ type MVC struct {
 	URLConvert         URLConvert
 	URLRecovery        URLRecovery
 	MaxUploadSize      int64
-	RootAppName        string
+	RootModuleName     string
 	URL                string
 	URLs               *URLs
 	DefaultMiddlewares []interface{} `json:"-" xml:"-"`
@@ -168,7 +168,7 @@ func (s *MVC) SetDomain(name string, domain string) *MVC {
 		}
 		delete(s.moduleHosts, domain)
 		var prefix string
-		if name != s.RootAppName {
+		if name != s.RootModuleName {
 			prefix = `/` + name
 			a.Dir = prefix + `/`
 		} else {
@@ -306,7 +306,7 @@ func (s *MVC) resetRenderer(conf *render.Config) *MVC {
 
 // Module 获取模块实例
 func (s *MVC) Module(args ...string) *Module {
-	name := s.RootAppName
+	name := s.RootModuleName
 	if len(args) > 0 {
 		name = args[0]
 		if ap, ok := s.moduleNames[name]; ok {
@@ -335,7 +335,7 @@ func (s *MVC) SetSessionOptions(sessionOptions *echo.SessionOptions) *MVC {
 
 // ModuleOk 获取模块实例
 func (s *MVC) ModuleOk(args ...string) (app *Module, ok bool) {
-	name := s.RootAppName
+	name := s.RootModuleName
 	if len(args) > 0 {
 		name = args[0]
 	}
