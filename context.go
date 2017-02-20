@@ -2,10 +2,12 @@ package echo
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"encoding/xml"
 	"io"
 	"mime"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,12 +15,9 @@ import (
 	"strings"
 	"time"
 
-	"mime/multipart"
-
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/logger"
 	"github.com/webx-top/echo/param"
-	"golang.org/x/net/context"
 )
 
 type (
