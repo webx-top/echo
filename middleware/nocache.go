@@ -50,22 +50,25 @@ func NoCache(skippers ...echo.Skipper) echo.MiddlewareFuncd {
 			if skipper(c) {
 				return next.Handle(c)
 			}
-			reqHdr := c.Request().Header()
-			resHdr := c.Response().Header()
-
-			// Delete any ETag headers that may have been set
-			for _, v := range etagHeaders {
-				if len(reqHdr.Get(v)) > 0 {
-					reqHdr.Del(v)
-				}
-			}
-
-			// Set our NoCache headers
-			for k, v := range noCacheHeaders {
-				resHdr.Set(k, v)
-			}
-
+			SetNoCacheHeader(c)
 			return next.Handle(c)
 		}
+	}
+}
+
+func SetNoCacheHeader(c echo.Context) {
+	reqHdr := c.Request().Header()
+	resHdr := c.Response().Header()
+
+	// Delete any ETag headers that may have been set
+	for _, v := range etagHeaders {
+		if len(reqHdr.Get(v)) > 0 {
+			reqHdr.Del(v)
+		}
+	}
+
+	// Set our NoCache headers
+	for k, v := range noCacheHeaders {
+		resHdr.Set(k, v)
 	}
 }
