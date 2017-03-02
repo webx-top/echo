@@ -67,7 +67,9 @@ func (t *Config) ApplyTo(e *echo.Echo, manager ...driver.Manager) *Config {
 		return c.Format() != `html`
 	}))
 	renderer := t.NewRenderer(manager...)
-	e.Use(middleware.Static(t.StaticOptions))
+	if t.StaticOptions != nil {
+		e.Use(middleware.Static(t.StaticOptions))
+	}
 	e.Use(Middleware(renderer))
 	e.SetRenderer(renderer)
 	t.renderer = renderer
