@@ -46,6 +46,14 @@ func (d *Data) Render(tmpl string, code ...int) error {
 	return d.context.Render(tmpl, d.Data, code...)
 }
 
+func (d *Data) Gets() (int, interface{}, interface{}, interface{}) {
+	return d.Code, d.Info, d.Zone, d.Data
+}
+
+func (d *Data) GetData() interface{} {
+	return d.Data
+}
+
 func (d *Data) SetError(err error, args ...int) *Data {
 	if err != nil {
 		if len(args) > 0 {

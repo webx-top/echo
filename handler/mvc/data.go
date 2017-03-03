@@ -7,4 +7,6 @@ type Data interface {
 	Render(tmpl string, code ...int) error
 	String() string
 	Set(code int, args ...interface{})
+	Gets() (code int, info interface{}, zone interface{}, data interface{})
+	GetData() interface{}
 }
