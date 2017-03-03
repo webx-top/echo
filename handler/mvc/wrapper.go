@@ -205,7 +205,7 @@ func (a *Wrapper) Register(p string, h interface{}, methods ...string) *Wrapper 
 	if len(methods) < 1 {
 		methods = append(methods, "GET")
 	}
-	_, ctl, act := a.Module.MVC.URLs.Set(h)
+	_, ctl, act := a.Module.Application.URLs.Set(h)
 	a.Module.Router().Match(methods, p, NewHandler(a.wrapHandler(h, ctl, act), a.HandleName(h)))
 	return a
 }
@@ -311,7 +311,7 @@ func (a *Wrapper) RouteTags() {
 			extends = strings.Split(ext, `|`)
 		}
 		k := ctlPath + name + `-fm`
-		u := a.Module.MVC.URLs.SetExtensions(k, extends)
+		u := a.Module.Application.URLs.SetExtensions(k, extends)
 		h := NewHandler(func(ctx echo.Context) error {
 			return a.execute(ctx, k, e, u, name)
 		}, k)
@@ -449,7 +449,7 @@ func (a *Wrapper) RouteMethods() {
 			}
 			ppath := `/` + ctl + `/` + pp
 			k := ctlPath + name + `-fm`
-			u := a.Module.MVC.URLs
+			u := a.Module.Application.URLs
 			handler := NewHandler(h(k, u), k)
 			a.addRouter(ctl, ppath, handler)
 			continue
@@ -468,7 +468,7 @@ func (a *Wrapper) RouteMethods() {
 		}
 		ppath := `/` + ctl + `/` + pp
 		k := ctlPath + name + `-fm`
-		u := a.Module.MVC.URLs
+		u := a.Module.Application.URLs
 		handler := NewHandler(h(k, u), k)
 		a.addRouter(ctl, ppath, handler, methods...)
 	}

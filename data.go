@@ -17,13 +17,21 @@
 */
 package echo
 
-import "fmt"
+import (
+	"encoding/gob"
+	"fmt"
+)
+
+func init() {
+	gob.Register(&Data{})
+}
 
 type Data struct {
-	Code int
-	Info interface{}
-	Zone interface{} `json:",omitempty" xml:",omitempty"`
-	Data interface{} `json:",omitempty" xml:",omitempty"`
+	context Context
+	Code    int
+	Info    interface{}
+	Zone    interface{} `json:",omitempty" xml:",omitempty"`
+	Data    interface{} `json:",omitempty" xml:",omitempty"`
 }
 
 func (d *Data) Error() string {
@@ -72,8 +80,62 @@ func (d *Data) SetData(data interface{}, args ...int) *Data {
 	return d
 }
 
+func (d *Data) SetContext(ctx Context) *Data {
+	d.context = ctx
+	return d
+}
+
+func (c *Data) Assign(key string, val interface{}) {
+	data, _ := c.Data.(H)
+	if data == nil {
+		data = H{}
+	}
+	data[key] = val
+	c.Data = data
+}
+
+func (c *Data) Assignx(values *map[string]interface{}) {
+	if values == nil {
+		return
+	}
+	data, _ := c.Data.(H)
+	if data == nil {
+		data = H{}
+	}
+	for key, val := range *values {
+		data[key] = val
+	}
+	c.Data = data
+}
+
+func (c *Data) SetTmplFuncs() {
+	flash, ok := c.context.Session().Get(`webx:flash`).(*Data)
+	if ok {
+		c.context.Session().Delete(`webx:flash`).Save()
+		c.context.SetFunc(`Code`, func() int {
+			return flash.Code
+		})
+		c.context.SetFunc(`Info`, func() interface{} {
+			return flash.Info
+		})
+		c.context.SetFunc(`Zone`, func() interface{} {
+			return flash.Zone
+		})
+	} else {
+		c.context.SetFunc(`Code`, func() int {
+			return c.Code
+		})
+		c.context.SetFunc(`Info`, func() interface{} {
+			return c.Info
+		})
+		c.context.SetFunc(`Zone`, func() interface{} {
+			return c.Zone
+		})
+	}
+}
+
 // NewData params: Code,Info,Zone,Data
-func NewData(code int, args ...interface{}) *Data {
+func NewData(ctx Context, code int, args ...interface{}) *Data {
 	var info, zone, data interface{}
 	switch len(args) {
 	case 3:
@@ -86,9 +148,10 @@ func NewData(code int, args ...interface{}) *Data {
 		info = args[0]
 	}
 	return &Data{
-		Code: code,
-		Info: info,
-		Zone: zone,
-		Data: data,
+		context: ctx,
+		Code:    code,
+		Info:    info,
+		Zone:    zone,
+		Data:    data,
 	}
 }

@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/admpub/confl"
+	codec "github.com/gorilla/securecookie"
 	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine"
@@ -31,20 +32,30 @@ import (
 	"github.com/webx-top/echo/engine/standard"
 	"github.com/webx-top/echo/handler/mvc/events"
 	"github.com/webx-top/echo/handler/mvc/static/resource"
+	"github.com/webx-top/echo/handler/pprof"
 	mw "github.com/webx-top/echo/middleware"
 	"github.com/webx-top/echo/middleware/render"
 	"github.com/webx-top/echo/middleware/render/driver"
 	"github.com/webx-top/echo/middleware/tplfunc"
 )
 
-// New 创建MVC实例
-func New(name string, middlewares ...interface{}) (s *MVC) {
+// New 创建Application实例
+func New(name string, middlewares ...interface{}) (s *Application) {
 	return NewWithContext(name, nil, middlewares...)
 }
 
-// NewWithContext 创建MVC实例
-func NewWithContext(name string, newContext func(*echo.Echo) echo.Context, middlewares ...interface{}) (s *MVC) {
-	s = &MVC{
+func HandlerWrapper(h interface{}) echo.Handler {
+	if handle, y := h.(func(*Context) error); y {
+		return echo.HandlerFunc(func(c echo.Context) error {
+			return handle(c.(*Context))
+		})
+	}
+	return nil
+}
+
+// NewWithContext 创建Application实例
+func NewWithContext(name string, newContext func(*echo.Echo) echo.Context, middlewares ...interface{}) (s *Application) {
+	s = &Application{
 		Name:           name,
 		moduleHosts:    make(map[string]*Module),
 		moduleNames:    make(map[string]*Module),
@@ -82,14 +93,20 @@ func NewWithContext(name string, newContext func(*echo.Echo) echo.Context, middl
 			Path:     `/`,
 		},
 	}
+	s.FuncMap = s.DefaultFuncMap()
+	s.ContextInitial = func(ctx echo.Context, wrp *Wrapper, controller interface{}, actionName string) (err error, exit bool) {
+		return ctx.(*Context).Init(wrp, controller, actionName)
+	} //[1]
 	if newContext == nil {
 		newContext = func(e *echo.Echo) echo.Context {
-			return echo.NewContext(nil, nil, e)
+			return NewContext(s, echo.NewContext(nil, nil, e))
 		}
 	}
-	s.ContextCreator = newContext
+	s.ContextCreator = newContext //[1]
 	s.Core = echo.NewWithContext(s.ContextCreator)
 	s.Core.Use(s.DefaultMiddlewares...)
+	s.Core.SetHandlerWrapper(HandlerWrapper) //[1]
+	s.SetErrorPages(nil)
 
 	s.URLs = NewURLs(name, s)
 	return
@@ -117,7 +134,7 @@ var (
 	UpperCaseFirst URLRecovery = strings.Title
 )
 
-type MVC struct {
+type Application struct {
 	Core               *echo.Echo
 	Name               string
 	TemplateDir        string
@@ -136,6 +153,7 @@ type MVC struct {
 	FuncMap            map[string]interface{}                                          `json:"-" xml:"-"`
 	ContextCreator     func(*echo.Echo) echo.Context                                   `json:"-" xml:"-"`
 	ContextInitial     func(echo.Context, *Wrapper, interface{}, string) (error, bool) `json:"-" xml:"-"`
+	Codec              codec.Codec                                                     `json:"-" xml:"-"`
 	moduleHosts        map[string]*Module                                              //域名关联
 	moduleNames        map[string]*Module                                              //名称关联
 	rootDir            string
@@ -143,7 +161,7 @@ type MVC struct {
 }
 
 // ServeHTTP HTTP服务执行入口
-func (s *MVC) ServeHTTP(r engine.Request, w engine.Response) {
+func (s *Application) ServeHTTP(r engine.Request, w engine.Response) {
 	var h *echo.Echo
 	host := r.Host()
 	module, ok := s.moduleHosts[host]
@@ -165,8 +183,13 @@ func (s *MVC) ServeHTTP(r engine.Request, w engine.Response) {
 	}
 }
 
+func (s *Application) SetErrorPages(templates map[int]string, renderFunc ...func(string, echo.Context) error) *Application {
+	s.Core.SetHTTPErrorHandler(render.HTTPErrorHandler(templates, renderFunc...))
+	return s
+}
+
 // SetDomain 为模块设置域名
-func (s *MVC) SetDomain(name string, domain string) *MVC {
+func (s *Application) SetDomain(name string, domain string) *Application {
 	a, ok := s.moduleNames[name]
 	if !ok {
 		s.Core.Logger().Warn(`Module does not exist: `, name)
@@ -257,7 +280,7 @@ func (s *MVC) SetDomain(name string, domain string) *MVC {
 }
 
 // NewModule 创建新模块
-func (s *MVC) NewModule(name string, middlewares ...interface{}) *Module {
+func (s *Application) NewModule(name string, middlewares ...interface{}) *Module {
 	r := strings.Split(name, `@`) //blog@www.blog.com
 	var domain string
 	if len(r) > 1 {
@@ -273,7 +296,7 @@ func (s *MVC) NewModule(name string, middlewares ...interface{}) *Module {
 }
 
 // NewRenderer 新建渲染接口
-func (s *MVC) NewRenderer(conf *render.Config, a *Module, funcMap map[string]interface{}) driver.Driver {
+func (s *Application) NewRenderer(conf *render.Config, a *Module, funcMap map[string]interface{}) driver.Driver {
 	themeAbsPath := s.ThemeDir(conf.Theme)
 	staticURLPath := `/assets`
 	if a != nil && len(a.Name) > 0 {
@@ -291,7 +314,7 @@ func (s *MVC) NewRenderer(conf *render.Config, a *Module, funcMap map[string]int
 }
 
 // NewTemplateEngine 新建模板引擎实例
-func (s *MVC) NewTemplateEngine(tmplPath string, conf *render.Config) driver.Driver {
+func (s *Application) NewTemplateEngine(tmplPath string, conf *render.Config) driver.Driver {
 	if tmplPath == `` {
 		tmplPath = s.ThemeDir()
 	}
@@ -301,7 +324,7 @@ func (s *MVC) NewTemplateEngine(tmplPath string, conf *render.Config) driver.Dri
 }
 
 // 重置模板引擎
-func (s *MVC) resetRenderer(conf *render.Config) *MVC {
+func (s *Application) resetRenderer(conf *render.Config) *Application {
 	if s.Renderer != nil {
 		s.Renderer.Close()
 	}
@@ -316,7 +339,7 @@ func (s *MVC) resetRenderer(conf *render.Config) *MVC {
 }
 
 // Module 获取模块实例
-func (s *MVC) Module(args ...string) *Module {
+func (s *Application) Module(args ...string) *Module {
 	name := s.RootModuleName
 	if len(args) > 0 {
 		name = args[0]
@@ -327,7 +350,7 @@ func (s *MVC) Module(args ...string) *Module {
 	return s.NewModule(name)
 }
 
-func (s *MVC) SetSessionOptions(sessionOptions *echo.SessionOptions) *MVC {
+func (s *Application) SetSessionOptions(sessionOptions *echo.SessionOptions) *Application {
 	if sessionOptions.CookieOptions == nil {
 		sessionOptions.CookieOptions = &echo.CookieOptions{
 			Path:     `/`,
@@ -345,7 +368,7 @@ func (s *MVC) SetSessionOptions(sessionOptions *echo.SessionOptions) *MVC {
 }
 
 // ModuleOk 获取模块实例
-func (s *MVC) ModuleOk(args ...string) (app *Module, ok bool) {
+func (s *Application) ModuleOk(args ...string) (app *Module, ok bool) {
 	name := s.RootModuleName
 	if len(args) > 0 {
 		name = args[0]
@@ -354,20 +377,20 @@ func (s *MVC) ModuleOk(args ...string) (app *Module, ok bool) {
 	return
 }
 
-func (s *MVC) Modules(args ...bool) map[string]*Module {
+func (s *Application) Modules(args ...bool) map[string]*Module {
 	if len(args) > 0 && args[0] {
 		return s.moduleHosts
 	}
 	return s.moduleNames
 }
 
-func (s *MVC) HasModule(name string) bool {
+func (s *Application) HasModule(name string) bool {
 	_, ok := s.moduleNames[name]
 	return ok
 }
 
 // NewStatic 新建静态资源实例
-func (s *MVC) NewStatic(urlPath string, absPath string, f ...map[string]interface{}) *resource.Static {
+func (s *Application) NewStatic(urlPath string, absPath string, f ...map[string]interface{}) *resource.Static {
 	st := resource.NewStatic(urlPath, absPath)
 	if len(f) > 0 {
 		f[0] = st.Register(f[0])
@@ -377,7 +400,7 @@ func (s *MVC) NewStatic(urlPath string, absPath string, f ...map[string]interfac
 }
 
 // ThemeDir 主题所在文件夹的路径
-func (s *MVC) ThemeDir(args ...string) string {
+func (s *Application) ThemeDir(args ...string) string {
 	if len(args) < 1 {
 		return filepath.Join(s.TemplateDir, s.theme)
 	}
@@ -385,7 +408,7 @@ func (s *MVC) ThemeDir(args ...string) string {
 }
 
 // InitStatic 初始化静态资源
-func (s *MVC) InitStatic() *MVC {
+func (s *Application) InitStatic() *Application {
 	absPath := filepath.Join(s.ThemeDir(), s.StaticDir)
 	s.StaticRes = s.NewStatic(s.StaticDir, absPath, s.FuncMap)
 	if s.Renderer != nil {
@@ -395,18 +418,18 @@ func (s *MVC) InitStatic() *MVC {
 }
 
 // TemplateMonitor 模板监控事件
-func (s *MVC) TemplateMonitor() *MVC {
+func (s *Application) TemplateMonitor() *Application {
 	s.Renderer.MonitorEvent(s.StaticRes.OnUpdate(s.ThemeDir()))
 	return s
 }
 
 // Theme 当前使用的主题名称
-func (s *MVC) Theme() string {
+func (s *Application) Theme() string {
 	return s.theme
 }
 
 // SetTheme 设置模板主题
-func (s *MVC) SetTheme(conf *render.Config) *MVC {
+func (s *Application) SetTheme(conf *render.Config) *Application {
 	if conf.Theme == `admin` {
 		return s
 	}
@@ -416,7 +439,7 @@ func (s *MVC) SetTheme(conf *render.Config) *MVC {
 }
 
 // LoadConfig 载入confl支持的配置文件
-func (s *MVC) LoadConfig(file string, config interface{}) error {
+func (s *Application) LoadConfig(file string, config interface{}) error {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
@@ -425,7 +448,7 @@ func (s *MVC) LoadConfig(file string, config interface{}) error {
 }
 
 // RootDir 网站根目录
-func (s *MVC) RootDir() string {
+func (s *Application) RootDir() string {
 	if len(s.rootDir) == 0 {
 		ppath := os.Getenv(strings.ToUpper(s.Name) + `PATH`)
 		if len(ppath) == 0 {
@@ -438,17 +461,17 @@ func (s *MVC) RootDir() string {
 }
 
 // Debug 开关debug模式
-func (s *MVC) Debug(on bool) *MVC {
+func (s *Application) Debug(on bool) *Application {
 	s.Core.SetDebug(on)
 	return s
 }
 
 // 运行之前准备数据
-func (s *MVC) ready() {
+func (s *Application) ready() {
 	s.Event(`mvc.serverReady`, func(_ bool) {})
 }
 
-func (s *MVC) AddEvent(eventName string, handler interface{}) *MVC {
+func (s *Application) AddEvent(eventName string, handler interface{}) *Application {
 	if h, ok := handler.(func(func(bool), ...interface{})); ok {
 		events.AddEvent(eventName, h)
 		return s
@@ -463,23 +486,23 @@ func (s *MVC) AddEvent(eventName string, handler interface{}) *MVC {
 	return s
 }
 
-func (s *MVC) Event(eventName string, next func(bool), sessions ...interface{}) *MVC {
+func (s *Application) Event(eventName string, next func(bool), sessions ...interface{}) *Application {
 	events.Event(eventName, next, sessions...)
 	return s
 }
 
-func (s *MVC) GoEvent(eventName string, next func(bool), sessions ...interface{}) *MVC {
+func (s *Application) GoEvent(eventName string, next func(bool), sessions ...interface{}) *Application {
 	events.GoEvent(eventName, next, sessions...)
 	return s
 }
 
-func (s *MVC) DelEvent(eventName string) *MVC {
+func (s *Application) DelEvent(eventName string) *Application {
 	events.DelEvent(eventName)
 	return s
 }
 
 // Run 运行服务
-func (s *MVC) Run(args ...interface{}) {
+func (s *Application) Run(args ...interface{}) {
 	s.ready()
 	var eng engine.Engine
 	var arg interface{}
@@ -527,4 +550,72 @@ func (s *MVC) Run(args ...interface{}) {
 	s.Core.Run(eng, s)
 	s.Core.Logger().Infof(`Server "%v" has been closed.`, s.Name)
 	s.GoEvent(`mvc.serverExit`, func(_ bool) {})
+}
+
+// InitCodec 初始化 加密/解密 接口
+func (s *Application) InitCodec(hashKey []byte, blockKey []byte) {
+	s.Codec = codec.New(hashKey, blockKey)
+}
+
+// Pprof 启用pprof
+func (s *Application) Pprof() *Application {
+	pprof.Wrapper(s.Core)
+	return s
+}
+
+func (s *Application) DefaultFuncMap() (r map[string]interface{}) {
+	r = tplfunc.New()
+	r["RootURL"] = func(p ...string) string {
+		if len(p) > 0 {
+			return s.URL + p[0]
+		}
+		return s.URL
+	}
+	return
+}
+
+// Tree  module -> controller -> action -> HTTP-METHODS
+func (s *Application) Tree(args ...*echo.Echo) (r map[string]map[string]map[string]map[string]string) {
+	core := s.Core
+	if len(args) > 0 {
+		core = args[0]
+	}
+	nrs := core.NamedRoutes()
+	rs := core.Routes()
+	r = map[string]map[string]map[string]map[string]string{}
+	for name, indexes := range nrs {
+		p := strings.LastIndex(name, `/`)
+		s := strings.Split(name[p+1:], `.`)
+		var appName, ctlName, actName string
+		switch len(s) {
+		case 3:
+			if !strings.HasSuffix(s[2], `-fm`) {
+				continue
+			}
+			actName = strings.TrimSuffix(s[2], `-fm`)
+			ctlName = strings.TrimPrefix(s[1], `(`)
+			ctlName = strings.TrimPrefix(ctlName, `*`)
+			ctlName = strings.TrimSuffix(ctlName, `)`)
+			p2 := strings.LastIndex(name[0:p], `/`)
+			appName = name[p2+1 : p]
+		default:
+			continue
+		}
+		if _, ok := r[appName]; !ok {
+			r[appName] = map[string]map[string]map[string]string{}
+		}
+		if _, ok := r[appName][ctlName]; !ok {
+			r[appName][ctlName] = map[string]map[string]string{}
+		}
+		if _, ok := r[appName][ctlName][actName]; !ok {
+			r[appName][ctlName][actName] = map[string]string{}
+			for _, index := range indexes {
+				route := rs[index]
+				if _, ok := r[appName][ctlName][actName][route.Method]; !ok {
+					r[appName][ctlName][actName][route.Method] = route.Method
+				}
+			}
+		}
+	}
+	return
 }
