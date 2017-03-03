@@ -87,7 +87,7 @@ func Output(format string, c echo.Context) error {
 			return c.Render(tmpl, v.Data)
 		}
 		if h, y := data.(echo.H); y {
-			v := h.ToData()
+			v := h.ToData().SetContext(c)
 			SetFuncs(c, v)
 			return c.Render(tmpl, v.Data)
 		}
@@ -113,7 +113,7 @@ func OutputError(err error, format string, c echo.Context) error {
 	if apiData, ok := err.(*echo.Data); ok {
 		c.Set(DefaultDataKey, apiData)
 	} else {
-		c.Set(DefaultDataKey, echo.NewData(c.Code(), err.Error()))
+		c.Set(DefaultDataKey, echo.NewData(c, c.Code(), err.Error()))
 	}
 	c.Set(DefaultTmplKey, DefaultErrorTmpl)
 	c.SetCode(DefaultErrorHTTPCode)
