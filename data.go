@@ -38,6 +38,14 @@ func (d *Data) Error() string {
 	return fmt.Sprintf(`%v`, d.Info)
 }
 
+func (d *Data) String() string {
+	return fmt.Sprintf(`%v`, d.Info)
+}
+
+func (d *Data) Render(tmpl string, code ...int) error {
+	return d.context.Render(tmpl, d.Data, code...)
+}
+
 func (d *Data) SetError(err error, args ...int) *Data {
 	if err != nil {
 		if len(args) > 0 {
@@ -131,6 +139,33 @@ func (c *Data) SetTmplFuncs() {
 		c.context.SetFunc(`Zone`, func() interface{} {
 			return c.Zone
 		})
+	}
+}
+
+// Set 设置输出(code,info,zone,data)
+func (c *Data) Set(code int, args ...interface{}) {
+	c.Code = code
+	var hasData bool
+	switch len(args) {
+	case 3:
+		c.Data = args[2]
+		hasData = true
+		fallthrough
+	case 2:
+		c.Zone = args[1]
+		fallthrough
+	case 1:
+		c.Info = args[0]
+		if !hasData {
+			flash := &Data{
+				context: c.context,
+				Code:    c.Code,
+				Info:    c.Info,
+				Zone:    c.Zone,
+				Data:    nil,
+			}
+			c.context.Session().Set(`webx:flash`, flash).Save()
+		}
 	}
 }
 

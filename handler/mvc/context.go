@@ -273,10 +273,9 @@ func (c *Context) Display(args ...interface{}) error {
 		}
 	default:
 		if len(c.Tmpl) == 0 {
-			err = c.HTML(fmt.Sprintf(`<pre code="%v" for="%v">%v</pre>`, c.Output.Code, c.Output.Zone, c.Output.Info), c.Code())
+			err = c.String(fmt.Sprintf(`%v`, c.Output), c.Code())
 		} else {
-			c.SetTmplDefaultFuncs(flash)
-			err = c.Render(c.Tmpl, c.Output.Data, c.Code())
+			err = c.Output.Render(c.Tmpl, c.Code())
 		}
 	}
 	return err
