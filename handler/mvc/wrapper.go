@@ -26,10 +26,10 @@ import (
 )
 
 var (
-	mapperType        = reflect.TypeOf(Mapper{})
-	methodSuffixRegex = regexp.MustCompile(`(?:_(?:` + strings.Join(echo.Methods(), `|`) + `))+$`)
-	routeTagRegex     = regexp.MustCompile(`^[A-Z.]+(\|[A-Z]+)*$`)
-	IsMapper          = func(t reflect.Type) bool {
+	mapperType         = reflect.TypeOf(Mapper{})
+	methodSuffixRegex  = regexp.MustCompile(`(?:_(?:` + strings.Join(echo.Methods(), `|`) + `))+$`)
+	routeTagRegex      = regexp.MustCompile(`^[A-Z.]+(\|[A-Z]+)*$`)
+	DefaultMapperCheck = func(t reflect.Type) bool {
 		return t == mapperType
 	}
 	DefaultContextInitial = func(ctx echo.Context, wrp *Wrapper, controller interface{}, actionName string) (err error, exit bool) {
@@ -231,7 +231,7 @@ func (a *Wrapper) RouteTags() {
 	a.ControllerName = ctl
 	for i := 0; i < e.NumField(); i++ {
 		f := e.Field(i)
-		if !IsMapper(f.Type) {
+		if !a.Module.Application.MapperCheck(f.Type) {
 			continue
 		}
 		name := strings.Title(f.Name)

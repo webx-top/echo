@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/admpub/confl"
@@ -68,6 +69,7 @@ func NewWithContext(name string, newContext func(*echo.Echo) echo.Context, middl
 		RouteTagName:   `webx`,
 		URLConvert:     LowerCaseFirst,
 		URLRecovery:    UpperCaseFirst,
+		MapperCheck:    DefaultMapperCheck,
 	}
 	mwNum := len(middlewares)
 	if mwNum == 1 && middlewares[0] == nil {
@@ -154,6 +156,7 @@ type Application struct {
 	ContextCreator     func(*echo.Echo) echo.Context                                   `json:"-" xml:"-"`
 	ContextInitial     func(echo.Context, *Wrapper, interface{}, string) (error, bool) `json:"-" xml:"-"`
 	Codec              codec.Codec                                                     `json:"-" xml:"-"`
+	MapperCheck        func(t reflect.Type) bool                                       `json:"-" xml:"-"`
 	moduleHosts        map[string]*Module                                              //域名关联
 	moduleNames        map[string]*Module                                              //名称关联
 	rootDir            string
@@ -183,8 +186,8 @@ func (s *Application) ServeHTTP(r engine.Request, w engine.Response) {
 	}
 }
 
-func (s *Application) SetErrorPages(templates map[int]string, renderFunc ...func(string, echo.Context) error) *Application {
-	s.Core.SetHTTPErrorHandler(render.HTTPErrorHandler(templates, renderFunc...))
+func (s *Application) SetErrorPages(templates map[int]string, options ...*render.Options) *Application {
+	s.Core.SetHTTPErrorHandler(render.HTTPErrorHandler(templates, options...))
 	return s
 }
 
