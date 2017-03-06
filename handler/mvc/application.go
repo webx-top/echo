@@ -298,7 +298,7 @@ func (s *Application) NewModule(name string, middlewares ...interface{}) *Module
 	return a
 }
 
-// NewRenderer 新建渲染接口
+// NewRenderer 为特殊module(比如admin)单独新建渲染接口
 func (s *Application) NewRenderer(conf *render.Config, a *Module, funcMap map[string]interface{}) driver.Driver {
 	themeAbsPath := s.ThemeDir(conf.Theme)
 	staticURLPath := `/assets`

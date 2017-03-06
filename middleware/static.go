@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/admpub/log"
 	"github.com/webx-top/echo"
 )
 
@@ -37,6 +38,12 @@ func Static(options ...*StaticOptions) echo.MiddlewareFunc {
 
 	opts.Root, _ = filepath.Abs(opts.Root)
 	length := len(opts.Path)
+	if length > 0 && opts.Path[0] != '/' {
+		opts.Path = `/` + opts.Path
+		length++
+	}
+
+	log.GetLogger("echo").Debugf("Static: %v\t-> %v", opts.Path, opts.Root)
 
 	return func(next echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
