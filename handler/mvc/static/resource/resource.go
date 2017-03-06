@@ -49,6 +49,9 @@ type urlMapInfo struct {
 }
 
 func NewStatic(staticPath, rootPath string) *Static {
+	if len(staticPath) > 0 && staticPath[0] != '/' {
+		staticPath = `/` + staticPath
+	}
 	return &Static{
 		Path:            staticPath,
 		RootPath:        rootPath,
