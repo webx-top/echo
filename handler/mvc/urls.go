@@ -30,14 +30,14 @@ func NewURLs(project string, mvc *Application) *URLs {
 	return &URLs{
 		projectPath: `github.com/webx-top/` + project,
 		extensions:  map[string]map[string]int{},
-		Application:         mvc,
+		Application: mvc,
 	}
 }
 
 type URLs struct {
-	projectPath string
-	extensions  map[string]map[string]int
-	*Application        `json:"-" xml:"-"`
+	projectPath  string
+	extensions   map[string]map[string]int
+	*Application `json:"-" xml:"-"`
 }
 
 func (a *URLs) SetProjectPath(projectPath string) {
@@ -63,7 +63,7 @@ func (a *URLs) Build(mdl string, ctl string, act string, params ...interface{}) 
 	} else {
 		key = pkg + `.(*` + a.urlRecovery(ctl) + `).` + a.urlRecovery(act) + `-fm`
 	}
-	r = module.Router().URL(key, params)
+	r = module.Router().URL(key, params...)
 	if len(module.Domain) > 0 {
 		scheme := `http`
 		if a.Application.SessionOptions.Secure {

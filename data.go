@@ -198,3 +198,89 @@ func NewData(ctx Context, code int, args ...interface{}) *Data {
 		Data:    data,
 	}
 }
+
+type KV struct {
+	K string
+	V string
+}
+
+func NewKVData() *KVData {
+	return &KVData{
+		slice: []*KV{},
+		index: map[string][]int{},
+	}
+}
+
+type KVData struct {
+	slice []*KV
+	index map[string][]int
+}
+
+func (a *KVData) Slice() []*KV {
+	return a.slice
+}
+
+func (a *KVData) Index(k string) []int {
+	v, _ := a.index[k]
+	return v
+}
+
+func (a *KVData) Indexes() map[string][]int {
+	return a.index
+}
+
+func (a *KVData) Reset() *KVData {
+	a.index = map[string][]int{}
+	a.slice = []*KV{}
+	return a
+}
+
+func (a *KVData) Add(k, v string) *KVData {
+	if _, y := a.index[k]; !y {
+		a.index[k] = []int{}
+	}
+	a.index[k] = append(a.index[k], len(a.slice))
+	a.slice = append(a.slice, &KV{K: k, V: v})
+	return a
+}
+
+func (a *KVData) Set(k, v string) *KVData {
+	a.index[k] = []int{0}
+	a.slice = []*KV{&KV{K: k, V: v}}
+	return a
+}
+
+func (a *KVData) Delete(ks ...string) *KVData {
+	indexes := []int{}
+	for _, k := range ks {
+		v, y := a.index[k]
+		if !y {
+			continue
+		}
+		for _, key := range v {
+			indexes = append(indexes, key)
+		}
+	}
+	newSlice := []*KV{}
+	a.index = map[string][]int{}
+	for i, v := range a.slice {
+		var exists bool
+		for _, idx := range indexes {
+			if i != idx {
+				continue
+			}
+			exists = true
+			break
+		}
+		if exists {
+			continue
+		}
+		if _, y := a.index[v.K]; !y {
+			a.index[v.K] = []int{}
+		}
+		a.index[v.K] = append(a.index[v.K], len(newSlice))
+		newSlice = append(newSlice, v)
+	}
+	a.slice = newSlice
+	return a
+}
