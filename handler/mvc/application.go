@@ -42,7 +42,9 @@ import (
 
 // New 创建Application实例
 func New(name string, middlewares ...interface{}) (s *Application) {
-	return NewWithContext(name, nil, middlewares...)
+	s = NewWithContext(name, nil, middlewares...)
+	globalApp[name] = s
+	return
 }
 
 func HandlerWrapper(h interface{}) echo.Handler {
