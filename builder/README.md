@@ -116,11 +116,13 @@ github.com/webx-top/{name}
 │    │     └─ css
 │    ├─ theme
 │    │     ├─ {theme_1}
-│    │     │     ├─ {group_1}
-│    │     │     │     ├─ {handler_1}.html
-│    │     │     │     ├─ {handler_2}.html
-│    │     │     │     └─ {handler_N}.html
-│    │     │     └─ {group_N}
+│    │     │     ├─ {module_1}
+│    │     │     │     ├─ {controller_1}
+│    │     │     │     │     ├─ {action_1}.html
+│    │     │     │     │     ├─ {action_2}.html
+│    │     │     │     │     └─ {action_N}.html
+│    │     │     │     └─ {controller_N}
+│    │     │     └─ {module_N}
 │    │     └─ {theme_N}
 │    └─ upload
 └─ tool
