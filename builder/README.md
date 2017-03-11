@@ -3,7 +3,7 @@
 
 # 目录结构（初稿）
 
-## 函数式编程模式
+## 函数式
 ```
 github.com/webx-top/{name}
 │
@@ -54,7 +54,7 @@ github.com/webx-top/{name}
 ```
 
 
-## HMVC编程模式
+## HMVC模式
 ```
 github.com/webx-top/{name}
 │
