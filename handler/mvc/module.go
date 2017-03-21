@@ -25,6 +25,8 @@ import (
 	"strings"
 	"time"
 
+	"sync"
+
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/middleware/render"
 	"github.com/webx-top/echo/middleware/render/driver"
@@ -32,13 +34,14 @@ import (
 
 func NewModule(name string, domain string, s *Application, middlewares ...interface{}) (a *Module) {
 	a = &Module{
-		Application:                s,
+		Application:        s,
 		Name:               name,
 		Domain:             domain,
 		wrappers:           make(map[string]*Wrapper),
 		cachedHandlerNames: make(map[string]string),
 		Middlewares:        middlewares,
 		Config:             &ModuleConfig{},
+		lock:               &sync.RWMutex{},
 	}
 	if s.Renderer != nil {
 		a.Renderer = s.Renderer
@@ -76,7 +79,7 @@ func NewModule(name string, domain string, s *Application, middlewares ...interf
 }
 
 type Module struct {
-	*Application               `json:"-" xml:"-"`
+	*Application       `json:"-" xml:"-"`
 	Group              *echo.Group   `json:"-" xml:"-"`
 	Handler            *echo.Echo    `json:"-" xml:"-"` //指定域名时有效
 	Middlewares        []interface{} `json:"-" xml:"-"`
@@ -101,6 +104,8 @@ type Module struct {
 	// 安装和卸载逻辑
 	Install   func() error `json:"-" xml:"-"`
 	Uninstall func() error `json:"-" xml:"-"`
+
+	lock *sync.RWMutex
 }
 
 func (a *Module) Valid() error {
@@ -227,6 +232,8 @@ func (a *Module) ClearCachedHandlerNames() {
 
 // ExecAction 执行Action的通用方式
 func (a *Module) ExecAction(action string, t reflect.Type, v reflect.Value, c echo.Context) (err error) {
+	a.lock.Lock()
+	defer a.lock.Unlock()
 	k := t.PkgPath() + `.` + t.Name() + `.` + action + `_` + c.Method() + `_` + c.Format()
 	var m reflect.Value
 	if methodName, ok := a.cachedHandlerNames[k]; ok {
