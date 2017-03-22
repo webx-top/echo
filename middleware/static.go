@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -54,7 +55,7 @@ func Static(options ...*StaticOptions) echo.MiddlewareFunc {
 				return next.Handle(c)
 			}
 			file = file[length:]
-			file = filepath.Clean(file)
+			file = path.Clean(file)
 			absFile := filepath.Join(opts.Root, file)
 			if !strings.HasPrefix(absFile, opts.Root) {
 				return next.Handle(c)
