@@ -44,10 +44,7 @@ type H map[string]interface{}
 // MarshalXML allows type H to be used with xml.Marshal
 func (h H) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	if start.Name.Local == `H` {
-		start.Name = xml.Name{
-			Space: ``,
-			Local: `Map`,
-		}
+		start.Name.Local = `Map`
 	}
 	if err := e.EncodeToken(start); err != nil {
 		return err
@@ -61,10 +58,7 @@ func (h H) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 			return err
 		}
 	}
-	if err := e.EncodeToken(xml.EndElement{Name: start.Name}); err != nil {
-		return err
-	}
-	return nil
+	return e.EncodeToken(xml.EndElement{Name: start.Name})
 }
 
 // ToData conversion to *Data
