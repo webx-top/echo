@@ -112,8 +112,7 @@ func GzipWithConfig(config *GzipConfig) echo.MiddlewareFunc {
 					}
 					w.Close()
 				}()
-				gw := &gzipWriter{Writer: w, Response: resp}
-				resp.SetWriter(gw)
+				resp.SetWriter(&gzipWriter{Writer: w, Response: resp})
 			}
 			return h.Handle(c)
 		})
