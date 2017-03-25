@@ -39,18 +39,25 @@ var (
 	}
 )
 
-func (w gzipWriter) Write(b []byte) (int, error) {
+func (w *gzipWriter) WriteHeader(code int) {
+	if code == http.StatusNoContent { // Issue #489
+		w.Header().Del(echo.HeaderContentEncoding)
+	}
+	w.WriteHeader(code)
+}
+
+func (w *gzipWriter) Write(b []byte) (int, error) {
 	if w.Header().Get(echo.HeaderContentType) == `` {
 		w.Header().Set(echo.HeaderContentType, http.DetectContentType(b))
 	}
 	return w.Writer.Write(b)
 }
 
-func (w gzipWriter) Flush() error {
+func (w *gzipWriter) Flush() error {
 	return w.Writer.(*gzip.Writer).Flush()
 }
 
-func (w gzipWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+func (w *gzipWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	return w.Response.(http.Hijacker).Hijack()
 }
 
@@ -80,8 +87,6 @@ func GzipWithConfig(config *GzipConfig) echo.MiddlewareFunc {
 	if config.Level == 0 {
 		config.Level = DefaultGzipConfig.Level
 	}
-
-	pool := gzipPool(config)
 	scheme := `gzip`
 
 	return func(h echo.Handler) echo.Handler {
@@ -93,34 +98,27 @@ func GzipWithConfig(config *GzipConfig) echo.MiddlewareFunc {
 			resp.Header().Add(echo.HeaderVary, echo.HeaderAcceptEncoding)
 			if strings.Contains(c.Request().Header().Get(echo.HeaderAcceptEncoding), scheme) {
 				rw := resp.Writer()
-				w := pool.Get().(*gzip.Writer)
-				w.Reset(rw)
+				w, err := gzip.NewWriterLevel(rw, config.Level)
+				if err != nil {
+					return err
+				}
 				defer func() {
 					if resp.Size() == 0 {
+						if resp.Header().Get(echo.HeaderContentEncoding) == scheme {
+							resp.Header().Del(echo.HeaderContentEncoding)
+						}
 						// We have to reset response to it's pristine state when
 						// nothing is written to body or error is returned.
 						// See issue #424, #407.
 						resp.SetWriter(rw)
-						resp.Header().Del(echo.HeaderContentEncoding)
 						w.Reset(ioutil.Discard)
 					}
 					w.Close()
-					pool.Put(w)
 				}()
-				gw := gzipWriter{Writer: w, Response: resp}
-				resp.Header().Set(echo.HeaderContentEncoding, scheme)
+				gw := &gzipWriter{Writer: w, Response: resp}
 				resp.SetWriter(gw)
 			}
 			return h.Handle(c)
 		})
-	}
-}
-
-func gzipPool(config *GzipConfig) sync.Pool {
-	return sync.Pool{
-		New: func() interface{} {
-			w, _ := gzip.NewWriterLevel(ioutil.Discard, config.Level)
-			return w
-		},
 	}
 }
