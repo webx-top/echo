@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"sync"
 
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine"
@@ -40,7 +39,7 @@ var (
 )
 
 func (w *gzipWriter) WriteHeader(code int) {
-	if code == http.StatusNoContent { // Issue #489
+	if code == http.StatusNoContent {
 		w.Header().Del(echo.HeaderContentEncoding)
 	}
 	w.WriteHeader(code)
@@ -65,16 +64,13 @@ func (w *gzipWriter) CloseNotify() <-chan bool {
 	return w.Response.(http.CloseNotifier).CloseNotify()
 }
 
-var writerPool = sync.Pool{
-	New: func() interface{} {
-		return gzip.NewWriter(ioutil.Discard)
-	},
-}
-
 // Gzip returns a middleware which compresses HTTP response using gzip compression
 // scheme.
-func Gzip() echo.MiddlewareFunc {
-	return GzipWithConfig(DefaultGzipConfig)
+func Gzip(config ...*GzipConfig) echo.MiddlewareFunc {
+	if len(config) < 1 || config[0] == nil {
+		return GzipWithConfig(DefaultGzipConfig)
+	}
+	return GzipWithConfig(config[0])
 }
 
 // GzipWithConfig return Gzip middleware with config.
@@ -97,6 +93,7 @@ func GzipWithConfig(config *GzipConfig) echo.MiddlewareFunc {
 			resp := c.Response()
 			resp.Header().Add(echo.HeaderVary, echo.HeaderAcceptEncoding)
 			if strings.Contains(c.Request().Header().Get(echo.HeaderAcceptEncoding), scheme) {
+				resp.Header().Add(echo.HeaderContentEncoding, scheme)
 				rw := resp.Writer()
 				w, err := gzip.NewWriterLevel(rw, config.Level)
 				if err != nil {
