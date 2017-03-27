@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"fmt"
+	"html/template"
 	"net/http"
 	"os"
 	"path"
@@ -13,15 +13,34 @@ import (
 	"github.com/webx-top/echo/engine"
 )
 
+var ListDirTemplate = `<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{{.file}}</title>
+        <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible" />
+        <meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" name="viewport" />
+        <link href="/favicon.ico" rel="shortcut icon">
+    </head>
+    <body>
+		<ul id="fileList">
+		{{range $k, $d := .dirs}}
+		<li><a href="{{$d.Name}}{{if $d.IsDir}}/{{end}}" style="color: {{if $d.IsDir}}#e91e63{{else}}#212121{{end}};">{{$d.Name}}{{if $d.IsDir}}/{{end}}</a></li>
+		{{end}}
+		</ul>
+	</body>
+</html>`
+
 type (
 	StaticOptions struct {
 		// Skipper defines a function to skip middleware.
 		Skipper echo.Skipper `json:"-"`
 
-		Path   string `json:"path"` //UrlPath
-		Root   string `json:"root"`
-		Index  string `json:"index"`
-		Browse bool   `json:"browse"`
+		Path     string `json:"path"` //UrlPath
+		Root     string `json:"root"`
+		Index    string `json:"index"`
+		Browse   bool   `json:"browse"`
+		Template string `json:"template"`
 	}
 )
 
@@ -40,6 +59,19 @@ func Static(options ...*StaticOptions) echo.MiddlewareFunc {
 	if length > 0 && opts.Path[0] != '/' {
 		opts.Path = `/` + opts.Path
 		length++
+	}
+	var t *template.Template
+	if opts.Browse {
+		t = template.New(opts.Template)
+		var e error
+		if len(opts.Template) > 0 {
+			t, e = t.ParseFiles(opts.Template)
+		} else {
+			t, e = t.Parse(ListDirTemplate)
+		}
+		if e != nil {
+			panic(e)
+		}
 	}
 
 	log.GetLogger("echo").Debugf("Static: %v\t-> %v", opts.Path, opts.Root)
@@ -76,14 +108,14 @@ func Static(options ...*StaticOptions) echo.MiddlewareFunc {
 					fi, err = os.Stat(indexFile)
 					if err != nil || fi.IsDir() {
 						if opts.Browse {
-							return listDir(absFile, file, w)
+							return listDir(absFile, file, w, t)
 						}
 						return echo.ErrNotFound
 					}
 					absFile = indexFile
 				} else {
 					if opts.Browse {
-						return listDir(absFile, file, w)
+						return listDir(absFile, file, w, t)
 					}
 					return echo.ErrNotFound
 				}
@@ -93,7 +125,7 @@ func Static(options ...*StaticOptions) echo.MiddlewareFunc {
 	}
 }
 
-func listDir(absFile string, file string, w engine.Response) error {
+func listDir(absFile string, file string, w engine.Response, t *template.Template) error {
 	fs := http.Dir(filepath.Dir(absFile))
 	d, err := fs.Open(filepath.Base(absFile))
 	if err != nil {
@@ -105,37 +137,9 @@ func listDir(absFile string, file string, w engine.Response) error {
 		return echo.ErrNotFound
 	}
 
-	// Create a directory index
 	w.Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
-	if _, err = fmt.Fprintf(w, `<!doctype html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>`+file+`</title>
-        <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible" />
-        <meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" name="viewport" />
-        <link href="/favicon.ico" rel="shortcut icon">
-    </head>
-    <body>`); err != nil {
-		return err
-	}
-	if _, err = fmt.Fprintf(w, "<ul id=\"fileList\">\n"); err != nil {
-		return err
-	}
-	for _, d := range dirs {
-		name := d.Name()
-		color := "#212121"
-		if d.IsDir() {
-			color = "#e91e63"
-			name += "/"
-		}
-		if _, err = fmt.Fprintf(w, "<li><a href=\"%s\" style=\"color: %s;\">%s</a></li>\n", name, color, name); err != nil {
-			return err
-		}
-	}
-	if _, err = fmt.Fprintf(w, "</ul>\n"); err != nil {
-		return err
-	}
-	_, err = fmt.Fprintf(w, "</body>\n</html>")
-	return err
+	return t.Execute(w, map[string]interface{}{
+		`file`: file,
+		`dirs`: dirs,
+	})
 }
