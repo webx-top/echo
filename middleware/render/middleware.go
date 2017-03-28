@@ -176,16 +176,18 @@ func HTTPErrorHandler(templates map[int]string, options ...*Options) echo.HTTPEr
 	opt := checkOptions(options...)
 	return func(err error, c echo.Context) {
 		code := opt.DefaultErrorHTTPCode
-		msg := http.StatusText(code)
-		title := msg
+		var msg string
 		if he, ok := err.(*echo.HTTPError); ok {
 			if he.Code > 0 {
 				code = he.Code
 			}
 			msg = he.Message
 		}
+		title := http.StatusText(code)
 		if c.Echo().Debug() {
 			msg = err.Error()
+		} else if len(msg) == 0 {
+			msg = title
 		}
 		if !c.Response().Committed() {
 			switch {
