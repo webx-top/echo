@@ -105,7 +105,10 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 		vc = vc.Elem()
 		tc = tc.Elem()
 	}
-	var filter FormDataFilter
+	var (
+		validator *validation.Validation
+		filter    FormDataFilter
+	)
 	if len(filters) > 0 {
 		filter = filters[0]
 	}
@@ -365,9 +368,12 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 			if len(valid) == 0 {
 				continue
 			}
-			ok, err := validation.ValidSimple(name, fmt.Sprintf(`%v`, l), valid)
+			if validator == nil {
+				validator = validation.New()
+			}
+			ok, err := validator.ValidSimple(name, fmt.Sprintf(`%v`, l), valid)
 			if !ok {
-				return validation.Default.Errors[0].WithField()
+				return validator.Errors[0].WithField()
 			}
 			if err != nil {
 				e.Logger().Warn(err)
