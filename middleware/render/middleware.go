@@ -193,7 +193,7 @@ func HTTPErrorHandler(templates map[int]string, options ...*Options) echo.HTTPEr
 				c.NoContent(code)
 			case tmplNum > 0:
 				t, y := templates[code]
-				if !y && tmplNum > 1 {
+				if !y && code != 0 {
 					t, y = templates[0]
 				}
 				if y {
