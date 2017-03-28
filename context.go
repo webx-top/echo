@@ -25,6 +25,8 @@ type (
 	// response objects, path parameters, data and registered handler.
 	Context interface {
 		context.Context
+		Context() context.Context
+		SetContext(context.Context)
 		Validator
 		SetValidator(Validator)
 		Translator
