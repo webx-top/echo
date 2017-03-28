@@ -25,8 +25,8 @@ type (
 	// response objects, path parameters, data and registered handler.
 	Context interface {
 		context.Context
-		Context() context.Context
-		SetContext(context.Context)
+		StdContext() context.Context
+		SetStdContext(context.Context)
 		Validator
 		SetValidator(Validator)
 		Translator
@@ -265,11 +265,11 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 	return c
 }
 
-func (c *xContext) Context() context.Context {
+func (c *xContext) StdContext() context.Context {
 	return c.context
 }
 
-func (c *xContext) SetContext(ctx context.Context) {
+func (c *xContext) SetStdContext(ctx context.Context) {
 	c.context = ctx
 }
 
