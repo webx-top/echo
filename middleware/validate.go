@@ -2,7 +2,7 @@ package middleware
 
 import "github.com/webx-top/echo"
 
-func Validate(validator echo.Validator, skipper ...echo.Skipper) echo.MiddlewareFunc {
+func Validate(generator func() echo.Validator, skipper ...echo.Skipper) echo.MiddlewareFunc {
 	var skip echo.Skipper
 	if len(skipper) > 0 {
 		skip = skipper[0]
@@ -14,7 +14,7 @@ func Validate(validator echo.Validator, skipper ...echo.Skipper) echo.Middleware
 			if skip(c) {
 				return h.Handle(c)
 			}
-			c.SetValidator(validator)
+			c.SetValidator(generator())
 			return h.Handle(c)
 		})
 	}
