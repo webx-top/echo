@@ -211,7 +211,7 @@ func (self *Standard) InitRegexp() {
 	self.incTagRegex = regexp.MustCompile(left + self.IncludeTag + `[\s]+"([^"]+)"(?:[\s]+([^` + rfirst + `]+))?[\s]*` + right)
 	self.extTagRegex = regexp.MustCompile(left + self.ExtendTag + `[\s]+"([^"]+)"(?:[\s]+([^` + rfirst + `]+))?[\s]*` + right)
 	self.blkTagRegex = regexp.MustCompile(`(?s)` + left + self.BlockTag + `[\s]+"([^"]+)"[\s]*` + right + `(.*?)` + left + `\/` + self.BlockTag + right)
-	self.innerTagBlankRegex = regexp.MustCompile(`(` + right + "|>)[\r\n\t]+[ ]*(" + left + `|<)`)
+	self.innerTagBlankRegex = regexp.MustCompile(`(?s)(` + right + `|>)[\s]+(` + left + `|<)`)
 }
 
 // Render HTML

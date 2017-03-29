@@ -257,7 +257,7 @@ func (a *Pongo2) Fetch(tmpl string, data interface{}, funcMap map[string]interfa
 
 var (
 	fe      = []byte(`$1$2`)
-	ibRegex = regexp.MustCompile(`(\}|>)[` + "\r\n\t" + `]+[ ]*(\{|<})`)
+	ibRegex = regexp.MustCompile(`(?s)(\}|>)[\s]+(\{|<})`)
 )
 
 func (a *Pongo2) RawContent(tmpl string) (b []byte, e error) {
