@@ -211,7 +211,7 @@ func (self *Standard) InitRegexp() {
 	self.incTagRegex = regexp.MustCompile(left + self.IncludeTag + `[\s]+"([^"]+)"(?:[\s]+([^` + rfirst + `]+))?[\s]*` + right)
 	self.extTagRegex = regexp.MustCompile(left + self.ExtendTag + `[\s]+"([^"]+)"(?:[\s]+([^` + rfirst + `]+))?[\s]*` + right)
 	self.blkTagRegex = regexp.MustCompile(`(?s)` + left + self.BlockTag + `[\s]+"([^"]+)"[\s]*` + right + `(.*?)` + left + `\/` + self.BlockTag + right)
-	self.innerTagBlankRegex = regexp.MustCompile(`(?s)(` + right + `|>)[\s]+(` + left + `|<)`)
+	self.innerTagBlankRegex = regexp.MustCompile(`(?s)(` + right + `|>)[\s]{2,}(` + left + `|<)`)
 }
 
 // Render HTML
@@ -496,7 +496,7 @@ func (self *Standard) Include(tmplName string, funcMap htmlTpl.FuncMap, values i
 }
 
 var (
-	fe = []byte(`$1$2`)
+	fe = []byte(`$1 $2`)
 )
 
 func (self *Standard) RawContent(tmpl string) (b []byte, e error) {
