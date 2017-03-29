@@ -30,6 +30,8 @@ type Driver interface {
 
 	//获取模板根路径
 	TmplDir() string
+	Debug() bool
+	SetDebug(bool)
 	SetLogger(logger.Logger)
 	Logger() logger.Logger
 
@@ -64,6 +66,10 @@ type NopRenderer struct{}
 func (n *NopRenderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
 	return nil
 }
+
+func (n *NopRenderer) Debug() bool { return false }
+
+func (n *NopRenderer) SetDebug(_ bool) {}
 
 func (n *NopRenderer) Init(_ ...bool) {}
 
