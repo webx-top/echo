@@ -256,7 +256,6 @@ func (a *Pongo2) Fetch(tmpl string, data interface{}, funcMap map[string]interfa
 }
 
 var (
-	fe      = []byte(`$1 $2`)
 	ibRegex = regexp.MustCompile(`(?s)(\}|>)[\s]{2,}(\{|<})`)
 )
 
@@ -268,8 +267,11 @@ func (a *Pongo2) RawContent(tmpl string) (b []byte, e error) {
 			}
 		}
 		if !a.debug {
-			b = ibRegex.ReplaceAll(b, fe)
+			var pres [][]byte
+			b, pres = driver.ReplacePRE(b)
+			b = ibRegex.ReplaceAll(b, driver.FE)
 			b = bytes.TrimSpace(b)
+			b = driver.RecoveryPRE(b, pres)
 		}
 	}()
 	if a.Mgr != nil {

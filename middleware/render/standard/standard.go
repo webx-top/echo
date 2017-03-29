@@ -495,10 +495,6 @@ func (self *Standard) Include(tmplName string, funcMap htmlTpl.FuncMap, values i
 	return htmlTpl.HTML(self.Fetch(tmplName, values, funcMap))
 }
 
-var (
-	fe = []byte(`$1 $2`)
-)
-
 func (self *Standard) RawContent(tmpl string) (b []byte, e error) {
 	defer func() {
 		if b != nil && self.contentProcessors != nil {
@@ -507,8 +503,11 @@ func (self *Standard) RawContent(tmpl string) (b []byte, e error) {
 			}
 		}
 		if !self.debug {
-			b = self.innerTagBlankRegex.ReplaceAll(b, fe)
+			var pres [][]byte
+			b, pres = driver.ReplacePRE(b)
+			b = self.innerTagBlankRegex.ReplaceAll(b, driver.FE)
 			b = bytes.TrimSpace(b)
+			b = driver.RecoveryPRE(b, pres)
 		}
 	}()
 	if self.TemplateMgr != nil {
