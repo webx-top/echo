@@ -106,6 +106,7 @@ func TestEchoMeta(t *testing.T) {
 	g.Get("/", e.MetaHandler(
 		H{"version": 1.0, "data": H{"by": "handler"}},
 		func(c Context) error {
+			//Dump(c.Meta())
 			return c.String("OK")
 		},
 	))
@@ -124,4 +125,8 @@ func TestEchoMeta(t *testing.T) {
 			"by": "handler",
 		},
 	}, meta)
+
+	c, b := request(GET, "/root/", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "OK", b)
 }

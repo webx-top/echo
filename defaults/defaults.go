@@ -199,3 +199,12 @@ func Run(eng engine.Engine, handler ...engine.Handler) {
 func Engine() engine.Engine {
 	return Default.Engine()
 }
+
+// Stop stops the HTTP server.
+func Stop() error {
+	return Default.Stop()
+}
+
+func Meta() map[string]echo.H {
+	return Default.Meta()
+}

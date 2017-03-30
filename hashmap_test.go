@@ -22,7 +22,7 @@ func TestMapx(t *testing.T) {
 		"c[][b]": []string{"index 1.b"},
 	}
 	mx := NewMapx(data)
-	Dump(mx)
+	//Dump(mx)
 
 	assert.Equal(t, "first", mx.Value("a", "d"))
 	assert.Equal(t, "second", mx.Value("a", "e"))
