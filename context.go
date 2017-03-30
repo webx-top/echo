@@ -288,6 +288,9 @@ func (c *xContext) Value(key interface{}) interface{} {
 }
 
 func (c *xContext) Handle(ctx Context) error {
+	if c.route.Handler == nil {
+		return NotFoundHandler(ctx)
+	}
 	return c.route.Handler.Handle(ctx)
 }
 
