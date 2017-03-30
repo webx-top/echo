@@ -83,10 +83,25 @@ func TestEchoHandler(t *testing.T) {
 	e.Get("/ok", func(c Context) error {
 		return c.String("OK")
 	})
+	e.Get("/view/:id", func(c Context) error {
+		return c.String(c.Param(`id`))
+	})
+	e.Get("/file/*", func(c Context) error {
+		return c.String(c.P(0))
+	})
 
 	c, b := request(GET, "/ok", e)
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "OK", b)
+	c, b = request(GET, "/view/123", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "123", b)
+	c, b = request(POST, "/view/0", e)
+	assert.Equal(t, http.StatusMethodNotAllowed, c)
+	assert.Equal(t, "Method Not Allowed", b)
+	c, b = request(GET, "/file/path/to/file.js", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "path/to/file.js", b)
 }
 
 func TestEchoMeta(t *testing.T) {

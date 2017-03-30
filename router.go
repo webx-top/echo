@@ -471,6 +471,7 @@ End:
 
 	// NOTE: Slow zone...
 	if ctx.route == nil {
+		check405 := cn.check405
 		// Dig further for any, might have an empty value for *, e.g.
 		// serving a directory. Issue #207.
 		if cn = cn.findChildByKind(akind); cn != nil {
@@ -478,7 +479,7 @@ End:
 			pvalues[len(cn.pnames)-1] = ""
 		}
 		if ctx.route == nil {
-			ctx.route = cn.check405()
+			ctx.route = check405()
 		}
 	}
 	return
