@@ -204,16 +204,13 @@ type (
 	xContext struct {
 		Validator
 		Translator
-		sessioner Sessioner
-		cookier   Cookier
-		context   context.Context
-		request   engine.Request
-		response  engine.Response
-		//path                string
-		//pnames              []string
-		pvalues []string
-		store   store
-		//handler             Handler
+		sessioner           Sessioner
+		cookier             Cookier
+		context             context.Context
+		request             engine.Request
+		response            engine.Response
+		pvalues             []string
+		store               store
 		route               *Route
 		echo                *Echo
 		funcs               map[string]interface{}
