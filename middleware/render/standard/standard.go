@@ -240,6 +240,9 @@ func (self *Standard) parse(tmplName string, funcs map[string]interface{}) (tmpl
 	if self.getFuncs != nil {
 		funcMap = htmlTpl.FuncMap(self.getFuncs())
 	}
+	if funcMap == nil {
+		funcMap = htmlTpl.FuncMap{}
+	}
 	for k, v := range funcs {
 		funcMap[k] = v
 	}
