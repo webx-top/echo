@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/logger"
@@ -412,7 +413,7 @@ func (c *xContext) Render(name string, data interface{}, codes ...int) (err erro
 	if err != nil {
 		return
 	}
-	b = bytes.TrimLeft(b, ` `)
+	b = bytes.TrimLeftFunc(b, unicode.IsSpace)
 	c.response.Header().Set(HeaderContentType, MIMETextHTMLCharsetUTF8)
 	err = c.Blob(b, codes...)
 	return
