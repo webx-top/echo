@@ -217,16 +217,7 @@ func (self *Standard) Render(w io.Writer, tmplName string, values interface{}, c
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 	tmpl := self.parse(tmplName, c.Funcs())
-	buf := new(bytes.Buffer)
-	err := tmpl.ExecuteTemplate(buf, tmpl.Name(), values)
-	if err != nil {
-		return fmt.Errorf("Parse %v err: %v", tmpl.Name(), err)
-	}
-	_, err = io.Copy(w, buf)
-	if err != nil {
-		return fmt.Errorf("Parse %v err: %v", tmpl.Name(), err)
-	}
-	return err
+	return tmpl.ExecuteTemplate(w, tmpl.Name(), values)
 }
 
 func (self *Standard) parse(tmplName string, funcs map[string]interface{}) (tmpl *htmlTpl.Template) {
@@ -369,11 +360,7 @@ func (self *Standard) execute(tmpl *htmlTpl.Template, data interface{}) string {
 	if err != nil {
 		return fmt.Sprintf("Parse %v err: %v", tmpl.Name(), err)
 	}
-	b, err := ioutil.ReadAll(buf)
-	if err != nil {
-		return fmt.Sprintf("Parse %v err: %v", tmpl.Name(), err)
-	}
-	return string(b)
+	return buf.String()
 }
 
 func (self *Standard) ParseBlock(content string, subcs *map[string]string, extcs *map[string]string) {
