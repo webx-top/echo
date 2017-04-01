@@ -186,13 +186,13 @@ func (a *Pongo2) SetFuncMap(fn func() map[string]interface{}) {
 }
 
 func (a *Pongo2) Render(w io.Writer, tmpl string, data interface{}, c echo.Context) error {
+	a.mutex.Lock()
+	defer a.mutex.Unlock()
 	t, context := a.parse(tmpl, data, c.Funcs())
 	return t.ExecuteWriter(context, w)
 }
 
 func (a *Pongo2) parse(tmpl string, data interface{}, funcMap map[string]interface{}) (*Template, Context) {
-	a.mutex.Lock()
-	defer a.mutex.Unlock()
 	k := tmpl
 	if tmpl[0] == '/' {
 		k = tmpl[1:]
@@ -246,6 +246,8 @@ func (a *Pongo2) parse(tmpl string, data interface{}, funcMap map[string]interfa
 }
 
 func (a *Pongo2) Fetch(tmpl string, data interface{}, funcMap map[string]interface{}) string {
+	a.mutex.Lock()
+	defer a.mutex.Unlock()
 	t, context := a.parse(tmpl, data, funcMap)
 	r, err := t.Execute(context)
 	if err != nil {

@@ -214,6 +214,8 @@ func (self *Standard) InitRegexp() {
 
 // Render HTML
 func (self *Standard) Render(w io.Writer, tmplName string, values interface{}, c echo.Context) error {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
 	tmpl := self.parse(tmplName, c.Funcs())
 	buf := new(bytes.Buffer)
 	err := tmpl.ExecuteTemplate(buf, tmpl.Name(), values)
@@ -228,8 +230,6 @@ func (self *Standard) Render(w io.Writer, tmplName string, values interface{}, c
 }
 
 func (self *Standard) parse(tmplName string, funcs map[string]interface{}) (tmpl *htmlTpl.Template) {
-	self.mutex.Lock()
-	defer self.mutex.Unlock()
 	tmplName = tmplName + self.Ext
 	tmplName = self.TemplatePath(tmplName)
 	cachedKey := tmplName
@@ -358,6 +358,8 @@ func (self *Standard) parse(tmplName string, funcs map[string]interface{}) (tmpl
 }
 
 func (self *Standard) Fetch(tmplName string, data interface{}, funcMap map[string]interface{}) string {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
 	return self.execute(self.parse(tmplName, funcMap), data)
 }
 
