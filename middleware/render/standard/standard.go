@@ -215,8 +215,14 @@ func (self *Standard) InitRegexp() {
 
 // Render HTML
 func (self *Standard) Render(w io.Writer, tmplName string, values interface{}, c echo.Context) error {
-	self.mutex.Lock()
-	defer self.mutex.Unlock()
+	if c.Get(`webx:render.locked`) == nil {
+		c.Set(`webx:render.locked`, true)
+		self.mutex.Lock()
+		defer func() {
+			self.mutex.Unlock()
+			c.Delete(`webx:render.locked`)
+		}()
+	}
 	tmpl := self.parse(tmplName, c.Funcs())
 	return tmpl.ExecuteTemplate(w, tmpl.Name(), values)
 }
@@ -357,8 +363,6 @@ func (self *Standard) parse(tmplName string, funcs map[string]interface{}) (tmpl
 }
 
 func (self *Standard) Fetch(tmplName string, data interface{}, funcMap map[string]interface{}) string {
-	self.mutex.Lock()
-	defer self.mutex.Unlock()
 	return self.execute(self.parse(tmplName, funcMap), data)
 }
 
@@ -480,10 +484,6 @@ func (self *Standard) ContainsSubTpl(content string, subcs map[string]string) st
 
 func (self *Standard) Tag(content string) string {
 	return self.DelimLeft + content + self.DelimRight
-}
-
-func (self *Standard) Include(tmplName string, funcMap htmlTpl.FuncMap, values interface{}) interface{} {
-	return htmlTpl.HTML(self.Fetch(tmplName, values, funcMap))
 }
 
 func (self *Standard) RawContent(tmpl string) (b []byte, e error) {
