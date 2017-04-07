@@ -435,25 +435,26 @@ func SearchStrSlice(values []string, value string) int {
 }
 
 func FriendlyTime(t interface{}, args ...string) string {
-	if v, y := t.(time.Duration); y {
-		return com.FriendlyTime(v, args...)
+	var td time.Duration
+	switch v := t.(type) {
+	case time.Duration:
+		td = v
+	case int64:
+		td = time.Duration(v)
+	case int:
+		td = time.Duration(v)
+	case uint:
+		td = time.Duration(v)
+	case int32:
+		td = time.Duration(v)
+	case uint32:
+		td = time.Duration(v)
+	case uint64:
+		td = time.Duration(v)
+	default:
+		td = time.Duration(com.Int64(t))
 	}
-	if v, y := t.(int64); y {
-		return com.FriendlyTime(time.Duration(v), args...)
-	}
-	if v, y := t.(int); y {
-		return com.FriendlyTime(time.Duration(v), args...)
-	}
-	if v, y := t.(uint); y {
-		return com.FriendlyTime(time.Duration(v), args...)
-	}
-	if v, y := t.(int32); y {
-		return com.FriendlyTime(time.Duration(v), args...)
-	}
-	if v, y := t.(uint32); y {
-		return com.FriendlyTime(time.Duration(v), args...)
-	}
-	return com.FriendlyTime(time.Duration(com.Int64(t)), args...)
+	return com.FriendlyTime(td, args...)
 }
 
 func TsToTime(timestamp interface{}) time.Time {
