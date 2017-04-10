@@ -20,10 +20,14 @@ package tplfunc
 import (
 	"fmt"
 	"html/template"
+	"log"
 	"net/url"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
+
+	"regexp"
 
 	"github.com/webx-top/captcha"
 	"github.com/webx-top/com"
@@ -38,24 +42,10 @@ func New() (r template.FuncMap) {
 }
 
 var TplFuncMap template.FuncMap = template.FuncMap{
+	// ======================
+	// time
+	// ======================
 	"Now":             Now,
-	"Eq":              Eq,
-	"Add":             Add,
-	"Sub":             Sub,
-	"IsNil":           IsNil,
-	"IsEmpty":         IsEmpty,
-	"NotEmpty":        NotEmpty,
-	"Html":            ToHTML,
-	"Js":              ToJS,
-	"Css":             ToCSS,
-	"ToJS":            ToJS,
-	"ToCSS":           ToCSS,
-	"ToURL":           ToURL,
-	"ToHTML":          ToHTML,
-	"ToHTMLAttr":      ToHTMLAttr,
-	"ToHTMLAttrs":     ToHTMLAttrs,
-	"ToStrSlice":      ToStrSlice,
-	"Concat":          Concat,
 	"ElapsedMemory":   com.ElapsedMemory, //内存消耗
 	"TotalRunTime":    com.TotalRunTime,  //运行时长(从启动服务时算起)
 	"CaptchaForm":     CaptchaForm,       //验证码图片
@@ -64,39 +54,100 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"FormatPastTime":  com.FormatPastTime, //以前距离现在多长时间
 	"DateFormat":      com.DateFormat,
 	"DateFormatShort": com.DateFormatShort,
-	"Replace":         strings.Replace, //strings.Replace(s, old, new, n)
-	"Contains":        strings.Contains,
-	"HasPrefix":       strings.HasPrefix,
-	"HasSuffix":       strings.HasSuffix,
-	"Split":           strings.Split,
-	"Join":            strings.Join,
-	"Ext":             filepath.Ext,
-	"InExt":           InExt,
-	"Str":             com.Str,
-	"Int":             com.Int,
-	"Int32":           com.Int32,
-	"Int64":           com.Int64,
-	"Float32":         com.Float32,
-	"Float64":         com.Float64,
-	"InSlice":         com.InSlice,
-	"InSlicex":        com.InSliceIface,
-	"Substr":          com.Substr,
-	"StripTags":       com.StripTags,
-	"Default":         Default,
-	"JsonEncode":      JsonEncode,
-	"UrlEncode":       com.UrlEncode,
-	"UrlDecode":       com.UrlDecode,
-	"Base64Encode":    com.Base64Encode,
-	"Base64Decode":    com.Base64Decode,
-	"Set":             Set,
-	"Append":          Append,
-	"Nl2br":           NlToBr,
-	"AddSuffix":       AddSuffix,
-	"InStrSlice":      InStrSlice,
-	"SearchStrSlice":  SearchStrSlice,
-	"URLValues":       URLValues,
-	"ToSlice":         ToSlice,
-	"NoOutput":        NoOutput,
+	"Ts2time":         TsToTime, // 时间戳数字转time.Time
+	"Ts2date":         TsToDate, // 时间戳数字转日期字符串
+
+	// ======================
+	// compare
+	// ======================
+	"Eq":       Eq,
+	"Add":      Add,
+	"Sub":      Sub,
+	"IsNil":    IsNil,
+	"IsEmpty":  IsEmpty,
+	"NotEmpty": NotEmpty,
+
+	// ======================
+	// conversion type
+	// ======================
+	"Html":        ToHTML,
+	"Js":          ToJS,
+	"Css":         ToCSS,
+	"ToJS":        ToJS,
+	"ToCSS":       ToCSS,
+	"ToURL":       ToURL,
+	"ToHTML":      ToHTML,
+	"ToHTMLAttr":  ToHTMLAttr,
+	"ToHTMLAttrs": ToHTMLAttrs,
+	"ToStrSlice":  ToStrSlice,
+	"Str":         com.Str,
+	"Int":         com.Int,
+	"Int32":       com.Int32,
+	"Int64":       com.Int64,
+	"Uint":        com.Uint,
+	"Uint32":      com.Uint32,
+	"Uint64":      com.Uint64,
+	"Float32":     com.Float32,
+	"Float64":     com.Float64,
+
+	// ======================
+	// string
+	// ======================
+	"Contains":  strings.Contains,
+	"HasPrefix": strings.HasPrefix,
+	"HasSuffix": strings.HasSuffix,
+
+	"ToLower":        strings.ToLower,
+	"ToUpper":        strings.ToUpper,
+	"LowerCaseFirst": com.LowerCaseFirst,
+	"CamelCase":      com.CamelCase,
+	"PascalCase":     com.PascalCase,
+	"SnakeCase":      com.SnakeCase,
+	"Reverse":        com.Reverse,
+	"Ext":            filepath.Ext,
+	"InExt":          InExt,
+
+	"Concat":    Concat,
+	"Replace":   strings.Replace, //strings.Replace(s, old, new, n)
+	"Split":     strings.Split,
+	"Join":      strings.Join,
+	"Substr":    com.Substr,
+	"StripTags": com.StripTags,
+	"Nl2br":     NlToBr, // \n替换为<br>
+	"AddSuffix": AddSuffix,
+
+	// ======================
+	// encode & decode
+	// ======================
+	"JsonEncode":   JsonEncode,
+	"UrlEncode":    com.UrlEncode,
+	"UrlDecode":    com.UrlDecode,
+	"Base64Encode": com.Base64Encode,
+	"Base64Decode": com.Base64Decode,
+
+	// ======================
+	// map & slice
+	// ======================
+	"InSlice":        com.InSlice,
+	"InSlicex":       com.InSliceIface,
+	"Set":            Set,
+	"Append":         Append,
+	"InStrSlice":     InStrSlice,
+	"SearchStrSlice": SearchStrSlice,
+	"URLValues":      URLValues,
+	"ToSlice":        ToSlice,
+
+	// ======================
+	// regexp
+	// ======================
+	"Regexp":      regexp.MustCompile,
+	"RegexpPOSIX": regexp.MustCompilePOSIX,
+
+	// ======================
+	// other
+	// ======================
+	"NoOutput": NoOutput,
+	"Default":  Default,
 }
 
 func JsonEncode(s interface{}) string {
@@ -427,23 +478,61 @@ func SearchStrSlice(values []string, value string) int {
 }
 
 func FriendlyTime(t interface{}, args ...string) string {
-	if v, y := t.(time.Duration); y {
-		return com.FriendlyTime(v, args...)
+	var td time.Duration
+	switch v := t.(type) {
+	case time.Duration:
+		td = v
+	case int64:
+		td = time.Duration(v)
+	case int:
+		td = time.Duration(v)
+	case uint:
+		td = time.Duration(v)
+	case int32:
+		td = time.Duration(v)
+	case uint32:
+		td = time.Duration(v)
+	case uint64:
+		td = time.Duration(v)
+	default:
+		td = time.Duration(com.Int64(t))
 	}
-	if v, y := t.(int64); y {
-		return com.FriendlyTime(time.Duration(v), args...)
+	return com.FriendlyTime(td, args...)
+}
+
+func TsToTime(timestamp interface{}) time.Time {
+	return TimestampToTime(timestamp)
+}
+
+func TsToDate(format string, timestamp interface{}) string {
+	t := TimestampToTime(timestamp)
+	if t.IsZero() {
+		return ``
 	}
-	if v, y := t.(int); y {
-		return com.FriendlyTime(time.Duration(v), args...)
+	return t.Format(format)
+}
+
+func TimestampToTime(timestamp interface{}) time.Time {
+	var ts int64
+	switch v := timestamp.(type) {
+	case int64:
+		ts = v
+	case uint:
+		ts = int64(v)
+	case int:
+		ts = int64(v)
+	case uint32:
+		ts = int64(v)
+	case int32:
+		ts = int64(v)
+	case uint64:
+		ts = int64(v)
+	default:
+		i, e := strconv.ParseInt(fmt.Sprint(timestamp), 10, 64)
+		if e != nil {
+			log.Println(e)
+		}
+		ts = i
 	}
-	if v, y := t.(uint); y {
-		return com.FriendlyTime(time.Duration(v), args...)
-	}
-	if v, y := t.(int32); y {
-		return com.FriendlyTime(time.Duration(v), args...)
-	}
-	if v, y := t.(uint32); y {
-		return com.FriendlyTime(time.Duration(v), args...)
-	}
-	return com.FriendlyTime(time.Duration(com.Int64(t)), args...)
+	return time.Unix(ts, 0)
 }
