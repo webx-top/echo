@@ -201,7 +201,7 @@ func (c *Data) Set(code int, args ...interface{}) {
 }
 
 // NewData params: Code,Info,Zone,Data
-func NewData(ctx Context, code State, args ...interface{}) *Data {
+func NewData(ctx Context, code int, args ...interface{}) *Data {
 	var info, zone, data interface{}
 	switch len(args) {
 	case 3:
@@ -213,10 +213,11 @@ func NewData(ctx Context, code State, args ...interface{}) *Data {
 	case 1:
 		info = args[0]
 	}
+	c := State(code)
 	return &Data{
 		context: ctx,
-		Code:    code,
-		State:   code.String(),
+		Code:    c,
+		State:   c.String(),
 		Info:    info,
 		Zone:    zone,
 		Data:    data,
