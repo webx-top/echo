@@ -3,6 +3,7 @@ package echo_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -144,4 +145,13 @@ func TestEchoMeta(t *testing.T) {
 	c, b := request(GET, "/root/", e)
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "OK", b)
+}
+
+func TestEchoData(t *testing.T) {
+	data := NewData(nil, 0)
+	assert.Equal(t, 0, data.Code.Int())
+	assert.Equal(t, `0`, fmt.Sprintf(`%d`, data.Code))
+	assert.Equal(t, `Failure`, fmt.Sprintf(`%v`, data.Code))
+	assert.Equal(t, `Failure`, fmt.Sprintf(`%s`, data.Code))
+	assert.Equal(t, `Failure`, data.State)
 }
