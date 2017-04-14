@@ -46,3 +46,7 @@ type ICore interface {
 	MiddlewareRegister
 	URLBuilder
 }
+
+type Closer interface {
+	Close() error
+}
