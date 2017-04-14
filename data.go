@@ -26,21 +26,17 @@ func init() {
 	gob.Register(&Data{})
 }
 
+var States = map[State]string{
+	-2: `Non-Privileged`,  //无权限
+	-1: `Unauthenticated`, //未登录
+	0:  `Failure`,         //操作失败
+	1:  `Success`,         //操作成功
+}
+
 type State int
 
 func (s State) String() string {
-	switch s {
-	case -2:
-		return `Non-Privileged` //无权限
-	case -1:
-		return `Unauthenticated` //未登录
-	case 0:
-		return `Failure` //操作失败
-	case 1:
-		return `Success` //操作成功
-	default:
-		return ``
-	}
+	return States[s]
 }
 
 func (s State) Int() int {
