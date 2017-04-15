@@ -189,6 +189,7 @@ type (
 		Referer() string
 		Port() int
 		RealIP() string
+		HasAnyRequest() bool
 
 		MapForm(i interface{}, names ...string) error
 		MapData(i interface{}, data map[string][]string, names ...string) error
@@ -1115,6 +1116,11 @@ func (c *xContext) SaveUploadedFilesToWriter(fieldName string, writer func(*mult
 		}
 	}
 	return nil
+}
+
+// HasAnyRequest 是否提交了参数
+func (c *xContext) HasAnyRequest() bool {
+	return len(c.Request().Form().All()) > 0
 }
 
 func (c *xContext) AddPreResponseHook(hook func() error) Context {
