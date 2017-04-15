@@ -187,6 +187,7 @@ func (c *Data) Set(code int, args ...interface{}) {
 			flash := &Data{
 				context: c.context,
 				Code:    c.Code,
+				State:   c.State,
 				Info:    c.Info,
 				Zone:    c.Zone,
 				Data:    nil,
