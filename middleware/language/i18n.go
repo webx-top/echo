@@ -19,6 +19,7 @@ package language
 
 import (
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
 
@@ -35,8 +36,8 @@ type I18n struct {
 	config      *Config
 }
 
-func NewI18n(c *Config) *I18n {
-	f, errs := i18n.NewTranslatorFactory(c.RulesPath, c.MessagesPath, c.Fallback)
+func NewI18n(c *Config, getFileSystem ...func(string) http.FileSystem) *I18n {
+	f, errs := i18n.NewTranslatorFactory(c.RulesPath, c.MessagesPath, c.Fallback, getFileSystem...)
 	if errs != nil && len(errs) > 0 {
 		var errMsg string
 		for idx, err := range errs {
