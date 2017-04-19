@@ -61,7 +61,7 @@ func (a *Language) Init(c *Config) {
 			a.Set(`en`, true)
 		}
 	}
-	a.I18n = NewI18n(c, c.FSFunc())
+	a.I18n = NewI18n(c)
 	if c.Reload {
 		a.I18n.Monitor()
 	}
