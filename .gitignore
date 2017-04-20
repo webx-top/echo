@@ -17,3 +17,4 @@ node_modules
 /middleware/render/sse/test/*.exe
 /*.log
 /.vscode
+/middleware/session/test/*.exe
