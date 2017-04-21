@@ -28,6 +28,8 @@ func FuncMap(funcMap map[string]interface{}, skipper ...echo.Skipper) echo.Middl
 			c.SetFunc(`Atop`, c.Atop)
 			req := c.Request()
 			c.SetFunc(`URL`, req.URL)
+			c.SetFunc(`Referer`, c.Referer)
+			c.SetFunc(`URI`, req.URI)
 			c.SetFunc(`Header`, req.Header)
 			c.SetFunc(`Flash`, c.Flash)
 			c.SetFunc(`HasAnyRequest`, c.HasAnyRequest)
