@@ -322,6 +322,11 @@ func (c *Context) ModuleURLPath(ppath string, args ...map[string]interface{}) st
 	return c.Application.URLs.BuildFromPath(ppath, args...)
 }
 
+// RootModuleURL 生成根Module网址
+func (c *Context) RootModuleURL(ctl string, act string, args ...interface{}) string {
+	return c.Application.URLs.Build(c.Module.RootModuleName, ctl, act, args...)
+}
+
 // ModuleURL 生成指定Module网址
 func (c *Context) ModuleURL(mod string, ctl string, act string, args ...interface{}) string {
 	return c.Application.URLs.Build(mod, ctl, act, args...)
