@@ -2,20 +2,16 @@ package session_test
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/webx-top/echo"
-	"github.com/webx-top/echo/engine/standard"
 	"github.com/webx-top/echo/middleware/session"
+	test "github.com/webx-top/echo/testing"
 )
 
 func request(method, path string, e *echo.Echo) (int, string, http.Header) {
-	req, _ := http.NewRequest(method, path, nil)
-	rec := httptest.NewRecorder()
-
-	e.ServeHTTP(standard.NewRequest(req), standard.NewResponse(rec, req, nil))
+	rec := test.Request(method, path, e)
 	return rec.Code, rec.Body.String(), rec.HeaderMap
 }
 

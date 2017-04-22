@@ -33,14 +33,29 @@ func SetHTTPErrorHandler(h echo.HTTPErrorHandler) {
 	Default.SetHTTPErrorHandler(h)
 }
 
+// HTTPErrorHandler returns the HTTPErrorHandler
+func HTTPErrorHandler() echo.HTTPErrorHandler {
+	return Default.HTTPErrorHandler()
+}
+
 // SetBinder registers a custom binder. It's invoked by Context.Bind().
 func SetBinder(b echo.Binder) {
 	Default.SetBinder(b)
 }
 
+// Binder returns the binder instance.
+func Binder() echo.Binder {
+	return Default.Binder()
+}
+
 // SetRenderer registers an HTML template renderer. It's invoked by Context.Render().
 func SetRenderer(r echo.Renderer) {
 	Default.SetRenderer(r)
+}
+
+// Renderer returns the renderer instance.
+func Renderer() echo.Renderer {
+	return Default.Renderer()
 }
 
 // SetDebug enable/disable debug mode.
@@ -141,10 +156,6 @@ func AddHandlerWrapper(funcs ...func(interface{}) echo.Handler) {
 
 func AddMiddlewareWrapper(funcs ...func(interface{}) echo.Middleware) {
 	Default.AddMiddlewareWrapper(funcs...)
-}
-
-func Prefix() string {
-	return Default.Prefix()
 }
 
 // MetaMiddleware Add meta information about endpoint

@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/admpub/confl"
 	codec "github.com/gorilla/securecookie"
@@ -67,25 +68,24 @@ func NewWithContext(name string, newContext func(*echo.Echo) echo.Context) (s *A
 		MaxUploadSize:  10 * 1024 * 1024,
 		StaticDir:      `assets`,
 		RootModuleName: `base`,
-		FuncMap:        tplfunc.New(),
 		RouteTagName:   `webx`,
 		URLConvert:     LowerCaseFirst,
 		URLRecovery:    UpperCaseFirst,
 		MapperCheck:    DefaultMapperCheck,
+		SessionOptions: &echo.SessionOptions{
+			Engine: `cookie`,
+			Name:   `GOSID`,
+			CookieOptions: &echo.CookieOptions{
+				Prefix:   name + `_`,
+				HttpOnly: true,
+				Path:     `/`,
+			},
+		},
+		ContextInitial: func(ctx echo.Context, wrp *Wrapper, controller interface{}, actionName string) (err error, exit bool) {
+			return ctx.(*Context).Init(wrp, controller, actionName)
+		}, //[1]
 	}
 	s.URLs = NewURLs(name, s)
-	s.SessionOptions = &echo.SessionOptions{
-		Engine: `cookie`,
-		Name:   `GOSID`,
-		CookieOptions: &echo.CookieOptions{
-			Prefix:   name + `_`,
-			HttpOnly: true,
-			Path:     `/`,
-		},
-	}
-	s.ContextInitial = func(ctx echo.Context, wrp *Wrapper, controller interface{}, actionName string) (err error, exit bool) {
-		return ctx.(*Context).Init(wrp, controller, actionName)
-	} //[1]
 	if newContext == nil {
 		newContext = func(e *echo.Echo) echo.Context {
 			return NewContext(s, echo.NewContext(nil, nil, e))
@@ -93,7 +93,9 @@ func NewWithContext(name string, newContext func(*echo.Echo) echo.Context) (s *A
 	}
 	s.ContextCreator = newContext //[1]
 	s.Core = echo.NewWithContext(s.ContextCreator)
+	s.Core.SetHandlerWrapper(HandlerWrapper) //[1]
 
+	//Core middleware
 	s.FuncMap = s.DefaultFuncMap()
 	s.DefaultMiddlewares = []interface{}{
 		mw.Log(),
@@ -104,10 +106,7 @@ func NewWithContext(name string, newContext func(*echo.Echo) echo.Context) (s *A
 	}
 	s.Core.Use(s.DefaultMiddlewares...)
 
-	s.Core.SetHandlerWrapper(HandlerWrapper) //[1]
 	s.SetErrorPages(nil)
-
-	s.URLs = NewURLs(name, s)
 	return
 }
 
@@ -159,6 +158,7 @@ type Application struct {
 	moduleNames           map[string]*Module                                              //名称关联
 	rootDir               string
 	theme                 string
+	mutex                 sync.RWMutex
 }
 
 // Pre 全局前置中间件
@@ -172,12 +172,8 @@ func (s *Application) Pre(middleware ...interface{}) {
 		s.Core.Use(s.DefaultMiddlewares...)
 		return
 	}
-	var middlewares []interface{}
-	for _, m := range middleware {
-		s.Core.Pre(m)
-		middlewares = append(middlewares, m)
-	}
-	s.DefaultPreMiddlewares = append(middlewares, s.DefaultPreMiddlewares...)
+	s.Core.Pre(middleware...)
+	s.DefaultPreMiddlewares = append(middleware, s.DefaultPreMiddlewares...)
 }
 
 // Use 全局中间件
@@ -191,10 +187,8 @@ func (s *Application) Use(middleware ...interface{}) {
 		s.Core.Pre(s.DefaultPreMiddlewares...)
 		return
 	}
-	for _, m := range middleware {
-		s.Core.Use(m)
-		s.DefaultMiddlewares = append(s.DefaultMiddlewares, m)
-	}
+	s.Core.Use(middleware...)
+	s.DefaultMiddlewares = append(s.DefaultMiddlewares, middleware...)
 }
 
 // ServeHTTP HTTP服务执行入口
@@ -227,6 +221,8 @@ func (s *Application) SetErrorPages(templates map[int]string, options ...*render
 
 // SetDomain 为模块设置域名
 func (s *Application) SetDomain(name string, domain string) *Application {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	a, ok := s.moduleNames[name]
 	if !ok {
 		s.Core.Logger().Warn(`Module does not exist: `, name)
@@ -302,6 +298,9 @@ func (s *Application) SetDomain(name string, domain string) *Application {
 	a.Domain = domain
 	a.Group = nil
 	e := echo.NewWithContext(s.ContextCreator)
+	e.SetRenderer(a.Renderer)
+	e.SetHTTPErrorHandler(s.Core.HTTPErrorHandler())
+	e.Pre(s.DefaultPreMiddlewares...)
 	e.Use(s.DefaultMiddlewares...)
 	e.Use(a.Middlewares...)
 	s.Core.RebuildRouter(coreRoutes)
@@ -318,7 +317,9 @@ func (s *Application) SetDomain(name string, domain string) *Application {
 
 // NewModule 创建新模块
 func (s *Application) NewModule(name string, middlewares ...interface{}) *Module {
-	r := strings.Split(name, `@`) //blog@www.blog.com
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	r := strings.SplitN(name, `@`, 2) //blog@www.blog.com
 	var domain string
 	if len(r) > 1 {
 		name = r[0]
@@ -336,15 +337,24 @@ func (s *Application) NewModule(name string, middlewares ...interface{}) *Module
 func (s *Application) NewRenderer(conf *render.Config, a *Module, funcMap map[string]interface{}) driver.Driver {
 	themeAbsPath := s.ThemeDir(conf.Theme)
 	staticURLPath := `/assets`
+	var mwRegister echo.MiddlewareRegister
 	if a != nil && len(a.Name) > 0 {
-		staticURLPath = `/` + a.Name + staticURLPath
+		//TODO: 支持在域名绑定与非绑定之间切换
+		if a.Handler == nil {
+			staticURLPath = `/` + a.Name + staticURLPath
+		} else {
+			mwRegister = a.Router()
+		}
 	}
-	staticAbsPath := themeAbsPath + `/assets`
+	staticAbsPath := filepath.Join(themeAbsPath, `assets`)
 	te := s.NewTemplateEngine(themeAbsPath, conf)
-	static := s.NewStatic(staticURLPath, staticAbsPath, funcMap)
+	static := s.NewStatic(staticURLPath, staticAbsPath, mwRegister, funcMap)
 	te.SetFuncMap(func() map[string]interface{} {
 		return funcMap
 	})
+	if mwRegister != nil {
+		mwRegister.Use(mw.SimpleFuncMap(funcMap))
+	}
 	te.MonitorEvent(static.OnUpdate(themeAbsPath))
 	te.SetContentProcessor(conf.Parser())
 	return te
@@ -352,7 +362,7 @@ func (s *Application) NewRenderer(conf *render.Config, a *Module, funcMap map[st
 
 // NewTemplateEngine 新建模板引擎实例
 func (s *Application) NewTemplateEngine(tmplPath string, conf *render.Config) driver.Driver {
-	if tmplPath == `` {
+	if len(tmplPath) == 0 {
 		tmplPath = s.ThemeDir()
 	}
 	eng := render.New(conf.Engine, tmplPath, s.Core.Logger())
@@ -395,10 +405,10 @@ func (s *Application) SetSessionOptions(sessionOptions *echo.SessionOptions) *Ap
 			HttpOnly: true,
 		}
 	}
-	if sessionOptions.Name == `` {
+	if len(sessionOptions.Name) == 0 {
 		sessionOptions.Name = `GOSID`
 	}
-	if sessionOptions.Engine == `` {
+	if len(sessionOptions.Engine) == 0 {
 		sessionOptions.Engine = `cookie`
 	}
 	s.SessionOptions = sessionOptions
@@ -428,12 +438,21 @@ func (s *Application) HasModule(name string) bool {
 }
 
 // NewStatic 新建静态资源实例
-func (s *Application) NewStatic(urlPath string, absPath string, f ...map[string]interface{}) *resource.Static {
+func (s *Application) NewStatic(urlPath string, absPath string, register echo.MiddlewareRegister, f ...map[string]interface{}) *resource.Static {
 	st := resource.NewStatic(urlPath, absPath)
 	if len(f) > 0 {
 		f[0] = st.Register(f[0])
 	}
-	s.Core.Use(mw.Static(&mw.StaticOptions{Path: urlPath, Root: absPath}))
+	stMW := mw.Static(&mw.StaticOptions{
+		Path:  urlPath,
+		Root:  absPath,
+		Debug: s.Core.Debug(),
+	})
+	if register != nil {
+		register.Pre(stMW)
+	} else {
+		s.Core.Pre(stMW)
+	}
 	return st
 }
 
@@ -446,9 +465,13 @@ func (s *Application) ThemeDir(args ...string) string {
 }
 
 // InitStatic 初始化静态资源
-func (s *Application) InitStatic() *Application {
+func (s *Application) InitStatic(args ...echo.MiddlewareRegister) *Application {
+	var register echo.MiddlewareRegister
+	if len(args) > 0 {
+		register = args[0]
+	}
 	absPath := filepath.Join(s.ThemeDir(), s.StaticDir)
-	s.StaticRes = s.NewStatic(s.StaticDir, absPath, s.FuncMap)
+	s.StaticRes = s.NewStatic(s.StaticDir, absPath, register, s.FuncMap)
 	if s.Renderer != nil {
 		s.TemplateMonitor()
 	}
@@ -561,7 +584,7 @@ func (s *Application) Run(args ...interface{}) {
 			}
 		} else {
 			addr := `:80`
-			if v, ok := arg.(string); ok && v != `` {
+			if v, ok := arg.(string); ok && len(v) > 0 {
 				addr = v
 			}
 			if v, ok := args[1].(string); ok {
@@ -575,11 +598,11 @@ func (s *Application) Run(args ...interface{}) {
 			}
 		}
 	} else {
-		switch arg.(type) {
+		switch v := arg.(type) {
 		case string:
-			eng = fasthttp.New(arg.(string))
+			eng = fasthttp.New(v)
 		case engine.Engine:
-			eng = arg.(engine.Engine)
+			eng = v
 		default:
 			eng = fasthttp.New(`:80`)
 		}

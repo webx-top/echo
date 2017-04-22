@@ -40,6 +40,7 @@ type (
 		Index    string `json:"index"`
 		Browse   bool   `json:"browse"`
 		Template string `json:"template"`
+		Debug    bool   `json:"debug"`
 	}
 )
 
@@ -79,7 +80,9 @@ func Static(options ...*StaticOptions) echo.MiddlewareFunc {
 		}
 	}
 
-	log.GetLogger("echo").Debugf("Static: %v\t-> %v", opts.Path, opts.Root)
+	if opts.Debug {
+		log.GetLogger("echo").Debugf("Static: %v\t-> %v", opts.Path, opts.Root)
+	}
 
 	return func(next echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {

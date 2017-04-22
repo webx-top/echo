@@ -20,7 +20,6 @@ import (
 type (
 	Echo struct {
 		engine            engine.Engine
-		prefix            string
 		middleware        []interface{}
 		head              Handler
 		maxParam          *int
@@ -36,6 +35,8 @@ type (
 		handlerWrapper    []func(interface{}) Handler
 		middlewareWrapper []func(interface{}) Middleware
 		FuncMap           map[string]interface{}
+		RouteDebug        bool
+		MiddlewareDebug   bool
 	}
 
 	HTTPError struct {
@@ -293,6 +294,11 @@ func (e *Echo) SetHTTPErrorHandler(h HTTPErrorHandler) {
 	e.httpErrorHandler = h
 }
 
+// HTTPErrorHandler returns the HTTPErrorHandler
+func (e *Echo) HTTPErrorHandler() HTTPErrorHandler {
+	return e.httpErrorHandler
+}
+
 // SetBinder registers a custom binder. It's invoked by Context.Bind().
 func (e *Echo) SetBinder(b Binder) {
 	e.binder = b
@@ -306,6 +312,11 @@ func (e *Echo) Binder() Binder {
 // SetRenderer registers an HTML template renderer. It's invoked by Context.Render().
 func (e *Echo) SetRenderer(r Renderer) {
 	e.renderer = r
+}
+
+// Renderer returns the renderer instance.
+func (e *Echo) Renderer() Renderer {
+	return e.renderer
 }
 
 // SetDebug enable/disable debug mode.
@@ -330,6 +341,9 @@ func (e *Echo) Use(middleware ...interface{}) {
 	for _, m := range middleware {
 		e.ValidMiddleware(m)
 		e.middleware = append(e.middleware, m)
+		if e.MiddlewareDebug {
+			e.logger.Debugf(`Middleware[Use](%p): [] -> %s `, m, HandlerName(m))
+		}
 	}
 }
 
@@ -344,6 +358,9 @@ func (e *Echo) PreUse(middleware ...interface{}) {
 	for _, m := range middleware {
 		e.ValidMiddleware(m)
 		middlewares = append(middlewares, m)
+		if e.MiddlewareDebug {
+			e.logger.Debugf(`Middleware[Pre](%p): [] -> %s`, m, HandlerName(m))
+		}
 	}
 	e.middleware = append(middlewares, e.middleware...)
 }
@@ -356,53 +373,53 @@ func (e *Echo) Clear() {
 
 // Connect adds a CONNECT route > handler to the router.
 func (e *Echo) Connect(path string, h interface{}, m ...interface{}) {
-	e.add(CONNECT, path, h, m...)
+	e.add(CONNECT, "", path, h, m...)
 }
 
 // Delete adds a DELETE route > handler to the router.
 func (e *Echo) Delete(path string, h interface{}, m ...interface{}) {
-	e.add(DELETE, path, h, m...)
+	e.add(DELETE, "", path, h, m...)
 }
 
 // Get adds a GET route > handler to the router.
 func (e *Echo) Get(path string, h interface{}, m ...interface{}) {
-	e.add(GET, path, h, m...)
+	e.add(GET, "", path, h, m...)
 }
 
 // Head adds a HEAD route > handler to the router.
 func (e *Echo) Head(path string, h interface{}, m ...interface{}) {
-	e.add(HEAD, path, h, m...)
+	e.add(HEAD, "", path, h, m...)
 }
 
 // Options adds an OPTIONS route > handler to the router.
 func (e *Echo) Options(path string, h interface{}, m ...interface{}) {
-	e.add(OPTIONS, path, h, m...)
+	e.add(OPTIONS, "", path, h, m...)
 }
 
 // Patch adds a PATCH route > handler to the router.
 func (e *Echo) Patch(path string, h interface{}, m ...interface{}) {
-	e.add(PATCH, path, h, m...)
+	e.add(PATCH, "", path, h, m...)
 }
 
 // Post adds a POST route > handler to the router.
 func (e *Echo) Post(path string, h interface{}, m ...interface{}) {
-	e.add(POST, path, h, m...)
+	e.add(POST, "", path, h, m...)
 }
 
 // Put adds a PUT route > handler to the router.
 func (e *Echo) Put(path string, h interface{}, m ...interface{}) {
-	e.add(PUT, path, h, m...)
+	e.add(PUT, "", path, h, m...)
 }
 
 // Trace adds a TRACE route > handler to the router.
 func (e *Echo) Trace(path string, h interface{}, m ...interface{}) {
-	e.add(TRACE, path, h, m...)
+	e.add(TRACE, "", path, h, m...)
 }
 
 // Any adds a route > handler to the router for all HTTP methods.
 func (e *Echo) Any(path string, h interface{}, middleware ...interface{}) {
 	for _, m := range methods {
-		e.add(m, path, h, middleware...)
+		e.add(m, "", path, h, middleware...)
 	}
 }
 
@@ -413,7 +430,7 @@ func (e *Echo) Route(methods string, path string, h interface{}, middleware ...i
 // Match adds a route > handler to the router for multiple HTTP methods provided.
 func (e *Echo) Match(methods []string, path string, h interface{}, middleware ...interface{}) {
 	for _, m := range methods {
-		e.add(m, path, h, middleware...)
+		e.add(m, "", path, h, middleware...)
 	}
 }
 
@@ -457,11 +474,7 @@ func (e *Echo) AddMiddlewareWrapper(funcs ...func(interface{}) Middleware) {
 	e.middlewareWrapper = append(e.middlewareWrapper, funcs...)
 }
 
-func (e *Echo) Prefix() string {
-	return e.prefix
-}
-
-func (e *Echo) add(method, path string, h interface{}, middleware ...interface{}) {
+func (e *Echo) add(method, prefix string, path string, h interface{}, middleware ...interface{}) {
 	handler := e.ValidHandler(h)
 	if handler == nil {
 		return
@@ -490,8 +503,10 @@ func (e *Echo) add(method, path string, h interface{}, middleware ...interface{}
 	hdl := HandlerFunc(func(c Context) error {
 		return handler.Handle(c)
 	})
-	r := e.router.Add(method, path, hdl, name, meta, e)
-	e.logger.Debugf(`Route: %7v %-30v -> %v`, method, r.Format, name)
+	r := e.router.Add(method, prefix, path, hdl, name, meta, e)
+	if e.RouteDebug {
+		e.logger.Debugf(`Route: %7v %-30v -> %v`, method, r.Format, name)
+	}
 	if _, ok := e.router.nroute[name]; !ok {
 		e.router.nroute[name] = []int{len(e.router.routes)}
 	} else {
@@ -531,7 +546,7 @@ func (e *Echo) RebuildRouter(args ...[]*Route) {
 	e.router = NewRouter(e)
 	for index, r := range routes {
 		//e.logger.Debugf(`%p rebuild: %#v`, e, *r)
-		e.router.Add(r.Method, r.Path, r.Handler, r.HandlerName, r.Meta, e)
+		e.router.Add(r.Method, r.Prefix, r.Path, r.Handler, r.HandlerName, r.Meta, e)
 
 		if _, ok := e.router.nroute[r.HandlerName]; !ok {
 			e.router.nroute[r.HandlerName] = []int{index}
@@ -546,7 +561,7 @@ func (e *Echo) RebuildRouter(args ...[]*Route) {
 // AppendRouter append router
 func (e *Echo) AppendRouter(routes []*Route) {
 	for index, r := range routes {
-		e.router.Add(r.Method, r.Path, r.Handler, r.HandlerName, r.Meta, e)
+		e.router.Add(r.Method, r.Prefix, r.Path, r.Handler, r.HandlerName, r.Meta, e)
 		index = len(e.router.routes)
 		if _, ok := e.router.nroute[r.HandlerName]; !ok {
 			e.router.nroute[r.HandlerName] = []int{index}

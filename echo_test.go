@@ -5,19 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	. "github.com/webx-top/echo"
-	"github.com/webx-top/echo/engine/standard"
+	test "github.com/webx-top/echo/testing"
 )
 
 func request(method, path string, e *Echo) (int, string) {
-	req, _ := http.NewRequest(method, path, nil)
-	rec := httptest.NewRecorder()
-
-	e.ServeHTTP(standard.NewRequest(req), standard.NewResponse(rec, req, nil))
+	rec := test.Request(method, path, e)
 	return rec.Code, rec.Body.String()
 }
 
@@ -75,6 +71,85 @@ func TestEchoMiddlewareError(t *testing.T) {
 	e.Get("/", NotFoundHandler)
 	c, _ := request(GET, "/", e)
 	assert.Equal(t, http.StatusInternalServerError, c)
+}
+
+func TestGroupMiddleware(t *testing.T) {
+	e := New()
+	buf := new(bytes.Buffer)
+
+	e.Pre(func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			assert.Empty(t, c.Path())
+			buf.WriteString("-1")
+			return next.Handle(c)
+		}
+	}, func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			assert.Empty(t, c.Path())
+			buf.WriteString("0")
+			return next.Handle(c)
+		}
+	})
+
+	e.Pre(func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			assert.Empty(t, c.Path())
+			buf.WriteString("-3")
+			return next.Handle(c)
+		}
+	}, func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			assert.Empty(t, c.Path())
+			buf.WriteString("-2")
+			return next.Handle(c)
+		}
+	})
+
+	e.Use(func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			buf.WriteString("1")
+			return next.Handle(c)
+		}
+	})
+
+	g := e.Group("/", func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			buf.WriteString("2")
+			return next.Handle(c)
+		}
+	}, func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			buf.WriteString("3")
+			return next.Handle(c)
+		}
+	})
+
+	// Route
+	g.Get("", func(c Context) error {
+		return c.String("OK")
+	}, func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			buf.WriteString("4")
+			return next.Handle(c)
+		}
+	}, func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			buf.WriteString("5")
+			return next.Handle(c)
+		}
+	})
+
+	c, b := request(GET, "/", e)
+	assert.Equal(t, "-3-2-1012345", buf.String())
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "OK", b)
+
+	buf = new(bytes.Buffer)
+	e.RebuildRouter()
+	c, b = request(GET, "/", e)
+	assert.Equal(t, "-3-2-1012345", buf.String())
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "OK", b)
 }
 
 func TestEchoHandler(t *testing.T) {

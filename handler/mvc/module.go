@@ -46,7 +46,7 @@ func NewModule(name string, domain string, s *Application, middlewares ...interf
 	if s.Renderer != nil {
 		a.Renderer = s.Renderer
 	}
-	if a.Domain == `` {
+	if len(a.Domain) == 0 {
 		var prefix string
 		if name != s.RootModuleName {
 			prefix = `/` + name
@@ -62,6 +62,8 @@ func NewModule(name string, domain string, s *Application, middlewares ...interf
 		a.Group.Use(middlewares...)
 	} else {
 		e := echo.NewWithContext(s.ContextCreator)
+		e.SetRenderer(s.Core.Renderer())
+		e.SetHTTPErrorHandler(s.Core.HTTPErrorHandler())
 		e.Pre(s.DefaultPreMiddlewares...)
 		e.Use(s.DefaultMiddlewares...)
 		e.Use(middlewares...)
@@ -200,6 +202,9 @@ func (a *Module) Use(args ...interface{}) *Module {
 // InitRenderer 初始化渲染接口(用于单独对app指定renderer，如不指定，默认会使用Server中Renderer)
 func (a *Module) InitRenderer(conf *render.Config, funcMap map[string]interface{}) *Module {
 	a.Renderer = a.Application.NewRenderer(conf, a, funcMap)
+	if a.Handler != nil {
+		a.Handler.SetRenderer(a.Renderer)
+	}
 	return a
 }
 
