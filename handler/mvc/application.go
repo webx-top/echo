@@ -41,8 +41,8 @@ import (
 )
 
 // New 创建Application实例
-func New(name string, middlewares ...interface{}) (s *Application) {
-	s = NewWithContext(name, nil, middlewares...)
+func New(name string) (s *Application) {
+	s = NewWithContext(name, nil)
 	globalApp[name] = s
 	return
 }
@@ -57,7 +57,7 @@ func HandlerWrapper(h interface{}) echo.Handler {
 }
 
 // NewWithContext 创建Application实例
-func NewWithContext(name string, newContext func(*echo.Echo) echo.Context, middlewares ...interface{}) (s *Application) {
+func NewWithContext(name string, newContext func(*echo.Echo) echo.Context) (s *Application) {
 	s = &Application{
 		Name:           name,
 		moduleHosts:    make(map[string]*Module),
@@ -73,21 +73,7 @@ func NewWithContext(name string, newContext func(*echo.Echo) echo.Context, middl
 		URLRecovery:    UpperCaseFirst,
 		MapperCheck:    DefaultMapperCheck,
 	}
-	mwNum := len(middlewares)
-	if mwNum == 1 && middlewares[0] == nil {
-		s.DefaultMiddlewares = []interface{}{}
-	} else {
-		s.DefaultMiddlewares = []interface{}{
-			mw.Log(),
-			mw.Recover(),
-			mw.FuncMap(s.FuncMap, func(ctx echo.Context) bool {
-				return ctx.Format() != `html`
-			}),
-		}
-		if mwNum > 0 {
-			s.DefaultMiddlewares = append(s.DefaultMiddlewares, middlewares...)
-		}
-	}
+	s.URLs = NewURLs(name, s)
 	s.SessionOptions = &echo.SessionOptions{
 		Engine: `cookie`,
 		Name:   `GOSID`,
@@ -107,12 +93,21 @@ func NewWithContext(name string, newContext func(*echo.Echo) echo.Context, middl
 	}
 	s.ContextCreator = newContext //[1]
 	s.Core = echo.NewWithContext(s.ContextCreator)
+
+	s.FuncMap = s.DefaultFuncMap()
+	s.DefaultMiddlewares = []interface{}{
+		mw.Log(),
+		mw.Recover(),
+		mw.FuncMap(s.FuncMap, func(ctx echo.Context) bool {
+			return ctx.Format() != `html`
+		}),
+	}
 	s.Core.Use(s.DefaultMiddlewares...)
+
 	s.Core.SetHandlerWrapper(HandlerWrapper) //[1]
 	s.SetErrorPages(nil)
 
 	s.URLs = NewURLs(name, s)
-	s.FuncMap = s.DefaultFuncMap()
 	return
 }
 
@@ -139,30 +134,67 @@ var (
 )
 
 type Application struct {
-	Core               *echo.Echo
-	Name               string
-	TemplateDir        string
-	StaticDir          string
-	StaticRes          *resource.Static
-	RouteTagName       string
-	URLConvert         URLConvert  `json:"-" xml:"-"`
-	URLRecovery        URLRecovery `json:"-" xml:"-"`
-	MaxUploadSize      int64
-	RootModuleName     string
-	URL                string
-	URLs               *URLs
-	DefaultMiddlewares []interface{} `json:"-" xml:"-"`
-	SessionOptions     *echo.SessionOptions
-	Renderer           driver.Driver                                                   `json:"-" xml:"-"`
-	FuncMap            map[string]interface{}                                          `json:"-" xml:"-"`
-	ContextCreator     func(*echo.Echo) echo.Context                                   `json:"-" xml:"-"`
-	ContextInitial     func(echo.Context, *Wrapper, interface{}, string) (error, bool) `json:"-" xml:"-"`
-	Codec              codec.Codec                                                     `json:"-" xml:"-"`
-	MapperCheck        func(t reflect.Type) bool                                       `json:"-" xml:"-"`
-	moduleHosts        map[string]*Module                                              //域名关联
-	moduleNames        map[string]*Module                                              //名称关联
-	rootDir            string
-	theme              string
+	Core                  *echo.Echo
+	Name                  string
+	TemplateDir           string
+	StaticDir             string
+	StaticRes             *resource.Static
+	RouteTagName          string
+	URLConvert            URLConvert  `json:"-" xml:"-"`
+	URLRecovery           URLRecovery `json:"-" xml:"-"`
+	MaxUploadSize         int64
+	RootModuleName        string
+	URL                   string
+	URLs                  *URLs
+	DefaultMiddlewares    []interface{} `json:"-" xml:"-"`
+	DefaultPreMiddlewares []interface{} `json:"-" xml:"-"`
+	SessionOptions        *echo.SessionOptions
+	Renderer              driver.Driver                                                   `json:"-" xml:"-"`
+	FuncMap               map[string]interface{}                                          `json:"-" xml:"-"`
+	ContextCreator        func(*echo.Echo) echo.Context                                   `json:"-" xml:"-"`
+	ContextInitial        func(echo.Context, *Wrapper, interface{}, string) (error, bool) `json:"-" xml:"-"`
+	Codec                 codec.Codec                                                     `json:"-" xml:"-"`
+	MapperCheck           func(t reflect.Type) bool                                       `json:"-" xml:"-"`
+	moduleHosts           map[string]*Module                                              //域名关联
+	moduleNames           map[string]*Module                                              //名称关联
+	rootDir               string
+	theme                 string
+}
+
+// Pre 全局前置中间件
+func (s *Application) Pre(middleware ...interface{}) {
+	if len(s.moduleNames) > 0 {
+		panic(`The global pre-middleware must be set before Module is not created`)
+	}
+	if len(middleware) == 1 && middleware[0] == nil {
+		s.DefaultPreMiddlewares = []interface{}{}
+		s.Core.Clear()
+		s.Core.Use(s.DefaultMiddlewares...)
+		return
+	}
+	var middlewares []interface{}
+	for _, m := range middleware {
+		s.Core.Pre(m)
+		middlewares = append(middlewares, m)
+	}
+	s.DefaultPreMiddlewares = append(middlewares, s.DefaultPreMiddlewares...)
+}
+
+// Use 全局中间件
+func (s *Application) Use(middleware ...interface{}) {
+	if len(s.moduleNames) > 0 {
+		panic(`The global middleware must be set before Module is not created`)
+	}
+	if len(middleware) == 1 && middleware[0] == nil {
+		s.DefaultMiddlewares = []interface{}{}
+		s.Core.Clear()
+		s.Core.Pre(s.DefaultPreMiddlewares...)
+		return
+	}
+	for _, m := range middleware {
+		s.Core.Use(m)
+		s.DefaultMiddlewares = append(s.DefaultMiddlewares, m)
+	}
 }
 
 // ServeHTTP HTTP服务执行入口

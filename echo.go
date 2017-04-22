@@ -348,6 +348,12 @@ func (e *Echo) PreUse(middleware ...interface{}) {
 	e.middleware = append(middlewares, e.middleware...)
 }
 
+// Clear middleware
+func (e *Echo) Clear() {
+	e.middleware = []interface{}{}
+	e.head = nil
+}
+
 // Connect adds a CONNECT route > handler to the router.
 func (e *Echo) Connect(path string, h interface{}, m ...interface{}) {
 	e.add(CONNECT, path, h, m...)
