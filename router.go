@@ -13,6 +13,8 @@ var (
 	}
 )
 
+const ParamStar = "_*"
+
 type (
 	Router struct {
 		tree   *node
@@ -187,7 +189,7 @@ func (r *Router) Add(method, prefix, path string, h Handler, name string, meta H
 		} else if path[i] == '*' {
 			uri.WriteString(`%v`)
 			r.insert(path[:i], skind, newRoute(h, ``, ``, nil), e)
-			pnames = append(pnames, "_*")
+			pnames = append(pnames, ParamStar)
 			route = newRoute(h, name, ppath, pnames)
 			r.insert(path[:i+1], akind, route, e)
 			return

@@ -83,6 +83,11 @@ func PreUse(middleware ...interface{}) {
 	Default.PreUse(middleware...)
 }
 
+// Clear middleware
+func Clear(middleware ...interface{}) {
+	Default.Clear(middleware...)
+}
+
 // Connect adds a CONNECT route > handler to the router.
 func Connect(path string, h interface{}, m ...interface{}) {
 	Default.Connect(path, h, m...)

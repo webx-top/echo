@@ -55,10 +55,8 @@ func Static(options ...*StaticOptions) echo.MiddlewareFunc {
 		opts.Skipper = echo.DefaultSkipper
 	}
 	opts.Root, _ = filepath.Abs(opts.Root)
-	length := len(opts.Path)
-	if length > 0 && opts.Path[0] != '/' {
+	if len(opts.Path) > 0 && opts.Path[0] != '/' {
 		opts.Path = `/` + opts.Path
-		length++
 	}
 	var render func(echo.Context, interface{}) error
 	if opts.Browse {
@@ -90,6 +88,7 @@ func Static(options ...*StaticOptions) echo.MiddlewareFunc {
 				return next.Handle(c)
 			}
 			file := c.Request().URL().Path()
+			length := len(opts.Path)
 			if len(file) < length || file[0:length] != opts.Path {
 				return next.Handle(c)
 			}

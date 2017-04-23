@@ -366,8 +366,27 @@ func (e *Echo) PreUse(middleware ...interface{}) {
 }
 
 // Clear middleware
-func (e *Echo) Clear() {
-	e.middleware = []interface{}{}
+func (e *Echo) Clear(middleware ...interface{}) {
+	if len(middleware) > 0 {
+		for _, dm := range middleware {
+			var decr int
+			for i, m := range e.middleware {
+				if m != dm {
+					continue
+				}
+				i -= decr
+				start := i + 1
+				if start < len(e.middleware) {
+					e.middleware = append(e.middleware[0:i], e.middleware[start:]...)
+				} else {
+					e.middleware = e.middleware[0:i]
+				}
+				decr++
+			}
+		}
+	} else {
+		e.middleware = []interface{}{}
+	}
 	e.head = nil
 }
 
@@ -544,14 +563,14 @@ func (e *Echo) RebuildRouter(args ...[]*Route) {
 		routes = args[0]
 	}
 	e.router = NewRouter(e)
-	for index, r := range routes {
+	for i, r := range routes {
 		//e.logger.Debugf(`%p rebuild: %#v`, e, *r)
 		e.router.Add(r.Method, r.Prefix, r.Path, r.Handler, r.HandlerName, r.Meta, e)
 
 		if _, ok := e.router.nroute[r.HandlerName]; !ok {
-			e.router.nroute[r.HandlerName] = []int{index}
+			e.router.nroute[r.HandlerName] = []int{i}
 		} else {
-			e.router.nroute[r.HandlerName] = append(e.router.nroute[r.HandlerName], index)
+			e.router.nroute[r.HandlerName] = append(e.router.nroute[r.HandlerName], i)
 		}
 	}
 	e.router.routes = routes
@@ -560,13 +579,13 @@ func (e *Echo) RebuildRouter(args ...[]*Route) {
 
 // AppendRouter append router
 func (e *Echo) AppendRouter(routes []*Route) {
-	for index, r := range routes {
+	for i, r := range routes {
 		e.router.Add(r.Method, r.Prefix, r.Path, r.Handler, r.HandlerName, r.Meta, e)
-		index = len(e.router.routes)
+		i = len(e.router.routes)
 		if _, ok := e.router.nroute[r.HandlerName]; !ok {
-			e.router.nroute[r.HandlerName] = []int{index}
+			e.router.nroute[r.HandlerName] = []int{i}
 		} else {
-			e.router.nroute[r.HandlerName] = append(e.router.nroute[r.HandlerName], index)
+			e.router.nroute[r.HandlerName] = append(e.router.nroute[r.HandlerName], i)
 		}
 		e.router.routes = append(e.router.routes, r)
 	}

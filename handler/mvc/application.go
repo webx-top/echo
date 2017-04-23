@@ -60,13 +60,15 @@ func HandlerWrapper(h interface{}) echo.Handler {
 // NewWithContext 创建Application实例
 func NewWithContext(name string, newContext func(*echo.Echo) echo.Context) (s *Application) {
 	s = &Application{
-		Name:           name,
-		moduleHosts:    make(map[string]*Module),
-		moduleNames:    make(map[string]*Module),
-		TemplateDir:    `template`,
-		URL:            `/`,
-		MaxUploadSize:  10 * 1024 * 1024,
-		StaticDir:      `assets`,
+		Name:          name,
+		moduleHosts:   make(map[string]*Module),
+		moduleNames:   make(map[string]*Module),
+		TemplateDir:   `template`,
+		URL:           `/`,
+		MaxUploadSize: 10 * 1024 * 1024,
+		Resource: &Resource{
+			Dir: `assets`,
+		},
 		RootModuleName: `base`,
 		RouteTagName:   `webx`,
 		URLConvert:     LowerCaseFirst,
@@ -136,8 +138,7 @@ type Application struct {
 	Core                  *echo.Echo
 	Name                  string
 	TemplateDir           string
-	StaticDir             string
-	StaticRes             *resource.Static
+	Resource              *Resource
 	RouteTagName          string
 	URLConvert            URLConvert  `json:"-" xml:"-"`
 	URLRecovery           URLRecovery `json:"-" xml:"-"`
@@ -334,30 +335,23 @@ func (s *Application) NewModule(name string, middlewares ...interface{}) *Module
 }
 
 // NewRenderer 为特殊module(比如admin)单独新建渲染接口
-func (s *Application) NewRenderer(conf *render.Config, a *Module, funcMap map[string]interface{}) driver.Driver {
+func (s *Application) NewRenderer(conf *render.Config, a *Module, funcMap map[string]interface{}) (driver.Driver, *resource.Static) {
 	themeAbsPath := s.ThemeDir(conf.Theme)
 	staticURLPath := `/assets`
-	var mwRegister echo.MiddlewareRegister
 	if a != nil && len(a.Name) > 0 {
-		//TODO: 支持在域名绑定与非绑定之间切换
 		if a.Handler == nil {
 			staticURLPath = `/` + a.Name + staticURLPath
-		} else {
-			mwRegister = a.Router()
 		}
 	}
 	staticAbsPath := filepath.Join(themeAbsPath, `assets`)
 	te := s.NewTemplateEngine(themeAbsPath, conf)
-	static := s.NewStatic(staticURLPath, staticAbsPath, mwRegister, funcMap)
+	static := s.NewStatic(staticURLPath, staticAbsPath, funcMap)
 	te.SetFuncMap(func() map[string]interface{} {
 		return funcMap
 	})
-	if mwRegister != nil {
-		mwRegister.Use(mw.SimpleFuncMap(funcMap))
-	}
 	te.MonitorEvent(static.OnUpdate(themeAbsPath))
 	te.SetContentProcessor(conf.Parser())
-	return te
+	return te, static
 }
 
 // NewTemplateEngine 新建模板引擎实例
@@ -438,20 +432,10 @@ func (s *Application) HasModule(name string) bool {
 }
 
 // NewStatic 新建静态资源实例
-func (s *Application) NewStatic(urlPath string, absPath string, register echo.MiddlewareRegister, f ...map[string]interface{}) *resource.Static {
+func (s *Application) NewStatic(urlPath string, absPath string, f ...map[string]interface{}) *resource.Static {
 	st := resource.NewStatic(urlPath, absPath)
 	if len(f) > 0 {
 		f[0] = st.Register(f[0])
-	}
-	stMW := mw.Static(&mw.StaticOptions{
-		Path:  urlPath,
-		Root:  absPath,
-		Debug: s.Core.Debug(),
-	})
-	if register != nil {
-		register.Pre(stMW)
-	} else {
-		s.Core.Pre(stMW)
 	}
 	return st
 }
@@ -465,22 +449,19 @@ func (s *Application) ThemeDir(args ...string) string {
 }
 
 // InitStatic 初始化静态资源
-func (s *Application) InitStatic(args ...echo.MiddlewareRegister) *Application {
-	var register echo.MiddlewareRegister
-	if len(args) > 0 {
-		register = args[0]
-	}
-	absPath := filepath.Join(s.ThemeDir(), s.StaticDir)
-	s.StaticRes = s.NewStatic(s.StaticDir, absPath, register, s.FuncMap)
+func (s *Application) InitStatic() *Application {
+	absPath := filepath.Join(s.ThemeDir(), s.Resource.Dir)
+	s.Resource.Static = s.NewStatic(s.Resource.Dir, absPath, s.FuncMap)
 	if s.Renderer != nil {
 		s.TemplateMonitor()
 	}
+	s.Core.Pre(s.Resource.Middleware())
 	return s
 }
 
 // TemplateMonitor 模板监控事件
 func (s *Application) TemplateMonitor() *Application {
-	s.Renderer.MonitorEvent(s.StaticRes.OnUpdate(s.ThemeDir()))
+	s.Renderer.MonitorEvent(s.Resource.Static.OnUpdate(s.ThemeDir()))
 	return s
 }
 
@@ -683,4 +664,11 @@ func (s *Application) Tree(args ...*echo.Echo) (r map[string]map[string]map[stri
 		}
 	}
 	return
+}
+
+func (s *Application) FuncMapCopyTo(m map[string]interface{}) *Application {
+	for k, v := range s.FuncMap {
+		m[k] = v
+	}
+	return s
 }
