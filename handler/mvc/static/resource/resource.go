@@ -287,9 +287,6 @@ func (s *Static) ClearCache() {
 
 func (s *Static) OnUpdate(tmplDir string) func(string) {
 	return func(name string) {
-		if s == nil {
-			return
-		}
 		if s.Public != nil {
 			s.Public.ClearCache()
 			if s.Public == s {

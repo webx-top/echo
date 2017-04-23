@@ -370,9 +370,18 @@ func (s *Application) resetRenderer(conf *render.Config) *Application {
 	if s.Renderer != nil {
 		s.Renderer.Close()
 	}
-	s.Renderer = s.NewTemplateEngine(s.ThemeDir(conf.Theme), conf)
+	themeAbsPath := s.ThemeDir(conf.Theme)
+	s.Renderer = s.NewTemplateEngine(themeAbsPath, conf)
 	s.Core.SetRenderer(s.Renderer)
-	s.TemplateMonitor()
+
+	if s.Resource.Static != nil {
+		s.TemplateMonitor()
+		staticURLPath := `/assets`
+		staticAbsPath := filepath.Join(themeAbsPath, s.Resource.Dir)
+		s.Resource.Static.Root = staticAbsPath
+		s.Resource.Static.Path = staticURLPath
+	}
+
 	s.Renderer.SetFuncMap(func() map[string]interface{} {
 		return s.FuncMap
 	})
