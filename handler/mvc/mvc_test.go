@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"errors"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/webx-top/echo"
+	mw "github.com/webx-top/echo/middleware"
+	"github.com/webx-top/echo/middleware/render"
 	test "github.com/webx-top/echo/testing"
 )
 
@@ -35,6 +38,24 @@ func TestChangeDomain(t *testing.T) {
 	})
 
 	blog := s.NewModule("blog")
+	funcMap := map[string]interface{}{}
+	s.FuncMapCopyTo(funcMap)
+	tmplConfig := &render.Config{}
+	//==================copy from Module#InitRenderer()
+	blog.Renderer, blog.Resource = blog.NewRenderer(tmplConfig, blog, funcMap)
+	if blog.Handler != nil {
+		blog.Handler.SetRenderer(blog.Renderer)
+		blog.Handler.Get(blog.Resource.Path+`/*`, func(c echo.Context) error {
+			return c.String(c.P(0))
+		})
+	} else {
+		blog.Group.Get(strings.TrimPrefix(blog.Resource.Path, `/`+blog.Name)+`/*`, func(c echo.Context) error {
+			return c.String(c.P(0))
+		})
+	}
+	blog.Use(mw.SimpleFuncMap(funcMap))
+	//===================================================
+	//blog.InitRenderer(tmplConfig, funcMap)
 
 	blog.Register(`/index`, func(ctx *Context) error {
 		return ctx.String(`OK:/blog/index`)
@@ -44,6 +65,11 @@ func TestChangeDomain(t *testing.T) {
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "OK:/blog/index", b)
 
+	// assets
+	c, b = request(echo.GET, "/blog/assets/webx.js", s)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "webx.js", b)
+
 	// change domain
 	c, b = request(echo.GET, "/setdomain?domain=blog.webx.top&module=blog", s)
 	assert.Equal(t, http.StatusOK, c)
@@ -52,6 +78,16 @@ func TestChangeDomain(t *testing.T) {
 	c, b = request(echo.GET, "/blog/index", s)
 	assert.Equal(t, http.StatusNotFound, c)
 	assert.Equal(t, http.StatusText(http.StatusNotFound), b)
+
+	// assets
+	c, b = request(echo.GET, "/blog/assets/webx.js", s)
+	assert.Equal(t, http.StatusNotFound, c)
+	assert.Equal(t, http.StatusText(http.StatusNotFound), b)
+
+	// assets
+	c, b = request(echo.GET, "http://blog.webx.top/assets/webx.js", s)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "webx.js", b)
 
 	c, b = request(echo.GET, "http://blog.webx.top/index", s)
 	assert.Equal(t, http.StatusOK, c)
@@ -65,6 +101,16 @@ func TestChangeDomain(t *testing.T) {
 	c, b = request(echo.GET, "http://blog.webx.top/index", s)
 	assert.Equal(t, http.StatusNotFound, c)
 	assert.Equal(t, http.StatusText(http.StatusNotFound), b)
+
+	// assets
+	c, b = request(echo.GET, "http://blog.webx.top/assets/webx.js", s)
+	assert.Equal(t, http.StatusNotFound, c)
+	assert.Equal(t, http.StatusText(http.StatusNotFound), b)
+
+	// assets
+	c, b = request(echo.GET, "/blog/assets/webx.js", s)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "webx.js", b)
 
 	c, b = request(echo.GET, "/blog/index", s)
 	assert.Equal(t, http.StatusOK, c)
