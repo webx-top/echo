@@ -536,8 +536,7 @@ func (e *Echo) add(method, prefix string, path string, h interface{}, middleware
 	}
 	rid := len(e.router.routes)
 	e.router.Add(r, rid)
-	if true || e.RouteDebug {
-		log.Sync()
+	if e.RouteDebug {
 		e.logger.Debugf(`Route: %7v %-30v -> %v`, method, r.Format, name)
 	}
 	if _, ok := e.router.nroute[name]; !ok {
