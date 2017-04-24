@@ -493,13 +493,14 @@ func (e *Echo) AddMiddlewareWrapper(funcs ...func(interface{}) Middleware) {
 	e.middlewareWrapper = append(e.middlewareWrapper, funcs...)
 }
 
-func (e *Echo) makeHandler(handler Handler, middleware ...interface{}) (name string, resultHandler Handler, meta H) {
+func (e *Echo) makeHandler(handler Handler, middleware ...interface{}) (string, Handler, H) {
+	var name string
 	if hn, ok := handler.(HandleName); ok {
 		name = hn.HandleName()
 	} else {
 		name = HandlerName(handler)
 	}
-	meta = H{}
+	meta := H{}
 	for i := len(middleware) - 1; i >= 0; i-- {
 		m := middleware[i]
 		mw := e.ValidMiddleware(m)
@@ -514,8 +515,7 @@ func (e *Echo) makeHandler(handler Handler, middleware ...interface{}) (name str
 		meta = mt.Meta()
 	}
 	e.addMeta(meta, name)
-	resultHandler = handler
-	return
+	return name, handler, meta
 }
 
 func (e *Echo) add(method, prefix string, path string, h interface{}, middleware ...interface{}) {
