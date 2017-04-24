@@ -40,7 +40,7 @@ type (
 		Logger() logger.Logger
 		Object() *xContext
 		Echo() *Echo
-		Meta() H
+		Route() *Route
 		Reset(engine.Request, engine.Response)
 
 		//----------------
@@ -217,9 +217,13 @@ type (
 		context             context.Context
 		request             engine.Request
 		response            engine.Response
+		path                string
+		pnames              []string
 		pvalues             []string
 		store               store
+		handler             Handler
 		route               *Route
+		rid                 int
 		echo                *Echo
 		funcs               map[string]interface{}
 		renderer            Renderer
@@ -271,7 +275,7 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 		echo:       e,
 		pvalues:    make([]string, *e.maxParam),
 		store:      make(store),
-		route:      NotFoundRoute,
+		handler:    NotFoundHandler,
 		funcs:      make(map[string]interface{}),
 		sessioner:  DefaultNopSession,
 	}
@@ -304,14 +308,18 @@ func (c *xContext) Value(key interface{}) interface{} {
 }
 
 func (c *xContext) Handle(ctx Context) error {
-	if c.route.Handler == nil {
-		return NotFoundHandler(ctx)
-	}
-	return c.route.Handler.Handle(ctx)
+	return c.handler.Handle(ctx)
 }
 
-func (c *xContext) Meta() H {
-	return c.route.Meta
+func (c *xContext) Route() *Route {
+	if c.route == nil {
+		if c.rid < 0 || c.rid >= len(c.echo.router.routes) {
+			c.route = defaultRoute
+		} else {
+			c.route = c.echo.router.routes[c.rid]
+		}
+	}
+	return c.route
 }
 
 // Request returns *http.Request.
@@ -326,12 +334,12 @@ func (c *xContext) Response() engine.Response {
 
 // Path returns the registered path for the handler.
 func (c *xContext) Path() string {
-	return c.route.Path
+	return c.path
 }
 
 // P returns path parameter by index.
 func (c *xContext) P(i int) (value string) {
-	l := len(c.route.Params)
+	l := len(c.pnames)
 	if i < l {
 		value = c.pvalues[i]
 	}
@@ -340,8 +348,8 @@ func (c *xContext) P(i int) (value string) {
 
 // Param returns path parameter by name.
 func (c *xContext) Param(name string) (value string) {
-	l := len(c.route.Params)
-	for i, n := range c.route.Params {
+	l := len(c.pnames)
+	for i, n := range c.pnames {
 		if n == name && i < l {
 			value = c.pvalues[i]
 			break
@@ -351,7 +359,7 @@ func (c *xContext) Param(name string) (value string) {
 }
 
 func (c *xContext) ParamNames() []string {
-	return c.route.Params
+	return c.pnames
 }
 
 func (c *xContext) ParamValues() []string {
@@ -658,9 +666,13 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.request = req
 	c.response = res
 	c.store = make(store)
+	c.path = ""
+	c.pnames = nil
 	c.funcs = make(map[string]interface{})
 	c.renderer = nil
-	c.route = NotFoundRoute
+	c.handler = NotFoundHandler
+	c.route = nil
+	c.rid = -1
 	c.sessionOptions = nil
 	c.withFormatExtension = false
 	c.format = ""

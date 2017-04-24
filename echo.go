@@ -523,15 +523,27 @@ func (e *Echo) add(method, prefix string, path string, h interface{}, middleware
 	if handler == nil {
 		return
 	}
-	name, handler, meta := e.makeHandler(handler, middleware...)
-	r := e.router.Add(method, prefix, path, handler, name, meta, e)
-	if e.RouteDebug {
+	name, xhandler, meta := e.makeHandler(handler, middleware...)
+	r := &Route{
+		Method:      method,
+		Path:        path,
+		Handler:     xhandler,
+		HandlerName: name,
+		Prefix:      prefix,
+		Meta:        meta,
+		handler:     h,
+		middleware:  middleware,
+	}
+	rid := len(e.router.routes)
+	e.router.Add(r, rid)
+	if true || e.RouteDebug {
+		log.Sync()
 		e.logger.Debugf(`Route: %7v %-30v -> %v`, method, r.Format, name)
 	}
 	if _, ok := e.router.nroute[name]; !ok {
-		e.router.nroute[name] = []int{len(e.router.routes)}
+		e.router.nroute[name] = []int{rid}
 	} else {
-		e.router.nroute[name] = append(e.router.nroute[name], len(e.router.routes))
+		e.router.nroute[name] = append(e.router.nroute[name], rid)
 	}
 	e.router.routes = append(e.router.routes, r)
 }
@@ -567,7 +579,7 @@ func (e *Echo) RebuildRouter(args ...[]*Route) {
 	e.router = NewRouter(e)
 	for i, r := range routes {
 		//e.logger.Debugf(`%p rebuild: %#v`, e, *r)
-		e.router.Add(r.Method, r.Prefix, r.Path, r.Handler, r.HandlerName, r.Meta, e)
+		e.router.Add(r, i)
 
 		if _, ok := e.router.nroute[r.HandlerName]; !ok {
 			e.router.nroute[r.HandlerName] = []int{i}
@@ -582,8 +594,8 @@ func (e *Echo) RebuildRouter(args ...[]*Route) {
 // AppendRouter append router
 func (e *Echo) AppendRouter(routes []*Route) {
 	for i, r := range routes {
-		e.router.Add(r.Method, r.Prefix, r.Path, r.Handler, r.HandlerName, r.Meta, e)
 		i = len(e.router.routes)
+		e.router.Add(r, i)
 		if _, ok := e.router.nroute[r.HandlerName]; !ok {
 			e.router.nroute[r.HandlerName] = []int{i}
 		} else {
