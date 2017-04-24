@@ -220,7 +220,3 @@ func Engine() engine.Engine {
 func Stop() error {
 	return Default.Stop()
 }
-
-func Meta() map[string]echo.H {
-	return Default.Meta()
-}

@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"testing"
 
+	"encoding/json"
+
 	"github.com/stretchr/testify/assert"
 	. "github.com/webx-top/echo"
 	test "github.com/webx-top/echo/testing"
@@ -183,22 +185,12 @@ func TestEchoHandler(t *testing.T) {
 func TestEchoMeta(t *testing.T) {
 	e := New()
 
-	middleware := e.MetaMiddleware(
-		H{"authorization": true, "data": H{"by": "middleware"}},
-		func(next HandlerFunc) HandlerFunc {
-			return func(c Context) error {
-				return next.Handle(c)
-			}
-		},
-	)
 	g := e.Group("/root")
-	g.Use(middleware)
 
 	g.Get("/", e.MetaHandler(
 		H{"version": 1.0, "data": H{"by": "handler"}},
 		func(c Context) error {
-			//Dump(c.Meta())
-			return c.String("OK")
+			return c.JSON(c.Route().Meta)
 		},
 	))
 
@@ -209,17 +201,18 @@ func TestEchoMeta(t *testing.T) {
 			meta = route.Meta
 		}
 	}
-	assert.Equal(t, H{
-		"authorization": true,
-		"version":       1.0,
+	expected := H{
+		"version": 1.0,
 		"data": H{
 			"by": "handler",
 		},
-	}, meta)
+	}
+	assert.Equal(t, expected, meta)
 
 	c, b := request(GET, "/root/", e)
 	assert.Equal(t, http.StatusOK, c)
-	assert.Equal(t, "OK", b)
+	expected2, _ := json.Marshal(expected)
+	assert.Equal(t, string(expected2), b)
 }
 
 func TestEchoData(t *testing.T) {

@@ -17,6 +17,11 @@ type (
 		echo   *Echo
 	}
 
+	meta struct {
+		name string
+		meta H
+	}
+
 	Route struct {
 		Method      string
 		Path        string
@@ -68,6 +73,28 @@ const (
 
 func (r *Route) IsZero() bool {
 	return r.Handler == nil
+}
+
+func (r *Route) apply(e *Echo) *Route {
+	handler := e.ValidHandler(r.handler)
+	middleware := r.middleware
+	if hn, ok := handler.(HandleName); ok {
+		r.HandlerName = hn.HandleName()
+	} else {
+		r.HandlerName = HandlerName(handler)
+	}
+	if mt, ok := handler.(Meta); ok {
+		r.Meta = mt.Meta()
+	} else {
+		r.Meta = H{}
+	}
+	for i := len(middleware) - 1; i >= 0; i-- {
+		m := middleware[i]
+		mw := e.ValidMiddleware(m)
+		handler = mw.Handle(handler)
+	}
+	r.Handler = handler
+	return r
 }
 
 func (m *methodHandler) addHandler(method string, h Handler, rid int) {

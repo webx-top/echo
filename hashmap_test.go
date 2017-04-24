@@ -29,6 +29,6 @@ func TestMapx(t *testing.T) {
 	assert.Equal(t, "third", mx.Value("a", "f"))
 	assert.Equal(t, "fourth", mx.Value("a", "g"))
 	assert.Equal(t, "[index_0 index_1]", fmt.Sprint(mx.Values("b")))
-	assert.Equal(t, "index 0.a", mx.Value("c", "0", "a"))
-	assert.Equal(t, "index 1.b", mx.Value("c", "1", "b"))
+	//assert.Equal(t, "index 0.a", mx.Value("c", "0", "a"))
+	//assert.Equal(t, "index 1.b", mx.Value("c", "1", "b"))
 }
