@@ -347,7 +347,7 @@ func (e *Echo) Use(middleware ...interface{}) {
 	}
 }
 
-// Pre is alias
+// Pre is an alias for `PreUse` function.
 func (e *Echo) Pre(middleware ...interface{}) {
 	e.PreUse(middleware...)
 }
@@ -493,18 +493,13 @@ func (e *Echo) AddMiddlewareWrapper(funcs ...func(interface{}) Middleware) {
 	e.middlewareWrapper = append(e.middlewareWrapper, funcs...)
 }
 
-func (e *Echo) add(method, prefix string, path string, h interface{}, middleware ...interface{}) {
-	handler := e.ValidHandler(h)
-	if handler == nil {
-		return
-	}
-	var name string
+func (e *Echo) makeHandler(handler Handler, middleware ...interface{}) (name string, resultHandler Handler, meta H) {
 	if hn, ok := handler.(HandleName); ok {
 		name = hn.HandleName()
 	} else {
 		name = HandlerName(handler)
 	}
-	meta := H{}
+	meta = H{}
 	for i := len(middleware) - 1; i >= 0; i-- {
 		m := middleware[i]
 		mw := e.ValidMiddleware(m)
@@ -519,10 +514,17 @@ func (e *Echo) add(method, prefix string, path string, h interface{}, middleware
 		meta = mt.Meta()
 	}
 	e.addMeta(meta, name)
-	hdl := HandlerFunc(func(c Context) error {
-		return handler.Handle(c)
-	})
-	r := e.router.Add(method, prefix, path, hdl, name, meta, e)
+	resultHandler = handler
+	return
+}
+
+func (e *Echo) add(method, prefix string, path string, h interface{}, middleware ...interface{}) {
+	handler := e.ValidHandler(h)
+	if handler == nil {
+		return
+	}
+	name, handler, meta := e.makeHandler(handler, middleware...)
+	r := e.router.Add(method, prefix, path, handler, name, meta, e)
 	if e.RouteDebug {
 		e.logger.Debugf(`Route: %7v %-30v -> %v`, method, r.Format, name)
 	}

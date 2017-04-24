@@ -42,6 +42,7 @@ func (g *Group) Use(middleware ...interface{}) {
 	}
 }
 
+// Pre is an alias for `PreUse` function.
 func (g *Group) Pre(middleware ...interface{}) {
 	g.PreUse(middleware...)
 }
