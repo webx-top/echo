@@ -678,6 +678,8 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.format = ""
 	c.code = 0
 	c.preResponseHook = nil
+	// NOTE: Don't reset because it has to have length c.echo.maxParam at all times
+	// c.pvalues = nil
 }
 
 func (c *xContext) GetFunc(key string) interface{} {
