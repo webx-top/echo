@@ -9,5 +9,7 @@ before_install:
 script:
     - go test -coverprofile=echo.coverprofile
     - go test -coverprofile=middleware.coverprofile ./middleware
+    - go test -coverprofile=mvc.coverprofile ./handler/mvc
+    - go test -coverprofile=session.coverprofile ./middleware/session
     - $HOME/gopath/bin/gover
 #    - $HOME/gopath/bin/goveralls -coverprofile=gover.coverprofile -service=travis-ci
