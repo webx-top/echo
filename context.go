@@ -7,7 +7,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"mime"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -637,16 +636,6 @@ func (c *xContext) ServeContent(content io.ReadSeeker, name string, modtime time
 	rs.SetKeepBody(false)
 	_, err := io.Copy(rs, content)
 	return err
-}
-
-// ContentTypeByExtension returns the MIME type associated with the file based on
-// its extension. It returns `application/octet-stream` incase MIME type is not
-// found.
-func ContentTypeByExtension(name string) (t string) {
-	if t = mime.TypeByExtension(filepath.Ext(name)); len(t) == 0 {
-		t = MIMEOctetStream
-	}
-	return
 }
 
 // Echo returns the `Echo` instance.

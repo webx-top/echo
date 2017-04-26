@@ -5,8 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"reflect"
-	"runtime"
 	"strings"
 	"sync"
 
@@ -309,6 +307,22 @@ func (e *Echo) Match(methods []string, path string, h interface{}, middleware ..
 	}
 }
 
+// Static registers a new route with path prefix to serve static files from the
+// provided root directory.
+func (e *Echo) Static(prefix, root string) {
+	if root == "" {
+		root = "." // For security we want to restrict to CWD.
+	}
+	static(e, prefix, root)
+}
+
+// File registers a new route with path to serve a static file.
+func (e *Echo) File(path, file string) {
+	e.Get(path, func(c Context) error {
+		return c.File(file)
+	})
+}
+
 func (e *Echo) ValidHandler(v interface{}) (h Handler) {
 	if e.handlerWrapper != nil {
 		for _, wrapper := range e.handlerWrapper {
@@ -549,19 +563,4 @@ func (e *Echo) Stop() error {
 		return nil
 	}
 	return e.engine.Stop()
-}
-
-// HandlerName returns the handler name
-func HandlerName(h interface{}) string {
-	v := reflect.ValueOf(h)
-	t := v.Type()
-	if t.Kind() == reflect.Func {
-		return runtime.FuncForPC(v.Pointer()).Name()
-	}
-	return t.String()
-}
-
-// Methods returns methods
-func Methods() []string {
-	return methods
 }

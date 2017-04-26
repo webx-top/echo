@@ -4,8 +4,6 @@ import (
 	"bytes"
 )
 
-const ParamStar = "_*"
-
 var defaultRoute = &Route{}
 
 type (
@@ -231,7 +229,7 @@ func (r *Router) Add(rt *Route, rid int) {
 		} else if path[i] == '*' {
 			uri.WriteString(`%v`)
 			r.insert(rt.Method, path[:i], nil, skind, "", nil, -1)
-			pnames = append(pnames, "_*")
+			pnames = append(pnames, "*")
 			r.insert(rt.Method, path[:i+1], rt.Handler, akind, ppath, pnames, rid)
 			return
 		}
