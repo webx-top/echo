@@ -163,11 +163,6 @@ func AddMiddlewareWrapper(funcs ...func(interface{}) echo.Middleware) {
 	Default.AddMiddlewareWrapper(funcs...)
 }
 
-// MetaMiddleware Add meta information about endpoint
-func MetaMiddleware(m echo.H, middleware interface{}) interface{} {
-	return Default.MetaMiddleware(m, middleware)
-}
-
 // MetaHandler Add meta information about endpoint
 func MetaHandler(m echo.H, handler interface{}) interface{} {
 	return Default.MetaHandler(m, handler)
