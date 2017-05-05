@@ -63,9 +63,13 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"Eq":       Eq,
 	"Add":      Add,
 	"Sub":      Sub,
+	"Div":      Div,
+	"Mul":      Mul,
 	"IsNil":    IsNil,
 	"IsEmpty":  IsEmpty,
 	"NotEmpty": NotEmpty,
+	"IsNaN":    IsNaN,
+	"IsInf":    IsInf,
 
 	// ======================
 	// conversion type
@@ -91,8 +95,6 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"Float64":     com.Float64,
 	"ToFloat64":   ToFloat64,
 	"Math":        Math,
-	"IsNaN":       IsNaN,
-	"IsInf":       IsInf,
 
 	// ======================
 	// string
