@@ -94,6 +94,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"Float32":     com.Float32,
 	"Float64":     com.Float64,
 	"ToFloat64":   ToFloat64,
+	"ToFixed":     ToFixed,
 	"Math":        Math,
 
 	// ======================
@@ -326,12 +327,13 @@ func interface2Float64(value interface{}) (float64, bool) {
 }
 
 func ToFloat64(value interface{}) float64 {
-	v, isInt := interface2Int64(value)
-	if isInt {
+	if v, ok := interface2Int64(value); ok {
 		return float64(v)
 	}
-	fv, _ := interface2Float64(value)
-	return fv
+	if v, ok := interface2Float64(value); ok {
+		return v
+	}
+	return com.Float64(value)
 }
 
 func Add(left interface{}, right interface{}) interface{} {
@@ -497,6 +499,10 @@ func Sub(left interface{}, right interface{}) interface{} {
 		return rleft - rright
 	}
 	return fleft + float64(rleft) - (fright + float64(rright))
+}
+
+func ToFixed(value interface{}, precision interface{}) string {
+	return fmt.Sprintf("%.*f", com.Int(precision), ToFloat64(value))
 }
 
 func Now() time.Time {
