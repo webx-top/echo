@@ -352,13 +352,21 @@ func Add(left interface{}, right interface{}) interface{} {
 	return fleft + fright + float64(intSum)
 }
 
+func Div(left interface{}, right interface{}) interface{} {
+	return ToFloat64(left) / ToFloat64(right)
+}
+
+func Mul(left interface{}, right interface{}) interface{} {
+	return ToFloat64(left) * ToFloat64(right)
+}
+
 func Math(op string, args ...interface{}) interface{} {
 	length := len(args)
 	if length < 1 {
 		return float64(0)
 	}
 	switch op {
-	case `mod`:
+	case `mod`: //模
 		if length < 2 {
 			return float64(0)
 		}
@@ -420,12 +428,12 @@ func Math(op string, args ...interface{}) interface{} {
 			return float64(0)
 		}
 		return math.Min(ToFloat64(args[0]), ToFloat64(args[1]))
-	case `pow`:
+	case `pow`: //幂
 		if length < 2 {
 			return float64(0)
 		}
 		return math.Pow(ToFloat64(args[0]), ToFloat64(args[1]))
-	case `sqrt`:
+	case `sqrt`: //平方根
 		return math.Sqrt(ToFloat64(args[0]))
 	case `sin`:
 		return math.Sin(ToFloat64(args[0]))
@@ -439,6 +447,26 @@ func Math(op string, args ...interface{}) interface{} {
 		return math.Tan(ToFloat64(args[0]))
 	case `tanh`:
 		return math.Tanh(ToFloat64(args[0]))
+	case `add`: //加
+		if length < 2 {
+			return float64(0)
+		}
+		return Add(ToFloat64(args[0]), ToFloat64(args[1]))
+	case `sub`: //减
+		if length < 2 {
+			return float64(0)
+		}
+		return Sub(ToFloat64(args[0]), ToFloat64(args[1]))
+	case `mul`: //乘
+		if length < 2 {
+			return float64(0)
+		}
+		return Mul(ToFloat64(args[0]), ToFloat64(args[1]))
+	case `div`: //除
+		if length < 2 {
+			return float64(0)
+		}
+		return Div(ToFloat64(args[0]), ToFloat64(args[1]))
 	}
 	return nil
 }
