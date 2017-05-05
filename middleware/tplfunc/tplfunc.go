@@ -91,6 +91,8 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"Float64":     com.Float64,
 	"ToFloat64":   ToFloat64,
 	"Math":        Math,
+	"IsNaN":       IsNaN,
+	"IsInf":       IsInf,
 
 	// ======================
 	// string
@@ -439,6 +441,14 @@ func Math(op string, args ...interface{}) interface{} {
 		return math.Tanh(ToFloat64(args[0]))
 	}
 	return nil
+}
+
+func IsNaN(v interface{}) bool {
+	return math.IsNaN(ToFloat64(v))
+}
+
+func IsInf(v interface{}, s interface{}) bool {
+	return math.IsInf(ToFloat64(v), com.Int(s))
 }
 
 func Sub(left interface{}, right interface{}) interface{} {
