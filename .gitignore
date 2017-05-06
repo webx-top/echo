@@ -18,3 +18,4 @@ node_modules
 /*.log
 /.vscode
 /middleware/session/test/*.exe
+*.test

@@ -8,8 +8,11 @@ import (
 	"github.com/webx-top/echo/engine/standard"
 )
 
-func Request(method, path string, handler engine.Handler) *httptest.ResponseRecorder {
+func Request(method, path string, handler engine.Handler, reqRewrite ...func(*http.Request)) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(method, path, nil)
+	if len(reqRewrite) > 0 && reqRewrite[0] != nil {
+		reqRewrite[0](req)
+	}
 	rec := httptest.NewRecorder()
 
 	handler.ServeHTTP(standard.NewRequest(req), standard.NewResponse(rec, req, nil))
