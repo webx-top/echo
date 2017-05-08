@@ -38,3 +38,13 @@ type HTTPError struct {
 func (e *HTTPError) Error() string {
 	return e.Message
 }
+
+func NewPanicError(err error) *PanicError {
+	return &PanicError{
+		error: err,
+	}
+}
+
+type PanicError struct {
+	error
+}

@@ -249,7 +249,7 @@ func (a *Module) SafelyCall(fn reflect.Value, args []reflect.Value) (resp []refl
 				content += "\n" + fmt.Sprintf(`%v %v`, file, line)
 			}
 			a.Application.Core.Logger().Error(content)
-			err = errors.New(content)
+			err = echo.NewPanicError(errors.New(content))
 		}
 	}()
 	if fn.Type().NumIn() > 0 {

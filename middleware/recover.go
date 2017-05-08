@@ -79,7 +79,7 @@ func RecoverWithConfig(config RecoverConfig) echo.MiddlewareFunc {
 							err = errDetail
 						}
 					}
-					c.Error(err)
+					c.Error(echo.NewPanicError(err))
 				}
 			}()
 			return next.Handle(c)
