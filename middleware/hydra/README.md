@@ -1,5 +1,5 @@
 # hydra
-[Hydra](https://github.com/ory-am/hydra) middleware for [Echo](https://github.com/webx-top/echo) framework.
+[Hydra](https://github.com/ory/hydra) middleware for [Echo](https://github.com/webx-top/echo) framework.
 It uses Hydra's API to extract and validate auth token.
 
 ## Example
@@ -8,7 +8,7 @@ It uses Hydra's API to extract and validate auth token.
 import (
     "github.com/webx-top/echo"
     "github.com/webx-top/echo/engine/standard"
-    "github.com/ory-am/hydra/firewall"
+    "github.com/ory/hydra/firewall"
     hydraMW "github.com/webx-top/echo/middleware/hydra"
 )
 

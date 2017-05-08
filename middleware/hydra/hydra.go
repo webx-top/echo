@@ -20,10 +20,10 @@ package hydra
 import (
 	"fmt"
 
-	"github.com/ory-am/fosite"
-	"github.com/ory-am/hydra/firewall"
-	hydraSDK "github.com/ory-am/hydra/sdk"
-	"github.com/ory-am/ladon"
+	"github.com/ory/fosite"
+	"github.com/ory/hydra/firewall"
+	hydraSDK "github.com/ory/hydra/sdk"
+	"github.com/ory/ladon"
 	"github.com/webx-top/echo"
 )
 
