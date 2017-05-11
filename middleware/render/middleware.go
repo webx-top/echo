@@ -158,7 +158,7 @@ func HTTPErrorHandler(templates map[int]string, options ...*Options) echo.HTTPEr
 	return func(err error, c echo.Context) {
 		code := opt.DefaultErrorHTTPCode
 		var msg string
-		var isPanic bool
+		var panicErr *echo.PanicError
 		switch e := err.(type) {
 		case *echo.HTTPError:
 			if e.Code > 0 {
@@ -166,7 +166,7 @@ func HTTPErrorHandler(templates map[int]string, options ...*Options) echo.HTTPEr
 			}
 			msg = e.Message
 		case *echo.PanicError:
-			isPanic = true
+			panicErr = e
 		}
 		title := http.StatusText(code)
 		if c.Echo().Debug() {
@@ -189,7 +189,7 @@ func HTTPErrorHandler(templates map[int]string, options ...*Options) echo.HTTPEr
 						"content": msg,
 						"debug":   c.Echo().Debug(),
 						"code":    code,
-						"isPanic": isPanic,
+						"panic":   panicErr,
 					}))
 					c.Set(opt.TmplKey, t)
 					c.SetCode(code)

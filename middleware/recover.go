@@ -63,6 +63,7 @@ func RecoverWithConfig(config RecoverConfig) echo.MiddlewareFunc {
 
 			defer func() {
 				if r := recover(); r != nil {
+					panicErr := echo.NewPanicError(r, nil)
 					var err error
 					switch r := r.(type) {
 					case error:
@@ -70,16 +71,30 @@ func RecoverWithConfig(config RecoverConfig) echo.MiddlewareFunc {
 					default:
 						err = fmt.Errorf("%v", r)
 					}
-					stack := make([]byte, config.StackSize)
-					length := runtime.Stack(stack, !config.DisableStackAll)
-					if !config.DisablePrintStack {
-						errDetail := fmt.Errorf("[%s] %s %s", "PANIC RECOVER", err, stack[:length])
-						c.Logger().Error(errDetail)
-						if c.Echo().Debug() {
-							err = errDetail
-						}
+					if config.DisableStackAll {
+						c.Error(panicErr.SetError(err))
+						return
 					}
-					c.Error(echo.NewPanicError(err))
+					var content string
+					for i := 1; len(content) < config.StackSize; i++ {
+						pc, file, line, ok := runtime.Caller(i)
+						if !ok {
+							break
+						}
+						t := &echo.Trace{
+							File: file,
+							Line: line,
+							Func: runtime.FuncForPC(pc).Name(),
+						}
+						panicErr.AddTrace(t)
+						content += "\n" + fmt.Sprintf(`%v:%v`, file, line)
+					}
+					errDetail := fmt.Errorf("[%s] %s %s", "PANIC RECOVER", err, content)
+					c.Logger().Error(errDetail)
+					if c.Echo().Debug() {
+						err = errDetail
+					}
+					c.Error(panicErr.SetErrorString(content))
 				}
 			}()
 			return next.Handle(c)

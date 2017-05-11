@@ -18,7 +18,6 @@
 package mvc
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"runtime"
@@ -239,17 +238,24 @@ func (a *Module) SafelyCall(fn reflect.Value, args []reflect.Value) (resp []refl
 	defer func() {
 		if e := recover(); e != nil {
 			resp = nil
+			panicErr := echo.NewPanicError(e, nil)
 			var content string
 			content = fmt.Sprintf(`Handler crashed with error: %v`, e)
 			for i := 1; ; i++ {
-				_, file, line, ok := runtime.Caller(i)
+				pc, file, line, ok := runtime.Caller(i)
 				if !ok {
 					break
 				}
-				content += "\n" + fmt.Sprintf(`%v %v`, file, line)
+				t := &echo.Trace{
+					File: file,
+					Line: line,
+					Func: runtime.FuncForPC(pc).Name(),
+				}
+				panicErr.AddTrace(t)
+				content += "\n" + fmt.Sprintf(`%v:%v`, file, line)
 			}
 			a.Application.Core.Logger().Error(content)
-			err = echo.NewPanicError(errors.New(content))
+			err = panicErr.SetErrorString(content)
 		}
 	}()
 	if fn.Type().NumIn() > 0 {
