@@ -76,6 +76,7 @@ type PanicError struct {
 	Raw      interface{}
 	Traces   []*Trace
 	Snippets []*SnippetGroup
+	debug    bool
 }
 
 type SnippetGroup struct {
@@ -241,4 +242,13 @@ func (p *PanicError) SetError(err error) *PanicError {
 func (p *PanicError) SetErrorString(errStr string) *PanicError {
 	p.error = errors.New(errStr)
 	return p
+}
+
+func (p *PanicError) SetDebug(on bool) *PanicError {
+	p.debug = on
+	return p
+}
+
+func (p *PanicError) Debug() bool {
+	return p.debug
 }

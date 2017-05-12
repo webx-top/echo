@@ -239,8 +239,8 @@ func (a *Module) SafelyCall(fn reflect.Value, args []reflect.Value) (resp []refl
 		if e := recover(); e != nil {
 			resp = nil
 			panicErr := echo.NewPanicError(e, nil)
-			var content string
-			content = fmt.Sprintf(`Handler crashed with error: %v`, e)
+			panicErr.SetDebug(a.Application.Core.Debug())
+			content := fmt.Sprintf(`Handler crashed with error: %v`, e)
 			for i := 1; ; i++ {
 				pc, file, line, ok := runtime.Caller(i)
 				if !ok {
@@ -254,8 +254,9 @@ func (a *Module) SafelyCall(fn reflect.Value, args []reflect.Value) (resp []refl
 				panicErr.AddTrace(t)
 				content += "\n" + fmt.Sprintf(`%v:%v`, file, line)
 			}
-			a.Application.Core.Logger().Error(content)
-			err = panicErr.SetErrorString(content)
+			panicErr.SetErrorString(content)
+			a.Application.Core.Logger().Error(panicErr)
+			err = panicErr
 		}
 	}()
 	if fn.Type().NumIn() > 0 {

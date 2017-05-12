@@ -64,6 +64,7 @@ func RecoverWithConfig(config RecoverConfig) echo.MiddlewareFunc {
 			defer func() {
 				if r := recover(); r != nil {
 					panicErr := echo.NewPanicError(r, nil)
+					panicErr.SetDebug(c.Echo().Debug())
 					var err error
 					switch r := r.(type) {
 					case error:
@@ -75,7 +76,7 @@ func RecoverWithConfig(config RecoverConfig) echo.MiddlewareFunc {
 						c.Error(panicErr.SetError(err))
 						return
 					}
-					var content string
+					content := "[PANIC RECOVER] " + err.Error()
 					for i := 1; len(content) < config.StackSize; i++ {
 						pc, file, line, ok := runtime.Caller(i)
 						if !ok {
@@ -89,12 +90,9 @@ func RecoverWithConfig(config RecoverConfig) echo.MiddlewareFunc {
 						panicErr.AddTrace(t)
 						content += "\n" + fmt.Sprintf(`%v:%v`, file, line)
 					}
-					errDetail := fmt.Errorf("[%s] %s %s", "PANIC RECOVER", err, content)
-					c.Logger().Error(errDetail)
-					if c.Echo().Debug() {
-						err = errDetail
-					}
-					c.Error(panicErr.SetErrorString(content))
+					panicErr.SetErrorString(content)
+					c.Logger().Error(panicErr)
+					c.Error(panicErr)
 				}
 			}()
 			return next.Handle(c)
