@@ -40,44 +40,44 @@ func (s store) String(key string) string {
 
 func (s store) HTML(key string) template.HTML {
 	val := s.Get(key)
-	if v, y := val.(string); y {
-		return template.HTML(v)
-	}
 	if v, y := val.(template.HTML); y {
 		return v
+	}
+	if v, y := val.(string); y {
+		return template.HTML(v)
 	}
 	return emptyHTML
 }
 
 func (s store) HTMLAttr(key string) template.HTMLAttr {
 	val := s.Get(key)
-	if v, y := val.(string); y {
-		return template.HTMLAttr(v)
-	}
 	if v, y := val.(template.HTMLAttr); y {
 		return v
+	}
+	if v, y := val.(string); y {
+		return template.HTMLAttr(v)
 	}
 	return emptyHTMLAttr
 }
 
 func (s store) JS(key string) template.JS {
 	val := s.Get(key)
-	if v, y := val.(string); y {
-		return template.JS(v)
-	}
 	if v, y := val.(template.JS); y {
 		return v
+	}
+	if v, y := val.(string); y {
+		return template.JS(v)
 	}
 	return emptyJS
 }
 
 func (s store) CSS(key string) template.CSS {
 	val := s.Get(key)
-	if v, y := val.(string); y {
-		return template.CSS(v)
-	}
 	if v, y := val.(template.CSS); y {
 		return v
+	}
+	if v, y := val.(string); y {
+		return template.CSS(v)
 	}
 	return emptyCSS
 }
