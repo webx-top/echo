@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 	"unicode"
 
@@ -232,37 +231,7 @@ type (
 		code                int
 		preResponseHook     []func() error
 	}
-
-	store map[string]interface{}
 )
-
-var mutex sync.RWMutex
-
-func (s store) Set(key string, value interface{}) store {
-	mutex.Lock()
-	s[key] = value
-	mutex.Unlock()
-	return s
-}
-
-func (s store) Get(key string) interface{} {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	if v, y := s[key]; y {
-		return v
-	}
-	return nil
-}
-
-func (s store) Delete(keys ...string) {
-	mutex.Lock()
-	for _, key := range keys {
-		if _, y := s[key]; y {
-			delete(s, key)
-		}
-	}
-	mutex.Unlock()
-}
 
 // NewContext creates a Context object.
 func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
