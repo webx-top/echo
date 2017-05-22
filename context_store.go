@@ -2,6 +2,7 @@ package echo
 
 import (
 	"html/template"
+	"strconv"
 	"sync"
 )
 
@@ -90,49 +91,111 @@ func (s store) Bool(key string) bool {
 }
 
 func (s store) Float64(key string) float64 {
-	if v, y := s.Get(key).(float64); y {
+	val := s.Get(key)
+	if v, y := val.(float64); y {
+		return v
+	}
+	if v, y := val.(int64); y {
+		return float64(v)
+	}
+	if v, y := val.(uint64); y {
+		return float64(v)
+	}
+	if v, y := val.(float32); y {
+		return float64(v)
+	}
+	if v, y := val.(int32); y {
+		return float64(v)
+	}
+	if v, y := val.(uint32); y {
+		return float64(v)
+	}
+	if v, y := val.(int); y {
+		return float64(v)
+	}
+	if v, y := val.(uint); y {
+		return float64(v)
+	}
+	if v, y := val.(string); y {
+		v, _ := strconv.ParseFloat(v, 64)
 		return v
 	}
 	return 0
 }
 
 func (s store) Float32(key string) float32 {
-	if v, y := s.Get(key).(float32); y {
+	val := s.Get(key)
+	if v, y := val.(float32); y {
 		return v
+	}
+	if v, y := val.(int32); y {
+		return float32(v)
+	}
+	if v, y := val.(uint32); y {
+		return float32(v)
+	}
+	if v, y := val.(string); y {
+		v, _ := strconv.ParseFloat(v, 32)
+		return float32(v)
 	}
 	return 0
 }
 
 func (s store) Int8(key string) int8 {
-	if v, y := s.Get(key).(int8); y {
+	val := s.Get(key)
+	if v, y := val.(int8); y {
 		return v
+	}
+	if v, y := val.(string); y {
+		v, _ := strconv.ParseInt(v, 10, 8)
+		return int8(v)
 	}
 	return 0
 }
 
 func (s store) Int16(key string) int16 {
-	if v, y := s.Get(key).(int16); y {
+	val := s.Get(key)
+	if v, y := val.(int16); y {
 		return v
+	}
+	if v, y := val.(string); y {
+		v, _ := strconv.ParseInt(v, 10, 16)
+		return int16(v)
 	}
 	return 0
 }
 
 func (s store) Int(key string) int {
-	if v, y := s.Get(key).(int); y {
+	val := s.Get(key)
+	if v, y := val.(int); y {
+		return v
+	}
+	if v, y := val.(string); y {
+		v, _ := strconv.Atoi(v)
 		return v
 	}
 	return 0
 }
 
 func (s store) Int32(key string) int32 {
-	if v, y := s.Get(key).(int32); y {
+	val := s.Get(key)
+	if v, y := val.(int32); y {
 		return v
+	}
+	if v, y := val.(string); y {
+		v, _ := strconv.ParseInt(v, 10, 32)
+		return int32(v)
 	}
 	return 0
 }
 
 func (s store) Int64(key string) int64 {
-	if v, y := s.Get(key).(int64); y {
+	val := s.Get(key)
+	if v, y := val.(int64); y {
+		return v
+	}
+	if v, y := val.(string); y {
+		v, _ := strconv.ParseInt(v, 10, 64)
 		return v
 	}
 	return 0
@@ -153,35 +216,60 @@ func (s store) Incr(key string, n int64) int64 {
 }
 
 func (s store) Uint8(key string) uint8 {
-	if v, y := s.Get(key).(uint8); y {
+	val := s.Get(key)
+	if v, y := val.(uint8); y {
 		return v
+	}
+	if v, y := val.(string); y {
+		v, _ := strconv.ParseUint(v, 10, 8)
+		return uint8(v)
 	}
 	return 0
 }
 
 func (s store) Uint16(key string) uint16 {
-	if v, y := s.Get(key).(uint16); y {
+	val := s.Get(key)
+	if v, y := val.(uint16); y {
 		return v
+	}
+	if v, y := val.(string); y {
+		v, _ := strconv.ParseUint(v, 10, 16)
+		return uint16(v)
 	}
 	return 0
 }
 
 func (s store) Uint(key string) uint {
-	if v, y := s.Get(key).(uint); y {
+	val := s.Get(key)
+	if v, y := val.(uint); y {
 		return v
+	}
+	if v, y := val.(string); y {
+		v, _ := strconv.ParseUint(v, 10, 32)
+		return uint(v)
 	}
 	return 0
 }
 
 func (s store) Uint32(key string) uint32 {
-	if v, y := s.Get(key).(uint32); y {
+	val := s.Get(key)
+	if v, y := val.(uint32); y {
 		return v
+	}
+	if v, y := val.(string); y {
+		v, _ := strconv.ParseUint(v, 10, 32)
+		return uint32(v)
 	}
 	return 0
 }
 
 func (s store) Uint64(key string) uint64 {
-	if v, y := s.Get(key).(uint64); y {
+	val := s.Get(key)
+	if v, y := val.(uint64); y {
+		return v
+	}
+	if v, y := val.(string); y {
+		v, _ := strconv.ParseUint(v, 10, 64)
 		return v
 	}
 	return 0
