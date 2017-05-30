@@ -1,0 +1,21 @@
+{{extends "layout.html"}}
+
+{{block title()}}
+{{yield content}} - powered by webx.top
+{{end}}
+
+{{block body()}}
+ <div>
+    Hello World.
+ </div>
+  {{include "included.html" .}}
+
+{{end}}
+{{block foot()}}
+<br />-----------------foot---------------<br />
+{{include "included2.html" .}}
+{{end}}
+
+{{block no()}}
+{{empty}} www.webx.top
+{{end}}
