@@ -398,7 +398,10 @@ func (c *Context) GotoNext(defaultURL ...string) error {
 
 // GetNextURL 自动获取下一步网址
 func (c *Context) GetNextURL() string {
-	next := c.Form(`next`)
+	next := c.Header(`X-Next`)
+	if len(next) == 0 {
+		next = c.Form(`next`)
+	}
 	if len(next) > 0 {
 		return c.ParseNextURL(next)
 	}
