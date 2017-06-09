@@ -506,12 +506,26 @@ func (c *Context) Redir(url string, args ...interface{}) error {
 		}
 	}
 	c.Exit()
-	if c.Format() != `html` {
+	if c.Format() != `html` || c.echoRedirect() {
 		c.Set(`webx:ignoreRender`, false)
 		c.Assign(`Location`, url)
 		return c.Display()
 	}
 	return c.Context.Redirect(url, code)
+}
+
+func (c *Context) echoRedirect() bool {
+	format := c.Header(`X-Echo-Redirect`)
+	if len(format) == 0 {
+		return false
+	}
+	switch format {
+	case `json`, `xml`:
+		c.SetFormat(format)
+		return true
+	default:
+		return false
+	}
 }
 
 // Goto 页面跳转(根据路由生成网址后跳转)

@@ -167,6 +167,7 @@ type (
 		IsPjax() bool
 		Method() string
 		Format() string
+		SetFormat(string)
 		IsPost() bool
 		IsGet() bool
 		IsPut() bool
@@ -783,6 +784,10 @@ func (c *xContext) Format() string {
 		c.format = c.ResolveFormat()
 	}
 	return c.format
+}
+
+func (c *xContext) SetFormat(format string) {
+	c.format = format
 }
 
 // IsPost CREATE：在服务器新建一个资源
