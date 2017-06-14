@@ -154,8 +154,8 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	// ======================
 	// other
 	// ======================
-	"NoOutput": NoOutput,
-	"Default":  Default,
+	"Ignore":  Ignore,
+	"Default": Default,
 }
 
 func JsonEncode(s interface{}) string {
@@ -163,7 +163,7 @@ func JsonEncode(s interface{}) string {
 	return r
 }
 
-func NoOutput(_ interface{}) interface{} {
+func Ignore(_ interface{}) interface{} {
 	return nil
 }
 
