@@ -18,7 +18,6 @@
 package render
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/webx-top/echo"
@@ -112,8 +111,6 @@ func AutoOutput(options ...*Options) echo.MiddlewareFunc {
 // Output Outputs the specified format
 func Output(format string, c echo.Context, opt *Options) error {
 	data := c.Get(opt.DataKey)
-	fmt.Println(`---------------------------------------------------`)
-	echo.Dump(data)
 	switch format {
 	case `json`:
 		return c.JSON(data)
