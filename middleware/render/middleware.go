@@ -190,7 +190,7 @@ func HTTPErrorHandler(templates map[int]string, options ...*Options) echo.HTTPEr
 						"debug":   c.Echo().Debug(),
 						"code":    code,
 						"panic":   panicErr,
-					}))
+					}, 0))
 					c.Set(opt.TmplKey, t)
 					c.SetCode(code)
 					if err := opt.OutputFunc(c.Format(), c, opt); err != nil {
