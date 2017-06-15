@@ -216,7 +216,8 @@ func TestEchoMeta(t *testing.T) {
 }
 
 func TestEchoData(t *testing.T) {
-	data := NewData(nil, 0)
+	data := NewData(nil)
+	data.SetCode(0)
 	assert.Equal(t, 0, data.Code.Int())
 	assert.Equal(t, `0`, fmt.Sprintf(`%d`, data.Code))
 	assert.Equal(t, `Failure`, fmt.Sprintf(`%v`, data.Code))
