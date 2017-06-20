@@ -37,7 +37,7 @@ type Status struct {
 
 var (
 	//States 状态码对应的文本
-	defaultStates = map[State]*Status{
+	States = map[State]*Status{
 		-2: {`Non-Privileged`, http.StatusOK},  //无权限
 		-1: {`Unauthenticated`, http.StatusOK}, //未登录
 		0:  {`Failure`, http.StatusOK},         //操作失败
@@ -45,7 +45,7 @@ var (
 	}
 	//GetStatus 获取状态值
 	GetStatus = func(key State) (*Status, bool) {
-		v, y := defaultStates[key]
+		v, y := States[key]
 		return v, y
 	}
 )
