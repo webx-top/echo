@@ -134,16 +134,11 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 		names := strings.Split(k, `.`)
 		var (
 			err      error
-			isSlice  bool
 			propPath string
 		)
 		length := len(names)
 		if length == 1 && strings.HasSuffix(k, `]`) {
-			isSlice = strings.HasSuffix(k, `[]`)
 			names = FormNames(k)
-			if isSlice {
-				names = append(names, "")
-			}
 			length = len(names)
 		}
 		value := vc
@@ -181,16 +176,8 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 					value = value.Elem()
 				}
 				if value.Kind() != reflect.Struct {
-					switch value.Kind() {
-					case reflect.Slice, reflect.Array:
-						if isSlice && i == length-2 {
-							continue
-						}
-						fallthrough
-					default:
-						e.Logger().Warnf(`binder: arg error, value %T#%v kind is %v`, m, name, value.Kind())
-						break
-					}
+					e.Logger().Warnf(`binder: arg error, value %T#%v kind is %v`, m, propPath, value.Kind())
+					break
 				}
 				typev = value.Type()
 				f, _ = typev.FieldByName(name)
@@ -201,20 +188,6 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 			}
 
 			//最后一个元素
-			if isSlice && i > 0 && len(name) == 0 {
-				switch value.Kind() {
-				case reflect.Slice, reflect.Array:
-					setSlice(e, names[i-1], value, t)
-				default:
-					e.Logger().Warnf(`binder: arg error, value %T#%v kind is %v`, m, propPath, value.Kind())
-				}
-				break
-			}
-
-			if value.Kind() != reflect.Struct {
-				e.Logger().Warnf(`binder: arg error, value %T#%v kind is %v`, m, propPath, value.Kind())
-				break
-			}
 			tv := value.FieldByName(name)
 			if !tv.IsValid() {
 				break
