@@ -27,142 +27,142 @@ func (p StringSlice) String() []string {
 	return []string(p)
 }
 
-func (p StringSlice) Int(filters ...func(int) bool) []int {
-	var filter func(int) bool
+func (p StringSlice) Int(filters ...func(int, int) bool) []int {
+	var filter func(int, int) bool
 	if len(filters) > 0 {
 		filter = filters[0]
 	}
 	var ids []int
-	for _, id := range p {
+	for idx, id := range p {
 		i, _ := strconv.Atoi(id)
-		if filter == nil || filter(i) {
+		if filter == nil || filter(idx, i) {
 			ids = append(ids, i)
 		}
 	}
 	return ids
 }
 
-func (p StringSlice) Int64(filters ...func(int64) bool) []int64 {
-	var filter func(int64) bool
+func (p StringSlice) Int64(filters ...func(int, int64) bool) []int64 {
+	var filter func(int, int64) bool
 	if len(filters) > 0 {
 		filter = filters[0]
 	}
 	var ids []int64
-	for _, id := range p {
+	for idx, id := range p {
 		i, _ := strconv.ParseInt(id, 10, 64)
-		if filter == nil || filter(i) {
+		if filter == nil || filter(idx, i) {
 			ids = append(ids, i)
 		}
 	}
 	return ids
 }
 
-func (p StringSlice) Int32(filters ...func(int32) bool) []int32 {
-	var filter func(int32) bool
+func (p StringSlice) Int32(filters ...func(int, int32) bool) []int32 {
+	var filter func(int, int32) bool
 	if len(filters) > 0 {
 		filter = filters[0]
 	}
 	var ids []int32
-	for _, id := range p {
+	for idx, id := range p {
 		i, _ := strconv.ParseInt(id, 10, 32)
 		iv := int32(i)
-		if filter == nil || filter(iv) {
+		if filter == nil || filter(idx, iv) {
 			ids = append(ids, iv)
 		}
 	}
 	return ids
 }
 
-func (p StringSlice) Uint(filters ...func(uint) bool) []uint {
-	var filter func(uint) bool
+func (p StringSlice) Uint(filters ...func(int, uint) bool) []uint {
+	var filter func(int, uint) bool
 	if len(filters) > 0 {
 		filter = filters[0]
 	}
 	var ids []uint
-	for _, id := range p {
+	for idx, id := range p {
 		i, _ := strconv.ParseUint(id, 10, 64)
 		iv := uint(i)
-		if filter == nil || filter(iv) {
+		if filter == nil || filter(idx, iv) {
 			ids = append(ids, iv)
 		}
 	}
 	return ids
 }
 
-func (p StringSlice) Uint64(filters ...func(uint64) bool) []uint64 {
-	var filter func(uint64) bool
+func (p StringSlice) Uint64(filters ...func(int, uint64) bool) []uint64 {
+	var filter func(int, uint64) bool
 	if len(filters) > 0 {
 		filter = filters[0]
 	}
 	var ids []uint64
-	for _, id := range p {
+	for idx, id := range p {
 		i, _ := strconv.ParseUint(id, 10, 64)
-		if filter == nil || filter(i) {
+		if filter == nil || filter(idx, i) {
 			ids = append(ids, i)
 		}
 	}
 	return ids
 }
 
-func (p StringSlice) Uint32(filters ...func(uint32) bool) []uint32 {
-	var filter func(uint32) bool
+func (p StringSlice) Uint32(filters ...func(int, uint32) bool) []uint32 {
+	var filter func(int, uint32) bool
 	if len(filters) > 0 {
 		filter = filters[0]
 	}
 	var ids []uint32
-	for _, id := range p {
+	for idx, id := range p {
 		i, _ := strconv.ParseUint(id, 10, 32)
 		iv := uint32(i)
-		if filter == nil || filter(iv) {
+		if filter == nil || filter(idx, iv) {
 			ids = append(ids, iv)
 		}
 	}
 	return ids
 }
 
-func (p StringSlice) Float32(filters ...func(float32) bool) []float32 {
-	var filter func(float32) bool
+func (p StringSlice) Float32(filters ...func(int, float32) bool) []float32 {
+	var filter func(int, float32) bool
 	if len(filters) > 0 {
 		filter = filters[0]
 	}
 	var values []float32
-	for _, v := range p {
+	for idx, v := range p {
 		i, _ := strconv.ParseFloat(v, 32)
 		iv := float32(i)
-		if filter == nil || filter(iv) {
+		if filter == nil || filter(idx, iv) {
 			values = append(values, iv)
 		}
 	}
 	return values
 }
 
-func (p StringSlice) Float64(filters ...func(float64) bool) []float64 {
-	var filter func(float64) bool
+func (p StringSlice) Float64(filters ...func(int, float64) bool) []float64 {
+	var filter func(int, float64) bool
 	if len(filters) > 0 {
 		filter = filters[0]
 	}
 	var values []float64
-	for _, v := range p {
+	for idx, v := range p {
 		i, _ := strconv.ParseFloat(v, 64)
-		if filter == nil || filter(i) {
+		if filter == nil || filter(idx, i) {
 			values = append(values, i)
 		}
 	}
 	return values
 }
 
-func (p StringSlice) Bool(filters ...func(bool) bool) []bool {
-	var filter func(bool) bool
+func (p StringSlice) Bool(filters ...func(int, bool) bool) []bool {
+	var filter func(int, bool) bool
 	if len(filters) > 0 {
 		filter = filters[0]
 	}
 	var values []bool
-	for _, v := range p {
+	for idx, v := range p {
 		i, e := strconv.ParseBool(v)
 		if e != nil {
 			continue
 		}
-		if filter == nil || filter(i) {
+		if filter == nil || filter(idx, i) {
 			values = append(values, i)
 		}
 	}
