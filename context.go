@@ -60,6 +60,7 @@ type (
 		// Queries returns the query parameters as map. It is an alias for `engine.URL#Query()`.
 		Queries() map[string][]string
 		QueryValues(string) []string
+		QueryxValues(string) param.StringSlice
 		Query(string) string
 
 		//----------------
@@ -68,6 +69,7 @@ type (
 
 		Form(string) string
 		FormValues(string) []string
+		FormxValues(string) param.StringSlice
 		// Forms returns the form parameters as map. It is an alias for `engine.Request#Form().All()`.
 		Forms() map[string][]string
 
@@ -78,6 +80,8 @@ type (
 		Formx(string) param.String
 		// string to param.String
 		Atop(string) param.String
+		ToParamString(string) param.String
+		ToStringSlice([]string) param.StringSlice
 
 		//----------------
 		// Context data
@@ -362,6 +366,10 @@ func (c *xContext) QueryValues(name string) []string {
 	return c.request.URL().QueryValues(name)
 }
 
+func (c *xContext) QueryxValues(name string) param.StringSlice {
+	return param.StringSlice(c.request.URL().QueryValues(name))
+}
+
 func (c *xContext) Queries() map[string][]string {
 	return c.request.URL().Query()
 }
@@ -373,6 +381,10 @@ func (c *xContext) Form(name string) string {
 
 func (c *xContext) FormValues(name string) []string {
 	return c.request.Form().Gets(name)
+}
+
+func (c *xContext) FormxValues(name string) param.StringSlice {
+	return param.StringSlice(c.request.Form().Gets(name))
 }
 
 func (c *xContext) Forms() map[string][]string {
@@ -777,6 +789,14 @@ func (c *xContext) Formx(name string) param.String {
 
 func (c *xContext) Atop(v string) param.String {
 	return param.String(v)
+}
+
+func (c *xContext) ToParamString(v string) param.String {
+	return param.String(v)
+}
+
+func (c *xContext) ToStringSlice(v []string) param.StringSlice {
+	return param.StringSlice(v)
 }
 
 func (c *xContext) Header(name string) string {
