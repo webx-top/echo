@@ -133,7 +133,7 @@ func (v *Validation) Validate(i interface{}, args ...string) ValidateResult {
 		vErr := v.validator.Errors[0]
 		e.SetError(vErr)
 		e.SetField(vErr.Field)
-		e.SetRaw(vErr)
+		e.SetRaw(v.validator.Errors)
 		v.validator.Errors = nil
 	}
 	return e
