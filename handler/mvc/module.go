@@ -116,13 +116,13 @@ type Module struct {
 
 func (a *Module) Valid() error {
 	if a.Installed == 0 {
-		return ErrAppHasNotBeenInstalled
+		return ErrModuleHasNotBeenInstalled
 	}
 	if a.Disabled > 0 {
-		return ErrAppHasBeenDisabled
+		return ErrModuleHasBeenDisabled
 	}
 	if a.Expired > 0 && int64(a.Expired) < time.Now().Unix() {
-		return ErrAppHasExpired
+		return ErrModuleHasExpired
 	}
 	return nil
 }

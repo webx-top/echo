@@ -20,7 +20,7 @@ package mvc
 import "errors"
 
 var (
-	ErrAppHasBeenDisabled     = errors.New(`This module has been disabled`)
-	ErrAppHasNotBeenInstalled = errors.New(`This module has not been installed`)
-	ErrAppHasExpired          = errors.New(`This module has expired`)
+	ErrModuleHasBeenDisabled     = errors.New(`This module has been disabled`)
+	ErrModuleHasNotBeenInstalled = errors.New(`This module has not been installed`)
+	ErrModuleHasExpired          = errors.New(`This module has expired`)
 )
