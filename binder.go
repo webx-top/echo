@@ -41,11 +41,11 @@ func (b *binder) MustBind(i interface{}, c Context, filter ...FormDataFilter) (e
 	defer body.Close()
 	ct := r.Header().Get(HeaderContentType)
 	err = ErrUnsupportedMediaType
-	if strings.HasPrefix(ct, MIMEApplicationJSON) {
+	if strings.Contains(ct, MIMEApplicationJSON) {
 		err = json.NewDecoder(body).Decode(i)
-	} else if strings.HasPrefix(ct, MIMEApplicationXML) {
+	} else if strings.Contains(ct, MIMEApplicationXML) {
 		err = xml.NewDecoder(body).Decode(i)
-	} else if strings.HasPrefix(ct, MIMEApplicationForm) {
+	} else if strings.Contains(ct, MIMEApplicationForm) {
 		err = b.structMap(i, r.PostForm().All(), filter...)
 	} else if strings.Contains(ct, MIMEMultipartForm) {
 		err = b.structMap(i, r.Form().All(), filter...)

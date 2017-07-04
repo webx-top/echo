@@ -908,18 +908,18 @@ func (c *xContext) ResolveFormat() string {
 	accept := c.Header(`Accept`)
 	switch {
 	case accept == ``,
-		strings.HasPrefix(accept, `*/*`), // */
-		strings.HasPrefix(accept, `application/xhtml`),
-		strings.HasPrefix(accept, `text/html`):
+		strings.Contains(accept, `*/*`), // */
+		strings.Contains(accept, `application/xhtml`),
+		strings.Contains(accept, `text/html`):
 		return `html`
-	case strings.HasPrefix(accept, `application/json`),
-		strings.HasPrefix(accept, `text/javascript`),
-		strings.HasPrefix(accept, `application/javascript`):
+	case strings.Contains(accept, `application/json`),
+		strings.Contains(accept, `text/javascript`),
+		strings.Contains(accept, `application/javascript`):
 		return `json`
-	case strings.HasPrefix(accept, `application/xml`),
-		strings.HasPrefix(accept, `text/xml`):
+	case strings.Contains(accept, `application/xml`),
+		strings.Contains(accept, `text/xml`):
 		return `xml`
-	case strings.HasPrefix(accept, `text/plain`):
+	case strings.Contains(accept, `text/plain`):
 		return `text`
 	}
 	return `html`
