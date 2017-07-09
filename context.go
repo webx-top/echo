@@ -872,14 +872,14 @@ func (c *xContext) IsWebsocket() bool {
 
 // IsUpload returns boolean of whether file uploads in this request or not..
 func (c *xContext) IsUpload() bool {
-	return strings.Contains(c.Header(`Content-Type`), `multipart/form-data`)
+	return c.ResolveContentType() == MIMEMultipartForm
 }
 
 // ResolveContentType Get the content type.
 // e.g. From `multipart/form-data; boundary=--` to `multipart/form-data`
 // If none is specified, returns `text/html` by default.
 func (c *xContext) ResolveContentType() string {
-	contentType := c.Header(`Content-Type`)
+	contentType := c.Header(HeaderContentType)
 	if len(contentType) == 0 {
 		return `text/html`
 	}
@@ -906,21 +906,14 @@ func (c *xContext) ResolveFormat() string {
 	}
 
 	accept := c.Header(`Accept`)
-	switch {
-	case accept == ``,
-		strings.Contains(accept, `*/*`), // */
-		strings.Contains(accept, `application/xhtml`),
-		strings.Contains(accept, `text/html`):
-		return `html`
-	case strings.Contains(accept, `application/json`),
-		strings.Contains(accept, `text/javascript`),
-		strings.Contains(accept, `application/javascript`):
-		return `json`
-	case strings.Contains(accept, `application/xml`),
-		strings.Contains(accept, `text/xml`):
-		return `xml`
-	case strings.Contains(accept, `text/plain`):
-		return `text`
+	for _, mimeType := range strings.Split(strings.SplitN(accept, `;`, 2)[0], `,`) {
+		mimeType = strings.TrimSpace(mimeType)
+		if format, ok := c.echo.acceptFormats[mimeType]; ok {
+			return format
+		}
+	}
+	if format, ok := c.echo.acceptFormats[`*`]; ok {
+		return format
 	}
 	return `html`
 }

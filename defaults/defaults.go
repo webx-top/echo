@@ -8,6 +8,14 @@ import (
 
 var Default = echo.New()
 
+func SetAcceptFormats(acceptFormats map[string]string) *echo.Echo {
+	return Default.SetAcceptFormats(acceptFormats)
+}
+
+func AddAcceptFormat(mime, format string) *echo.Echo {
+	return Default.AddAcceptFormat(mime, format)
+}
+
 // Router returns router.
 func Router() *echo.Router {
 	return Default.Router()

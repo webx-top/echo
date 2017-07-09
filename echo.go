@@ -29,6 +29,7 @@ type (
 		logger            logger.Logger
 		handlerWrapper    []func(interface{}) Handler
 		middlewareWrapper []func(interface{}) Middleware
+		acceptFormats     map[string]string //mime=>format
 		FuncMap           map[string]interface{}
 		RouteDebug        bool
 		MiddlewareDebug   bool
@@ -83,11 +84,31 @@ func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 	// Defaults
 	//----------
 	e.SetHTTPErrorHandler(e.DefaultHTTPErrorHandler)
-	e.SetBinder(&binder{Echo: e})
+	e.SetBinder(NewBinder(e))
 
 	// Logger
 	e.logger = log.GetLogger("echo")
+	e.acceptFormats = map[string]string{
+		//json
+		`application/json`:       `json`,
+		`text/javascript`:        `json`,
+		`application/javascript`: `json`,
 
+		//xml
+		`application/xml`: `xml`,
+		`text/xml`:        `xml`,
+
+		//text
+		`text/plain`: `text`,
+
+		//html
+		`*/*`:               `html`,
+		`application/xhtml`: `html`,
+		`text/html`:         `html`,
+
+		//default
+		`*`: `html`,
+	}
 	return
 }
 
@@ -101,6 +122,16 @@ func (m MiddlewareFuncd) Handle(h Handler) Handler {
 
 func (h HandlerFunc) Handle(c Context) error {
 	return h(c)
+}
+
+func (e *Echo) SetAcceptFormats(acceptFormats map[string]string) *Echo {
+	e.acceptFormats = acceptFormats
+	return e
+}
+
+func (e *Echo) AddAcceptFormat(mime, format string) *Echo {
+	e.acceptFormats[mime] = format
+	return e
 }
 
 // Router returns router.
