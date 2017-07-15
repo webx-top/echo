@@ -177,7 +177,7 @@ func (p *PanicError) HTML() template.HTML {
 	table += `<thead><tr><th colspan="2">Trace</th></tr><tr><th>File</th><th>Func</th></tr></thead>`
 	table += `<tbody>`
 	for _, ts := range p.Traces {
-		f := ts.File + `:` + strconv.Itoa(ts.Line)
+		f := html.EscapeString(ts.File) + `:` + strconv.Itoa(ts.Line)
 		table += `<tr><td class='left'>`
 		if ts.HasErr {
 			table += `<strong>` + f + `</strong>`
