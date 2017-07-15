@@ -112,8 +112,8 @@ func (sg *SnippetGroup) TableRow() string {
 		cd = strings.Replace(cd, "\t", "&nbsp;&nbsp;&nbsp;&nbsp;", -1)
 		cd = strings.Replace(cd, " ", "&nbsp;", -1)
 		if snippet.Current {
-			ns = "<strong>" + ns + "<strong>"
-			cd = "<strong>" + cd + "<strong>"
+			ns = "<strong>" + ns + "</strong>"
+			cd = "<strong>" + cd + "</strong>"
 		}
 		s += "<tr><td class='left'>" + ns + "</td><td class='right'>" + cd + "</td></tr>"
 	}
