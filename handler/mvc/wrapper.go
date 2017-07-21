@@ -28,7 +28,7 @@ import (
 var (
 	mapperType         = reflect.TypeOf(Mapper{})
 	methodSuffixRegex  = regexp.MustCompile(`(?:_(?:` + strings.Join(echo.Methods(), `|`) + `))+$`)
-	routeTagRegex      = regexp.MustCompile(`^[A-Z.]+(\|[A-Z]+)*$`)
+	routeTagRegex      = regexp.MustCompile(`^[A-Z]+(\|[A-Z]+)*(\.[A-Z]+(\|[A-Z]+)*)*$`) //GET|POST.JSON|XML
 	DefaultMapperCheck = func(t reflect.Type) bool {
 		return t == mapperType
 	}
@@ -256,8 +256,7 @@ func (a *Wrapper) RouteTags() {
 		*/
 		tag := e.Field(i).Tag
 		tagv := tag.Get(a.Module.RouteTagName)
-		methods := []string{}
-		extends := []string{}
+		var methods, extends []string
 		var p, w string
 		if len(tagv) > 0 {
 			tags := strings.Split(tagv, ` `)
@@ -294,19 +293,18 @@ func (a *Wrapper) RouteTags() {
 			}
 			ppath = `/` + ctl + p
 		}
-		met := ``
-		ext := ``
-		if w != `` {
+		var met, ext string
+		if len(w) > 0 {
 			me := strings.Split(w, `.`)
 			met = me[0]
 			if len(me) > 1 {
 				ext = me[1]
 			}
 		}
-		if met != `` {
+		if len(met) > 0 {
 			methods = strings.Split(met, `|`)
 		}
-		if ext != `` {
+		if len(ext) > 0 {
 			ext = strings.ToLower(ext)
 			extends = strings.Split(ext, `|`)
 		}
