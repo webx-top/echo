@@ -12,7 +12,11 @@ import (
 	ss "github.com/webx-top/echo/middleware/session/engine"
 )
 
-func New(opts *BoltOptions) BoltStore {
+var (
+	DefaultCheckInterval = time.Minute * 30
+)
+
+func New(opts *BoltOptions) sessions.Store {
 	store, err := NewBoltStore(opts)
 	if err != nil {
 		panic(err.Error())
@@ -20,7 +24,7 @@ func New(opts *BoltOptions) BoltStore {
 	return store
 }
 
-func Reg(store BoltStore, args ...string) {
+func Reg(store sessions.Store, args ...string) {
 	name := `bolt`
 	if len(args) > 0 {
 		name = args[0]
@@ -32,28 +36,19 @@ func RegWithOptions(opts *BoltOptions, args ...string) {
 	Reg(New(opts), args...)
 }
 
-type BoltStore interface {
-	ss.Store
-}
-
 type BoltOptions struct {
-	File           string               `json:"file"`
-	KeyPairs       [][]byte             `json:"keyPairs"`
-	BucketName     string               `json:"bucketName"`
-	SessionOptions *echo.SessionOptions `json:"session"`
+	File          string        `json:"file"`
+	KeyPairs      [][]byte      `json:"keyPairs"`
+	BucketName    string        `json:"bucketName"`
+	CheckInterval time.Duration `json:"checkInterval"`
 }
 
 // NewBoltStore ./sessions.db
-func NewBoltStore(opts *BoltOptions) (BoltStore, error) {
+func NewBoltStore(opts *BoltOptions) (sessions.Store, error) {
 	config := store.Config{
-		SessionOptions: sessions.Options{
-			Path:     opts.SessionOptions.Path,
-			Domain:   opts.SessionOptions.Domain,
-			MaxAge:   opts.SessionOptions.MaxAge,
-			Secure:   opts.SessionOptions.Secure,
-			HttpOnly: opts.SessionOptions.HttpOnly,
+		DBOptions: store.Options{
+			BucketName: []byte(opts.BucketName),
 		},
-		DBOptions: store.Options{BucketName: []byte(opts.BucketName)},
 	}
 	b := &boltStore{
 		config:   &config,
@@ -62,6 +57,7 @@ func NewBoltStore(opts *BoltOptions) (BoltStore, error) {
 		Storex: &Storex{
 			Store: &store.Store{},
 		},
+		checkInterval: opts.CheckInterval,
 	}
 	b.Storex.b = b
 	return b, nil
@@ -106,26 +102,12 @@ func (s *Storex) Save(ctx echo.Context, session *sessions.Session) error {
 
 type boltStore struct {
 	*Storex
-	config   *store.Config
-	keyPairs [][]byte
-	quiteC   chan<- struct{}
-	doneC    <-chan struct{}
-	dbFile   string
-}
-
-func (c *boltStore) Options(options echo.SessionOptions) {
-	c.config.SessionOptions = sessions.Options{
-		Path:     options.Path,
-		Domain:   options.Domain,
-		MaxAge:   options.MaxAge,
-		Secure:   options.Secure,
-		HttpOnly: options.HttpOnly,
-	}
-	stor, err := store.New(c.Storex.db, *c.config, c.keyPairs...)
-	if err != nil {
-		panic(err.Error())
-	}
-	c.Store = stor
+	config        *store.Config
+	keyPairs      [][]byte
+	quiteC        chan<- struct{}
+	doneC         <-chan struct{}
+	dbFile        string
+	checkInterval time.Duration
 }
 
 func (c *boltStore) Close() error {
@@ -152,9 +134,12 @@ func (b *boltStore) Init() error {
 		if err != nil {
 			return err
 		}
+		if b.checkInterval == 0 {
+			b.checkInterval = DefaultCheckInterval
+		}
 		b.quiteC, b.doneC = reaper.Run(b.Storex.db, reaper.Options{
 			BucketName:    b.config.DBOptions.BucketName,
-			CheckInterval: time.Duration(int64(b.config.SessionOptions.MaxAge)) * time.Second,
+			CheckInterval: b.checkInterval,
 		})
 		runtime.SetFinalizer(b, func(b *boltStore) {
 			b.Close()

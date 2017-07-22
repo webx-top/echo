@@ -16,7 +16,6 @@
 
 */
 
-
 package echo
 
 var (
@@ -38,6 +37,14 @@ type SessionOptions struct {
 	*CookieOptions
 }
 
+func (s *SessionOptions) Clone() *SessionOptions {
+	clone := *s
+	if s.CookieOptions != nil {
+		clone.CookieOptions = s.CookieOptions.Clone()
+	}
+	return &clone
+}
+
 // Sessioner Wraps thinly gorilla-session methods.
 // Session stores the values and optional configuration for a session.
 type Sessioner interface {
@@ -45,8 +52,8 @@ type Sessioner interface {
 	Get(key string) interface{}
 	// Set sets the session value associated to the given key.
 	Set(key string, val interface{}) Sessioner
-	SetId(id string) Sessioner
-	Id() string
+	SetID(id string) Sessioner
+	ID() string
 	// Delete removes the session value associated to the given key.
 	Delete(key string) Sessioner
 	// Clear deletes all values in the session.
@@ -59,9 +66,6 @@ type Sessioner interface {
 	// A single variadic argument is accepted, and it is optional: it defines the flash key.
 	// If not defined "_flash" is used by default.
 	Flashes(vars ...string) []interface{}
-
-	Options(SessionOptions) Sessioner
-
 	// Save saves all sessions used during the current request.
 	Save() error
 }
@@ -77,11 +81,11 @@ func (n *NopSession) Set(name string, value interface{}) Sessioner {
 	return n
 }
 
-func (n *NopSession) SetId(id string) Sessioner {
+func (n *NopSession) SetID(id string) Sessioner {
 	return n
 }
 
-func (n *NopSession) Id() string {
+func (n *NopSession) ID() string {
 	return ``
 }
 

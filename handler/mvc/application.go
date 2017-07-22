@@ -26,7 +26,7 @@ import (
 	"sync"
 
 	"github.com/admpub/confl"
-	codec "github.com/gorilla/securecookie"
+	codec "github.com/admpub/securecookie"
 	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine"
