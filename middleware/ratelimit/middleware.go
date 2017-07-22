@@ -25,24 +25,40 @@ import (
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/middleware/ratelimit/config"
-	"github.com/webx-top/echo/middleware/ratelimit/errors"
 )
 
-func LimitMiddleware(limiter *config.Limiter) echo.MiddlewareFunc {
+func LimitMiddleware(limiter *config.Limiter, bucketExpireTTL ...time.Duration) echo.MiddlewareFunc {
+	var limit func(engine.Request) *echo.HTTPError
+	if len(bucketExpireTTL) > 0 {
+		var cleanUpInterval time.Duration
+		if len(bucketExpireTTL) > 1 {
+			cleanUpInterval = bucketExpireTTL[1]
+		} else {
+			cleanUpInterval = time.Minute * 5
+		}
+		limiter.SetExpiring(bucketExpireTTL[0], cleanUpInterval)
+		limit = func(req engine.Request) *echo.HTTPError {
+			return LimitByRequestWithExpiring(limiter, req, bucketExpireTTL[0])
+		}
+	} else {
+		limit = func(req engine.Request) *echo.HTTPError {
+			return LimitByRequest(limiter, req)
+		}
+	}
 	return func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
 			SetResponseHeaders(limiter, c.Response())
-			httpError := LimitByRequest(limiter, c.Request())
+			httpError := limit(c.Request())
 			if httpError != nil {
-				return c.String(httpError.Message, httpError.StatusCode)
+				return httpError
 			}
 			return h.Handle(c)
 		})
 	}
 }
 
-func LimitHandler(limiter *config.Limiter) echo.MiddlewareFunc {
-	return LimitMiddleware(limiter)
+func LimitHandler(limiter *config.Limiter, bucketExpireTTL ...time.Duration) echo.MiddlewareFunc {
+	return LimitMiddleware(limiter, bucketExpireTTL...)
 }
 
 // New is a convenience function to config.NewLimiter.
@@ -50,11 +66,31 @@ func New(max int64, ttl time.Duration) *config.Limiter {
 	return config.NewLimiter(max, ttl)
 }
 
+// NewExpiringBuckets 带过期时间
+// @param max 每个周期的最大连接数
+// @param ttl 周期
+// @param bucketDefaultExpirationTTL 默认有效时长
+// @param bucketExpireJobInterval 默认清理周期
+func NewExpiringBuckets(max int64, ttl, bucketDefaultExpirationTTL, bucketExpireJobInterval time.Duration) *config.Limiter {
+	return config.NewLimiterExpiringBuckets(max, ttl, bucketDefaultExpirationTTL, bucketExpireJobInterval)
+}
+
 // LimitByKeys keeps track number of request made by keys separated by pipe.
 // It returns HTTPError when limit is exceeded.
-func LimitByKeys(limiter *config.Limiter, keys []string) *errors.HTTPError {
+func LimitByKeys(limiter *config.Limiter, keys []string) *echo.HTTPError {
 	if limiter.LimitReached(strings.Join(keys, "|")) {
-		return &errors.HTTPError{Message: limiter.Message, StatusCode: limiter.StatusCode}
+		return echo.NewHTTPError(limiter.StatusCode, limiter.Message)
+	}
+
+	return nil
+}
+
+// LimitByKeysWithCustomTokenBucketTTL keeps track number of request made by keys separated by pipe.
+// It returns HTTPError when limit is exceeded.
+// User can define a TTL for the key to expire
+func LimitByKeysWithCustomTokenBucketTTL(limiter *config.Limiter, keys []string, bucketExpireTTL time.Duration) *echo.HTTPError {
+	if limiter.LimitReachedWithCustomTokenBucketTTL(strings.Join(keys, "|"), bucketExpireTTL) {
+		return echo.NewHTTPError(limiter.StatusCode, limiter.Message)
 	}
 
 	return nil
@@ -68,12 +104,26 @@ func SetResponseHeaders(limiter *config.Limiter, w engine.Response) {
 
 // LimitByRequest builds keys based on http.Request struct,
 // loops through all the keys, and check if any one of them returns HTTPError.
-func LimitByRequest(limiter *config.Limiter, r engine.Request) *errors.HTTPError {
+func LimitByRequest(limiter *config.Limiter, r engine.Request) *echo.HTTPError {
 	sliceKeys := BuildKeys(limiter, r)
 
 	// Loop sliceKeys and check if one of them has error.
 	for _, keys := range sliceKeys {
 		httpError := LimitByKeys(limiter, keys)
+		if httpError != nil {
+			return httpError
+		}
+	}
+
+	return nil
+}
+
+func LimitByRequestWithExpiring(limiter *config.Limiter, r engine.Request, bucketExpireTTL time.Duration) *echo.HTTPError {
+	sliceKeys := BuildKeys(limiter, r)
+
+	// Loop sliceKeys and check if one of them has error.
+	for _, keys := range sliceKeys {
+		httpError := LimitByKeysWithCustomTokenBucketTTL(limiter, keys, bucketExpireTTL)
 		if httpError != nil {
 			return httpError
 		}
@@ -102,23 +152,21 @@ func ipAddrFromRemoteAddr(s string) string {
 
 // RemoteIP finds IP Address given http.Request struct.
 func RemoteIP(ipLookups []string, r engine.Request) string {
-	realIP := r.Header().Get("X-Real-IP")
-	forwardedFor := r.Header().Get("X-Forwarded-For")
 
 	for _, lookup := range ipLookups {
 		if lookup == "RemoteAddr" {
 			return ipAddrFromRemoteAddr(r.RemoteAddress())
 		}
-		if lookup == "X-Forwarded-For" && forwardedFor != "" {
-			// X-Forwarded-For is potentially a list of addresses separated with ","
-			parts := strings.Split(forwardedFor, ",")
-			for i, p := range parts {
-				parts[i] = strings.TrimSpace(p)
+		if lookup == "X-Forwarded-For" {
+			if forwardedFor := r.Header().Get("X-Forwarded-For"); len(forwardedFor) > 0 {
+				// X-Forwarded-For is potentially a list of addresses separated with ","
+				return strings.TrimSpace(strings.SplitN(forwardedFor, ",", 2)[0])
 			}
-			return parts[0]
 		}
-		if lookup == "X-Real-IP" && realIP != "" {
-			return realIP
+		if lookup == "X-Real-IP" {
+			if realIP := r.Header().Get("X-Real-IP"); len(realIP) > 0 {
+				return realIP
+			}
 		}
 	}
 
