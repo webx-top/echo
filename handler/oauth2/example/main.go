@@ -35,7 +35,6 @@ func main() {
 		KeyPairs: [][]byte{
 			[]byte(`123456789012345678901234567890ab`),
 		},
-		SessionOptions: sessionOptions,
 	})
 
 	boltStore.RegWithOptions(&boltStore.BoltOptions{
@@ -43,8 +42,7 @@ func main() {
 		KeyPairs: [][]byte{
 			[]byte(`123456789012345678901234567890ab`),
 		},
-		BucketName:     `session`,
-		SessionOptions: sessionOptions,
+		BucketName: `session`,
 	})
 
 	e.Use(session.Middleware(sessionOptions))
