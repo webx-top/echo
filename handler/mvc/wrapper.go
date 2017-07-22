@@ -28,7 +28,7 @@ import (
 var (
 	mapperType         = reflect.TypeOf(Mapper{})
 	methodSuffixRegex  = regexp.MustCompile(`(?:_(?:` + strings.Join(echo.Methods(), `|`) + `))+$`)
-	routeTagRegex      = regexp.MustCompile(`^[A-Z]+(\|[A-Z]+)*(\.[A-Z]+(\|[A-Z]+)*)*$`) //GET|POST.JSON|XML
+	routeTagRegex      = regexp.MustCompile(`^[A-Z]*(\|[A-Z]+)*(\.[A-Z]+(\|[A-Z]+)*)*$`) //GET|POST.JSON|XML
 	DefaultMapperCheck = func(t reflect.Type) bool {
 		return t == mapperType
 	}
