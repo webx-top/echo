@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -222,9 +223,25 @@ func (c *Context) CheckTmplPath(tpath string) string {
 	if len(tpath) == 0 {
 		return ``
 	}
-	if tpath[0] == '/' {
+	switch tpath[0] {
+	case '#': // 公共组件 {bin}/data/widgets
+		tpath = filepath.Join(c.Module.Application.RootDir(), `data`, `widgets`, tpath[1:])
+	case '@': // 模块模板
+		tpath = tpath[1:]
+		var tdir string
+		if pos := strings.Index(tpath, `:`); pos > 0 {
+			module := c.Module.Application.Module(tpath[0:pos])
+			tpath = tpath[pos+1:]
+			tdir = module.Renderer.TmplDir()
+		} else {
+			tdir = c.Module.Renderer.TmplDir()
+		}
+		tpath = filepath.Join(tdir, tpath)
+	case '/': // 模块内模板
 		tpath = c.Module.Name + tpath
-	} else if !strings.Contains(tpath, `/`) {
+	case ':': // 主题内模板
+		tpath = filepath.Join(`..`, tpath[1:])
+	default:
 		tpath = c.Module.Name + `/` + c.ControllerName + `/` + tpath
 	}
 	return tpath
@@ -257,7 +274,6 @@ func (c *Context) Display(args ...interface{}) error {
 	if ignore, _ := c.Get(`webx:ignoreRender`).(bool); ignore {
 		return nil
 	}
-
 	c.Data().SetTmplFuncs()
 	var err error
 	switch c.Format() {
