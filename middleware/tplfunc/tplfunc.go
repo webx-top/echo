@@ -128,7 +128,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	// encode & decode
 	// ======================
 	"JsonEncode":   JsonEncode,
-	"JsonDcode":    JsonEncode,
+	"JsonDecode":   JsonDecode,
 	"UrlEncode":    com.UrlEncode,
 	"UrlDecode":    com.UrlDecode,
 	"Base64Encode": com.Base64Encode,
