@@ -128,6 +128,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	// encode & decode
 	// ======================
 	"JsonEncode":   JsonEncode,
+	"JsonDcode":    JsonEncode,
 	"UrlEncode":    com.UrlEncode,
 	"UrlDecode":    com.UrlDecode,
 	"Base64Encode": com.Base64Encode,
@@ -160,6 +161,15 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 
 func JsonEncode(s interface{}) string {
 	r, _ := com.SetJSON(s)
+	return r
+}
+
+func JsonDecode(s string) map[string]interface{} {
+	r := map[string]interface{}{}
+	e := com.GetJSON(&s, &r)
+	if e != nil {
+		log.Println(e)
+	}
 	return r
 }
 
