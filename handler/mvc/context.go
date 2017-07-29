@@ -26,6 +26,8 @@ import (
 	"reflect"
 	"strings"
 
+	"net/url"
+
 	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine"
@@ -445,6 +447,8 @@ func (c *Context) ParseNextURL(next string) string {
 		if err != nil {
 			c.Application.Core.Logger().Error(err)
 		}
+	} else {
+		next, _ = url.QueryUnescape(next)
 	}
 	return next
 }
