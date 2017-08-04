@@ -361,6 +361,13 @@ func (a *KVData) Get(k string) string {
 	return ``
 }
 
+func (a *KVData) Has(k string) bool {
+	if _, ok := a.index[k]; ok {
+		return true
+	}
+	return false
+}
+
 //Delete 设置某个键的所有值
 func (a *KVData) Delete(ks ...string) *KVData {
 	indexes := []int{}
