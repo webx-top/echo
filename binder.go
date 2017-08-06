@@ -3,6 +3,7 @@ package echo
 import (
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -137,6 +138,8 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 	case reflect.Ptr:
 		vc = vc.Elem()
 		tc = tc.Elem()
+	default:
+		return errors.New(`binder: unsupported type ` + tc.Kind().String())
 	}
 	var (
 		validator *validation.Validation
