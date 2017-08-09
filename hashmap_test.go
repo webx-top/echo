@@ -32,3 +32,20 @@ func TestMapx(t *testing.T) {
 	//assert.Equal(t, "index 0.a", mx.Value("c", "0", "a"))
 	//assert.Equal(t, "index 1.b", mx.Value("c", "1", "b"))
 }
+
+func TestKVList(t *testing.T) {
+	list := KVList{}
+	list.Add(`k`, `v`)
+	assert.Equal(t, "k", list[0].K)
+	assert.Equal(t, "v", list[0].V)
+
+	list.Add(`k2`, `v2`)
+	assert.Equal(t, "k2", list[1].K)
+	assert.Equal(t, "v2", list[1].V)
+
+	list.Del(1)
+	assert.Equal(t, 1, len(list))
+
+	list.Reset()
+	assert.Equal(t, 0, len(list))
+}
