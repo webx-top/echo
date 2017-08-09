@@ -298,6 +298,24 @@ type KV struct {
 	V string
 }
 
+type KVList []*KV
+
+func (list KVList) Add(k, v string) {
+	list = append(list, &KV{K: k, V: v})
+}
+
+func (list KVList) Del(i int) {
+	if i+1 < len(list) {
+		list = append(list[0:i], list[i+1:]...)
+	} else if i < len(list) {
+		list = list[0:i]
+	}
+}
+
+func (list KVList) Reset() {
+	list = list[0:0]
+}
+
 //NewKVData 键值对数据
 func NewKVData() *KVData {
 	return &KVData{
