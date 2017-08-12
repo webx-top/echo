@@ -114,6 +114,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"Reverse":        com.Reverse,
 	"Ext":            filepath.Ext,
 	"InExt":          InExt,
+	"InSlice":        com.InSliceIface,
 
 	"Concat":    Concat,
 	"Replace":   strings.Replace, //strings.Replace(s, old, new, n)
