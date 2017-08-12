@@ -114,7 +114,6 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"Reverse":        com.Reverse,
 	"Ext":            filepath.Ext,
 	"InExt":          InExt,
-	"InSlice":        com.InSliceIface,
 
 	"Concat":    Concat,
 	"Replace":   strings.Replace, //strings.Replace(s, old, new, n)
@@ -146,6 +145,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"SearchStrSlice": SearchStrSlice,
 	"URLValues":      URLValues,
 	"ToSlice":        ToSlice,
+	"StrToSlice":     StrToSlice,
 
 	// ======================
 	// regexp
@@ -202,6 +202,19 @@ func ToStrSlice(s ...string) []string {
 
 func ToSlice(s ...interface{}) []interface{} {
 	return s
+}
+
+func StrToStrSlice(s string, sep string) []string {
+	return ToStrSlice(strings.Split(s, sep)...)
+}
+
+func StrToSlice(s string, sep string) []interface{} {
+	ss := strings.Split(s, sep)
+	r := make([]interface{}, len(ss))
+	for i, s := range ss {
+		r[i] = s
+	}
+	return r
 }
 
 func Concat(s ...string) string {
