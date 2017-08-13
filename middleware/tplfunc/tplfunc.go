@@ -146,6 +146,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"URLValues":      URLValues,
 	"ToSlice":        ToSlice,
 	"StrToSlice":     StrToSlice,
+	"StrToStrSlice":  StrToStrSlice,
 
 	// ======================
 	// regexp
