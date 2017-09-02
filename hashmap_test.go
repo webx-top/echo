@@ -49,3 +49,20 @@ func TestKVList(t *testing.T) {
 	list.Reset()
 	assert.Equal(t, 0, len(list))
 }
+
+func TestMapClone(t *testing.T) {
+	list := H{
+		`key`: `value`,
+		`children`: []H{
+			{`childKey`: `childValue`},
+		},
+	}
+	listCopy := list.Clone()
+	listCopy[`key`] = `valueChg`
+	assert.Equal(t, "value", list[`key`])
+	assert.Equal(t, "valueChg", listCopy[`key`])
+
+	listCopy[`children`].([]H)[0][`childKey`] = `childValueChg`
+	assert.Equal(t, "childValue", list[`children`].([]H)[0][`childKey`])
+	assert.Equal(t, "childValueChg", listCopy[`children`].([]H)[0][`childKey`])
+}
