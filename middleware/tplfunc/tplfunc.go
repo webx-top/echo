@@ -101,9 +101,14 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	// ======================
 	// string
 	// ======================
-	"Contains":  strings.Contains,
-	"HasPrefix": strings.HasPrefix,
-	"HasSuffix": strings.HasSuffix,
+	"Contains":   strings.Contains,
+	"HasPrefix":  strings.HasPrefix,
+	"HasSuffix":  strings.HasSuffix,
+	"Trim":       strings.TrimSpace,
+	"TrimLeft":   strings.TrimLeft,
+	"TrimRight":  strings.TrimRight,
+	"TrimPrefix": strings.TrimPrefix,
+	"TrimSuffix": strings.TrimSuffix,
 
 	"ToLower":        strings.ToLower,
 	"ToUpper":        strings.ToUpper,
