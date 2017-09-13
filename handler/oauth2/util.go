@@ -154,7 +154,7 @@ var GetProviderName = getProviderName
 func getProviderName(ctx echo.Context) (string, error) {
 	provider := ctx.Param("provider")
 	if provider == "" {
-		provider = ctx.Query(":provider")
+		provider = ctx.Query("provider")
 	}
 	if provider == "" {
 		return provider, errors.New("you must select a provider")
