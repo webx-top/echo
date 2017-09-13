@@ -38,9 +38,9 @@ type OAuth struct {
 // receives one parameter of type 'Config'
 func New(hostURL string, cfg Config) *OAuth {
 	c := DefaultConfig().MergeSingle(cfg)
+	c.Host = hostURL
 	return &OAuth{
 		Config:              c,
-		HostURL:             hostURL,
 		beginAuthHandler:    echo.HandlerFunc(BeginAuthHandler),
 		completeAuthHandler: CompleteUserAuth,
 	}
@@ -79,7 +79,11 @@ func (p *OAuth) User(ctx echo.Context) (u goth.User) {
 
 // Wrapper register the oauth route
 func (p *OAuth) Wrapper(e *echo.Echo) {
-	oauthProviders := p.Config.GenerateProviders(p.HostURL)
+	oauthProviders := p.Config.Providers()
+	if oauthProviders == nil || len(oauthProviders) == 0 {
+		p.Config.GenerateProviders()
+	}
+	oauthProviders = p.Config.Providers()
 	if len(oauthProviders) > 0 {
 		goth.UseProviders(oauthProviders...)
 		// set the mux path to handle the registered providers

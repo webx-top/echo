@@ -64,7 +64,7 @@ const (
 // contains the providers' keys  (& secrets) and the relative auth callback url path(ex: "/auth" will be registered as /auth/:provider/callback)
 //
 type Config struct {
-	Path                                                  string
+	Host, Path                                            string
 	TwitterKey, TwitterSecret, TwitterName                string
 	FacebookKey, FacebookSecret, FacebookName             string
 	GplusKey, GplusSecret, GplusName                      string
@@ -98,6 +98,8 @@ type Config struct {
 	RouteName string
 	// defaults to 'oauth_user' used by plugin to give you the goth.User, but you can take this manually also by `context.Get(ContextKey).(goth.User)`
 	ContextKey string
+
+	providers []goth.Provider
 }
 
 // DefaultConfig returns OAuth config, the fields of the iteral are zero-values ( empty strings)
@@ -143,99 +145,105 @@ func (c Config) MergeSingle(cfg Config) (config Config) {
 	return
 }
 
+func (c Config) CallbackURL(providerName string) string {
+	return c.Host + c.Path + "/callback/" + providerName
+}
+
 // GenerateProviders returns the valid goth providers and the relative url paths (because the goth.Provider doesn't have a public method to get the Auth path...)
 // we do the hard-core/hand checking here at the configs.
 //
 // receives one parameter which is the host from the server,ex: http://localhost:3000, will be used as prefix for the oauth callback
-func (c Config) GenerateProviders(vhost string) (providers []goth.Provider) {
-
-	getCallbackURL := func(providerName string) string {
-		return vhost + c.Path + "/callback/" + providerName
-	}
-
+func (c Config) GenerateProviders() (providers []goth.Provider) {
 	//we could use a map but that's easier for the users because of code completion of their IDEs/editors
 	if c.TwitterKey != "" && c.TwitterSecret != "" {
-		println(getCallbackURL("twitter"))
-		providers = append(providers, twitter.New(c.TwitterKey, c.TwitterSecret, getCallbackURL(c.TwitterName)))
+		providers = append(providers, twitter.New(c.TwitterKey, c.TwitterSecret, c.CallbackURL(c.TwitterName)))
 	}
 	if c.FacebookKey != "" && c.FacebookSecret != "" {
-		providers = append(providers, facebook.New(c.FacebookKey, c.FacebookSecret, getCallbackURL(c.FacebookName)))
+		providers = append(providers, facebook.New(c.FacebookKey, c.FacebookSecret, c.CallbackURL(c.FacebookName)))
 	}
 	if c.GplusKey != "" && c.GplusSecret != "" {
-		providers = append(providers, gplus.New(c.GplusKey, c.GplusSecret, getCallbackURL(c.GplusName)))
+		providers = append(providers, gplus.New(c.GplusKey, c.GplusSecret, c.CallbackURL(c.GplusName)))
 	}
 	if c.GithubKey != "" && c.GithubSecret != "" {
-		providers = append(providers, github.New(c.GithubKey, c.GithubSecret, getCallbackURL(c.GithubName)))
+		providers = append(providers, github.New(c.GithubKey, c.GithubSecret, c.CallbackURL(c.GithubName)))
 	}
 	if c.SpotifyKey != "" && c.SpotifySecret != "" {
-		providers = append(providers, spotify.New(c.SpotifyKey, c.SpotifySecret, getCallbackURL(c.SpotifyName)))
+		providers = append(providers, spotify.New(c.SpotifyKey, c.SpotifySecret, c.CallbackURL(c.SpotifyName)))
 	}
 	if c.LinkedinKey != "" && c.LinkedinSecret != "" {
-		providers = append(providers, linkedin.New(c.LinkedinKey, c.LinkedinSecret, getCallbackURL(c.LinkedinName)))
+		providers = append(providers, linkedin.New(c.LinkedinKey, c.LinkedinSecret, c.CallbackURL(c.LinkedinName)))
 	}
 	if c.LastfmKey != "" && c.LastfmSecret != "" {
-		providers = append(providers, lastfm.New(c.LastfmKey, c.LastfmSecret, getCallbackURL(c.LastfmName)))
+		providers = append(providers, lastfm.New(c.LastfmKey, c.LastfmSecret, c.CallbackURL(c.LastfmName)))
 	}
 	if c.TwitchKey != "" && c.TwitchSecret != "" {
-		providers = append(providers, twitch.New(c.TwitchKey, c.TwitchSecret, getCallbackURL(c.TwitchName)))
+		providers = append(providers, twitch.New(c.TwitchKey, c.TwitchSecret, c.CallbackURL(c.TwitchName)))
 	}
 	if c.DropboxKey != "" && c.DropboxSecret != "" {
-		providers = append(providers, dropbox.New(c.DropboxKey, c.DropboxSecret, getCallbackURL(c.DropboxName)))
+		providers = append(providers, dropbox.New(c.DropboxKey, c.DropboxSecret, c.CallbackURL(c.DropboxName)))
 	}
 	if c.DigitaloceanKey != "" && c.DigitaloceanSecret != "" {
-		providers = append(providers, digitalocean.New(c.DigitaloceanKey, c.DigitaloceanSecret, getCallbackURL(c.DigitaloceanName)))
+		providers = append(providers, digitalocean.New(c.DigitaloceanKey, c.DigitaloceanSecret, c.CallbackURL(c.DigitaloceanName)))
 	}
 	if c.BitbucketKey != "" && c.BitbucketSecret != "" {
-		providers = append(providers, bitbucket.New(c.BitbucketKey, c.BitbucketSecret, getCallbackURL(c.BitbucketName)))
+		providers = append(providers, bitbucket.New(c.BitbucketKey, c.BitbucketSecret, c.CallbackURL(c.BitbucketName)))
 	}
 	if c.InstagramKey != "" && c.InstagramSecret != "" {
-		providers = append(providers, instagram.New(c.InstagramKey, c.InstagramSecret, getCallbackURL(c.InstagramName)))
+		providers = append(providers, instagram.New(c.InstagramKey, c.InstagramSecret, c.CallbackURL(c.InstagramName)))
 	}
 	if c.BoxKey != "" && c.BoxSecret != "" {
-		providers = append(providers, box.New(c.BoxKey, c.BoxSecret, getCallbackURL(c.BoxName)))
+		providers = append(providers, box.New(c.BoxKey, c.BoxSecret, c.CallbackURL(c.BoxName)))
 	}
 	if c.SalesforceKey != "" && c.SalesforceSecret != "" {
-		providers = append(providers, salesforce.New(c.SalesforceKey, c.SalesforceSecret, getCallbackURL(c.SalesforceName)))
+		providers = append(providers, salesforce.New(c.SalesforceKey, c.SalesforceSecret, c.CallbackURL(c.SalesforceName)))
 	}
 	if c.AmazonKey != "" && c.AmazonSecret != "" {
-		providers = append(providers, amazon.New(c.AmazonKey, c.AmazonSecret, getCallbackURL(c.AmazonName)))
+		providers = append(providers, amazon.New(c.AmazonKey, c.AmazonSecret, c.CallbackURL(c.AmazonName)))
 	}
 	if c.YammerKey != "" && c.YammerSecret != "" {
-		providers = append(providers, yammer.New(c.YammerKey, c.YammerSecret, getCallbackURL(c.YammerName)))
+		providers = append(providers, yammer.New(c.YammerKey, c.YammerSecret, c.CallbackURL(c.YammerName)))
 	}
 	if c.OneDriveKey != "" && c.OneDriveSecret != "" {
-		providers = append(providers, onedrive.New(c.OneDriveKey, c.OneDriveSecret, getCallbackURL(c.OneDriveName)))
+		providers = append(providers, onedrive.New(c.OneDriveKey, c.OneDriveSecret, c.CallbackURL(c.OneDriveName)))
 	}
 	if c.YahooKey != "" && c.YahooSecret != "" {
-		providers = append(providers, yahoo.New(c.YahooKey, c.YahooSecret, getCallbackURL(c.YahooName)))
+		providers = append(providers, yahoo.New(c.YahooKey, c.YahooSecret, c.CallbackURL(c.YahooName)))
 	}
 	if c.SlackKey != "" && c.SlackSecret != "" {
-		providers = append(providers, slack.New(c.SlackKey, c.SlackSecret, getCallbackURL(c.SlackName)))
+		providers = append(providers, slack.New(c.SlackKey, c.SlackSecret, c.CallbackURL(c.SlackName)))
 	}
 	if c.StripeKey != "" && c.StripeSecret != "" {
-		providers = append(providers, stripe.New(c.StripeKey, c.StripeSecret, getCallbackURL(c.StripeName)))
+		providers = append(providers, stripe.New(c.StripeKey, c.StripeSecret, c.CallbackURL(c.StripeName)))
 	}
 	if c.WepayKey != "" && c.WepaySecret != "" {
-		providers = append(providers, wepay.New(c.WepayKey, c.WepaySecret, getCallbackURL(c.WepayName)))
+		providers = append(providers, wepay.New(c.WepayKey, c.WepaySecret, c.CallbackURL(c.WepayName)))
 	}
 	if c.PaypalKey != "" && c.PaypalSecret != "" {
-		providers = append(providers, paypal.New(c.PaypalKey, c.PaypalSecret, getCallbackURL(c.PaypalName)))
+		providers = append(providers, paypal.New(c.PaypalKey, c.PaypalSecret, c.CallbackURL(c.PaypalName)))
 	}
 	if c.SteamKey != "" {
-		providers = append(providers, steam.New(c.SteamKey, getCallbackURL(c.SteamName)))
+		providers = append(providers, steam.New(c.SteamKey, c.CallbackURL(c.SteamName)))
 	}
 	if c.HerokuKey != "" && c.HerokuSecret != "" {
-		providers = append(providers, heroku.New(c.HerokuKey, c.HerokuSecret, getCallbackURL(c.HerokuName)))
+		providers = append(providers, heroku.New(c.HerokuKey, c.HerokuSecret, c.CallbackURL(c.HerokuName)))
 	}
 	if c.UberKey != "" && c.UberSecret != "" {
-		providers = append(providers, uber.New(c.UberKey, c.UberSecret, getCallbackURL(c.UberName)))
+		providers = append(providers, uber.New(c.UberKey, c.UberSecret, c.CallbackURL(c.UberName)))
 	}
 	if c.SoundcloudKey != "" && c.SoundcloudSecret != "" {
-		providers = append(providers, soundcloud.New(c.SoundcloudKey, c.SoundcloudSecret, getCallbackURL(c.SoundcloudName)))
+		providers = append(providers, soundcloud.New(c.SoundcloudKey, c.SoundcloudSecret, c.CallbackURL(c.SoundcloudName)))
 	}
 	if c.GitlabKey != "" && c.GitlabSecret != "" {
-		providers = append(providers, gitlab.New(c.GitlabKey, c.GitlabSecret, getCallbackURL(c.GithubName)))
+		providers = append(providers, gitlab.New(c.GitlabKey, c.GitlabSecret, c.CallbackURL(c.GithubName)))
 	}
-
+	c.providers = providers
 	return
+}
+
+func (c Config) Providers() []goth.Provider {
+	return c.providers
+}
+
+func (c Config) AddProvider(providers ...goth.Provider) {
+	c.providers = append(c.providers, providers...)
 }
