@@ -55,7 +55,7 @@ func main() {
 		GithubKey:    `9b168a10a77fbcafcdcf`,
 		GithubSecret: `929bbf6136084052faf4f5768c14af805173ac27`,
 	})
-	options.Success(func(ctx echo.Context) error {
+	options.SetSuccessHandler(func(ctx echo.Context) error {
 		user := options.User(ctx)
 		b, e := json.MarshalIndent(user, "", "  ")
 		if e != nil {

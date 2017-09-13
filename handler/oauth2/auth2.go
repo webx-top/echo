@@ -26,28 +26,48 @@ import (
 
 // OAuth is a plugin which helps you to use OAuth/OAuth2 apis from famous websites
 type OAuth struct {
-	Config          Config
-	HostURL         string
-	successHandlers []interface{}
-	failHandler     echo.HTTPErrorHandler
+	Config              Config
+	HostURL             string
+	successHandlers     []interface{}
+	failHandler         echo.HTTPErrorHandler
+	beginAuthHandler    echo.Handler
+	completeAuthHandler func(ctx echo.Context) (goth.User, error)
 }
 
 // New returns a new OAuth plugin
 // receives one parameter of type 'Config'
 func New(hostURL string, cfg Config) *OAuth {
 	c := DefaultConfig().MergeSingle(cfg)
-	return &OAuth{Config: c, HostURL: hostURL}
+	return &OAuth{
+		Config:              c,
+		HostURL:             hostURL,
+		beginAuthHandler:    echo.HandlerFunc(BeginAuthHandler),
+		completeAuthHandler: CompleteUserAuth,
+	}
 }
 
-// Success registers handler(s) which fires when the user logged in successfully
-func (p *OAuth) Success(handlersFn ...interface{}) {
+// SetSuccessHandler registers handler(s) which fires when the user logged in successfully
+func (p *OAuth) SetSuccessHandler(handlersFn ...interface{}) {
+	p.successHandlers = handlersFn
+}
+
+// AddSuccessHandler registers handler(s) which fires when the user logged in successfully
+func (p *OAuth) AddSuccessHandler(handlersFn ...interface{}) {
 	p.successHandlers = append(p.successHandlers, handlersFn...)
 }
 
-// Fail registers handler which fires when the user failed to logged in
+// SetFailHandler registers handler which fires when the user failed to logged in
 // underhood it justs registers an error handler to the StatusUnauthorized(400 status code), same as 'iris.OnError(400,handler)'
-func (p *OAuth) Fail(handler echo.HTTPErrorHandler) {
+func (p *OAuth) SetFailHandler(handler echo.HTTPErrorHandler) {
 	p.failHandler = handler
+}
+
+func (p *OAuth) SetBeginAuthHandler(handler echo.Handler) {
+	p.beginAuthHandler = handler
+}
+
+func (p *OAuth) SetCompleteAuthHandler(handler func(ctx echo.Context) (goth.User, error)) {
+	p.completeAuthHandler = handler
 }
 
 // User returns the user for the particular client
@@ -63,17 +83,11 @@ func (p *OAuth) Wrapper(e *echo.Echo) {
 	if len(oauthProviders) > 0 {
 		goth.UseProviders(oauthProviders...)
 		// set the mux path to handle the registered providers
-		e.Get(p.Config.Path+"/login/:provider", func(ctx echo.Context) error {
-			err := BeginAuthHandler(ctx)
-			if err != nil {
-				e.Logger().Error("[OAUTH2] Error: " + err.Error())
-			}
-			return err
-		})
+		e.Get(p.Config.Path+"/login/:provider", p.beginAuthHandler)
 
 		authMiddleware := func(h echo.Handler) echo.Handler {
 			return echo.HandlerFunc(func(ctx echo.Context) error {
-				user, err := CompleteUserAuth(ctx)
+				user, err := p.completeAuthHandler(ctx)
 				if err != nil {
 					return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 				}

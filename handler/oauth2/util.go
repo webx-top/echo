@@ -19,7 +19,6 @@ package oauth2
 
 import (
 	"errors"
-	"fmt"
 	"net/url"
 
 	"github.com/markbates/goth"
@@ -77,10 +76,6 @@ I would recommend using the BeginAuthHandler instead of doing all of these steps
 yourself, but that's entirely up to you.
 */
 func GetAuthURL(ctx echo.Context) (string, error) {
-	if ctx.Session() == nil {
-		fmt.Println("You have to enable sessions")
-	}
-
 	providerName, err := GetProviderName(ctx)
 	if err != nil {
 		return "", err
@@ -111,11 +106,6 @@ It expects to be able to get the name of the provider from the named parameters
 as either "provider" or url query parameter ":provider".
 */
 var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
-
-	if ctx.Session() == nil {
-		fmt.Println("You have to enable sessions")
-	}
-
 	providerName, err := GetProviderName(ctx)
 	if err != nil {
 		return goth.User{}, err
