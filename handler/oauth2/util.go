@@ -20,6 +20,7 @@ package oauth2
 import (
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/markbates/goth"
 	"github.com/webx-top/echo"
@@ -29,20 +30,7 @@ import (
 // we could use the echo's sessions default, but this session should be not confict with the cookie session name defined by the sessions manager
 const SessionName = "EchoGothSession"
 
-// GothParams used to convert the context.URLParams to goth's params
-type GothParams map[string][]string
-
-// Get returns the value of
-func (g GothParams) Get(key string) string {
-	if v, y := g[key]; y {
-		if len(v) > 0 {
-			return v[0]
-		}
-	}
-	return ``
-}
-
-var _ goth.Params = GothParams{}
+var _ goth.Params = url.Values{}
 
 /*
 BeginAuthHandler is a convienence handler for starting the authentication process.
@@ -147,7 +135,7 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 	if err != nil {
 		return goth.User{}, err
 	}
-	_, err = sess.Authorize(provider, GothParams(ctx.Queries()))
+	_, err = sess.Authorize(provider, url.Values(ctx.Queries()))
 
 	if err != nil {
 		return goth.User{}, err
