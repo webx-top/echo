@@ -64,6 +64,8 @@ type Account struct {
 	Key         string
 	Secret      string
 	Extra       echo.H
+	LoginURL    string
+	CallbackURL string
 	Constructor func(*Account) goth.Provider `json:"-" xml:"-"`
 }
 
@@ -134,6 +136,12 @@ func (c *Config) GenerateProviders() *Config {
 }
 
 func (c *Config) NewProvider(account *Account) goth.Provider {
+	if len(account.LoginURL) == 0 {
+		account.LoginURL = c.LoginURL(account.Name)
+	}
+	if len(account.CallbackURL) == 0 {
+		account.CallbackURL = c.CallbackURL(account.Name)
+	}
 	if len(account.Key) == 0 || len(account.Secret) == 0 {
 		return nil
 	}
@@ -142,59 +150,59 @@ func (c *Config) NewProvider(account *Account) goth.Provider {
 	}
 	switch account.Name {
 	case "twitter":
-		return twitter.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return twitter.New(account.Key, account.Secret, account.CallbackURL)
 	case "facebook":
-		return facebook.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return facebook.New(account.Key, account.Secret, account.CallbackURL)
 	case "gplus":
-		return gplus.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return gplus.New(account.Key, account.Secret, account.CallbackURL)
 	case "github":
-		return github.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return github.New(account.Key, account.Secret, account.CallbackURL)
 	case "spotify":
-		return spotify.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return spotify.New(account.Key, account.Secret, account.CallbackURL)
 	case "linkedin":
-		return linkedin.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return linkedin.New(account.Key, account.Secret, account.CallbackURL)
 	case "lastfm":
-		return lastfm.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return lastfm.New(account.Key, account.Secret, account.CallbackURL)
 	case "twitch":
-		return twitch.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return twitch.New(account.Key, account.Secret, account.CallbackURL)
 	case "dropbox":
-		return dropbox.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return dropbox.New(account.Key, account.Secret, account.CallbackURL)
 	case "digitalocean":
-		return digitalocean.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return digitalocean.New(account.Key, account.Secret, account.CallbackURL)
 	case "bitbucket":
-		return bitbucket.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return bitbucket.New(account.Key, account.Secret, account.CallbackURL)
 	case "instagram":
-		return instagram.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return instagram.New(account.Key, account.Secret, account.CallbackURL)
 	case "box":
-		return box.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return box.New(account.Key, account.Secret, account.CallbackURL)
 	case "salesforce":
-		return salesforce.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return salesforce.New(account.Key, account.Secret, account.CallbackURL)
 	case "amazon":
-		return amazon.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return amazon.New(account.Key, account.Secret, account.CallbackURL)
 	case "yammer":
-		return yammer.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return yammer.New(account.Key, account.Secret, account.CallbackURL)
 	case "onedrive":
-		return onedrive.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return onedrive.New(account.Key, account.Secret, account.CallbackURL)
 	case "yahoo":
-		return yahoo.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return yahoo.New(account.Key, account.Secret, account.CallbackURL)
 	case "slack":
-		return slack.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return slack.New(account.Key, account.Secret, account.CallbackURL)
 	case "stripe":
-		return stripe.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return stripe.New(account.Key, account.Secret, account.CallbackURL)
 	case "wepay":
-		return wepay.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return wepay.New(account.Key, account.Secret, account.CallbackURL)
 	case "paypal":
-		return paypal.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return paypal.New(account.Key, account.Secret, account.CallbackURL)
 	case "steam":
-		return steam.New(account.Key, c.CallbackURL(account.Name))
+		return steam.New(account.Key, account.CallbackURL)
 	case "heroku":
-		return heroku.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return heroku.New(account.Key, account.Secret, account.CallbackURL)
 	case "uber":
-		return uber.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return uber.New(account.Key, account.Secret, account.CallbackURL)
 	case "soundcloud":
-		return soundcloud.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return soundcloud.New(account.Key, account.Secret, account.CallbackURL)
 	case "gitlab":
-		return gitlab.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+		return gitlab.New(account.Key, account.Secret, account.CallbackURL)
 	}
 	return nil
 }
@@ -216,6 +224,8 @@ func (c *Config) SetAccount(newAccount *Account) *Config {
 		account.Secret = newAccount.Secret
 		account.Extra = newAccount.Extra
 		account.Constructor = newAccount.Constructor
+		account.LoginURL = newAccount.LoginURL
+		account.CallbackURL = newAccount.CallbackURL
 		c.Accounts[index] = account
 		if isOff {
 			c.GenerateProviders()
