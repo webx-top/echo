@@ -16,7 +16,6 @@
 
 */
 
-
 package echo
 
 type RouteRegister interface {
@@ -34,6 +33,10 @@ type RouteRegister interface {
 	Trace(path string, h interface{}, m ...interface{})
 	Static(prefix, root string)
 	File(path, file string)
+}
+
+type ContextRegister interface {
+	SetContext(Context)
 }
 
 type MiddlewareRegister interface {

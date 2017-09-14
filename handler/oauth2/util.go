@@ -90,6 +90,10 @@ func GetAuthURL(ctx echo.Context) (string, error) {
 		return "", err
 	}
 
+	if cr, ok := sess.(echo.ContextRegister); ok {
+		cr.SetContext(ctx)
+	}
+
 	url, err := sess.GetAuthURL()
 	if err != nil {
 		return "", err
@@ -125,6 +129,11 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 	if err != nil {
 		return goth.User{}, err
 	}
+
+	if cr, ok := sess.(echo.ContextRegister); ok {
+		cr.SetContext(ctx)
+	}
+
 	_, err = sess.Authorize(provider, url.Values(ctx.Queries()))
 
 	if err != nil {
