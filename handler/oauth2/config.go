@@ -62,7 +62,7 @@ type Account struct {
 	On          bool // on / off
 	Name        string
 	Key         string
-	Secret      string
+	Secret      string `json:"-" xml:"-"`
 	Extra       echo.H
 	LoginURL    string
 	CallbackURL string
