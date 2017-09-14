@@ -52,6 +52,7 @@ func main() {
 	})
 	config := &oauth2.Config{}
 	config.AddAccount(&oauth2.Account{
+		On:     true,
 		Name:   `github`,
 		Key:    `9b168a10a77fbcafcdcf`,
 		Secret: `929bbf6136084052faf4f5768c14af805173ac27`,

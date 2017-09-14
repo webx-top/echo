@@ -59,6 +59,7 @@ const (
 )
 
 type Account struct {
+	On          bool // on / off
 	Name        string
 	Key         string
 	Secret      string
@@ -116,68 +117,11 @@ func (c *Config) GenerateProviders() *Config {
 	var providers []goth.Provider
 	//we could use a map but that's easier for the users because of code completion of their IDEs/editors
 	for _, account := range c.Accounts {
-		if len(account.Key) == 0 || len(account.Secret) == 0 {
+		if !account.On {
 			continue
 		}
-		if account.Constructor != nil {
-			providers = append(providers, account.Instance())
-			continue
-		}
-		switch account.Name {
-		case "twitter":
-			providers = append(providers, twitter.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "facebook":
-			providers = append(providers, facebook.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "gplus":
-			providers = append(providers, gplus.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "github":
-			providers = append(providers, github.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "spotify":
-			providers = append(providers, spotify.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "linkedin":
-			providers = append(providers, linkedin.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "lastfm":
-			providers = append(providers, lastfm.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "twitch":
-			providers = append(providers, twitch.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "dropbox":
-			providers = append(providers, dropbox.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "digitalocean":
-			providers = append(providers, digitalocean.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "bitbucket":
-			providers = append(providers, bitbucket.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "instagram":
-			providers = append(providers, instagram.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "box":
-			providers = append(providers, box.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "salesforce":
-			providers = append(providers, salesforce.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "amazon":
-			providers = append(providers, amazon.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "yammer":
-			providers = append(providers, yammer.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "onedrive":
-			providers = append(providers, onedrive.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "yahoo":
-			providers = append(providers, yahoo.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "slack":
-			providers = append(providers, slack.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "stripe":
-			providers = append(providers, stripe.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "wepay":
-			providers = append(providers, wepay.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "paypal":
-			providers = append(providers, paypal.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "steam":
-			providers = append(providers, steam.New(account.Key, c.CallbackURL(account.Name)))
-		case "heroku":
-			providers = append(providers, heroku.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "uber":
-			providers = append(providers, uber.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "soundcloud":
-			providers = append(providers, soundcloud.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
-		case "gitlab":
-			providers = append(providers, gitlab.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		if provider := c.NewProvider(account); provider != nil {
+			providers = append(providers, provider)
 		}
 	}
 
@@ -185,7 +129,107 @@ func (c *Config) GenerateProviders() *Config {
 	return c
 }
 
+func (c *Config) NewProvider(account *Account) goth.Provider {
+	if len(account.Key) == 0 || len(account.Secret) == 0 {
+		return nil
+	}
+	if account.Constructor != nil {
+		return account.Instance()
+	}
+	switch account.Name {
+	case "twitter":
+		return twitter.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "facebook":
+		return facebook.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "gplus":
+		return gplus.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "github":
+		return github.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "spotify":
+		return spotify.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "linkedin":
+		return linkedin.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "lastfm":
+		return lastfm.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "twitch":
+		return twitch.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "dropbox":
+		return dropbox.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "digitalocean":
+		return digitalocean.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "bitbucket":
+		return bitbucket.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "instagram":
+		return instagram.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "box":
+		return box.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "salesforce":
+		return salesforce.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "amazon":
+		return amazon.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "yammer":
+		return yammer.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "onedrive":
+		return onedrive.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "yahoo":
+		return yahoo.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "slack":
+		return slack.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "stripe":
+		return stripe.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "wepay":
+		return wepay.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "paypal":
+		return paypal.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "steam":
+		return steam.New(account.Key, c.CallbackURL(account.Name))
+	case "heroku":
+		return heroku.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "uber":
+		return uber.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "soundcloud":
+		return soundcloud.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	case "gitlab":
+		return gitlab.New(account.Key, account.Secret, c.CallbackURL(account.Name))
+	}
+	return nil
+}
+
 func (c *Config) AddAccount(accounts ...*Account) *Config {
 	c.Accounts = append(c.Accounts, accounts...)
+	return c
+}
+
+func (c *Config) SetAccount(newAccount *Account) *Config {
+	var exists bool
+	for index, account := range c.Accounts {
+		if account.Name != newAccount.Name {
+			continue
+		}
+		isOff := account.On && !newAccount.On
+		account.On = newAccount.On
+		account.Key = newAccount.Key
+		account.Secret = newAccount.Secret
+		account.Extra = newAccount.Extra
+		account.Constructor = newAccount.Constructor
+		c.Accounts[index] = account
+		if isOff {
+			c.GenerateProviders()
+		} else if account.On {
+			if provider := c.NewProvider(account); provider != nil {
+				goth.UseProviders(provider)
+			}
+		}
+		exists = true
+		break
+	}
+	if !exists {
+		c.Accounts = append(c.Accounts, newAccount)
+		if newAccount.On {
+			if provider := c.NewProvider(newAccount); provider != nil {
+				goth.UseProviders(provider)
+			}
+		}
+	}
 	return c
 }
