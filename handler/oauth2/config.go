@@ -108,6 +108,10 @@ func (c *Config) CallbackURL(providerName string) string {
 	return c.Host + c.Path + "/callback/" + providerName
 }
 
+func (c *Config) LoginURL(providerName string) string {
+	return c.Host + c.Path + "/login/" + providerName
+}
+
 // GenerateProviders returns the valid goth providers and the relative url paths (because the goth.Provider doesn't have a public method to get the Auth path...)
 // we do the hard-core/hand checking here at the configs.
 //
