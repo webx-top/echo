@@ -50,11 +50,13 @@ func main() {
 	e.Get("/", func(c echo.Context) error {
 		return c.HTML(`Login: <a href="/oauth/login/github" target="_blank">github</a>`)
 	})
-
-	options := oauth2.New(`http://www.coscms.com`, oauth2.Config{
-		GithubKey:    `9b168a10a77fbcafcdcf`,
-		GithubSecret: `929bbf6136084052faf4f5768c14af805173ac27`,
+	config := &oauth2.Config{}
+	config.AddAccount(&oauth2.Account{
+		Name:   `github`,
+		Key:    `9b168a10a77fbcafcdcf`,
+		Secret: `929bbf6136084052faf4f5768c14af805173ac27`,
 	})
+	options := oauth2.New(`http://www.coscms.com`, config)
 	options.SetSuccessHandler(func(ctx echo.Context) error {
 		user := options.User(ctx)
 		b, e := json.MarshalIndent(user, "", "  ")

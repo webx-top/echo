@@ -26,7 +26,7 @@ import (
 
 // OAuth is a plugin which helps you to use OAuth/OAuth2 apis from famous websites
 type OAuth struct {
-	Config              Config
+	Config              *Config
 	HostURL             string
 	successHandlers     []interface{}
 	failHandler         echo.HTTPErrorHandler
@@ -36,7 +36,7 @@ type OAuth struct {
 
 // New returns a new OAuth plugin
 // receives one parameter of type 'Config'
-func New(hostURL string, cfg Config) *OAuth {
+func New(hostURL string, cfg *Config) *OAuth {
 	c := DefaultConfig().MergeSingle(cfg)
 	c.Host = hostURL
 	return &OAuth{
@@ -79,39 +79,33 @@ func (p *OAuth) User(ctx echo.Context) (u goth.User) {
 
 // Wrapper register the oauth route
 func (p *OAuth) Wrapper(e *echo.Echo) {
-	oauthProviders := p.Config.Providers()
-	if oauthProviders == nil || len(oauthProviders) == 0 {
-		p.Config.GenerateProviders()
+	p.Config.GenerateProviders()
+
+	// set the mux path to handle the registered providers
+	e.Get(p.Config.Path+"/login/:provider", p.beginAuthHandler)
+
+	authMiddleware := func(h echo.Handler) echo.Handler {
+		return echo.HandlerFunc(func(ctx echo.Context) error {
+			user, err := p.completeAuthHandler(ctx)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+			}
+			ctx.Set(p.Config.ContextKey, user)
+			return h.Handle(ctx)
+		})
 	}
-	oauthProviders = p.Config.Providers()
-	if len(oauthProviders) > 0 {
-		goth.UseProviders(oauthProviders...)
-		// set the mux path to handle the registered providers
-		e.Get(p.Config.Path+"/login/:provider", p.beginAuthHandler)
 
-		authMiddleware := func(h echo.Handler) echo.Handler {
-			return echo.HandlerFunc(func(ctx echo.Context) error {
-				user, err := p.completeAuthHandler(ctx)
-				if err != nil {
-					return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-				}
-				ctx.Set(p.Config.ContextKey, user)
-				return h.Handle(ctx)
-			})
-		}
-
-		p.successHandlers = append([]interface{}{authMiddleware}, p.successHandlers...)
-		lastIndex := len(p.successHandlers) - 1
-		if lastIndex == 0 {
-			e.Get(p.Config.Path+"/callback/:provider", func(ctx echo.Context) error {
-				return ctx.String(`Success Handler is not set`)
-			}, p.successHandlers...)
-		} else {
-			e.Get(p.Config.Path+"/callback/:provider", p.successHandlers[lastIndex], p.successHandlers[0:lastIndex]...)
-		}
-		// register the error handler
-		if p.failHandler != nil {
-			e.SetHTTPErrorHandler(p.failHandler)
-		}
+	p.successHandlers = append([]interface{}{authMiddleware}, p.successHandlers...)
+	lastIndex := len(p.successHandlers) - 1
+	if lastIndex == 0 {
+		e.Get(p.Config.Path+"/callback/:provider", func(ctx echo.Context) error {
+			return ctx.String(`Success Handler is not set`)
+		}, p.successHandlers...)
+	} else {
+		e.Get(p.Config.Path+"/callback/:provider", p.successHandlers[lastIndex], p.successHandlers[0:lastIndex]...)
+	}
+	// register the error handler
+	if p.failHandler != nil {
+		e.SetHTTPErrorHandler(p.failHandler)
 	}
 }

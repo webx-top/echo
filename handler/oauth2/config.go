@@ -47,16 +47,32 @@ import (
 	"github.com/markbates/goth/providers/wepay"
 	"github.com/markbates/goth/providers/yahoo"
 	"github.com/markbates/goth/providers/yammer"
+	"github.com/webx-top/echo"
 )
 
 const (
 	// DefaultPath /oauth
 	DefaultPath = "/oauth"
-	// DefaultRouteName oauth
-	DefaultRouteName = "oauth"
+
 	// DefaultContextKey oauth_user
 	DefaultContextKey = "oauth_user"
 )
+
+type Account struct {
+	Name        string
+	Key         string
+	Secret      string
+	Extra       echo.H
+	Constructor func(*Account) goth.Provider `json:"-" xml:"-"`
+}
+
+func (a *Account) SetConstructor(constructor func(*Account) goth.Provider) {
+	a.Constructor = constructor
+}
+
+func (a *Account) Instance() goth.Provider {
+	return a.Constructor(a)
+}
 
 // Config the configs for the gothic oauth/oauth2 authentication for third-party websites
 // All Key and Secret values are empty by default strings. Non-empty will be registered as Goth Provider automatically, by Iris
@@ -64,88 +80,30 @@ const (
 // contains the providers' keys  (& secrets) and the relative auth callback url path(ex: "/auth" will be registered as /auth/:provider/callback)
 //
 type Config struct {
-	Host, Path                                            string
-	TwitterKey, TwitterSecret, TwitterName                string
-	FacebookKey, FacebookSecret, FacebookName             string
-	GplusKey, GplusSecret, GplusName                      string
-	GithubKey, GithubSecret, GithubName                   string
-	SpotifyKey, SpotifySecret, SpotifyName                string
-	LinkedinKey, LinkedinSecret, LinkedinName             string
-	LastfmKey, LastfmSecret, LastfmName                   string
-	TwitchKey, TwitchSecret, TwitchName                   string
-	DropboxKey, DropboxSecret, DropboxName                string
-	DigitaloceanKey, DigitaloceanSecret, DigitaloceanName string
-	BitbucketKey, BitbucketSecret, BitbucketName          string
-	InstagramKey, InstagramSecret, InstagramName          string
-	BoxKey, BoxSecret, BoxName                            string
-	SalesforceKey, SalesforceSecret, SalesforceName       string
-	AmazonKey, AmazonSecret, AmazonName                   string
-	YammerKey, YammerSecret, YammerName                   string
-	OneDriveKey, OneDriveSecret, OneDriveName             string
-	YahooKey, YahooSecret, YahooName                      string
-	SlackKey, SlackSecret, SlackName                      string
-	StripeKey, StripeSecret, StripeName                   string
-	WepayKey, WepaySecret, WepayName                      string
-	PaypalKey, PaypalSecret, PaypalName                   string
-	SteamKey, SteamName                                   string
-	HerokuKey, HerokuSecret, HerokuName                   string
-	UberKey, UberSecret, UberName                         string
-	SoundcloudKey, SoundcloudSecret, SoundcloudName       string
-	GitlabKey, GitlabSecret, GitlabName                   string
+	Host, Path string
+	Accounts   []*Account
 
-	//RouteName is the registered route's name, using to help you render a link using templates or iris.URL("RouteName","Providername")
-	// defaults to 'oauth'
-	RouteName string
 	// defaults to 'oauth_user' used by plugin to give you the goth.User, but you can take this manually also by `context.Get(ContextKey).(goth.User)`
 	ContextKey string
-
-	providers []goth.Provider
 }
 
 // DefaultConfig returns OAuth config, the fields of the iteral are zero-values ( empty strings)
-func DefaultConfig() Config {
-	return Config{
-		Path:             DefaultPath,
-		TwitterName:      "twitter",
-		FacebookName:     "facebook",
-		GplusName:        "gplus",
-		GithubName:       "github",
-		SpotifyName:      "spotify",
-		LinkedinName:     "linkedin",
-		LastfmName:       "lastfm",
-		TwitchName:       "twitch",
-		DropboxName:      "dropbox",
-		DigitaloceanName: "digitalocean",
-		BitbucketName:    "bitbucket",
-		InstagramName:    "instagram",
-		BoxName:          "box",
-		SalesforceName:   "salesforce",
-		AmazonName:       "amazon",
-		YammerName:       "yammer",
-		OneDriveName:     "onedrive",
-		YahooName:        "yahoo",
-		SlackName:        "slack",
-		StripeName:       "stripe",
-		WepayName:        "wepay",
-		PaypalName:       "paypal",
-		SteamName:        "steam",
-		HerokuName:       "heroku",
-		UberName:         "uber",
-		SoundcloudName:   "soundcloud",
-		GitlabName:       "gitlab",
-		RouteName:        DefaultRouteName,
-		ContextKey:       DefaultContextKey,
+func DefaultConfig() *Config {
+	return &Config{
+		Path:       DefaultPath,
+		Accounts:   []*Account{},
+		ContextKey: DefaultContextKey,
 	}
 }
 
 // MergeSingle merges the default with the given config and returns the result
-func (c Config) MergeSingle(cfg Config) (config Config) {
+func (c *Config) MergeSingle(cfg *Config) (config *Config) {
 	config = cfg
-	mergo.Merge(&config, c)
+	mergo.Merge(config, c)
 	return
 }
 
-func (c Config) CallbackURL(providerName string) string {
+func (c *Config) CallbackURL(providerName string) string {
 	return c.Host + c.Path + "/callback/" + providerName
 }
 
@@ -153,97 +111,81 @@ func (c Config) CallbackURL(providerName string) string {
 // we do the hard-core/hand checking here at the configs.
 //
 // receives one parameter which is the host from the server,ex: http://localhost:3000, will be used as prefix for the oauth callback
-func (c Config) GenerateProviders() (providers []goth.Provider) {
+func (c *Config) GenerateProviders() *Config {
+	goth.ClearProviders()
+	var providers []goth.Provider
 	//we could use a map but that's easier for the users because of code completion of their IDEs/editors
-	if c.TwitterKey != "" && c.TwitterSecret != "" {
-		providers = append(providers, twitter.New(c.TwitterKey, c.TwitterSecret, c.CallbackURL(c.TwitterName)))
+	for _, account := range c.Accounts {
+		if len(account.Key) == 0 || len(account.Secret) == 0 {
+			continue
+		}
+		if account.Constructor != nil {
+			providers = append(providers, account.Instance())
+			continue
+		}
+		switch account.Name {
+		case "twitter":
+			providers = append(providers, twitter.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "facebook":
+			providers = append(providers, facebook.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "gplus":
+			providers = append(providers, gplus.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "github":
+			providers = append(providers, github.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "spotify":
+			providers = append(providers, spotify.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "linkedin":
+			providers = append(providers, linkedin.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "lastfm":
+			providers = append(providers, lastfm.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "twitch":
+			providers = append(providers, twitch.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "dropbox":
+			providers = append(providers, dropbox.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "digitalocean":
+			providers = append(providers, digitalocean.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "bitbucket":
+			providers = append(providers, bitbucket.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "instagram":
+			providers = append(providers, instagram.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "box":
+			providers = append(providers, box.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "salesforce":
+			providers = append(providers, salesforce.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "amazon":
+			providers = append(providers, amazon.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "yammer":
+			providers = append(providers, yammer.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "onedrive":
+			providers = append(providers, onedrive.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "yahoo":
+			providers = append(providers, yahoo.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "slack":
+			providers = append(providers, slack.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "stripe":
+			providers = append(providers, stripe.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "wepay":
+			providers = append(providers, wepay.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "paypal":
+			providers = append(providers, paypal.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "steam":
+			providers = append(providers, steam.New(account.Key, c.CallbackURL(account.Name)))
+		case "heroku":
+			providers = append(providers, heroku.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "uber":
+			providers = append(providers, uber.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "soundcloud":
+			providers = append(providers, soundcloud.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		case "gitlab":
+			providers = append(providers, gitlab.New(account.Key, account.Secret, c.CallbackURL(account.Name)))
+		}
 	}
-	if c.FacebookKey != "" && c.FacebookSecret != "" {
-		providers = append(providers, facebook.New(c.FacebookKey, c.FacebookSecret, c.CallbackURL(c.FacebookName)))
-	}
-	if c.GplusKey != "" && c.GplusSecret != "" {
-		providers = append(providers, gplus.New(c.GplusKey, c.GplusSecret, c.CallbackURL(c.GplusName)))
-	}
-	if c.GithubKey != "" && c.GithubSecret != "" {
-		providers = append(providers, github.New(c.GithubKey, c.GithubSecret, c.CallbackURL(c.GithubName)))
-	}
-	if c.SpotifyKey != "" && c.SpotifySecret != "" {
-		providers = append(providers, spotify.New(c.SpotifyKey, c.SpotifySecret, c.CallbackURL(c.SpotifyName)))
-	}
-	if c.LinkedinKey != "" && c.LinkedinSecret != "" {
-		providers = append(providers, linkedin.New(c.LinkedinKey, c.LinkedinSecret, c.CallbackURL(c.LinkedinName)))
-	}
-	if c.LastfmKey != "" && c.LastfmSecret != "" {
-		providers = append(providers, lastfm.New(c.LastfmKey, c.LastfmSecret, c.CallbackURL(c.LastfmName)))
-	}
-	if c.TwitchKey != "" && c.TwitchSecret != "" {
-		providers = append(providers, twitch.New(c.TwitchKey, c.TwitchSecret, c.CallbackURL(c.TwitchName)))
-	}
-	if c.DropboxKey != "" && c.DropboxSecret != "" {
-		providers = append(providers, dropbox.New(c.DropboxKey, c.DropboxSecret, c.CallbackURL(c.DropboxName)))
-	}
-	if c.DigitaloceanKey != "" && c.DigitaloceanSecret != "" {
-		providers = append(providers, digitalocean.New(c.DigitaloceanKey, c.DigitaloceanSecret, c.CallbackURL(c.DigitaloceanName)))
-	}
-	if c.BitbucketKey != "" && c.BitbucketSecret != "" {
-		providers = append(providers, bitbucket.New(c.BitbucketKey, c.BitbucketSecret, c.CallbackURL(c.BitbucketName)))
-	}
-	if c.InstagramKey != "" && c.InstagramSecret != "" {
-		providers = append(providers, instagram.New(c.InstagramKey, c.InstagramSecret, c.CallbackURL(c.InstagramName)))
-	}
-	if c.BoxKey != "" && c.BoxSecret != "" {
-		providers = append(providers, box.New(c.BoxKey, c.BoxSecret, c.CallbackURL(c.BoxName)))
-	}
-	if c.SalesforceKey != "" && c.SalesforceSecret != "" {
-		providers = append(providers, salesforce.New(c.SalesforceKey, c.SalesforceSecret, c.CallbackURL(c.SalesforceName)))
-	}
-	if c.AmazonKey != "" && c.AmazonSecret != "" {
-		providers = append(providers, amazon.New(c.AmazonKey, c.AmazonSecret, c.CallbackURL(c.AmazonName)))
-	}
-	if c.YammerKey != "" && c.YammerSecret != "" {
-		providers = append(providers, yammer.New(c.YammerKey, c.YammerSecret, c.CallbackURL(c.YammerName)))
-	}
-	if c.OneDriveKey != "" && c.OneDriveSecret != "" {
-		providers = append(providers, onedrive.New(c.OneDriveKey, c.OneDriveSecret, c.CallbackURL(c.OneDriveName)))
-	}
-	if c.YahooKey != "" && c.YahooSecret != "" {
-		providers = append(providers, yahoo.New(c.YahooKey, c.YahooSecret, c.CallbackURL(c.YahooName)))
-	}
-	if c.SlackKey != "" && c.SlackSecret != "" {
-		providers = append(providers, slack.New(c.SlackKey, c.SlackSecret, c.CallbackURL(c.SlackName)))
-	}
-	if c.StripeKey != "" && c.StripeSecret != "" {
-		providers = append(providers, stripe.New(c.StripeKey, c.StripeSecret, c.CallbackURL(c.StripeName)))
-	}
-	if c.WepayKey != "" && c.WepaySecret != "" {
-		providers = append(providers, wepay.New(c.WepayKey, c.WepaySecret, c.CallbackURL(c.WepayName)))
-	}
-	if c.PaypalKey != "" && c.PaypalSecret != "" {
-		providers = append(providers, paypal.New(c.PaypalKey, c.PaypalSecret, c.CallbackURL(c.PaypalName)))
-	}
-	if c.SteamKey != "" {
-		providers = append(providers, steam.New(c.SteamKey, c.CallbackURL(c.SteamName)))
-	}
-	if c.HerokuKey != "" && c.HerokuSecret != "" {
-		providers = append(providers, heroku.New(c.HerokuKey, c.HerokuSecret, c.CallbackURL(c.HerokuName)))
-	}
-	if c.UberKey != "" && c.UberSecret != "" {
-		providers = append(providers, uber.New(c.UberKey, c.UberSecret, c.CallbackURL(c.UberName)))
-	}
-	if c.SoundcloudKey != "" && c.SoundcloudSecret != "" {
-		providers = append(providers, soundcloud.New(c.SoundcloudKey, c.SoundcloudSecret, c.CallbackURL(c.SoundcloudName)))
-	}
-	if c.GitlabKey != "" && c.GitlabSecret != "" {
-		providers = append(providers, gitlab.New(c.GitlabKey, c.GitlabSecret, c.CallbackURL(c.GithubName)))
-	}
-	c.providers = providers
-	return
+
+	goth.UseProviders(providers...)
+	return c
 }
 
-func (c Config) Providers() []goth.Provider {
-	return c.providers
-}
-
-func (c Config) AddProvider(providers ...goth.Provider) {
-	c.providers = append(c.providers, providers...)
+func (c *Config) AddAccount(accounts ...*Account) *Config {
+	c.Accounts = append(c.Accounts, accounts...)
+	return c
 }
