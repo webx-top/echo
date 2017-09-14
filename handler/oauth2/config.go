@@ -130,7 +130,6 @@ func (c *Config) GenerateProviders() *Config {
 			providers = append(providers, provider)
 		}
 	}
-
 	goth.UseProviders(providers...)
 	return c
 }
@@ -141,9 +140,6 @@ func (c *Config) NewProvider(account *Account) goth.Provider {
 	}
 	if len(account.CallbackURL) == 0 {
 		account.CallbackURL = c.CallbackURL(account.Name)
-	}
-	if len(account.Key) == 0 || len(account.Secret) == 0 {
-		return nil
 	}
 	if account.Constructor != nil {
 		return account.Instance()
