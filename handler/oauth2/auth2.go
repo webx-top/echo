@@ -78,11 +78,13 @@ func (p *OAuth) User(ctx echo.Context) (u goth.User) {
 }
 
 // Wrapper register the oauth route
-func (p *OAuth) Wrapper(e *echo.Echo) {
+func (p *OAuth) Wrapper(e *echo.Echo, middlewares ...interface{}) {
 	p.Config.GenerateProviders()
 
+	g := e.Group(p.Config.Path, middlewares...)
+
 	// set the mux path to handle the registered providers
-	e.Get(p.Config.Path+"/login/:provider", p.beginAuthHandler)
+	g.Get("/login/:provider", p.beginAuthHandler)
 
 	authMiddleware := func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(ctx echo.Context) error {
@@ -98,11 +100,11 @@ func (p *OAuth) Wrapper(e *echo.Echo) {
 	p.successHandlers = append([]interface{}{authMiddleware}, p.successHandlers...)
 	lastIndex := len(p.successHandlers) - 1
 	if lastIndex == 0 {
-		e.Get(p.Config.Path+"/callback/:provider", func(ctx echo.Context) error {
+		g.Get("/callback/:provider", func(ctx echo.Context) error {
 			return ctx.String(`Success Handler is not set`)
 		}, p.successHandlers...)
 	} else {
-		e.Get(p.Config.Path+"/callback/:provider", p.successHandlers[lastIndex], p.successHandlers[0:lastIndex]...)
+		g.Get("/callback/:provider", p.successHandlers[lastIndex], p.successHandlers[0:lastIndex]...)
 	}
 	// register the error handler
 	if p.failHandler != nil {

@@ -57,3 +57,7 @@ type ICore interface {
 type Closer interface {
 	Close() error
 }
+
+type Prefixer interface {
+	Prefix() string
+}

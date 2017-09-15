@@ -27,6 +27,7 @@ type (
 		debug             bool
 		router            *Router
 		logger            logger.Logger
+		groups            map[string]*Group
 		handlerWrapper    []func(interface{}) Handler
 		middlewareWrapper []func(interface{}) Middleware
 		acceptFormats     map[string]string //mime=>format
@@ -79,6 +80,7 @@ func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 		return fn(e)
 	}
 	e.router = NewRouter(e)
+	e.groups = make(map[string]*Group)
 
 	//----------
 	// Defaults
@@ -463,6 +465,12 @@ func (e *Echo) AppendRouter(routes []*Route) {
 func (e *Echo) Group(prefix string, m ...interface{}) (g *Group) {
 	g = &Group{prefix: prefix, echo: e}
 	g.Use(m...)
+	e.groups[prefix] = g
+	return
+}
+
+func (e *Echo) GetGroup(prefix string) (g *Group) {
+	g, _ = e.groups[prefix]
 	return
 }
 

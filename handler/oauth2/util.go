@@ -102,7 +102,24 @@ func GetAuthURL(ctx echo.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	//fmt.Println(sess.Marshal())
+	length := len(url)
+	if length > 0 {
+		switch url[0] {
+		case '/':
+			url = ctx.Site() + url
+		case '.':
+			url = ctx.Site() + `/` + url
+		default:
+			if length > 7 {
+				switch url[0:7] {
+				case `https:/`, `http://`:
+				default:
+					url = ctx.Site() + `/` + url
+				}
+			}
+		}
+	}
+	//panic(sess.Marshal())
 	err = ctx.Session().Set(SessionName, sess.Marshal()).Save()
 	return url, err
 }
@@ -124,12 +141,12 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return goth.User{}, err
 	}
 
-	sv := ctx.Session().Get(SessionName)
-	if sv == nil {
+	sv, ok := ctx.Session().Get(SessionName).(string)
+	if !ok || len(sv) == 0 {
 		return goth.User{}, errors.New("could not find a matching session for this request")
 	}
 
-	sess, err := provider.UnmarshalSession(sv.(string))
+	sess, err := provider.UnmarshalSession(sv)
 	if err != nil {
 		return goth.User{}, err
 	}

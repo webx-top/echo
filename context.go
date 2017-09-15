@@ -259,7 +259,7 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 		store:      make(store),
 		handler:    NotFoundHandler,
 		funcs:      make(map[string]interface{}),
-		sessioner:  DefaultNopSession,
+		sessioner:  DefaultSession,
 	}
 	c.cookier = NewCookier(c)
 	c.dataEngine = NewData(c)
@@ -657,7 +657,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.Validator = DefaultNopValidate
 	c.Emitter = emitter.DefaultCondEmitter
 	c.Translator = DefaultNopTranslate
-	c.sessioner = DefaultNopSession
+	c.sessioner = DefaultSession
 	c.cookier = NewCookier(c)
 	c.context = context.Background()
 	c.request = req

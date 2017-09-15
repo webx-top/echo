@@ -182,8 +182,12 @@ func RebuildRouter(args ...[]*echo.Route) {
 }
 
 // Group creates a new sub-router with prefix.
-func Group(prefix string, m ...interface{}) (g *echo.Group) {
+func Group(prefix string, m ...interface{}) *echo.Group {
 	return Default.Group(prefix, m...)
+}
+
+func GetGroup(prefix string) *echo.Group {
+	return Default.GetGroup(prefix)
 }
 
 // URI generates a URI from handler.
