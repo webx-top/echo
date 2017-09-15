@@ -174,6 +174,7 @@ type (
 		Header(string) string
 		IsAjax() bool
 		IsPjax() bool
+		PjaxContainer() string
 		Method() string
 		Format() string
 		SetFormat(string)
@@ -809,6 +810,14 @@ func (c *xContext) IsAjax() bool {
 
 func (c *xContext) IsPjax() bool {
 	return len(c.Header(`X-PJAX`)) > 0
+}
+
+func (c *xContext) PjaxContainer() string {
+	container := c.Header(`X-PJAX-Container`)
+	if len(container) > 0 {
+		return container
+	}
+	return c.Query(`_pjax`)
 }
 
 func (c *xContext) Method() string {
