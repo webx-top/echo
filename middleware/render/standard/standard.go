@@ -227,11 +227,14 @@ func (self *Standard) Render(w io.Writer, tmplName string, values interface{}, c
 			c.Delete(`webx:render.locked`)
 		}()
 	}
-	tmpl := self.parse(tmplName, c.Funcs())
+	tmpl, err := self.parse(tmplName, c.Funcs())
+	if err != nil {
+		return err
+	}
 	return tmpl.ExecuteTemplate(w, tmpl.Name(), values)
 }
 
-func (self *Standard) parse(tmplName string, funcs map[string]interface{}) (tmpl *htmlTpl.Template) {
+func (self *Standard) parse(tmplName string, funcs map[string]interface{}) (tmpl *htmlTpl.Template, err error) {
 	tmplName = tmplName + self.Ext
 	tmplName = self.TemplatePath(tmplName)
 	cachedKey := tmplName
@@ -272,7 +275,8 @@ func (self *Standard) parse(tmplName string, funcs map[string]interface{}) (tmpl
 	}
 	funcMap = setFunc(rel.Tpl[0], funcMap)
 	t.Funcs(funcMap)
-	b, err := self.RawContent(tmplName)
+	var b []byte
+	b, err = self.RawContent(tmplName)
 	if err != nil {
 		tmpl, _ = t.Parse(err.Error())
 		return
@@ -368,7 +372,8 @@ func (self *Standard) parse(tmplName string, funcs map[string]interface{}) (tmpl
 }
 
 func (self *Standard) Fetch(tmplName string, data interface{}, funcMap map[string]interface{}) string {
-	return self.execute(self.parse(tmplName, funcMap), data)
+	content, _ := self.parse(tmplName, funcMap)
+	return self.execute(content, data)
 }
 
 func (self *Standard) execute(tmpl *htmlTpl.Template, data interface{}) string {
