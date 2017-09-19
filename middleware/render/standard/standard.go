@@ -52,6 +52,7 @@ func New(templateDir string, args ...logger.Logger) driver.Driver {
 	t := &Standard{
 		CachedRelation:    make(map[string]*CcRel),
 		TemplateDir:       templateDir,
+		TemplateMgr:       manager.Default,
 		DelimLeft:         "{{",
 		DelimRight:        "}}",
 		IncludeTag:        "Include",
@@ -158,6 +159,11 @@ func (self *Standard) SetFuncMap(fn func() map[string]interface{}) {
 }
 
 func (self *Standard) deleteCachedRelation(name string) {
+	name = strings.TrimPrefix(name, self.TemplateDir)
+	name = strings.TrimPrefix(name, echo.FilePathSeparator)
+	if filepath.Separator == '\\' {
+		name = strings.Replace(name, `\`, `/`, -1)
+	}
 	if cs, ok := self.CachedRelation[name]; ok {
 		_ = cs
 		self.CachedRelation = make(map[string]*CcRel)
@@ -175,7 +181,7 @@ func (self *Standard) deleteCachedRelation(name string) {
 	}
 }
 
-func (self *Standard) Init(cached ...bool) {
+func (self *Standard) Init() {
 	callback := func(name, typ, event string) {
 		switch event {
 		case "create":
@@ -189,7 +195,9 @@ func (self *Standard) Init(cached ...bool) {
 			}
 		}
 	}
-	self.TemplateMgr = manager.New(self.logger, self.TemplateDir, []string{"*" + self.Ext}, callback, cached...)
+	self.TemplateMgr.AddAllow("*" + self.Ext)
+	self.TemplateMgr.AddWatchDir(self.TemplateDir)
+	self.TemplateMgr.AddCallback(callback)
 }
 
 func (self *Standard) SetManager(mgr driver.Manager) {
@@ -200,10 +208,16 @@ func (self *Standard) SetManager(mgr driver.Manager) {
 }
 
 func (self *Standard) TemplatePath(p string) string {
-	if self.TemplatePathParser == nil {
-		return p
+	if self.TemplatePathParser != nil {
+		p = self.TemplatePathParser(p)
 	}
-	return self.TemplatePathParser(p)
+	p = filepath.Join(self.TemplateDir, p)
+	p = strings.TrimPrefix(p, self.TemplateDir)
+	p = strings.TrimPrefix(p, echo.FilePathSeparator)
+	if filepath.Separator == '\\' {
+		p = strings.Replace(p, `\`, `/`, -1)
+	}
+	return p
 }
 
 func (self *Standard) InitRegexp() {
@@ -238,9 +252,6 @@ func (self *Standard) parse(tmplName string, funcs map[string]interface{}) (tmpl
 	tmplName = tmplName + self.Ext
 	tmplName = self.TemplatePath(tmplName)
 	cachedKey := tmplName
-	if tmplName[0] == '/' {
-		cachedKey = tmplName[1:]
-	}
 	var funcMap htmlTpl.FuncMap
 	if self.getFuncs != nil {
 		funcMap = htmlTpl.FuncMap(self.getFuncs())
@@ -506,7 +517,7 @@ func (self *Standard) RawContent(tmpl string) (b []byte, e error) {
 		b = self.strip(b)
 	}()
 	if self.TemplateMgr != nil {
-		b, e = self.TemplateMgr.GetTemplate(tmpl)
+		b, e = self.TemplateMgr.GetTemplate(filepath.Join(self.TemplateDir, tmpl))
 		if e != nil {
 			self.logger.Error(e)
 		}

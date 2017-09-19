@@ -360,7 +360,7 @@ func (s *Application) NewTemplateEngine(tmplPath string, conf *render.Config) dr
 		tmplPath = s.ThemeDir()
 	}
 	eng := render.New(conf.Engine, tmplPath, s.Core.Logger())
-	eng.Init(true, conf.Reload)
+	eng.Init()
 	eng.SetDebug(conf.Debug)
 	return eng
 }

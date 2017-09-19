@@ -22,10 +22,18 @@ import (
 )
 
 type Manager interface {
+	Start() error
 	Close()
-	SetOnChangeCallback(func(name, typ, event string))
+	SetCallback(...func(name, typ, event string))
+	AddCallback(...func(name, typ, event string))
+	SetAllows(allows map[string]bool)
+	AddAllow(allows ...string)
+	SetIgnores(ignores map[string]bool)
+	AddIgnore(ignores ...string)
+	AddWatchDir(ppath string) (err error)
+	CancelWatchDir(oldDir string) (err error)
+	ChangeWatchDir(oldDir string, newDir string) (err error)
 	SetLogger(logger.Logger)
 	ClearCache()
 	GetTemplate(string) ([]byte, error)
-	Init(logger logger.Logger, rootDir string, reload bool, allows ...string)
 }

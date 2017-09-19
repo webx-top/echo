@@ -29,7 +29,7 @@ import (
 
 type Driver interface {
 	//初始化模板引擎
-	Init(...bool)
+	Init()
 
 	//获取模板根路径
 	TmplDir() string

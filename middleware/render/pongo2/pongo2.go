@@ -53,6 +53,7 @@ func New(templateDir string, args ...logger.Logger) driver.Driver {
 		ext:               `.html`,
 		fileEvents:        make([]func(string), 0),
 		contentProcessors: make([]func([]byte) []byte, 0),
+		Mgr:               manager.Default,
 	}
 	if len(args) > 0 {
 		a.logger = args[0]
@@ -132,7 +133,7 @@ func (a *Pongo2) MonitorEvent(fn func(string)) {
 	a.fileEvents = append(a.fileEvents, fn)
 }
 
-func (a *Pongo2) Init(cached ...bool) {
+func (a *Pongo2) Init() {
 	callback := func(name, typ, event string) {
 		switch event {
 		case "create":
@@ -141,6 +142,8 @@ func (a *Pongo2) Init(cached ...bool) {
 				return
 			}
 			key := strings.TrimSuffix(name, a.ext)
+			println(`----------------------->`, key)
+			echo.Dump(a.templates)
 			//布局模板被修改时，清空缓存
 			if strings.HasSuffix(key, `layout`) {
 				a.templates = make(map[string]*Template)
@@ -154,7 +157,9 @@ func (a *Pongo2) Init(cached ...bool) {
 			}
 		}
 	}
-	a.Mgr = manager.New(a.logger, a.templateDir, []string{"*" + a.ext}, callback, cached...)
+	a.Mgr.AddAllow("*" + a.ext)
+	a.Mgr.AddCallback(callback)
+	a.Mgr.AddWatchDir(a.templateDir)
 	a.templates = map[string]*Template{}
 	loader := &templateLoader{
 		templateDir: a.templateDir,
@@ -202,11 +207,13 @@ func (a *Pongo2) parse(tmpl string, data interface{}, funcMap map[string]interfa
 	if tmpl[0] == '/' {
 		k = tmpl[1:]
 	}
+
 	t, ok := a.templates[k]
 	if !ok {
 		var err error
 		t, err = a.set.FromFile(tmpl)
 		if err != nil {
+			a.logger.Error(err)
 			t = Must(a.set.FromString(err.Error()))
 			return t, Context{}
 		}
