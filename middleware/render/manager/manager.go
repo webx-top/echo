@@ -28,9 +28,10 @@ import (
 	"github.com/admpub/fsnotify"
 	"github.com/admpub/log"
 	"github.com/webx-top/echo/logger"
+	"github.com/webx-top/echo/middleware/render/driver"
 )
 
-var Default = New()
+var Default driver.Manager = New()
 
 func New() *Manager {
 	m := &Manager{
@@ -41,7 +42,7 @@ func New() *Manager {
 			"*.TMP": false,
 		},
 		allows:   map[string]bool{},
-		callback: []func(string, string, string){},
+		callback: map[string]func(string, string, string){},
 		Logger:   log.GetLogger(`watcher`),
 		done:     make(chan bool),
 	}
@@ -57,7 +58,7 @@ type Manager struct {
 	allows       map[string]bool
 	Logger       logger.Logger
 	preprocessor func([]byte) []byte
-	callback     []func(string, string, string) //参数为：目标名称，类型(file/dir)，事件名(create/delete/modify/rename)
+	callback     map[string]func(string, string, string) //参数为：目标名称，类型(file/dir)，事件名(create/delete/modify/rename)
 	done         chan bool
 	watcher      *fsnotify.Watcher
 }
@@ -66,16 +67,22 @@ func (self *Manager) closeMoniter() {
 	close(self.done)
 }
 
-func (self *Manager) SetCallback(callback ...func(name, typ, event string)) {
-	self.callback = callback
+func (self *Manager) AddCallback(rootDir string, callback func(name, typ, event string)) {
+	self.callback[rootDir] = callback
 }
 
-func (self *Manager) AddCallback(callback ...func(name, typ, event string)) {
-	self.callback = append(self.callback, callback...)
+func (self *Manager) ClearCallback() {
+	self.callback = map[string]func(string, string, string){}
 }
 
-func (self *Manager) SetAllows(allows map[string]bool) {
-	self.allows = allows
+func (self *Manager) DelCallback(rootDir string) {
+	if _, ok := self.callback[rootDir]; ok {
+		delete(self.callback, rootDir)
+	}
+}
+
+func (self *Manager) ClearAllows() {
+	self.allows = map[string]bool{}
 }
 
 func (self *Manager) AddAllow(allows ...string) {
@@ -84,13 +91,25 @@ func (self *Manager) AddAllow(allows ...string) {
 	}
 }
 
-func (self *Manager) SetIgnores(ignores map[string]bool) {
-	self.ignores = ignores
+func (self *Manager) DelAllow(allow string) {
+	if _, ok := self.allows[allow]; ok {
+		delete(self.allows, allow)
+	}
+}
+
+func (self *Manager) ClearIgnores() {
+	self.ignores = map[string]bool{}
 }
 
 func (self *Manager) AddIgnore(ignores ...string) {
 	for _, ignore := range ignores {
 		self.allows[ignore] = false
+	}
+}
+
+func (self *Manager) DelIgnore(ignore string) {
+	if _, ok := self.ignores[ignore]; ok {
+		delete(self.ignores, ignore)
 	}
 }
 

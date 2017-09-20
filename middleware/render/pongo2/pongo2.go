@@ -142,8 +142,6 @@ func (a *Pongo2) Init() {
 				return
 			}
 			key := strings.TrimSuffix(name, a.ext)
-			println(`----------------------->`, key)
-			echo.Dump(a.templates)
 			//布局模板被修改时，清空缓存
 			if strings.HasSuffix(key, `layout`) {
 				a.templates = make(map[string]*Template)
@@ -158,7 +156,7 @@ func (a *Pongo2) Init() {
 		}
 	}
 	a.Mgr.AddAllow("*" + a.ext)
-	a.Mgr.AddCallback(callback)
+	a.Mgr.AddCallback(a.templateDir, callback)
 	a.Mgr.AddWatchDir(a.templateDir)
 	a.templates = map[string]*Template{}
 	loader := &templateLoader{
@@ -204,10 +202,6 @@ func (a *Pongo2) Render(w io.Writer, tmpl string, data interface{}, c echo.Conte
 
 func (a *Pongo2) parse(tmpl string, data interface{}, funcMap map[string]interface{}) (*Template, Context) {
 	k := tmpl
-	if tmpl[0] == '/' {
-		k = tmpl[1:]
-	}
-
 	t, ok := a.templates[k]
 	if !ok {
 		var err error
@@ -307,6 +301,11 @@ func (a *Pongo2) ClearCache() {
 func (a *Pongo2) Close() {
 	a.ClearCache()
 	if a.Mgr != nil {
-		a.Mgr.Close()
+		if a.Mgr == manager.Default {
+			a.Mgr.CancelWatchDir(a.templateDir)
+			a.Mgr.DelCallback(a.templateDir)
+		} else {
+			a.Mgr.Close()
+		}
 	}
 }

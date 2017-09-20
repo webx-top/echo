@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"html/template"
+	"os"
 	"time"
 
 	"github.com/webx-top/echo"
@@ -20,6 +22,11 @@ type Nested struct {
 }
 
 func main() {
+	t := template.New(`C:\a\b\c\c.html`)
+	t = template.Must(t.Parse(`{{define "C:\\a\\b\\c\\d.html"}}123333{{end}}{{template "C:\\a\\b\\c\\d.html"}}`)) //注意：define和template标签后面的参数如果含“\”，则会执行转义。所以“C:\d”需要改为“C:\\d”,否则会出错
+	t.Execute(os.Stdout, nil)
+	//return
+
 	tpl := render.New("standard", "./template/")
 	tpl.Init()
 	demo := map[string]interface{}{
