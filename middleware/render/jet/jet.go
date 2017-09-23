@@ -89,10 +89,7 @@ func (self *Jet) TmplDir() string {
 func (self *Jet) MonitorEvent(fn func(string)) {
 }
 
-func (self *Jet) Init(cached ...bool) {
-	if len(cached) > 0 {
-		self.set.SetDevelopmentMode(!cached[0])
-	}
+func (self *Jet) Init() {
 }
 
 func (self *Jet) SetManager(mgr driver.Manager) {
