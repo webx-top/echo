@@ -11,7 +11,7 @@ import (
 func main() {
 	jet.SetDefaultExtensions(`.html`)
 	t := New(`./template/`)
-	t.Init(true)
+	t.Init()
 	//t.SetDebug(true)
 	for i := 0; i < 5; i++ {
 		ts := time.Now()

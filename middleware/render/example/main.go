@@ -17,7 +17,7 @@ func main() {
 	e.Use(mw.Log())
 
 	d := render.New(`standard`, `./template`)
-	d.Init(true)
+	d.Init()
 
 	e.Use(render.Middleware(d))
 
