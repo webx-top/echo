@@ -470,11 +470,20 @@ func (c *Context) GenNextURL(u string) string {
 }
 
 // U 网址生成
+// @usage:
+// c.U(moduleName,controllerName,actionName) or c.U(moduleName,controllerName,actionName,`?q=coscms`)
+// c.U(controllerName,actionName) or c.U(controllerName,actionName,`?q=coscms`)
+// c.U(actionName) or  or c.U(actionName,`?q=coscms`)
 func (c *Context) U(args ...string) (s string) {
 	var p string
 	switch len(args) {
+	case 4:
+		if args[3][0] == '?' {
+			p = args[2]
+		}
+		fallthrough
 	case 3:
-		if args[2][0] != '?' {
+		if len(p) > 0 || args[2][0] != '?' {
 			return c.ModuleURL(args[0], args[1], args[2])
 		}
 		p = args[2]
