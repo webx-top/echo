@@ -76,7 +76,7 @@ func (a *URLs) Build(mdl string, ctl string, act string, params ...interface{}) 
 
 func (a *URLs) BuildFromPath(ppath string, args ...map[string]interface{}) (r string) {
 	var mdl, ctl, act string
-	uris := strings.SplitN(ppath, "?", 2)
+	uris := strings.SplitN(ppath, `?`, 2)
 	ret := strings.SplitN(uris[0], `/`, 3)
 	switch len(ret) {
 	case 3:
@@ -106,7 +106,7 @@ func (a *URLs) BuildFromPath(ppath string, args ...map[string]interface{}) (r st
 	}
 	if len(args) > 0 {
 		for k, v := range args[0] {
-			params.Set(k, fmt.Sprintf("%v", v))
+			params.Set(k, fmt.Sprint(v))
 		}
 	}
 	r = module.Router().URL(key, params)
