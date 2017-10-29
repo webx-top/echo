@@ -174,6 +174,7 @@ func (a *Pongo2) SetManager(mgr driver.Manager) {
 		a.Mgr.Close()
 	}
 	a.Mgr = mgr
+	a.Mgr.Start()
 }
 
 func (a *Pongo2) SetContentProcessor(fn func([]byte) []byte) {
