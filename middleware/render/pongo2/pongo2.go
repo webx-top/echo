@@ -53,13 +53,13 @@ func New(templateDir string, args ...logger.Logger) driver.Driver {
 		ext:               `.html`,
 		fileEvents:        make([]func(string), 0),
 		contentProcessors: make([]func([]byte) []byte, 0),
-		Mgr:               manager.Default,
 	}
 	if len(args) > 0 {
 		a.logger = args[0]
 	} else {
 		a.logger = log.New("render-pongo2")
 	}
+	a.SetManager(manager.Default)
 	return a
 }
 
