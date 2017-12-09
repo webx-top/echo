@@ -84,6 +84,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"ToHTMLAttr":   ToHTMLAttr,
 	"ToHTMLAttrs":  ToHTMLAttrs,
 	"ToStrSlice":   ToStrSlice,
+	"ToDuration":   ToDuration,
 	"Str":          com.Str,
 	"Int":          com.Int,
 	"Int32":        com.Int32,
@@ -660,6 +661,45 @@ func SearchStrSlice(values []string, value string) int {
 	return -1
 }
 
+func ToDuration(t interface{}, args ...string) time.Duration {
+	td := time.Second
+	if len(args) > 0 {
+		switch args[0] {
+		case `ns`:
+			td = time.Nanosecond
+		case `us`:
+			td = time.Microsecond
+		case `s`:
+			td = time.Second
+		case `ms`:
+			td = time.Millisecond
+		case `h`:
+			td = time.Hour
+		case `m`:
+			td = time.Minute
+		}
+	}
+	switch v := t.(type) {
+	case time.Duration:
+		return v
+	case int64:
+		td = time.Duration(v) * td
+	case int:
+		td = time.Duration(v) * td
+	case uint:
+		td = time.Duration(v) * td
+	case int32:
+		td = time.Duration(v) * td
+	case uint32:
+		td = time.Duration(v) * td
+	case uint64:
+		td = time.Duration(v) * td
+	default:
+		td = time.Duration(com.Int64(t)) * td
+	}
+	return td
+}
+
 func FriendlyTime(t interface{}, args ...string) string {
 	var td time.Duration
 	switch v := t.(type) {
@@ -677,12 +717,6 @@ func FriendlyTime(t interface{}, args ...string) string {
 		td = time.Duration(v)
 	case uint64:
 		td = time.Duration(v)
-	case string:
-		var err error
-		td, err = time.ParseDuration(v)
-		if err != nil {
-			return err.Error()
-		}
 	default:
 		td = time.Duration(com.Int64(t))
 	}
