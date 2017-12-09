@@ -677,6 +677,12 @@ func FriendlyTime(t interface{}, args ...string) string {
 		td = time.Duration(v)
 	case uint64:
 		td = time.Duration(v)
+	case string:
+		var err error
+		td, err = time.ParseDuration(v)
+		if err != nil {
+			return err.Error()
+		}
 	default:
 		td = time.Duration(com.Int64(t))
 	}
