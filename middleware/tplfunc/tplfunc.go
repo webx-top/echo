@@ -153,7 +153,6 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"URLValues":      URLValues,
 	"ToSlice":        ToSlice,
 	"StrToSlice":     StrToSlice,
-	"StrToStrSlice":  StrToStrSlice,
 
 	// ======================
 	// regexp
@@ -210,10 +209,6 @@ func ToStrSlice(s ...string) []string {
 
 func ToSlice(s ...interface{}) []interface{} {
 	return s
-}
-
-func StrToStrSlice(s string, sep string) []string {
-	return ToStrSlice(strings.Split(s, sep)...)
 }
 
 func StrToSlice(s string, sep string) []interface{} {
