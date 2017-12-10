@@ -662,9 +662,9 @@ func SearchStrSlice(values []string, value string) int {
 	return -1
 }
 
-func DurationFormat(unit string, t interface{}, args ...interface{}) *com.Durafmt {
-	duration := ToDuration(t, unit)
-	return com.ParseDuration(duration, args...)
+func DurationFormat(lang interface{}, t interface{}, args ...string) *com.Durafmt {
+	duration := ToDuration(t, args...)
+	return com.ParseDuration(duration, lang)
 }
 
 func ToDuration(t interface{}, args ...string) time.Duration {
