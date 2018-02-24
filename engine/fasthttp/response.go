@@ -18,18 +18,16 @@ import (
 
 var ErrAlreadyCommitted = errors.New(`response already committed`)
 
-type (
-	Response struct {
-		context           *fasthttp.RequestCtx
-		header            engine.Header
-		status            int
-		size              int64
-		committed         bool
-		writer            io.Writer
-		logger            logger.Logger
-		stdResponseWriter http.ResponseWriter
-	}
-)
+type Response struct {
+	context           *fasthttp.RequestCtx
+	header            engine.Header
+	status            int
+	size              int64
+	committed         bool
+	writer            io.Writer
+	logger            logger.Logger
+	stdResponseWriter http.ResponseWriter
+}
 
 func NewResponse(c *fasthttp.RequestCtx) *Response {
 	return &Response{

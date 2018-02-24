@@ -9,12 +9,10 @@ import (
 	"github.com/webx-top/echo/engine"
 )
 
-type (
-	URL struct {
-		url   *fasthttp.URI
-		query url.Values
-	}
-)
+type URL struct {
+	url   *fasthttp.URI
+	query url.Values
+}
 
 func (u *URL) SetPath(path string) {
 	u.url.SetPath(path)

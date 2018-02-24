@@ -18,17 +18,15 @@ import (
 	"github.com/webx-top/echo/engine"
 )
 
-type (
-	Request struct {
-		response   *Response
-		context    *fasthttp.RequestCtx
-		url        engine.URL
-		header     engine.Header
-		value      *Value
-		realIP     string
-		stdRequest *http.Request
-	}
-)
+type Request struct {
+	response   *Response
+	context    *fasthttp.RequestCtx
+	url        engine.URL
+	header     engine.Header
+	value      *Value
+	realIP     string
+	stdRequest *http.Request
+}
 
 func NewRequest(c *fasthttp.RequestCtx) *Request {
 	req := &Request{
