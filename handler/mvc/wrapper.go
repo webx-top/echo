@@ -98,7 +98,7 @@ func (h *Handler) Handle(c echo.Context) error {
 	return h.handle(c)
 }
 
-func (h *Handler) HandleName() string {
+func (h *Handler) Name() string {
 	return h.name
 }
 
@@ -195,7 +195,7 @@ func (a *Wrapper) wrapHandler(v interface{}, ctl string, act string) func(echo.C
 	}
 }
 
-func (a *Wrapper) HandleName(h interface{}) string {
+func (a *Wrapper) HandlerName(h interface{}) string {
 	return echo.HandlerName(h)
 }
 
@@ -206,7 +206,7 @@ func (a *Wrapper) Register(p string, h interface{}, methods ...string) *Wrapper 
 		methods = append(methods, "GET")
 	}
 	_, ctl, act := a.Module.Application.URLs.Set(h)
-	a.Module.Router().Match(methods, p, NewHandler(a.wrapHandler(h, ctl, act), a.HandleName(h)))
+	a.Module.Router().Match(methods, p, NewHandler(a.wrapHandler(h, ctl, act), a.HandlerName(h)))
 	return a
 }
 
