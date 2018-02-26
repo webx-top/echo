@@ -436,13 +436,8 @@ func (c *Context) ParseNextURL(next string) string {
 	}
 	if next[0] == '!' {
 		next = next[1:]
-		next = strings.Replace(next, `-`, `/`, -1)
-		next = strings.Replace(next, ` `, `+`, -1)
-		for strings.HasSuffix(next, `_`) {
-			next = strings.TrimSuffix(next, `_`) + `=`
-		}
 		var err error
-		next, err = com.Base64Decode(next)
+		next, err = com.SafeBase64Decode(next)
 		if err != nil {
 			c.Application.Core.Logger().Error(err)
 		}
@@ -460,11 +455,7 @@ func (c *Context) GenNextURL(u string) string {
 	if u[0] == '!' {
 		return u
 	}
-	u = com.Base64Encode(u)
-	for strings.HasSuffix(u, `=`) {
-		u = strings.TrimSuffix(u, `=`) + `_`
-	}
-	u = strings.Replace(u, `/`, `-`, -1)
+	u = com.SafeBase64Encode(u)
 	return `!` + u
 }
 
