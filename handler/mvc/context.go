@@ -22,11 +22,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"reflect"
 	"strings"
-
-	"net/url"
 
 	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
