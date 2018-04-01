@@ -932,15 +932,16 @@ func (c *xContext) Protocol() string {
 	return c.Request().Proto()
 }
 
-// Site returns base site url as scheme://domain type.
+// Site returns base site url as scheme://domain/ type.
 func (c *xContext) Site() string {
-	return c.Scheme() + `://` + c.Domain()
+	return c.Scheme() + `://` + c.Request().Host() + `/`
 }
 
 // Scheme returns request scheme as `http` or `https`.
 func (c *xContext) Scheme() string {
-	if c.Request().Scheme() != `` {
-		return c.Request().Scheme()
+	scheme := c.Request().Scheme()
+	if len(scheme) > 0 {
+		return scheme
 	}
 	if c.Request().IsTLS() == false {
 		return `http`
