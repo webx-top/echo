@@ -15,6 +15,7 @@
    limitations under the License.
 
 */
+
 package tplfunc
 
 import (
@@ -134,10 +135,10 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	// ======================
 	// encode & decode
 	// ======================
-	"JsonEncode":   JsonEncode,
-	"JsonDecode":   JsonDecode,
-	"UrlEncode":    com.UrlEncode,
-	"UrlDecode":    com.UrlDecode,
+	"JSONEncode":   com.JSONEncode,
+	"JSONDecode":   com.JSONDecode,
+	"URLEncode":    com.URLEncode,
+	"URLDecode":    com.URLDecode,
 	"Base64Encode": com.Base64Encode,
 	"Base64Decode": com.Base64Decode,
 
@@ -165,20 +166,6 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	// ======================
 	"Ignore":  Ignore,
 	"Default": Default,
-}
-
-func JsonEncode(s interface{}) string {
-	r, _ := com.SetJSON(s)
-	return r
-}
-
-func JsonDecode(s string) map[string]interface{} {
-	r := map[string]interface{}{}
-	e := com.GetJSON(&s, &r)
-	if e != nil {
-		log.Println(e)
-	}
-	return r
 }
 
 func Ignore(_ interface{}) interface{} {
