@@ -40,7 +40,7 @@ func FuncMap(funcMap map[string]interface{}, skipper ...echo.Skipper) echo.Middl
 			c.SetFunc(`Site`, c.Site)
 
 			var pageURL string
-			c.SetFunc(`PageURL`, func() string {
+			c.SetFunc(`SURL`, func() string {
 				if len(pageURL) > 0 {
 					return pageURL
 				}
