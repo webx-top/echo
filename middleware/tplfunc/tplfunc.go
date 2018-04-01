@@ -135,12 +135,14 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	// ======================
 	// encode & decode
 	// ======================
-	"JSONEncode":   com.JSONEncode,
-	"JSONDecode":   com.JSONDecode,
-	"URLEncode":    com.URLEncode,
-	"URLDecode":    com.URLDecode,
-	"Base64Encode": com.Base64Encode,
-	"Base64Decode": com.Base64Decode,
+	"JSONEncode":       JSONEncode,
+	"JSONDecode":       JSONDecode,
+	"URLEncode":        com.URLEncode,
+	"URLDecode":        URLDecode,
+	"Base64Encode":     com.Base64Encode,
+	"Base64Decode":     Base64Decode,
+	"SafeBase64Encode": com.SafeBase64Encode,
+	"SafeBase64Decode": SafeBase64Decode,
 
 	// ======================
 	// map & slice
@@ -166,6 +168,44 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	// ======================
 	"Ignore":  Ignore,
 	"Default": Default,
+}
+
+func JSONEncode(s interface{}, indents ...string) string {
+	r, _ := com.JSONEncode(s, indents...)
+	return string(r)
+}
+
+func JSONDecode(s string) map[string]interface{} {
+	r := map[string]interface{}{}
+	e := com.JSONDecode([]byte(s), &r)
+	if e != nil {
+		log.Println(e)
+	}
+	return r
+}
+
+func URLDecode(s string) string {
+	r, e := com.URLDecode(s)
+	if e != nil {
+		log.Println(e)
+	}
+	return r
+}
+
+func Base64Decode(s string) string {
+	r, e := com.Base64Decode(s)
+	if e != nil {
+		log.Println(e)
+	}
+	return r
+}
+
+func SafeBase64Decode(s string) string {
+	r, e := com.SafeBase64Decode(s)
+	if e != nil {
+		log.Println(e)
+	}
+	return r
 }
 
 func Ignore(_ interface{}) interface{} {
