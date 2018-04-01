@@ -36,6 +36,7 @@ func FuncMap(funcMap map[string]interface{}, skipper ...echo.Skipper) echo.Middl
 			c.SetFunc(`Atop`, c.Atop)
 			c.SetFunc(`URL`, req.URL)
 			c.SetFunc(`URI`, req.URI)
+			c.SetFunc(`Site`, c.Site)
 			c.SetFunc(`Referer`, c.Referer)
 			c.SetFunc(`Header`, req.Header)
 			c.SetFunc(`Flash`, c.Flash)
