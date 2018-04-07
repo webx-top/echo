@@ -71,7 +71,9 @@ const (
 	// Headers
 	//---------
 
+	HeaderAccept              = "Accept"
 	HeaderAcceptEncoding      = "Accept-Encoding"
+	HeaderAllow               = "Allow"
 	HeaderAuthorization       = "Authorization"
 	HeaderContentDisposition  = "Content-Disposition"
 	HeaderContentEncoding     = "Content-Encoding"

@@ -876,7 +876,8 @@ func (c *xContext) IsSecure() bool {
 
 // IsWebsocket returns boolean of this request is in webSocket.
 func (c *xContext) IsWebsocket() bool {
-	return c.Header(`Upgrade`) == `websocket`
+	upgrade := c.Header(`Upgrade`)
+	return upgrade == `websocket` || upgrade == `Websocket`
 }
 
 // IsUpload returns boolean of whether file uploads in this request or not..
@@ -914,7 +915,7 @@ func (c *xContext) ResolveFormat() string {
 		}
 	}
 
-	accept := c.Header(`Accept`)
+	accept := c.Header(HeaderAccept)
 	for _, mimeType := range strings.Split(strings.SplitN(accept, `;`, 2)[0], `,`) {
 		mimeType = strings.TrimSpace(mimeType)
 		if format, ok := c.echo.acceptFormats[mimeType]; ok {
