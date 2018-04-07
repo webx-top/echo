@@ -117,7 +117,6 @@ func RewriteWithConfig(config RewriteConfig) echo.MiddlewareFuncd {
 			}
 
 			req := c.Request()
-			urlPath := req.URL().Path()
 			req.URL().SetPath(config.Rewrite(req.URL().Path()))
 			return next.Handle(c)
 		}
