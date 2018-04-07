@@ -219,17 +219,16 @@ func ProxyWithConfig(config ProxyConfig) echo.MiddlewareFuncd {
 			}
 
 			req := c.Request()
-			res := c.Response()
 			tgt := config.Balancer.Next()
 			req.URL().SetPath(config.Rewrite.Rewrite(req.URL().Path()))
 			// Fix header
-			if len(c.Header(echo.HeaderXRealIP)) > 0 {
+			if len(c.Header(echo.HeaderXRealIP)) == 0 {
 				req.Header().Set(echo.HeaderXRealIP, c.RealIP())
 			}
-			if len(c.Header(echo.HeaderXForwardedProto)) > 0 {
+			if len(c.Header(echo.HeaderXForwardedProto)) == 0 {
 				req.Header().Set(echo.HeaderXForwardedProto, c.Scheme())
 			}
-			if c.IsWebsocket() && len(c.Header(echo.HeaderXForwardedFor)) > 0 { // For HTTP, it is automatically set by Go HTTP reverse proxy.
+			if c.IsWebsocket() && len(c.Header(echo.HeaderXForwardedFor)) == 0 { // For HTTP, it is automatically set by Go HTTP reverse proxy.
 				req.Header().Set(echo.HeaderXForwardedFor, c.RealIP())
 			}
 

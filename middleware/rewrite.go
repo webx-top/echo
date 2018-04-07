@@ -33,7 +33,7 @@ func (c *RewriteConfig) Init() *RewriteConfig {
 	c.rulesRegex = map[*regexp.Regexp]string{}
 
 	for k, v := range c.Rules {
-		config.Set(k, v)
+		c.Set(k, v)
 	}
 	return c
 }
