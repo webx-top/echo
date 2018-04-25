@@ -245,6 +245,11 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 				switch tagfast.Value(tc, f, `form_filter`) {
 				case `html`:
 					v = DefaultHTMLFilter(v)
+				default:
+					delimter := tagfast.Value(tc, f, `form_delimter`)
+					if len(delimter) > 0 {
+						v = strings.Join(t, delimter)
+					}
 				}
 				l = v
 				tv.Set(reflect.ValueOf(l))
