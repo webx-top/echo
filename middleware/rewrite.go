@@ -31,6 +31,7 @@ type (
 // Init Initialize
 func (c *RewriteConfig) Init() *RewriteConfig {
 	c.rulesRegex = map[*regexp.Regexp]string{}
+	c.addresses = map[string]*regexp.Regexp{}
 
 	for k, v := range c.Rules {
 		c.Set(k, v)
