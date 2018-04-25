@@ -9,7 +9,7 @@ import (
 type TestForm struct {
 	Files []string
 	Data  *TestData
-	IDs   string `form_delimter:","`
+	IDs   string `form_delimiter:","`
 }
 
 type TestData struct {
