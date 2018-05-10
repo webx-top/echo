@@ -19,12 +19,13 @@ package param
 
 import (
 	"strconv"
+	"strings"
 )
 
 type String string
 
 func (p String) String() string {
-	return string(p)
+	return strings.TrimSpace(string(p))
 }
 
 func (p String) Int() int {
