@@ -108,6 +108,38 @@ func AutoOutput(options ...*Options) echo.MiddlewareFunc {
 	}
 }
 
+func defaultFormatOutput(data interface{}, c echo.Context, opt *Options) error {
+	tmpl, ok := c.Get(opt.TmplKey).(string)
+	if !ok {
+		tmpl = opt.DefaultTmpl
+	}
+	if v, y := data.(echo.Data); y {
+		v.SetTmplFuncs()
+		return v.Render(tmpl)
+	}
+	if h, y := data.(echo.H); y {
+		v := h.ToData().SetContext(c)
+		v.SetTmplFuncs()
+		return v.Render(tmpl)
+	}
+	return c.Render(tmpl, data)
+}
+
+// Output2 Outputs the specified format
+func Output2(format string, c echo.Context, opt *Options) error {
+	data := c.Get(opt.DataKey)
+	switch format {
+	case `json`:
+		return c.JSON(data, http.StatusOK)
+	case `jsonp`:
+		return c.JSONP(c.Query(opt.JSONPCallbackName), data, http.StatusOK)
+	case `xml`:
+		return c.XML(data, http.StatusOK)
+	default:
+		return defaultFormatOutput(data, c, opt)
+	}
+}
+
 // Output Outputs the specified format
 func Output(format string, c echo.Context, opt *Options) error {
 	data := c.Get(opt.DataKey)
@@ -119,20 +151,7 @@ func Output(format string, c echo.Context, opt *Options) error {
 	case `xml`:
 		return c.XML(data)
 	default:
-		tmpl, ok := c.Get(opt.TmplKey).(string)
-		if !ok {
-			tmpl = opt.DefaultTmpl
-		}
-		if v, y := data.(echo.Data); y {
-			v.SetTmplFuncs()
-			return v.Render(tmpl)
-		}
-		if h, y := data.(echo.H); y {
-			v := h.ToData().SetContext(c)
-			v.SetTmplFuncs()
-			return v.Render(tmpl)
-		}
-		return c.Render(tmpl, data)
+		return defaultFormatOutput(data, c, opt)
 	}
 }
 
