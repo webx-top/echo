@@ -143,6 +143,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"Base64Decode":     Base64Decode,
 	"SafeBase64Encode": com.SafeBase64Encode,
 	"SafeBase64Decode": SafeBase64Decode,
+	"Hash":             Hash,
 
 	// ======================
 	// map & slice
@@ -168,6 +169,10 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	// ======================
 	"Ignore":  Ignore,
 	"Default": Default,
+}
+
+func Hash(text, salt string, positions ...uint) string {
+	return com.MakePassword(text, salt, positions...)
 }
 
 func JSONEncode(s interface{}, indents ...string) string {
