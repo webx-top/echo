@@ -171,11 +171,17 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"Default": Default,
 }
 
-var Salt = time.Now().Format(time.RFC3339)
+var (
+	HashSalt          = time.Now().Format(time.RFC3339)
+	HashClipPositions = []uint{1, 3, 8, 9}
+)
 
 func Hash(text, salt string, positions ...uint) string {
 	if len(salt) < 1 {
-		salt = Salt
+		salt = HashSalt
+	}
+	if len(positions) < 1 {
+		positions = HashClipPositions
 	}
 	return com.MakePassword(text, salt, positions...)
 }
