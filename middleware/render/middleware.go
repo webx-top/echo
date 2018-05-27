@@ -18,6 +18,7 @@
 package render
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/webx-top/echo"
@@ -78,6 +79,9 @@ func SetDefaultOptions(opt *Options) *Options {
 	if len(opt.JSONPCallbackName) == 0 {
 		opt.JSONPCallbackName = DefaultOptions.JSONPCallbackName
 	}
+	if opt.DefaultErrorHTTPCode == 0 {
+		opt.DefaultErrorHTTPCode = DefaultOptions.DefaultErrorHTTPCode
+	}
 	return opt
 }
 
@@ -88,6 +92,8 @@ func checkOptions(options ...*Options) *Options {
 	}
 	if opt == nil {
 		opt = DefaultOptions
+	} else {
+		opt = SetDefaultOptions(opt)
 	}
 	return opt
 }
@@ -125,21 +131,6 @@ func defaultFormatOutput(data interface{}, c echo.Context, opt *Options) error {
 	return c.Render(tmpl, data)
 }
 
-// Output2 Outputs the specified format
-func Output2(format string, c echo.Context, opt *Options) error {
-	data := c.Get(opt.DataKey)
-	switch format {
-	case `json`:
-		return c.JSON(data, http.StatusOK)
-	case `jsonp`:
-		return c.JSONP(c.Query(opt.JSONPCallbackName), data, http.StatusOK)
-	case `xml`:
-		return c.XML(data, http.StatusOK)
-	default:
-		return defaultFormatOutput(data, c, opt)
-	}
-}
-
 // Output Outputs the specified format
 func Output(format string, c echo.Context, opt *Options) error {
 	data := c.Get(opt.DataKey)
@@ -150,6 +141,8 @@ func Output(format string, c echo.Context, opt *Options) error {
 		return c.JSONP(c.Query(opt.JSONPCallbackName), data)
 	case `xml`:
 		return c.XML(data)
+	case `text`:
+		return c.String(fmt.Sprint(data))
 	default:
 		return defaultFormatOutput(data, c, opt)
 	}
@@ -191,14 +184,18 @@ func HTTPErrorHandler(templates map[int]string, options ...*Options) echo.HTTPEr
 				}
 				if y {
 					c.Set(opt.TmplKey, t)
-					c.Set(opt.DataKey, c.Data().Reset().SetInfo(echo.H{
-						"title":   title,
-						"content": msg,
-						"debug":   c.Echo().Debug(),
-						"code":    code,
-						"panic":   panicErr,
-					}, 0))
-					c.SetCode(code)
+					if c.Format() == `html` {
+						c.Set(opt.DataKey, c.Data().Reset().SetInfo(echo.H{
+							"title":   title,
+							"content": msg,
+							"debug":   c.Echo().Debug(),
+							"code":    code,
+							"panic":   panicErr,
+						}, 0))
+					} else {
+						c.Set(opt.DataKey, c.Data().Reset().SetInfo(msg, 0))
+					}
+					c.SetCode(opt.DefaultErrorHTTPCode)
 					if err := opt.OutputFunc(c.Format(), c, opt); err != nil {
 						msg += "\n" + err.Error()
 						y = false
