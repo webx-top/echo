@@ -205,7 +205,7 @@ func (a *Wrapper) Register(p string, h interface{}, methods ...string) *Wrapper 
 	if len(methods) < 1 {
 		methods = append(methods, "GET")
 	}
-	_, ctl, act := a.Module.Application.URLs.Set(h)
+	_, ctl, act := a.Module.Application.URLBuilder.Set(h)
 	a.Module.Router().Match(methods, p, NewHandler(a.wrapHandler(h, ctl, act), a.HandlerName(h)))
 	return a
 }
@@ -309,7 +309,7 @@ func (a *Wrapper) RouteTags() {
 			extends = strings.Split(ext, `|`)
 		}
 		k := ctlPath + name + `-fm`
-		u := a.Module.Application.URLs.SetExtensions(k, extends)
+		u := a.Module.Application.URLBuilder.SetExtensions(k, extends)
 		h := NewHandler(func(ctx echo.Context) error {
 			return a.execute(ctx, k, e, u, name)
 		}, k)
@@ -365,7 +365,7 @@ func (a *Wrapper) addRouter(ctl string, ppath string, h *Handler, methods ...str
 	}
 }
 
-func (a *Wrapper) execute(c echo.Context, k string, e reflect.Type, u *URLs, action string) error {
+func (a *Wrapper) execute(c echo.Context, k string, e reflect.Type, u *URLBuilder, action string) error {
 	if !u.AllowFormat(k, c.Format()) {
 		return c.HTML(`The contents can not be displayed in this format: `+c.Format(), 404)
 	}
@@ -432,7 +432,7 @@ func (a *Wrapper) RouteMethods() {
 	for i := t.NumMethod() - 1; i >= 0; i-- {
 		m := t.Method(i)
 		name := m.Name
-		h := func(k string, u *URLs) func(ctx echo.Context) error {
+		h := func(k string, u *URLBuilder) func(ctx echo.Context) error {
 			return func(ctx echo.Context) error {
 				return a.execute(ctx, k, e, u, name)
 			}
@@ -447,7 +447,7 @@ func (a *Wrapper) RouteMethods() {
 			}
 			ppath := `/` + ctl + `/` + pp
 			k := ctlPath + name + `-fm`
-			u := a.Module.Application.URLs
+			u := a.Module.Application.URLBuilder
 			handler := NewHandler(h(k, u), k)
 			a.addRouter(ctl, ppath, handler)
 			continue
@@ -466,7 +466,7 @@ func (a *Wrapper) RouteMethods() {
 		}
 		ppath := `/` + ctl + `/` + pp
 		k := ctlPath + name + `-fm`
-		u := a.Module.Application.URLs
+		u := a.Module.Application.URLBuilder
 		handler := NewHandler(h(k, u), k)
 		a.addRouter(ctl, ppath, handler, methods...)
 	}

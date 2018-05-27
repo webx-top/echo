@@ -334,22 +334,22 @@ func (c *Context) SetNoPerm(args ...interface{}) *Context {
 
 // ModuleURLPath 生成指定Module网址
 func (c *Context) ModuleURLPath(ppath string, args ...map[string]interface{}) string {
-	return c.Application.URLs.BuildFromPath(ppath, args...)
+	return c.Application.URLBuilder.BuildFromPath(ppath, args...)
 }
 
 // RootModuleURL 生成根Module网址
 func (c *Context) RootModuleURL(ctl string, act string, args ...interface{}) string {
-	return c.Application.URLs.Build(c.Module.RootModuleName, ctl, act, args...)
+	return c.Application.URLBuilder.Build(c.Module.RootModuleName, ctl, act, args...)
 }
 
 // ModuleURL 生成指定Module网址
 func (c *Context) ModuleURL(mod string, ctl string, act string, args ...interface{}) string {
-	return c.Application.URLs.Build(mod, ctl, act, args...)
+	return c.Application.URLBuilder.Build(mod, ctl, act, args...)
 }
 
 // URLFor ModuleURL的别名。生成指定Module网址
 func (c *Context) URLFor(mod string, ctl string, act string, args ...interface{}) string {
-	return c.Application.URLs.Build(mod, ctl, act, args...)
+	return c.Application.URLBuilder.Build(mod, ctl, act, args...)
 }
 
 // URLPath 生成当前Module网址
@@ -359,15 +359,15 @@ func (c *Context) URLPath(ppath string, args ...map[string]interface{}) string {
 			ppath = c.ControllerName + `/`
 		}
 		ppath += c.ActionName
-		return c.Application.URLs.BuildFromPath(c.Module.Name+`/`+ppath, args...)
+		return c.Application.URLBuilder.BuildFromPath(c.Module.Name+`/`+ppath, args...)
 	}
 	ppath = strings.TrimLeft(ppath, `/`)
-	return c.Application.URLs.BuildFromPath(c.Module.Name+`/`+ppath, args...)
+	return c.Application.URLBuilder.BuildFromPath(c.Module.Name+`/`+ppath, args...)
 }
 
 // BuildURL 生成当前Module网址
 func (c *Context) BuildURL(ctl string, act string, args ...interface{}) string {
-	return c.Application.URLs.Build(c.Module.Name, ctl, act, args...)
+	return c.Application.URLBuilder.Build(c.Module.Name, ctl, act, args...)
 }
 
 // TmplPath 生成模板路径 args: ActionName,ControllerName,ModuleName

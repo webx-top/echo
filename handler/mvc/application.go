@@ -87,7 +87,7 @@ func NewWithContext(name string, newContext func(*echo.Echo) echo.Context) (s *A
 			return ctx.(*Context).Init(wrp, controller, actionName)
 		}, //[1]
 	}
-	s.URLs = NewURLs(name, s)
+	s.URLBuilder = NewURLBuilder(name, s)
 	if newContext == nil {
 		newContext = func(e *echo.Echo) echo.Context {
 			return NewContext(s, echo.NewContext(nil, nil, e))
@@ -145,7 +145,7 @@ type Application struct {
 	MaxUploadSize         int64
 	RootModuleName        string
 	URL                   string
-	URLs                  *URLs
+	URLBuilder            *URLBuilder
 	DefaultMiddlewares    []interface{} `json:"-" xml:"-"`
 	DefaultPreMiddlewares []interface{} `json:"-" xml:"-"`
 	SessionOptions        *echo.SessionOptions
@@ -623,12 +623,12 @@ func (s *Application) DefaultFuncMap() (r map[string]interface{}) {
 		return s.URL
 	}
 	r["RootModuleURL"] = func(ctl string, act string, params ...interface{}) string {
-		return s.URLs.Build(s.RootModuleName, ctl, act, params...)
+		return s.URLBuilder.Build(s.RootModuleName, ctl, act, params...)
 	}
 	r["ModuleRootURL"] = func(module string) string {
 		return s.Module(module).URL
 	}
-	r["URLFor"] = s.URLs.Build
+	r["URLFor"] = s.URLBuilder.Build
 	return
 }
 

@@ -26,32 +26,32 @@ import (
 	"github.com/webx-top/echo"
 )
 
-func NewURLs(project string, mvc *Application) *URLs {
-	return &URLs{
+func NewURLBuilder(project string, mvc *Application) *URLBuilder {
+	return &URLBuilder{
 		projectPath: `github.com/webx-top/` + project,
 		extensions:  map[string]map[string]int{},
 		Application: mvc,
 	}
 }
 
-type URLs struct {
+type URLBuilder struct {
 	projectPath  string
 	extensions   map[string]map[string]int
 	*Application `json:"-" xml:"-"`
 }
 
-func (a *URLs) SetProjectPath(projectPath string) {
+func (a *URLBuilder) SetProjectPath(projectPath string) {
 	a.projectPath = strings.TrimSuffix(projectPath, `/`)
 }
 
-func (a *URLs) urlRecovery(s string) string {
+func (a *URLBuilder) urlRecovery(s string) string {
 	if a.URLRecovery != nil {
 		return a.URLRecovery(s)
 	}
 	return s
 }
 
-func (a *URLs) Build(mdl string, ctl string, act string, params ...interface{}) (r string) {
+func (a *URLBuilder) Build(mdl string, ctl string, act string, params ...interface{}) (r string) {
 	module, ok := a.Application.moduleNames[mdl]
 	if !ok {
 		return
@@ -74,7 +74,7 @@ func (a *URLs) Build(mdl string, ctl string, act string, params ...interface{}) 
 	return
 }
 
-func (a *URLs) BuildFromPath(ppath string, args ...map[string]interface{}) (r string) {
+func (a *URLBuilder) BuildFromPath(ppath string, args ...map[string]interface{}) (r string) {
 	var mdl, ctl, act string
 	uris := strings.SplitN(ppath, `?`, 2)
 	ret := strings.SplitN(uris[0], `/`, 3)
@@ -120,7 +120,7 @@ func (a *URLs) BuildFromPath(ppath string, args ...map[string]interface{}) (r st
 	return
 }
 
-func (a *URLs) Set(h interface{}) (pkg string, ctl string, act string) {
+func (a *URLBuilder) Set(h interface{}) (pkg string, ctl string, act string) {
 	key := echo.HandlerName(h)
 	if _, ok := a.extensions[key]; !ok {
 		a.extensions[key] = map[string]int{}
@@ -129,7 +129,7 @@ func (a *URLs) Set(h interface{}) (pkg string, ctl string, act string) {
 	return
 }
 
-func (a *URLs) SetExtensions(key string, exts []string) *URLs {
+func (a *URLBuilder) SetExtensions(key string, exts []string) *URLBuilder {
 	e := map[string]int{}
 	for key, val := range exts {
 		e[val] = key
@@ -138,7 +138,7 @@ func (a *URLs) SetExtensions(key string, exts []string) *URLs {
 	return a
 }
 
-func (a *URLs) AllowFormat(key string, ext string) (ok bool) {
+func (a *URLBuilder) AllowFormat(key string, ext string) (ok bool) {
 	if ex, y := a.extensions[key]; !y || ex == nil || len(ex) < 1 {
 		ok = true
 	} else {

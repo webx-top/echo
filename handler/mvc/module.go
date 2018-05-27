@@ -132,7 +132,7 @@ func (a *Module) Register(p string, v interface{}, methods ...string) *Module {
 	if len(methods) < 1 {
 		methods = append(methods, "GET")
 	}
-	a.Application.URLs.Set(v)
+	a.Application.URLBuilder.Set(v)
 	h := a.Core.ValidHandler(v)
 	a.Router().Match(methods, p, echo.HandlerFunc(func(ctx echo.Context) error {
 		if c, y := ctx.(Initer); y {
