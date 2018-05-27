@@ -37,6 +37,7 @@ func New() *Manager {
 	m := &Manager{
 		caches: make(map[string][]byte),
 		lock:   &sync.Once{},
+		mutex:  &sync.RWMutex{},
 		ignores: map[string]bool{
 			"*.tmp": false,
 			"*.TMP": false,
@@ -53,6 +54,7 @@ func New() *Manager {
 type Manager struct {
 	caches       map[string][]byte
 	lock         *sync.Once
+	mutex        *sync.RWMutex
 	ignores      map[string]bool
 	allows       map[string]bool
 	Logger       logger.Logger
@@ -67,7 +69,9 @@ func (self *Manager) closeMoniter() {
 }
 
 func (self *Manager) AddCallback(rootDir string, callback func(name, typ, event string)) {
+	self.mutex.Lock()
 	self.callback[rootDir] = callback
+	self.mutex.Unlock()
 }
 
 func (self *Manager) ClearCallback() {
@@ -75,9 +79,11 @@ func (self *Manager) ClearCallback() {
 }
 
 func (self *Manager) DelCallback(rootDir string) {
+	self.mutex.Lock()
 	if _, ok := self.callback[rootDir]; ok {
 		delete(self.callback, rootDir)
 	}
+	self.mutex.Unlock()
 }
 
 func (self *Manager) ClearAllows() {
@@ -318,6 +324,8 @@ func (self *Manager) GetTemplate(tmpl string) ([]byte, error) {
 		return nil, err
 	}
 
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
 	if content, ok := self.caches[tmpl]; ok {
 		self.Logger.Debugf("load template %v from cache", tmpl)
 		return content, nil
@@ -336,15 +344,19 @@ func (self *Manager) CacheTemplate(tmpl string, content []byte) {
 		content = self.preprocessor(content)
 	}
 	self.Logger.Debugf("update template %v on cache", tmpl)
+	self.mutex.Lock()
 	self.caches[tmpl] = content
+	self.mutex.Unlock()
 	return
 }
 
 func (self *Manager) CacheDelete(tmpl string) {
+	self.mutex.Lock()
 	if _, ok := self.caches[tmpl]; ok {
 		self.Logger.Infof("delete template %v from cache", tmpl)
 		delete(self.caches, tmpl)
 	}
+	self.mutex.Unlock()
 	return
 }
 

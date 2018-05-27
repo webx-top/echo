@@ -185,6 +185,7 @@ func HTTPErrorHandler(templates map[int]string, options ...*Options) echo.HTTPEr
 				if y {
 					c.Set(opt.TmplKey, t)
 					if c.Format() == `html` {
+						c.SetCode(code)
 						c.Set(opt.DataKey, c.Data().Reset().SetInfo(echo.H{
 							"title":   title,
 							"content": msg,
@@ -193,9 +194,9 @@ func HTTPErrorHandler(templates map[int]string, options ...*Options) echo.HTTPEr
 							"panic":   panicErr,
 						}, 0))
 					} else {
+						c.SetCode(opt.DefaultErrorHTTPCode)
 						c.Set(opt.DataKey, c.Data().Reset().SetInfo(msg, 0))
 					}
-					c.SetCode(opt.DefaultErrorHTTPCode)
 					if err := opt.OutputFunc(c.Format(), c, opt); err != nil {
 						msg += "\n" + err.Error()
 						y = false
