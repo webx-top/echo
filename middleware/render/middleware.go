@@ -155,7 +155,7 @@ func HTTPErrorHandler(templates map[int]string, options ...*Options) echo.HTTPEr
 	tmplNum := len(templates)
 	opt := checkOptions(options...)
 	return func(err error, c echo.Context) {
-		code := opt.DefaultErrorHTTPCode
+		code := DefaultOptions.DefaultErrorHTTPCode
 		var msg string
 		var panicErr *echo.PanicError
 		switch e := err.(type) {
@@ -166,6 +166,7 @@ func HTTPErrorHandler(templates map[int]string, options ...*Options) echo.HTTPEr
 			msg = e.Message
 		case *echo.PanicError:
 			panicErr = e
+
 		}
 		title := http.StatusText(code)
 		if c.Echo().Debug() {
