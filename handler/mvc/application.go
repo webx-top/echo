@@ -15,6 +15,7 @@
    limitations under the License.
 
 */
+
 package mvc
 
 import (
@@ -48,6 +49,7 @@ func New(name string) (s *Application) {
 	return
 }
 
+// HandlerWrapper 增加对"func(*Context) error"的支持
 func HandlerWrapper(h interface{}) echo.Handler {
 	if handle, y := h.(func(*Context) error); y {
 		return echo.HandlerFunc(func(c echo.Context) error {
@@ -134,6 +136,7 @@ var (
 	UpperCaseFirst URLRecovery = strings.Title
 )
 
+// Application 定义应用
 type Application struct {
 	Core                  *echo.Echo
 	Name                  string
@@ -192,17 +195,23 @@ func (s *Application) Use(middleware ...interface{}) {
 	s.DefaultMiddlewares = append(s.DefaultMiddlewares, middleware...)
 }
 
+// FindModuleByDomain 根据域名查询对应模块实例
+func (s *Application) FindModuleByDomain(host string) (*Module, bool) {
+	module, has := s.moduleHosts[host]
+	if !has {
+		if p := strings.LastIndexByte(host, ':'); p > -1 {
+			module, has = s.moduleHosts[host[0:p]]
+		}
+	}
+	return module, has
+}
+
 // ServeHTTP HTTP服务执行入口
 func (s *Application) ServeHTTP(r engine.Request, w engine.Response) {
 	var h *echo.Echo
 	host := r.Host()
-	module, ok := s.moduleHosts[host]
-	if !ok {
-		if p := strings.LastIndexByte(host, ':'); p > -1 {
-			module, ok = s.moduleHosts[host[0:p]]
-		}
-	}
-	if !ok || module.Handler == nil {
+	module, has := s.FindModuleByDomain(host)
+	if !has || module.Handler == nil {
 		h = s.Core
 	} else {
 		h = module.Handler
@@ -215,6 +224,7 @@ func (s *Application) ServeHTTP(r engine.Request, w engine.Response) {
 	}
 }
 
+// SetErrorPages 设置错误页面模板
 func (s *Application) SetErrorPages(templates map[int]string, options ...*render.Options) *Application {
 	s.Core.SetHTTPErrorHandler(render.HTTPErrorHandler(templates, options...))
 	return s
@@ -401,6 +411,7 @@ func (s *Application) Module(args ...string) *Module {
 	return s.NewModule(name)
 }
 
+// SetSessionOptions 设置Session配置
 func (s *Application) SetSessionOptions(sessionOptions *echo.SessionOptions) *Application {
 	if sessionOptions.CookieOptions == nil {
 		sessionOptions.CookieOptions = &echo.CookieOptions{
@@ -428,6 +439,7 @@ func (s *Application) ModuleOk(args ...string) (app *Module, ok bool) {
 	return
 }
 
+// Modules 获取模块列表，如果传递参数值为true，返回所有域名所对应的模块列表
 func (s *Application) Modules(args ...bool) map[string]*Module {
 	if len(args) > 0 && args[0] {
 		return s.moduleHosts
@@ -435,6 +447,7 @@ func (s *Application) Modules(args ...bool) map[string]*Module {
 	return s.moduleNames
 }
 
+// HasModule 检查模块是否存在
 func (s *Application) HasModule(name string) bool {
 	_, ok := s.moduleNames[name]
 	return ok
@@ -522,6 +535,7 @@ func (s *Application) ready() {
 	s.Event(`mvc.serverReady`, func(_ bool) {})
 }
 
+// AddEvent 添加事件
 func (s *Application) AddEvent(eventName string, handler interface{}) *Application {
 	if h, ok := handler.(func(func(bool), ...interface{})); ok {
 		events.AddEvent(eventName, h)
@@ -537,16 +551,19 @@ func (s *Application) AddEvent(eventName string, handler interface{}) *Applicati
 	return s
 }
 
+// Event 执行事件
 func (s *Application) Event(eventName string, next func(bool), sessions ...interface{}) *Application {
 	events.Event(eventName, next, sessions...)
 	return s
 }
 
+// GoEvent 并行执行事件
 func (s *Application) GoEvent(eventName string, next func(bool), sessions ...interface{}) *Application {
 	events.GoEvent(eventName, next, sessions...)
 	return s
 }
 
+// DelEvent 删除事件
 func (s *Application) DelEvent(eventName string) *Application {
 	events.DelEvent(eventName)
 	return s
@@ -614,6 +631,7 @@ func (s *Application) Pprof() *Application {
 	return s
 }
 
+// DefaultFuncMap 模板的默认函数
 func (s *Application) DefaultFuncMap() (r map[string]interface{}) {
 	r = tplfunc.New()
 	r["RootURL"] = func(p ...string) string {
@@ -678,6 +696,7 @@ func (s *Application) Tree(args ...*echo.Echo) (r map[string]map[string]map[stri
 	return
 }
 
+// FuncMapCopyTo 获取模板的默认函数副本
 func (s *Application) FuncMapCopyTo(m map[string]interface{}) *Application {
 	for k, v := range s.FuncMap {
 		m[k] = v

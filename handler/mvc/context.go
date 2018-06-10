@@ -96,6 +96,7 @@ func (c *Context) Init(wrp *Wrapper, controller interface{}, actName string) (er
 	c.Context.SetFunc(`BuildURL`, c.BuildURL)
 	c.Context.SetFunc(`ModuleURLPath`, c.ModuleURLPath)
 	c.Context.SetFunc(`ModuleURL`, c.ModuleURL)
+	c.Context.SetFunc(`CheckPath`, c.CheckPath)
 	c.Context.SetFunc(`ControllerName`, func() string {
 		return c.ControllerName
 	})
@@ -549,6 +550,14 @@ func (c *Context) echoRedirect() bool {
 func (c *Context) Goto(goURL string, args ...interface{}) error {
 	goURL = c.U(goURL)
 	return c.Redir(goURL, args...)
+}
+
+// CheckPath 检查权限所用的网址路径
+func (c *Context) CheckPath() string {
+	if len(c.Module.Domain) > 0 {
+		return `/` + c.Module.Name + c.Path()
+	}
+	return c.Path()
 }
 
 // Action 调用控制器方法
