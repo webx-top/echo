@@ -288,7 +288,7 @@ func (s *Static) ClearCache() {
 	s.urlMap = make(map[string]*urlMapInfo)
 }
 
-func (s *Static) OnUpdate(tmplDir string) func(string) {
+func (s *Static) OnUpdate() func(string) {
 	return func(name string) {
 		if s.Public != nil {
 			s.Public.ClearCache()
@@ -296,7 +296,6 @@ func (s *Static) OnUpdate(tmplDir string) func(string) {
 				return
 			}
 		}
-		name = filepath.Join(tmplDir, name)
 		s.DeleteCombined(name)
 	}
 }

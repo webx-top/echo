@@ -359,7 +359,7 @@ func (s *Application) NewRenderer(conf *render.Config, a *Module, funcMap map[st
 	te.SetFuncMap(func() map[string]interface{} {
 		return funcMap
 	})
-	te.MonitorEvent(static.OnUpdate(themeAbsPath))
+	te.MonitorEvent(static.OnUpdate())
 	te.SetContentProcessor(conf.Parser())
 	return te, static
 }
@@ -483,7 +483,7 @@ func (s *Application) InitStatic() *Application {
 
 // TemplateMonitor 模板监控事件
 func (s *Application) TemplateMonitor() *Application {
-	s.Renderer.MonitorEvent(s.Resource.Static.OnUpdate(s.ThemeDir()))
+	s.Renderer.MonitorEvent(s.Resource.Static.OnUpdate())
 	return s
 }
 

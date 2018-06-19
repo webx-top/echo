@@ -62,7 +62,7 @@ func (t *Config) NewRenderer(manager ...driver.Manager) driver.Driver {
 		if err == nil {
 			if strings.HasPrefix(absFilePath, absTmplPath) {
 				//如果静态文件在模板的子文件夹时，监控模板时判断静态文件更改
-				renderer.MonitorEvent(st.OnUpdate(tmplDir))
+				renderer.MonitorEvent(st.OnUpdate())
 			}
 		}
 	}
