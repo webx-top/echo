@@ -413,7 +413,7 @@ func (c *Context) GotoNext(defaultURL ...string) error {
 }
 
 // GetNextURL 自动获取下一步网址
-func (c *Context) GetNextURL() string {
+func (c *Context) GetNextURL(allowReferer ...bool) string {
 	next := c.Header(`X-Next`)
 	if len(next) == 0 {
 		next = c.Form(`next`)
@@ -421,13 +421,13 @@ func (c *Context) GetNextURL() string {
 	if len(next) > 0 {
 		return c.ParseNextURL(next)
 	}
-	next = c.Referer()
-	if len(next) > 0 {
-		if strings.HasSuffix(next, c.Request().URI()) {
-			next = ``
+	if len(allowReferer) < 1 || allowReferer[0] {
+		next = c.Referer()
+		if len(next) == 0 || !strings.HasSuffix(next, c.Request().URI()) {
+			return next
 		}
 	}
-	return next
+	return ``
 }
 
 // ParseNextURL 解析下一步网址
