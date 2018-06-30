@@ -1,7 +1,6 @@
 package echo
 
 import (
-	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -12,6 +11,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/webx-top/echo/encoding/json"
 	"github.com/webx-top/tagfast"
 	"github.com/webx-top/validation"
 )

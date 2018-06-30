@@ -3,7 +3,6 @@ package echo
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -18,6 +17,7 @@ import (
 
 	"github.com/admpub/events"
 	"github.com/admpub/events/emitter"
+	"github.com/webx-top/echo/encoding/json"
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/logger"
 	"github.com/webx-top/echo/param"
