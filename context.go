@@ -222,7 +222,7 @@ type (
 
 	Accept struct {
 		Type   string
-		Params map[string]string
+		Params param.StringMap
 	}
 
 	xContext struct {
@@ -256,7 +256,7 @@ type (
 
 func NewAccept() *Accept {
 	return &Accept{
-		Params: map[string]string{},
+		Params: param.StringMap{},
 	}
 }
 
@@ -950,7 +950,9 @@ func (c *xContext) Accept() *Accept {
 	typ, params, _ := mime.ParseMediaType(c.Header(HeaderAccept))
 	c.accept = NewAccept()
 	c.accept.Type = typ
-	c.accept.Params = params
+	for k, v := range params {
+		c.accept.Params[k] = param.String(v)
+	}
 	return c.accept
 }
 
