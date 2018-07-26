@@ -363,7 +363,7 @@ func CaptchaForm(args ...interface{}) template.HTML {
 }
 
 //CaptchaVerify 验证码验证
-func CaptchaVerify(captchaSolution string, idGet func(string) string) bool {
+func CaptchaVerify(captchaSolution string, idGet func(string, ...string) string) bool {
 	//id := r.FormValue("captchaId")
 	id := idGet("captchaId")
 	if !captcha.VerifyString(id, captchaSolution) {
