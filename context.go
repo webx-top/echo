@@ -50,8 +50,8 @@ type (
 		//----------------
 
 		Path() string
-		P(int) string
-		Param(string) string
+		P(int, ...string) string
+		Param(string, ...string) string
 		// ParamNames returns path parameter names.
 		ParamNames() []string
 		ParamValues() []string
@@ -61,23 +61,23 @@ type (
 		Queries() map[string][]string
 		QueryValues(string) []string
 		QueryxValues(string) param.StringSlice
-		Query(string) string
+		Query(string, ...string) string
 
 		//----------------
 		// Form data
 		//----------------
 
-		Form(string) string
+		Form(string, ...string) string
 		FormValues(string) []string
 		FormxValues(string) param.StringSlice
 		// Forms returns the form parameters as map. It is an alias for `engine.Request#Form().All()`.
 		Forms() map[string][]string
 
 		// Param+
-		Px(int) param.String
-		Paramx(string) param.String
-		Queryx(string) param.String
-		Formx(string) param.String
+		Px(int, ...string) param.String
+		Paramx(string, ...string) param.String
+		Queryx(string, ...string) param.String
+		Formx(string, ...string) param.String
 		// string to param.String
 		Atop(string) param.String
 		ToParamString(string) param.String
@@ -88,7 +88,7 @@ type (
 		//----------------
 
 		Set(string, interface{})
-		Get(string) interface{}
+		Get(string, ...interface{}) interface{}
 		Delete(...string)
 		Stored() store
 
@@ -326,22 +326,29 @@ func (c *xContext) Path() string {
 }
 
 // P returns path parameter by index.
-func (c *xContext) P(i int) (value string) {
+func (c *xContext) P(i int, defaults ...string) (value string) {
 	l := len(c.pnames)
 	if i < l {
 		value = c.pvalues[i]
+	}
+	if len(value) == 0 && len(defaults) > 0 {
+		return defaults[0]
 	}
 	return
 }
 
 // Param returns path parameter by name.
-func (c *xContext) Param(name string) (value string) {
+func (c *xContext) Param(name string, defaults ...string) (value string) {
 	l := len(c.pnames)
 	for i, n := range c.pnames {
 		if n == name && i < l {
 			value = c.pvalues[i]
 			break
 		}
+	}
+
+	if len(value) == 0 && len(defaults) > 0 {
+		return defaults[0]
 	}
 	return
 }
@@ -359,8 +366,12 @@ func (c *xContext) SetParamValues(values ...string) {
 }
 
 // Query returns query parameter by name.
-func (c *xContext) Query(name string) string {
-	return c.request.URL().QueryValue(name)
+func (c *xContext) Query(name string, defaults ...string) (value string) {
+	value = c.request.URL().QueryValue(name)
+	if len(value) == 0 && len(defaults) > 0 {
+		return defaults[0]
+	}
+	return
 }
 
 func (c *xContext) QueryValues(name string) []string {
@@ -376,8 +387,12 @@ func (c *xContext) Queries() map[string][]string {
 }
 
 // Form returns form parameter by name.
-func (c *xContext) Form(name string) string {
-	return c.request.FormValue(name)
+func (c *xContext) Form(name string, defaults ...string) (value string) {
+	value = c.request.FormValue(name)
+	if len(value) == 0 && len(defaults) > 0 {
+		return defaults[0]
+	}
+	return
 }
 
 func (c *xContext) FormValues(name string) []string {
@@ -393,7 +408,7 @@ func (c *xContext) Forms() map[string][]string {
 }
 
 // Get retrieves data from the context.
-func (c *xContext) Get(key string) interface{} {
+func (c *xContext) Get(key string, defaults ...interface{}) interface{} {
 	return c.store.Get(key)
 }
 
@@ -772,20 +787,20 @@ func (c *xContext) SetCookie(key string, val string, args ...interface{}) {
 	c.cookier.Set(key, val, args...)
 }
 
-func (c *xContext) Px(n int) param.String {
-	return param.String(c.P(n))
+func (c *xContext) Px(n int, defaults ...string) param.String {
+	return param.String(c.P(n, defaults...))
 }
 
-func (c *xContext) Paramx(name string) param.String {
-	return param.String(c.Param(name))
+func (c *xContext) Paramx(name string, defaults ...string) param.String {
+	return param.String(c.Param(name, defaults...))
 }
 
-func (c *xContext) Queryx(name string) param.String {
-	return param.String(c.Query(name))
+func (c *xContext) Queryx(name string, defaults ...string) param.String {
+	return param.String(c.Query(name, defaults...))
 }
 
-func (c *xContext) Formx(name string) param.String {
-	return param.String(c.Form(name))
+func (c *xContext) Formx(name string, defaults ...string) param.String {
+	return param.String(c.Form(name, defaults...))
 }
 
 func (c *xContext) Atop(v string) param.String {
