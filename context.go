@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -191,6 +192,7 @@ type (
 		ResolveContentType() string
 		WithFormatExtension(bool)
 		ResolveFormat() string
+		Accept() *Accept
 		Protocol() string
 		Site() string
 		Scheme() string
@@ -218,6 +220,11 @@ type (
 		SetPreResponseHook(...func() error) Context
 	}
 
+	Accept struct {
+		Type   string
+		Params param.StringMap
+	}
+
 	xContext struct {
 		Validator
 		Translator
@@ -243,8 +250,15 @@ type (
 		code                int
 		preResponseHook     []func() error
 		dataEngine          Data
+		accept              *Accept
 	}
 )
+
+func NewAccept() *Accept {
+	return &Accept{
+		Params: param.StringMap{},
+	}
+}
 
 // NewContext creates a Context object.
 func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
@@ -691,6 +705,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.format = ""
 	c.code = 0
 	c.preResponseHook = nil
+	c.accept = nil
 	c.dataEngine = NewData(c)
 	// NOTE: Don't reset because it has to have length c.echo.maxParam at all times
 	// c.pvalues = nil
@@ -930,8 +945,8 @@ func (c *xContext) ResolveFormat() string {
 		}
 	}
 
-	accept := c.Header(HeaderAccept)
-	for _, mimeType := range strings.Split(strings.SplitN(accept, `;`, 2)[0], `,`) {
+	accept := c.Accept()
+	for _, mimeType := range strings.Split(accept.Type, `,`) {
 		mimeType = strings.TrimSpace(mimeType)
 		if format, ok := c.echo.acceptFormats[mimeType]; ok {
 			return format
@@ -941,6 +956,19 @@ func (c *xContext) ResolveFormat() string {
 		return format
 	}
 	return `html`
+}
+
+func (c *xContext) Accept() *Accept {
+	if c.accept != nil {
+		return c.accept
+	}
+	typ, params, _ := mime.ParseMediaType(c.Header(HeaderAccept))
+	c.accept = NewAccept()
+	c.accept.Type = typ
+	for k, v := range params {
+		c.accept.Params[k] = param.String(v)
+	}
+	return c.accept
 }
 
 // Protocol returns request protocol name, such as HTTP/1.1 .
