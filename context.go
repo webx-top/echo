@@ -423,7 +423,7 @@ func (c *xContext) Forms() map[string][]string {
 
 // Get retrieves data from the context.
 func (c *xContext) Get(key string, defaults ...interface{}) interface{} {
-	return c.store.Get(key)
+	return c.store.Get(key, defaults...)
 }
 
 // Set saves data in the context.
