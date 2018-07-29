@@ -463,16 +463,16 @@ func (e *Echo) AppendRouter(routes []*Route) {
 }
 
 // Group creates a new sub-router with prefix.
-func (e *Echo) Group(prefix string, m ...interface{}) (g *Group) {
-	g = &Group{prefix: prefix, echo: e}
-	g.Use(m...)
-	e.groups[prefix] = g
-	return
-}
-
-func (e *Echo) GetGroup(prefix string) (g *Group) {
-	g, _ = e.groups[prefix]
-	return
+func (e *Echo) Group(prefix string, m ...interface{}) *Group {
+	g, y := e.groups[prefix]
+	if !y {
+		g = &Group{prefix: prefix, echo: e}
+		e.groups[prefix] = g
+	}
+	if len(m) > 0 {
+		g.Use(m...)
+	}
+	return g
 }
 
 // URI generates a URI from handler.
