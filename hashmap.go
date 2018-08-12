@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"sort"
 	"strconv"
 	"sync"
 )
@@ -136,61 +137,103 @@ type Mapx struct {
 	lock  *sync.RWMutex
 }
 
-func NewMapx(data map[string][]string) *Mapx {
+func NewMapx(data map[string][]string, mutex ...*sync.RWMutex) *Mapx {
 	m := &Mapx{
-		lock: &sync.RWMutex{},
+		Map:   map[string]*Mapx{},
+		Slice: []*Mapx{},
+		Val:   []string{},
+	}
+	if len(mutex) > 0 {
+		m.lock = mutex[0]
+	} else {
+		m.lock = &sync.RWMutex{}
+	}
+	if data == nil {
+		return m
 	}
 	return m.Parse(data)
 }
 
-func (m *Mapx) Parse(data map[string][]string) *Mapx {
-	if m.lock == nil {
-		m.lock = &sync.RWMutex{}
+func (m *Mapx) Clone() *Mapx {
+	mCopy := &Mapx{
+		Map:   map[string]*Mapx{},
+		Slice: make([]*Mapx, len(m.Slice)),
+		Val:   make([]string, len(m.Val)),
+		lock:  m.lock,
 	}
+	for key, mapx := range m.Map {
+		mCopy.Map[key] = mapx.Clone()
+	}
+	for idx, mapx := range m.Slice {
+		mCopy.Slice[idx] = mapx.Clone()
+	}
+	for idx, val := range m.Val {
+		mCopy.Val[idx] = val
+	}
+	return mCopy
+}
+
+func (m *Mapx) Parse(data map[string][]string, keySkipper ...func(string) bool) *Mapx {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	m.Map = map[string]*Mapx{}
-	for name, values := range data {
-		names := FormNames(name)
-		end := len(names) - 1
-		v := m
-		for idx, key := range names {
-			if len(key) == 0 {
+	keys := make([]string, 0, len(data))
+	var skip func(string) bool
+	if len(keySkipper) > 0 {
+		skip = keySkipper[0]
+	}
+	for k := range data {
+		if skip != nil && skip(k) {
+			continue
+		}
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, name := range keys {
+		m.Add(name, data[name])
+	}
+	return m
+}
 
-				if v.Slice == nil {
-					v.Slice = []*Mapx{}
-				}
+func (m *Mapx) Add(name string, values []string) *Mapx {
+	names := FormNames(name)
+	end := len(names) - 1
+	v := m
+	for idx, key := range names {
+		if len(key) == 0 {
 
-				if idx == end {
-					v.Slice = append(v.Slice, &Mapx{lock: m.lock, Val: values})
-					continue
-				}
-				mapx := &Mapx{
-					lock: m.lock,
-					Map:  map[string]*Mapx{},
-				}
-				v.Slice = append(v.Slice, mapx)
-				v = mapx
-				continue
-			}
-			if _, ok := v.Map[key]; !ok {
-				if idx == end {
-					v.Map[key] = &Mapx{lock: m.lock, Val: values}
-					continue
-				}
-				v.Map[key] = &Mapx{
-					lock: m.lock,
-					Map:  map[string]*Mapx{},
-				}
-				v = v.Map[key]
-				continue
+			if v.Slice == nil {
+				v.Slice = []*Mapx{}
 			}
 
 			if idx == end {
-				v.Map[key] = &Mapx{lock: m.lock, Val: values}
-			} else {
-				v = v.Map[key]
+				v.Slice = append(v.Slice, &Mapx{lock: m.lock, Val: values})
+				continue
 			}
+			mapx := &Mapx{
+				lock: m.lock,
+				Map:  map[string]*Mapx{},
+			}
+			v.Slice = append(v.Slice, mapx)
+			v = mapx
+			continue
+		}
+		if _, ok := v.Map[key]; !ok {
+			if idx == end {
+				v.Map[key] = &Mapx{lock: m.lock, Val: values}
+				continue
+			}
+			v.Map[key] = &Mapx{
+				lock: m.lock,
+				Map:  map[string]*Mapx{},
+			}
+			v = v.Map[key]
+			continue
+		}
+
+		if idx == end {
+			v.Map[key] = &Mapx{lock: m.lock, Val: values}
+		} else {
+			v = v.Map[key]
 		}
 	}
 	return m
@@ -245,13 +288,13 @@ func (m *Mapx) Values(names ...string) []string {
 }
 
 func (m *Mapx) get(k string) (*Mapx, bool) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
 	r, y := m.Map[k]
 	return r, y
 }
 
 func (m *Mapx) Get(names ...string) *Mapx {
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	v := m
 	end := len(names) - 1
 	for idx, key := range names {
