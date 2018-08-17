@@ -33,8 +33,9 @@ type (
 
 	// ProxyTarget defines the upstream target.
 	ProxyTarget struct {
-		Name string
-		URL  *url.URL
+		Name          string
+		URL           *url.URL
+		FlushInterval time.Duration
 	}
 
 	// ProxyBalancer defines an interface to implement a load balancing technique.
@@ -74,16 +75,26 @@ var (
 	}
 	// DefaultProxyHandler Proxy Handler
 	DefaultProxyHandler ProxyHandler = func(t *ProxyTarget, c echo.Context) error {
+		resp := c.Response().StdResponseWriter()
+		req := c.Request().StdRequest()
 		switch {
 		case c.IsWebsocket():
-			proxyRaw(t, c).ServeHTTP(c.Response().StdResponseWriter(), c.Request().StdRequest())
+			proxyRaw(t, c).ServeHTTP(resp, req)
 		case c.Header(echo.HeaderAccept) == "text/event-stream":
+			proxyHTTPWithFlushInterval(t).ServeHTTP(resp, req)
 		default:
-			proxyHTTP(t, c).ServeHTTP(c.Response().StdResponseWriter(), c.Request().StdRequest())
+			proxyHTTP(t, c).ServeHTTP(resp, req)
 		}
 		return nil
 	}
 )
+
+// Server-Sent Events
+func proxyHTTPWithFlushInterval(t *ProxyTarget) http.Handler {
+	proxy := httputil.NewSingleHostReverseProxy(t.URL)
+	proxy.FlushInterval = t.FlushInterval
+	return proxy
+}
 
 // http
 func proxyHTTP(t *ProxyTarget, _ echo.Context) http.Handler {
@@ -154,6 +165,11 @@ func (b *commonBalancer) AddTarget(target *ProxyTarget) bool {
 	}
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
+
+	if target.FlushInterval <= 0 {
+		target.FlushInterval = 100 * time.Millisecond
+	}
+
 	b.targets = append(b.targets, target)
 	return true
 }
