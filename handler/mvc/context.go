@@ -19,7 +19,6 @@ package mvc
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -276,25 +275,7 @@ func (c *Context) Display(args ...interface{}) error {
 	if ignore, _ := c.Get(`webx:ignoreRender`).(bool); ignore {
 		return nil
 	}
-	c.Data().SetTmplFuncs()
-	var err error
-	switch c.Format() {
-	case `xml`:
-		err = c.XML(c.Data(), c.Code())
-	case `json`:
-		if callback := c.Query(`callback`); callback != `` {
-			err = c.JSONP(callback, c.Data(), c.Code())
-		} else {
-			err = c.JSON(c.Data(), c.Code())
-		}
-	default:
-		if len(c.Tmpl) == 0 {
-			err = c.String(fmt.Sprintf(`%v`, c.Data()), c.Code())
-		} else {
-			err = c.Data().Render(c.Tmpl, c.Code())
-		}
-	}
-	return err
+	return c.SetAuto(true).Render(c.Tmpl, nil)
 }
 
 // ErrorWithCode 生成HTTPError
