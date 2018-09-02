@@ -143,7 +143,7 @@ type (
 		//----------------
 		// Render
 		//----------------
-
+		SetAuto(on bool) Context
 		Fetch(string, interface{}) ([]byte, error)
 		SetRenderer(Renderer)
 
@@ -251,6 +251,7 @@ type (
 		preResponseHook     []func() error
 		dataEngine          Data
 		accept              *Accept
+		auto                bool
 	}
 )
 
@@ -450,9 +451,33 @@ func (c *xContext) MustBind(i interface{}, filter ...FormDataFilter) error {
 	return c.echo.binder.MustBind(i, c, filter...)
 }
 
+func (c *xContext) SetAuto(on bool) Context {
+	c.auto = on
+	return c
+}
+
 // Render renders a template with data and sends a text/html response with status
 // code. Templates can be registered using `Echo.SetRenderer()`.
 func (c *xContext) Render(name string, data interface{}, codes ...int) (err error) {
+	if c.auto {
+		format := c.Format()
+		if render, ok := c.echo.formatRenders[format]; ok && render != nil {
+			switch v := data.(type) {
+			case Data: //Skip
+			case error:
+				c.dataEngine.SetError(v)
+			default:
+				if data != nil {
+					c.dataEngine.SetData(data)
+				}
+			}
+			return render(c, data)
+		}
+	}
+	c.dataEngine.SetTmplFuncs()
+	if data == nil {
+		data = c.dataEngine.GetData()
+	}
 	b, err := c.Fetch(name, data)
 	if err != nil {
 		return
@@ -704,6 +729,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.withFormatExtension = false
 	c.format = ""
 	c.code = 0
+	c.auto = false
 	c.preResponseHook = nil
 	c.accept = nil
 	c.dataEngine = NewData(c)
@@ -760,9 +786,9 @@ func (c *xContext) Session() Sessioner {
 	return c.sessioner
 }
 
-func (c *xContext) Flash(name ...string) (r interface{}) {
-	if v := c.sessioner.Flashes(name...); len(v) > 0 {
-		r = v[0]
+func (c *xContext) Flash(names ...string) (r interface{}) {
+	if v := c.sessioner.Flashes(names...); len(v) > 0 {
+		r = v[len(v)-1]
 	}
 	return r
 }

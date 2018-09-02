@@ -132,24 +132,16 @@ func (a *Module) Register(p string, v interface{}, methods ...string) *Module {
 	if len(methods) < 1 {
 		methods = append(methods, "GET")
 	}
-	_, ctl, act := a.Application.URLBuilder.Set(v)
-	if len(ctl) == 0 {
-		ctl = `_`
-	}
-	if len(act) == 0 {
-		act = `_`
-	}
-	hpath := echo.HandlerPath(v)
-	hname := echo.HandlerName(v)
+	a.Application.URLBuilder.Set(v)
 	h := a.Core.ValidHandler(v)
-	a.Router().Match(methods, p, NewHandler(func(ctx echo.Context) error {
+	a.Router().Match(methods, p, func(ctx echo.Context) error {
 		if c, y := ctx.(Initer); y {
 			if err := c.Init(ctx); err != nil {
 				return err
 			}
 		}
 		return h.Handle(ctx)
-	}, hname, hpath, `/`+a.Name+`/`+ctl+`/`+act))
+	})
 	return a
 }
 

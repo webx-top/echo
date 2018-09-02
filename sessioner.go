@@ -152,8 +152,8 @@ func (n *DebugSession) Clear() Sessioner {
 	return n
 }
 
-func (n *DebugSession) AddFlash(name interface{}, args ...string) Sessioner {
-	log.Println(`DebugSession.AddFlash`, name, args)
+func (n *DebugSession) AddFlash(value interface{}, args ...string) Sessioner {
+	log.Println(`DebugSession.AddFlash`, value, args)
 	return n
 }
 

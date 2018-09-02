@@ -14,15 +14,28 @@ func main() {
 	port := flag.String(`p`, "8080", "port")
 	flag.Parse()
 	e := echo.New()
-	e.Use(mw.Log())
+	e.SetDebug(true)
+	e.Use(mw.Log(), mw.Recover())
 
 	d := render.New(`standard`, `./template`)
 	d.Init()
 
 	e.Use(render.Middleware(d))
+	e.SetHTTPErrorHandler(render.HTTPErrorHandler(map[int]string{
+		500: `500`,
+	}))
 
 	e.Get("/", func(c echo.Context) error {
 
+		// It uses template file ./template/index.html
+		return c.Render(`index`, map[string]interface{}{
+			"Name": "Webx",
+		})
+	})
+
+	e.Get("/panic", func(c echo.Context) error {
+		var values []int
+		values[1] = 2
 		// It uses template file ./template/index.html
 		return c.Render(`index`, map[string]interface{}{
 			"Name": "Webx",
@@ -35,13 +48,10 @@ func main() {
 	g := e.Group("/api", render.Auto())
 	{
 		g.Get("", func(c echo.Context) error {
-			c.Set("data", c.Data().SetCode(1).SetData(echo.H{
-				"Name": "Webx",
-			}))
-
 			// It uses template file ./template/index.html
-			c.Set("tmpl", "index")
-			return nil
+			return c.Render("index", echo.H{
+				"Name": "Webx",
+			})
 		})
 	}
 

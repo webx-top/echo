@@ -78,7 +78,6 @@ type Data interface {
 	Assign(key string, val interface{})
 	Assignx(values *map[string]interface{})
 	SetTmplFuncs()
-	Render(tmpl string, code ...int) error
 	SetContext(ctx Context) Data
 	String() string
 	Set(code int, args ...interface{}) Data
@@ -119,11 +118,6 @@ func (d *RawData) Reset() Data {
 
 func (d *RawData) String() string {
 	return fmt.Sprintf(`%v`, d.Info)
-}
-
-//Render 通过模板渲染结果
-func (d *RawData) Render(tmpl string, code ...int) error {
-	return d.context.Render(tmpl, d.Data, code...)
 }
 
 //Gets 获取全部数据
@@ -204,12 +198,12 @@ func (d *RawData) SetContext(ctx Context) Data {
 
 //Assign 赋值
 func (d *RawData) Assign(key string, val interface{}) {
-	RawData, _ := d.Data.(H)
-	if RawData == nil {
-		RawData = H{}
+	data, _ := d.Data.(H)
+	if data == nil {
+		data = H{}
 	}
-	RawData[key] = val
-	d.Data = RawData
+	data[key] = val
+	d.Data = data
 }
 
 //Assignx 批量赋值
@@ -217,21 +211,21 @@ func (d *RawData) Assignx(values *map[string]interface{}) {
 	if values == nil {
 		return
 	}
-	RawData, _ := d.Data.(H)
-	if RawData == nil {
-		RawData = H{}
+	data, _ := d.Data.(H)
+	if data == nil {
+		data = H{}
 	}
 	for key, val := range *values {
-		RawData[key] = val
+		data[key] = val
 	}
-	d.Data = RawData
+	d.Data = data
 }
 
 //SetTmplFuncs 设置模板函数
 func (d *RawData) SetTmplFuncs() {
-	flash, ok := d.context.Session().Get(`webx:flash`).(*RawData)
+	flash, ok := d.context.Flash().(*RawData)
 	if ok {
-		d.context.Session().Delete(`webx:flash`).Save()
+		d.context.Session().Save()
 		d.context.SetFunc(`Code`, func() State {
 			return flash.Code
 		})
@@ -277,7 +271,7 @@ func (d *RawData) Set(code int, args ...interface{}) Data {
 				Zone:    d.Zone,
 				Data:    nil,
 			}
-			d.context.Session().Set(`webx:flash`, flash).Save()
+			d.context.Session().AddFlash(flash).Save()
 		}
 	}
 	return d

@@ -1,0 +1,9 @@
+{{Extend "layout"}}
+{{Block "title"}}{{.title}} {{Super}}{{/Block}}
+{{Block "body"}}
+<h1>{{.code}} {{.title}}</h1>
+<pre>{{.content}}</pre>
+{{if .panic}}
+{{.panic.HTML}}
+{{end}}
+{{/Block}}

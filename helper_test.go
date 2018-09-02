@@ -25,10 +25,6 @@ func TestHandlerPath(t *testing.T) {
 	assert.Equal(t, "github.com/webx-top/echo_test.testHandlerFunc", ppath)
 	ppath = echo.HandlerPath(&testHandler{})
 	assert.Equal(t, "github.com/webx-top/echo_test.testHandler", ppath)
-	e := echo.New()
-	r := &echo.Route{HandlerPath: ppath}
-	ppath = e.DefaultTmplPath(r)
-	assert.Equal(t, "/echo_test/test_handler", ppath)
 	ppath = echo.HandlerTmpl(`github.com/webx-top/echo_test.(*TestHandler).Index-fm`)
 	assert.Equal(t, "/echo_test/test_handler/index", ppath)
 }

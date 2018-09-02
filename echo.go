@@ -22,7 +22,6 @@ type (
 		maxParam          *int
 		notFoundHandler   HandlerFunc
 		httpErrorHandler  HTTPErrorHandler
-		tmplPathGenerator func(*Route) string
 		binder            Binder
 		renderer          Renderer
 		pool              sync.Pool
@@ -33,9 +32,11 @@ type (
 		handlerWrapper    []func(interface{}) Handler
 		middlewareWrapper []func(interface{}) Middleware
 		acceptFormats     map[string]string //mime=>format
+		formatRenders     map[string]func(ctx Context, data interface{}) error
 		FuncMap           map[string]interface{}
 		RouteDebug        bool
 		MiddlewareDebug   bool
+		JSONPVarName      string
 	}
 
 	Middleware interface {
@@ -52,14 +53,6 @@ type (
 
 	Name interface {
 		Name() string
-	}
-
-	Path interface {
-		Path() string
-	}
-
-	Tmpl interface {
-		Tmpl() string
 	}
 
 	Meta interface {
@@ -85,7 +78,11 @@ func New() (e *Echo) {
 }
 
 func NewWithContext(fn func(*Echo) Context) (e *Echo) {
-	e = &Echo{maxParam: new(int)}
+	e = &Echo{
+		maxParam:      new(int),
+		JSONPVarName:  `callback`,
+		formatRenders: make(map[string]func(ctx Context, data interface{}) error),
+	}
 	e.pool.New = func() interface{} {
 		return fn(e)
 	}
@@ -96,7 +93,6 @@ func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 	// Defaults
 	//----------
 	e.SetHTTPErrorHandler(e.DefaultHTTPErrorHandler)
-	e.SetTmplPathGenerator(e.DefaultTmplPath)
 	e.SetBinder(NewBinder(e))
 
 	// Logger
@@ -122,6 +118,18 @@ func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 		//default
 		`*`: `html`,
 	}
+	e.formatRenders[`json`] = func(c Context, data interface{}) error {
+		return c.JSON(c.Data())
+	}
+	e.formatRenders[`jsonp`] = func(c Context, data interface{}) error {
+		return c.JSONP(c.Query(e.JSONPVarName), c.Data())
+	}
+	e.formatRenders[`xml`] = func(c Context, data interface{}) error {
+		return c.XML(c.Data())
+	}
+	e.formatRenders[`text`] = func(c Context, data interface{}) error {
+		return c.String(fmt.Sprint(data))
+	}
 	return
 }
 
@@ -144,6 +152,25 @@ func (e *Echo) SetAcceptFormats(acceptFormats map[string]string) *Echo {
 
 func (e *Echo) AddAcceptFormat(mime, format string) *Echo {
 	e.acceptFormats[mime] = format
+	return e
+}
+
+func (e *Echo) SetFormatRenders(formatRenders map[string]func(c Context, data interface{}) error) *Echo {
+	e.formatRenders = formatRenders
+	return e
+}
+
+func (e *Echo) AddFormatRender(format string, render func(c Context, data interface{}) error) *Echo {
+	e.formatRenders[format] = render
+	return e
+}
+
+func (e *Echo) RemoveFormatRender(formats ...string) *Echo {
+	for _, format := range formats {
+		if _, ok := e.formatRenders[format]; ok {
+			delete(e.formatRenders, format)
+		}
+	}
 	return e
 }
 
@@ -405,14 +432,6 @@ func (e *Echo) AddHandlerWrapper(funcs ...func(interface{}) Handler) {
 
 func (e *Echo) AddMiddlewareWrapper(funcs ...func(interface{}) Middleware) {
 	e.middlewareWrapper = append(e.middlewareWrapper, funcs...)
-}
-
-func (e *Echo) SetTmplPathGenerator(f func(*Route) string) {
-	e.tmplPathGenerator = f
-}
-
-func (e *Echo) DefaultTmplPath(r *Route) string {
-	return HandlerTmpl(r.HandlerPath)
 }
 
 func (e *Echo) add(method, prefix string, path string, h interface{}, middleware ...interface{}) {

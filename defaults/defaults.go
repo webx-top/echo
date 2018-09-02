@@ -16,6 +16,18 @@ func AddAcceptFormat(mime, format string) *echo.Echo {
 	return Default.AddAcceptFormat(mime, format)
 }
 
+func SetFormatRenders(formatRenders map[string]func(c echo.Context, data interface{}) error) *echo.Echo {
+	return Default.SetFormatRenders(formatRenders)
+}
+
+func AddFormatRender(format string, render func(c echo.Context, data interface{}) error) *echo.Echo {
+	return Default.AddFormatRender(format, render)
+}
+
+func RemoveFormatRender(formats ...string) *echo.Echo {
+	return Default.RemoveFormatRender(formats...)
+}
+
 // Router returns router.
 func Router() *echo.Router {
 	return Default.Router()
