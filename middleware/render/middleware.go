@@ -98,8 +98,8 @@ func checkOptions(options ...*Options) *Options {
 	return opt
 }
 
-// AutoOutput Outputs the specified format
-func AutoOutput(options ...*Options) echo.MiddlewareFunc {
+// Auto Outputs the specified format
+func Auto(options ...*Options) echo.MiddlewareFunc {
 	opt := checkOptions(options...)
 	return func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
@@ -117,6 +117,9 @@ func AutoOutput(options ...*Options) echo.MiddlewareFunc {
 func defaultFormatOutput(data interface{}, c echo.Context, opt *Options) error {
 	tmpl, ok := c.Get(opt.TmplKey).(string)
 	if !ok {
+		tmpl = c.Route().HandlerTmpl
+	}
+	if len(tmpl) == 0 {
 		tmpl = opt.DefaultTmpl
 	}
 	if v, y := data.(echo.Data); y {
@@ -134,6 +137,9 @@ func defaultFormatOutput(data interface{}, c echo.Context, opt *Options) error {
 // Output Outputs the specified format
 func Output(format string, c echo.Context, opt *Options) error {
 	data := c.Get(opt.DataKey)
+	if data == nil {
+		data = c.Stored()
+	}
 	switch format {
 	case `json`:
 		return c.JSON(data)

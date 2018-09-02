@@ -32,7 +32,7 @@ func main() {
 	// try visit: http://localhost:8080/api or http://localhost:8080/api?format=xml or
 	// http://localhost:8080/api?format=json or
 	// http://localhost:8080/api?format=jsonp&callback=f
-	g := e.Group("/api", render.AutoOutput(nil))
+	g := e.Group("/api", render.Auto())
 	{
 		g.Get("", func(c echo.Context) error {
 			c.Set("data", c.Data().SetCode(1).SetData(echo.H{
