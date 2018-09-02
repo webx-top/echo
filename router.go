@@ -25,6 +25,8 @@ type (
 		Path        string
 		Handler     Handler `json:"-" xml:"-"`
 		HandlerName string
+		HandlerPath string
+		HandlerTmpl string
 		Format      string
 		Params      []string //param names
 		Prefix      string
@@ -78,8 +80,21 @@ func (r *Route) apply(e *Echo) *Route {
 	middleware := r.middleware
 	if hn, ok := handler.(Name); ok {
 		r.HandlerName = hn.Name()
-	} else {
+	}
+	if len(r.HandlerName) == 0 {
 		r.HandlerName = HandlerName(handler)
+	}
+	if hn, ok := handler.(Path); ok {
+		r.HandlerPath = hn.Path()
+	}
+	if len(r.HandlerPath) == 0 {
+		r.HandlerPath = HandlerPath(handler)
+	}
+	if hn, ok := handler.(Tmpl); ok {
+		r.HandlerTmpl = hn.Tmpl()
+	}
+	if len(r.HandlerTmpl) == 0 {
+		r.HandlerTmpl = e.tmplPathGenerator(r)
 	}
 	if mt, ok := handler.(Meta); ok {
 		r.Meta = mt.Meta()

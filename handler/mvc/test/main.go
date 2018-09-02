@@ -26,7 +26,7 @@ func (a *Index) Before() error {
 
 func (a *Index) Ping() error {
 	fmt.Println(`-------------->Ping`)
-	return a.String(`pong`)
+	return a.String(`pong` + echo.Dump(a.Route(), false))
 }
 
 func (a *Index) Noafter() error {
@@ -48,7 +48,7 @@ func main() {
 	s := mvc.New(`test`)
 	m := s.Module()
 	m.Register(`/`, func(ctx echo.Context) error {
-		return ctx.String(`Hello world.`)
+		return ctx.String(`Hello world.` + echo.Dump(ctx.Route(), false))
 	})
 	m.Add(&Index{})
 	s.Run(`:8181`)

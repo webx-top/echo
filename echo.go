@@ -22,6 +22,7 @@ type (
 		maxParam          *int
 		notFoundHandler   HandlerFunc
 		httpErrorHandler  HTTPErrorHandler
+		tmplPathGenerator func(*Route) string
 		binder            Binder
 		renderer          Renderer
 		pool              sync.Pool
@@ -51,6 +52,14 @@ type (
 
 	Name interface {
 		Name() string
+	}
+
+	Path interface {
+		Path() string
+	}
+
+	Tmpl interface {
+		Tmpl() string
 	}
 
 	Meta interface {
@@ -87,6 +96,7 @@ func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 	// Defaults
 	//----------
 	e.SetHTTPErrorHandler(e.DefaultHTTPErrorHandler)
+	e.SetTmplPathGenerator(e.DefaultTmplPath)
 	e.SetBinder(NewBinder(e))
 
 	// Logger
@@ -395,6 +405,14 @@ func (e *Echo) AddHandlerWrapper(funcs ...func(interface{}) Handler) {
 
 func (e *Echo) AddMiddlewareWrapper(funcs ...func(interface{}) Middleware) {
 	e.middlewareWrapper = append(e.middlewareWrapper, funcs...)
+}
+
+func (e *Echo) SetTmplPathGenerator(f func(*Route) string) {
+	e.tmplPathGenerator = f
+}
+
+func (e *Echo) DefaultTmplPath(r *Route) string {
+	return HandlerTmpl(r.HandlerPath)
 }
 
 func (e *Echo) add(method, prefix string, path string, h interface{}, middleware ...interface{}) {

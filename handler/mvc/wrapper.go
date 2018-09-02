@@ -82,15 +82,19 @@ type AllowFormat interface {
 	AllowFormat(urlPath string, extension string) bool
 }
 
-func NewHandler(h func(echo.Context) error, name string) *Handler {
+func NewHandler(h func(echo.Context) error, name string, ppath string, tmpl string) *Handler {
 	return &Handler{
 		name:   name,
+		path:   ppath,
+		tmpl:   tmpl,
 		handle: h,
 	}
 }
 
 type Handler struct {
 	name   string
+	path   string
+	tmpl   string
 	handle func(echo.Context) error
 }
 
@@ -100,6 +104,14 @@ func (h *Handler) Handle(c echo.Context) error {
 
 func (h *Handler) Name() string {
 	return h.name
+}
+
+func (h *Handler) Path() string {
+	return h.path
+}
+
+func (h *Handler) Tmpl() string {
+	return h.tmpl
 }
 
 type Wrapper struct {
@@ -206,7 +218,7 @@ func (a *Wrapper) Register(p string, h interface{}, methods ...string) *Wrapper 
 		methods = append(methods, "GET")
 	}
 	_, ctl, act := a.Module.Application.URLBuilder.Set(h)
-	a.Module.Router().Match(methods, p, NewHandler(a.wrapHandler(h, ctl, act), a.HandlerName(h)))
+	a.Module.Router().Match(methods, p, NewHandler(a.wrapHandler(h, ctl, act), a.HandlerName(h), echo.HandlerPath(h), ``))
 	return a
 }
 
@@ -312,7 +324,7 @@ func (a *Wrapper) RouteTags() {
 		u := a.Module.Application.URLBuilder.SetExtensions(k, extends)
 		h := NewHandler(func(ctx echo.Context) error {
 			return a.execute(ctx, k, e, u, name)
-		}, k)
+		}, k, k, `/`+a.Module.Name+`/`+e.Name()+`/`+name)
 		switch len(methods) {
 		case 0:
 			methods = append(methods, `GET`)
@@ -448,7 +460,7 @@ func (a *Wrapper) RouteMethods() {
 			ppath := `/` + ctl + `/` + pp
 			k := ctlPath + name + `-fm`
 			u := a.Module.Application.URLBuilder
-			handler := NewHandler(h(k, u), k)
+			handler := NewHandler(h(k, u), k, k, `/`+a.Module.Name+`/`+e.Name()+`/`+name)
 			a.addRouter(ctl, ppath, handler)
 			continue
 		}
@@ -467,7 +479,7 @@ func (a *Wrapper) RouteMethods() {
 		ppath := `/` + ctl + `/` + pp
 		k := ctlPath + name + `-fm`
 		u := a.Module.Application.URLBuilder
-		handler := NewHandler(h(k, u), k)
+		handler := NewHandler(h(k, u), k, k, `/`+a.Module.Name+`/`+e.Name()+`/`+name)
 		a.addRouter(ctl, ppath, handler, methods...)
 	}
 }
