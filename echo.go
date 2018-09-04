@@ -32,7 +32,7 @@ type (
 		handlerWrapper    []func(interface{}) Handler
 		middlewareWrapper []func(interface{}) Middleware
 		acceptFormats     map[string]string //mime=>format
-		formatRenders     map[string]func(ctx Context, data interface{}) error
+		formatRenderers     map[string]func(ctx Context, data interface{}) error
 		FuncMap           map[string]interface{}
 		RouteDebug        bool
 		MiddlewareDebug   bool
@@ -81,7 +81,7 @@ func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 	e = &Echo{
 		maxParam:      new(int),
 		JSONPVarName:  `callback`,
-		formatRenders: make(map[string]func(ctx Context, data interface{}) error),
+		formatRenderers: make(map[string]func(ctx Context, data interface{}) error),
 	}
 	e.pool.New = func() interface{} {
 		return fn(e)
@@ -118,16 +118,16 @@ func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 		//default
 		`*`: `html`,
 	}
-	e.formatRenders[`json`] = func(c Context, data interface{}) error {
+	e.formatRenderers[`json`] = func(c Context, data interface{}) error {
 		return c.JSON(c.Data())
 	}
-	e.formatRenders[`jsonp`] = func(c Context, data interface{}) error {
+	e.formatRenderers[`jsonp`] = func(c Context, data interface{}) error {
 		return c.JSONP(c.Query(e.JSONPVarName), c.Data())
 	}
-	e.formatRenders[`xml`] = func(c Context, data interface{}) error {
+	e.formatRenderers[`xml`] = func(c Context, data interface{}) error {
 		return c.XML(c.Data())
 	}
-	e.formatRenders[`text`] = func(c Context, data interface{}) error {
+	e.formatRenderers[`text`] = func(c Context, data interface{}) error {
 		return c.String(fmt.Sprint(data))
 	}
 	return
@@ -155,20 +155,20 @@ func (e *Echo) AddAcceptFormat(mime, format string) *Echo {
 	return e
 }
 
-func (e *Echo) SetFormatRenders(formatRenders map[string]func(c Context, data interface{}) error) *Echo {
-	e.formatRenders = formatRenders
+func (e *Echo) SetFormatRenderers(formatRenderers map[string]func(c Context, data interface{}) error) *Echo {
+	e.formatRenderers = formatRenderers
 	return e
 }
 
-func (e *Echo) AddFormatRender(format string, render func(c Context, data interface{}) error) *Echo {
-	e.formatRenders[format] = render
+func (e *Echo) AddFormatRenderer(format string, renderer func(c Context, data interface{}) error) *Echo {
+	e.formatRenderers[format] = renderer
 	return e
 }
 
-func (e *Echo) RemoveFormatRender(formats ...string) *Echo {
+func (e *Echo) RemoveFormatRenderer(formats ...string) *Echo {
 	for _, format := range formats {
-		if _, ok := e.formatRenders[format]; ok {
-			delete(e.formatRenders, format)
+		if _, ok := e.formatRenderers[format]; ok {
+			delete(e.formatRenderers, format)
 		}
 	}
 	return e
