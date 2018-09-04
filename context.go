@@ -461,7 +461,7 @@ func (c *xContext) SetAuto(on bool) Context {
 func (c *xContext) Render(name string, data interface{}, codes ...int) (err error) {
 	if c.auto {
 		format := c.Format()
-		if render, ok := c.echo.formatRenders[format]; ok && render != nil {
+		if render, ok := c.echo.formatRenderers[format]; ok && render != nil {
 			switch v := data.(type) {
 			case Data: //Skip
 			case error:
