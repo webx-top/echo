@@ -14,16 +14,16 @@ var (
 	emptyHTMLAttr = template.HTMLAttr(``)
 )
 
-type store map[string]interface{}
+type Store map[string]interface{}
 
-func (s store) Set(key string, value interface{}) store {
+func (s Store) Set(key string, value interface{}) Store {
 	mutex.Lock()
 	s[key] = value
 	mutex.Unlock()
 	return s
 }
 
-func (s store) Get(key string, defaults ...interface{}) interface{} {
+func (s Store) Get(key string, defaults ...interface{}) interface{} {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	if v, y := s[key]; y {
@@ -38,14 +38,14 @@ func (s store) Get(key string, defaults ...interface{}) interface{} {
 	return nil
 }
 
-func (s store) String(key string, defaults ...interface{}) string {
+func (s Store) String(key string, defaults ...interface{}) string {
 	if v, y := s.Get(key, defaults...).(string); y {
 		return v
 	}
 	return ``
 }
 
-func (s store) HTML(key string, defaults ...interface{}) template.HTML {
+func (s Store) HTML(key string, defaults ...interface{}) template.HTML {
 	val := s.Get(key, defaults...)
 	if v, y := val.(template.HTML); y {
 		return v
@@ -56,7 +56,7 @@ func (s store) HTML(key string, defaults ...interface{}) template.HTML {
 	return emptyHTML
 }
 
-func (s store) HTMLAttr(key string, defaults ...interface{}) template.HTMLAttr {
+func (s Store) HTMLAttr(key string, defaults ...interface{}) template.HTMLAttr {
 	val := s.Get(key, defaults...)
 	if v, y := val.(template.HTMLAttr); y {
 		return v
@@ -67,7 +67,7 @@ func (s store) HTMLAttr(key string, defaults ...interface{}) template.HTMLAttr {
 	return emptyHTMLAttr
 }
 
-func (s store) JS(key string, defaults ...interface{}) template.JS {
+func (s Store) JS(key string, defaults ...interface{}) template.JS {
 	val := s.Get(key, defaults...)
 	if v, y := val.(template.JS); y {
 		return v
@@ -78,7 +78,7 @@ func (s store) JS(key string, defaults ...interface{}) template.JS {
 	return emptyJS
 }
 
-func (s store) CSS(key string, defaults ...interface{}) template.CSS {
+func (s Store) CSS(key string, defaults ...interface{}) template.CSS {
 	val := s.Get(key, defaults...)
 	if v, y := val.(template.CSS); y {
 		return v
@@ -89,14 +89,14 @@ func (s store) CSS(key string, defaults ...interface{}) template.CSS {
 	return emptyCSS
 }
 
-func (s store) Bool(key string, defaults ...interface{}) bool {
+func (s Store) Bool(key string, defaults ...interface{}) bool {
 	if v, y := s.Get(key, defaults...).(bool); y {
 		return v
 	}
 	return false
 }
 
-func (s store) Float64(key string, defaults ...interface{}) float64 {
+func (s Store) Float64(key string, defaults ...interface{}) float64 {
 	val := s.Get(key, defaults...)
 	if v, y := val.(float64); y {
 		return v
@@ -129,7 +129,7 @@ func (s store) Float64(key string, defaults ...interface{}) float64 {
 	return 0
 }
 
-func (s store) Float32(key string, defaults ...interface{}) float32 {
+func (s Store) Float32(key string, defaults ...interface{}) float32 {
 	val := s.Get(key, defaults...)
 	if v, y := val.(float32); y {
 		return v
@@ -147,7 +147,7 @@ func (s store) Float32(key string, defaults ...interface{}) float32 {
 	return 0
 }
 
-func (s store) Int8(key string, defaults ...interface{}) int8 {
+func (s Store) Int8(key string, defaults ...interface{}) int8 {
 	val := s.Get(key, defaults...)
 	if v, y := val.(int8); y {
 		return v
@@ -159,7 +159,7 @@ func (s store) Int8(key string, defaults ...interface{}) int8 {
 	return 0
 }
 
-func (s store) Int16(key string, defaults ...interface{}) int16 {
+func (s Store) Int16(key string, defaults ...interface{}) int16 {
 	val := s.Get(key, defaults...)
 	if v, y := val.(int16); y {
 		return v
@@ -171,7 +171,7 @@ func (s store) Int16(key string, defaults ...interface{}) int16 {
 	return 0
 }
 
-func (s store) Int(key string, defaults ...interface{}) int {
+func (s Store) Int(key string, defaults ...interface{}) int {
 	val := s.Get(key, defaults...)
 	if v, y := val.(int); y {
 		return v
@@ -183,7 +183,7 @@ func (s store) Int(key string, defaults ...interface{}) int {
 	return 0
 }
 
-func (s store) Int32(key string, defaults ...interface{}) int32 {
+func (s Store) Int32(key string, defaults ...interface{}) int32 {
 	val := s.Get(key, defaults...)
 	if v, y := val.(int32); y {
 		return v
@@ -195,7 +195,7 @@ func (s store) Int32(key string, defaults ...interface{}) int32 {
 	return 0
 }
 
-func (s store) Int64(key string, defaults ...interface{}) int64 {
+func (s Store) Int64(key string, defaults ...interface{}) int64 {
 	val := s.Get(key, defaults...)
 	if v, y := val.(int64); y {
 		return v
@@ -207,21 +207,21 @@ func (s store) Int64(key string, defaults ...interface{}) int64 {
 	return 0
 }
 
-func (s store) Decr(key string, n int64, defaults ...interface{}) int64 {
+func (s Store) Decr(key string, n int64, defaults ...interface{}) int64 {
 	v, _ := s.Get(key, defaults...).(int64)
 	v -= n
 	s.Set(key, v)
 	return v
 }
 
-func (s store) Incr(key string, n int64, defaults ...interface{}) int64 {
+func (s Store) Incr(key string, n int64, defaults ...interface{}) int64 {
 	v, _ := s.Get(key, defaults...).(int64)
 	v += n
 	s.Set(key, v)
 	return v
 }
 
-func (s store) Uint8(key string, defaults ...interface{}) uint8 {
+func (s Store) Uint8(key string, defaults ...interface{}) uint8 {
 	val := s.Get(key, defaults...)
 	if v, y := val.(uint8); y {
 		return v
@@ -233,7 +233,7 @@ func (s store) Uint8(key string, defaults ...interface{}) uint8 {
 	return 0
 }
 
-func (s store) Uint16(key string, defaults ...interface{}) uint16 {
+func (s Store) Uint16(key string, defaults ...interface{}) uint16 {
 	val := s.Get(key, defaults...)
 	if v, y := val.(uint16); y {
 		return v
@@ -245,7 +245,7 @@ func (s store) Uint16(key string, defaults ...interface{}) uint16 {
 	return 0
 }
 
-func (s store) Uint(key string, defaults ...interface{}) uint {
+func (s Store) Uint(key string, defaults ...interface{}) uint {
 	val := s.Get(key, defaults...)
 	if v, y := val.(uint); y {
 		return v
@@ -257,7 +257,7 @@ func (s store) Uint(key string, defaults ...interface{}) uint {
 	return 0
 }
 
-func (s store) Uint32(key string, defaults ...interface{}) uint32 {
+func (s Store) Uint32(key string, defaults ...interface{}) uint32 {
 	val := s.Get(key, defaults...)
 	if v, y := val.(uint32); y {
 		return v
@@ -269,7 +269,7 @@ func (s store) Uint32(key string, defaults ...interface{}) uint32 {
 	return 0
 }
 
-func (s store) Uint64(key string, defaults ...interface{}) uint64 {
+func (s Store) Uint64(key string, defaults ...interface{}) uint64 {
 	val := s.Get(key, defaults...)
 	if v, y := val.(uint64); y {
 		return v
@@ -281,7 +281,7 @@ func (s store) Uint64(key string, defaults ...interface{}) uint64 {
 	return 0
 }
 
-func (s store) Delete(keys ...string) {
+func (s Store) Delete(keys ...string) {
 	mutex.Lock()
 	for _, key := range keys {
 		if _, y := s[key]; y {

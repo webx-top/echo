@@ -91,7 +91,7 @@ type (
 		Set(string, interface{})
 		Get(string, ...interface{}) interface{}
 		Delete(...string)
-		Stored() store
+		Stored() Store
 
 		//----------------
 		// Bind
@@ -237,7 +237,7 @@ type (
 		path                string
 		pnames              []string
 		pvalues             []string
-		store               store
+		store               Store
 		handler             Handler
 		route               *Route
 		rid                 int
@@ -272,7 +272,7 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 		response:   res,
 		echo:       e,
 		pvalues:    make([]string, *e.maxParam),
-		store:      make(store),
+		store:      make(Store),
 		handler:    NotFoundHandler,
 		funcs:      make(map[string]interface{}),
 		sessioner:  DefaultSession,
@@ -437,7 +437,7 @@ func (c *xContext) Delete(keys ...string) {
 	c.store.Delete(keys...)
 }
 
-func (c *xContext) Stored() store {
+func (c *xContext) Stored() Store {
 	return c.store
 }
 
@@ -717,7 +717,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.context = context.Background()
 	c.request = req
 	c.response = res
-	c.store = make(store)
+	c.store = make(Store)
 	c.path = ""
 	c.pnames = nil
 	c.funcs = make(map[string]interface{})
