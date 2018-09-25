@@ -292,7 +292,7 @@ func (s Store) Delete(keys ...string) {
 	mutex.Unlock()
 }
 
-// MarshalXML allows type H to be used with xml.Marshal
+// MarshalXML allows type Store to be used with xml.Marshal
 func (s Store) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	if start.Name.Local == `Store` {
 		start.Name.Local = `Map`
