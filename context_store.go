@@ -1,6 +1,7 @@
 package echo
 
 import (
+	"encoding/xml"
 	"html/template"
 	"strconv"
 	"sync"
@@ -289,4 +290,91 @@ func (s Store) Delete(keys ...string) {
 		}
 	}
 	mutex.Unlock()
+}
+
+// MarshalXML allows type H to be used with xml.Marshal
+func (s Store) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if start.Name.Local == `Store` {
+		start.Name.Local = `Map`
+	}
+	if err := e.EncodeToken(start); err != nil {
+		return err
+	}
+	for key, value := range s {
+		elem := xml.StartElement{
+			Name: xml.Name{Space: ``, Local: key},
+			Attr: []xml.Attr{},
+		}
+		if err := e.EncodeElement(value, elem); err != nil {
+			return err
+		}
+	}
+	return e.EncodeToken(xml.EndElement{Name: start.Name})
+}
+
+// ToData conversion to *RawData
+func (s Store) ToData() *RawData {
+	var info, zone, data interface{}
+	if v, y := s["Data"]; y {
+		data = v
+	}
+	if v, y := s["Zone"]; y {
+		zone = v
+	}
+	if v, y := s["Info"]; y {
+		info = v
+	}
+	var code State
+	if v, y := s["Code"]; y {
+		if c, y := v.(int); y {
+			code = State(c)
+		} else if c, y := v.(State); y {
+			code = c
+		}
+	}
+	return &RawData{
+		Code: code,
+		Info: info,
+		Zone: zone,
+		Data: data,
+	}
+}
+
+func (s Store) DeepMerge(source Store) {
+	for k, value := range source {
+		var (
+			destValue interface{}
+			ok        bool
+		)
+		if destValue, ok = s[k]; !ok {
+			s[k] = value
+			continue
+		}
+		sourceM, sourceOk := value.(H)
+		destM, destOk := destValue.(H)
+		if sourceOk && sourceOk == destOk {
+			destM.DeepMerge(sourceM)
+		} else {
+			s[k] = value
+		}
+	}
+}
+
+func (s Store) Clone() H {
+	r := make(Store)
+	for k, value := range s {
+		switch v := value.(type) {
+		case H:
+			r[k] = v.Clone()
+		case []H:
+			vCopy := make([]H, len(v))
+			for i, row := range v {
+				vCopy[i] = row.Clone()
+			}
+			r[k] = vCopy
+		default:
+			r[k] = value
+		}
+	}
+	return r
 }
