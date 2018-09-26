@@ -360,14 +360,14 @@ func (s Store) DeepMerge(source Store) {
 	}
 }
 
-func (s Store) Clone() H {
+func (s Store) Clone() Store {
 	r := make(Store)
 	for k, value := range s {
 		switch v := value.(type) {
-		case H:
+		case Store:
 			r[k] = v.Clone()
-		case []H:
-			vCopy := make([]H, len(v))
+		case []Store:
+			vCopy := make([]Store, len(v))
 			for i, row := range v {
 				vCopy[i] = row.Clone()
 			}
