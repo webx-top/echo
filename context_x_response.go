@@ -31,10 +31,10 @@ func (c *xContext) Render(name string, data interface{}, codes ...int) (err erro
 				c.dataEngine.SetError(v)
 			case nil:
 				if c.dataEngine.GetData() == nil {
-					c.dataEngine.SetData(c.Stored())
+					c.dataEngine.SetData(c.Stored(), c.dataEngine.GetCode().Int())
 				}
 			default:
-				c.dataEngine.SetData(data)
+				c.dataEngine.SetData(data, c.dataEngine.GetCode().Int())
 			}
 			return render(c, data)
 		}
