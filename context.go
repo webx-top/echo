@@ -180,7 +180,7 @@ type Context interface {
 	ResolveContentType() string
 	WithFormatExtension(bool)
 	ResolveFormat() string
-	Accept() *Accept
+	Accept() *Accepts
 	Protocol() string
 	Site() string
 	Scheme() string

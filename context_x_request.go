@@ -2,7 +2,6 @@ package echo
 
 import (
 	"io"
-	"mime"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -238,10 +237,9 @@ func (c *xContext) ResolveFormat() string {
 		}
 	}
 
-	accept := c.Accept()
-	for _, mimeType := range strings.Split(accept.Type, `,`) {
-		mimeType = strings.TrimSpace(mimeType)
-		if format, ok := c.echo.acceptFormats[mimeType]; ok {
+	info := c.Accept()
+	for _, accept := range info.Type {
+		if format, ok := c.echo.acceptFormats[accept.Mime]; ok {
 			return format
 		}
 	}
@@ -251,16 +249,11 @@ func (c *xContext) ResolveFormat() string {
 	return `html`
 }
 
-func (c *xContext) Accept() *Accept {
+func (c *xContext) Accept() *Accepts {
 	if c.accept != nil {
 		return c.accept
 	}
-	typ, params, _ := mime.ParseMediaType(c.Header(HeaderAccept))
-	c.accept = NewAccept()
-	c.accept.Type = typ
-	for k, v := range params {
-		c.accept.Params[k] = param.String(v)
-	}
+	c.accept = NewAccepts(c.Header(HeaderAccept)).Simple(2)
 	return c.accept
 }
 

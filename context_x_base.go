@@ -38,7 +38,7 @@ type xContext struct {
 	code                int
 	preResponseHook     []func() error
 	dataEngine          Data
-	accept              *Accept
+	accept              *Accepts
 	auto                bool
 }
 
