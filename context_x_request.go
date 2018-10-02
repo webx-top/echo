@@ -253,7 +253,7 @@ func (c *xContext) Accept() *Accepts {
 	if c.accept != nil {
 		return c.accept
 	}
-	c.accept = NewAccepts(c.Header(HeaderAccept)).Simple(2)
+	c.accept = NewAccepts(c.Header(HeaderAccept)).Simple(3)
 	return c.accept
 }
 
