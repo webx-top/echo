@@ -63,6 +63,9 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 	if opt.ErrorPages == nil {
 		opt.ErrorPages = DefaultOptions.ErrorPages
 	}
+	if opt.DefaultErrorHTTPCode < 1 {
+		opt.DefaultErrorHTTPCode = DefaultOptions.DefaultErrorHTTPCode
+	}
 	tmplNum := len(opt.ErrorPages)
 	return func(err error, c echo.Context) {
 		code := DefaultOptions.DefaultErrorHTTPCode

@@ -12,16 +12,17 @@ import (
 )
 
 type Config struct {
-	TmplDir       string
-	Theme         string
-	Engine        string
-	Style         string
-	Reload        bool
-	ParseStrings  map[string]string
-	ErrorPages    map[int]string
-	StaticOptions *middleware.StaticOptions
-	Debug         bool
-	renderer      driver.Driver
+	TmplDir              string
+	Theme                string
+	Engine               string
+	Style                string
+	Reload               bool
+	ParseStrings         map[string]string
+	ErrorPages           map[int]string
+	DefaultErrorHTTPCode int
+	StaticOptions        *middleware.StaticOptions
+	Debug                bool
+	renderer             driver.Driver
 }
 
 func (t *Config) Parser() func([]byte) []byte {
@@ -74,7 +75,8 @@ func (t *Config) ApplyTo(e *echo.Echo, manager ...driver.Manager) *Config {
 		t.renderer.Close()
 	}
 	e.SetHTTPErrorHandler(HTTPErrorHandler(&Options{
-		ErrorPages: t.ErrorPages,
+		ErrorPages:           t.ErrorPages,
+		DefaultErrorHTTPCode: t.DefaultErrorHTTPCode,
 	}))
 	e.Use(middleware.FuncMap(tplfunc.New(), func(c echo.Context) bool {
 		return c.Format() != `html`
