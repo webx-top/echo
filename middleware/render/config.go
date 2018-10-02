@@ -73,7 +73,9 @@ func (t *Config) ApplyTo(e *echo.Echo, manager ...driver.Manager) *Config {
 	if t.renderer != nil {
 		t.renderer.Close()
 	}
-	e.SetHTTPErrorHandler(HTTPErrorHandler(t.ErrorPages))
+	e.SetHTTPErrorHandler(HTTPErrorHandler(&Options{
+		ErrorPages: t.ErrorPages,
+	}))
 	e.Use(middleware.FuncMap(tplfunc.New(), func(c echo.Context) bool {
 		return c.Format() != `html`
 	}))

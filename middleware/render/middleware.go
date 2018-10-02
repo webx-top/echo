@@ -26,13 +26,14 @@ import (
 var (
 	DefaultOptions = &Options{
 		Skipper:              echo.DefaultSkipper,
+		ErrorPages:           make(map[int]string),
 		DefaultErrorHTTPCode: http.StatusInternalServerError,
 	}
 )
 
 type Options struct {
 	Skipper              echo.Skipper
-	DefaultErrorTmpl     string
+	ErrorPages           map[int]string
 	DefaultErrorHTTPCode int
 }
 
@@ -55,18 +56,14 @@ func Auto() echo.MiddlewareFunc {
 	}
 }
 
-func HTTPErrorHandler(templates map[int]string, options ...*Options) echo.HTTPErrorHandler {
-	if templates == nil {
-		templates = make(map[int]string)
-	}
-	tmplNum := len(templates)
-	var opt *Options
-	if len(options) > 0 {
-		opt = options[0]
-	}
+func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 	if opt == nil {
 		opt = DefaultOptions
 	}
+	if opt.ErrorPages == nil {
+		opt.ErrorPages = DefaultOptions.ErrorPages
+	}
+	tmplNum := len(opt.ErrorPages)
 	return func(err error, c echo.Context) {
 		code := DefaultOptions.DefaultErrorHTTPCode
 		var msg string
@@ -92,9 +89,9 @@ func HTTPErrorHandler(templates map[int]string, options ...*Options) echo.HTTPEr
 			case c.Request().Method() == echo.HEAD:
 				c.NoContent(code)
 			case tmplNum > 0:
-				t, y := templates[code]
+				t, y := opt.ErrorPages[code]
 				if !y && code != 0 {
-					t, y = templates[0]
+					t, y = opt.ErrorPages[0]
 				}
 				if y {
 					data := c.Data().Reset().SetInfo(msg, 0)
