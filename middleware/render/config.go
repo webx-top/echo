@@ -19,7 +19,7 @@ type Config struct {
 	Reload               bool
 	ParseStrings         map[string]string
 	ErrorPages           map[int]string
-	DefaultErrorHTTPCode int
+	DefaultHTTPErrorCode int
 	StaticOptions        *middleware.StaticOptions
 	Debug                bool
 	renderer             driver.Driver
@@ -76,7 +76,7 @@ func (t *Config) ApplyTo(e *echo.Echo, manager ...driver.Manager) *Config {
 	}
 	e.SetHTTPErrorHandler(HTTPErrorHandler(&Options{
 		ErrorPages:           t.ErrorPages,
-		DefaultErrorHTTPCode: t.DefaultErrorHTTPCode,
+		DefaultHTTPErrorCode: t.DefaultHTTPErrorCode,
 	}))
 	e.Use(middleware.FuncMap(tplfunc.New(), func(c echo.Context) bool {
 		return c.Format() != `html`

@@ -27,14 +27,14 @@ var (
 	DefaultOptions = &Options{
 		Skipper:              echo.DefaultSkipper,
 		ErrorPages:           make(map[int]string),
-		DefaultErrorHTTPCode: http.StatusInternalServerError,
+		DefaultHTTPErrorCode: http.StatusInternalServerError,
 	}
 )
 
 type Options struct {
 	Skipper              echo.Skipper
 	ErrorPages           map[int]string
-	DefaultErrorHTTPCode int
+	DefaultHTTPErrorCode int
 }
 
 // Middleware set renderer
@@ -63,12 +63,12 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 	if opt.ErrorPages == nil {
 		opt.ErrorPages = DefaultOptions.ErrorPages
 	}
-	if opt.DefaultErrorHTTPCode < 1 {
-		opt.DefaultErrorHTTPCode = DefaultOptions.DefaultErrorHTTPCode
+	if opt.DefaultHTTPErrorCode < 1 {
+		opt.DefaultHTTPErrorCode = DefaultOptions.DefaultHTTPErrorCode
 	}
 	tmplNum := len(opt.ErrorPages)
 	return func(err error, c echo.Context) {
-		code := DefaultOptions.DefaultErrorHTTPCode
+		code := DefaultOptions.DefaultHTTPErrorCode
 		var msg string
 		var panicErr *echo.PanicError
 		switch e := err.(type) {
@@ -108,7 +108,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 							"panic":   panicErr,
 						}, 0)
 					} else {
-						c.SetCode(opt.DefaultErrorHTTPCode)
+						c.SetCode(opt.DefaultHTTPErrorCode)
 					}
 					if err := c.SetAuto(true).Render(t, nil); err != nil {
 						msg += "\n" + err.Error()
