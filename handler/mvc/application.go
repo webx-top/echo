@@ -110,7 +110,7 @@ func NewWithContext(name string, newContext func(*echo.Echo) echo.Context) (s *A
 	}
 	s.Core.Use(s.DefaultMiddlewares...)
 
-	s.SetErrorPages(nil)
+	s.SetHTTPErrorOptions(nil)
 	return
 }
 
@@ -224,9 +224,9 @@ func (s *Application) ServeHTTP(r engine.Request, w engine.Response) {
 	}
 }
 
-// SetErrorPages 设置错误页面模板
-func (s *Application) SetErrorPages(templates map[int]string, options ...*render.Options) *Application {
-	s.Core.SetHTTPErrorHandler(render.HTTPErrorHandler(templates, options...))
+// SetHTTPErrorOptions 设置错误处理选项
+func (s *Application) SetHTTPErrorOptions(options *render.Options) *Application {
+	s.Core.SetHTTPErrorHandler(render.HTTPErrorHandler(options))
 	return s
 }
 

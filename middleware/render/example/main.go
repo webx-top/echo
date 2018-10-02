@@ -21,8 +21,10 @@ func main() {
 	d.Init()
 
 	e.Use(render.Middleware(d))
-	e.SetHTTPErrorHandler(render.HTTPErrorHandler(map[int]string{
-		500: `500`,
+	e.SetHTTPErrorHandler(render.HTTPErrorHandler(&render.Options{
+		ErrorPages: map[int]string{
+			500: `500`,
+		},
 	}))
 
 	e.Get("/", func(c echo.Context) error {
