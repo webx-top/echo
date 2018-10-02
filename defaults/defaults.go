@@ -8,6 +8,10 @@ import (
 
 var Default = echo.New()
 
+func ParseHeaderAccept(on bool) *echo.Echo {
+	return Default.ParseHeaderAccept(on)
+}
+
 func SetAcceptFormats(acceptFormats map[string]string) *echo.Echo {
 	return Default.SetAcceptFormats(acceptFormats)
 }

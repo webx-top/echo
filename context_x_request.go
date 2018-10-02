@@ -253,8 +253,11 @@ func (c *xContext) Accept() *Accepts {
 	if c.accept != nil {
 		return c.accept
 	}
-	c.accept = NewAccepts(c.Header(HeaderAccept)).Simple(3)
-	return c.accept
+	c.accept = NewAccepts(c.Header(HeaderAccept))
+	if c.echo.parseHeaderAccept {
+		return c.accept.Advance()
+	}
+	return c.accept.Simple(3)
 }
 
 // Protocol returns request protocol name, such as HTTP/1.1 .

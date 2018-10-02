@@ -32,11 +32,12 @@ type (
 		handlerWrapper    []func(interface{}) Handler
 		middlewareWrapper []func(interface{}) Middleware
 		acceptFormats     map[string]string //mime=>format
-		formatRenderers     map[string]func(ctx Context, data interface{}) error
+		formatRenderers   map[string]func(ctx Context, data interface{}) error
 		FuncMap           map[string]interface{}
 		RouteDebug        bool
 		MiddlewareDebug   bool
 		JSONPVarName      string
+		parseHeaderAccept bool
 	}
 
 	Middleware interface {
@@ -79,8 +80,8 @@ func New() (e *Echo) {
 
 func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 	e = &Echo{
-		maxParam:      new(int),
-		JSONPVarName:  `callback`,
+		maxParam:        new(int),
+		JSONPVarName:    `callback`,
 		formatRenderers: make(map[string]func(ctx Context, data interface{}) error),
 	}
 	e.pool.New = func() interface{} {
@@ -143,6 +144,11 @@ func (m MiddlewareFuncd) Handle(h Handler) Handler {
 
 func (h HandlerFunc) Handle(c Context) error {
 	return h(c)
+}
+
+func (e *Echo) ParseHeaderAccept(on bool) *Echo {
+	e.parseHeaderAccept = on
+	return e
 }
 
 func (e *Echo) SetAcceptFormats(acceptFormats map[string]string) *Echo {
