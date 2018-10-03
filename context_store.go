@@ -201,6 +201,18 @@ func (s Store) Int64(key string, defaults ...interface{}) int64 {
 	if v, y := val.(int64); y {
 		return v
 	}
+	if v, y := val.(int32); y {
+		return int64(v)
+	}
+	if v, y := val.(uint32); y {
+		return int64(v)
+	}
+	if v, y := val.(int); y {
+		return int64(v)
+	}
+	if v, y := val.(uint); y {
+		return int64(v)
+	}
 	if v, y := val.(string); y {
 		v, _ := strconv.ParseInt(v, 10, 64)
 		return v
