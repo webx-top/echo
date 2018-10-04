@@ -19,6 +19,7 @@
 package tplfunc
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
 	"log"
@@ -141,9 +142,12 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"URLDecode":        URLDecode,
 	"Base64Encode":     com.Base64Encode,
 	"Base64Decode":     Base64Decode,
+	"UnicodeDecode":    UnicodeDecode,
 	"SafeBase64Encode": com.SafeBase64Encode,
 	"SafeBase64Decode": SafeBase64Decode,
 	"Hash":             Hash,
+	"Unquote":          Unquote,
+	"Quote":            strconv.Quote,
 
 	// ======================
 	// map & slice
@@ -184,6 +188,37 @@ func Hash(text, salt string, positions ...uint) string {
 		positions = HashClipPositions
 	}
 	return com.MakePassword(text, salt, positions...)
+}
+
+func Unquote(s string) string {
+	r, _ := strconv.Unquote(`"` + s + `"`)
+	return r
+}
+
+func UnicodeDecode(str string) string {
+	buf := bytes.NewBuffer(nil)
+	i, j := 0, len(str)
+	for i < j {
+		x := i + 6
+		if x > j {
+			buf.WriteString(str[i:])
+			break
+		}
+		if str[i] == '\\' && str[i+1] == 'u' {
+			hex := str[i+2 : x]
+			r, err := strconv.ParseUint(hex, 16, 64)
+			if err == nil {
+				buf.WriteRune(rune(r))
+			} else {
+				buf.WriteString(str[i:x])
+			}
+			i = x
+		} else {
+			buf.WriteByte(str[i])
+			i++
+		}
+	}
+	return buf.String()
 }
 
 func JSONEncode(s interface{}, indents ...string) string {
