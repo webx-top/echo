@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -91,6 +92,9 @@ func (c *Config) SupportAutoTLS(autoTLSManager *autocert.Manager, hosts ...strin
 			}
 		}
 		autoTLSManager.Cache = autocert.DirCache(c.TLSCacheDir)
+	}
+	if c.Listener == nil && AddressPort(c.Address) != 80 {
+		go http.ListenAndServe(":http", autoTLSManager.HTTPHandler(nil))
 	}
 	//c.TLSConfig.GetCertificate = autoTLSManager.GetCertificate
 	c.TLSConfig.BuildNameToCertificate()
