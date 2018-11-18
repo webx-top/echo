@@ -375,6 +375,7 @@ func (s *Static) genCombinedCSS(absPath, urlPath string, onImportFn func(string)
 // Handle
 // =====================
 
+// HandleMinify 网址格式 类型/文件，例如 css/style/reset.css
 func (s *Static) HandleMinify(ctx echo.Context, filePathFn func(string) string) error {
 	param := ctx.Param(`*`)
 	size := len(param)
