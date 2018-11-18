@@ -376,8 +376,17 @@ func (s *Static) genCombinedCSS(absPath, urlPath string, onImportFn func(string)
 // =====================
 
 func (s *Static) HandleMinify(ctx echo.Context, filePathFn func(string) string) error {
-	fileStr := ctx.Param(`files`)
-	fileType := ctx.Param(`type`)
+	param := ctx.Param(`*`)
+	size := len(param)
+	if size == 0 {
+		return echo.ErrNotFound
+	}
+	first := strings.Index(param, `/`)
+	if first < 0 || size < first+2 {
+		return echo.ErrNotFound
+	}
+	fileStr := param[first+1:]
+	fileType := param[0:first]
 	files := strings.Split(fileStr, `,`)
 	var (
 		name    string
