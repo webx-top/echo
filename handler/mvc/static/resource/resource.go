@@ -414,7 +414,7 @@ func (s *Static) HandleMinify(ctx echo.Context, filePathFn func(string) string) 
 				f += `.` + fileType
 				absPath := filePathFn(f)
 				if con, err := s.genCombinedJS(absPath, f); err != nil {
-					log.Error(err)
+					return err
 				} else {
 					s.RecordCombined(absPath, combinedSavePath)
 					content += con
@@ -428,12 +428,15 @@ func (s *Static) HandleMinify(ctx echo.Context, filePathFn func(string) string) 
 				f += `.` + fileType
 				absPath := filePathFn(f)
 				if con, err := s.genCombinedCSS(absPath, f, onImportFn); err != nil {
-					log.Error(err)
+					return err
 				} else {
 					s.RecordCombined(absPath, combinedSavePath)
 					content += con
 				}
 			}
+		}
+		if len(content) == 0 {
+			return nil
 		}
 		byteContent := []byte(content)
 		com.WriteFile(combinedSavePath, byteContent)
