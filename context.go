@@ -197,8 +197,8 @@ type Context interface {
 	SaveUploadedFile(fieldName string, saveAbsPath string, saveFileName ...string) (*multipart.FileHeader, error)
 	SaveUploadedFileToWriter(string, io.Writer) (*multipart.FileHeader, error)
 	//Multiple file upload
-	SaveUploadedFiles(fieldName string, savePath func(*multipart.FileHeader) string) error
-	SaveUploadedFilesToWriter(fieldName string, writer func(*multipart.FileHeader) io.Writer) error
+	SaveUploadedFiles(fieldName string, savePath func(*multipart.FileHeader) (string, error)) error
+	SaveUploadedFilesToWriter(fieldName string, writer func(*multipart.FileHeader) (io.Writer, error)) error
 
 	//----------------
 	// Hook

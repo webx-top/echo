@@ -51,6 +51,7 @@ var (
 	ErrMethodNotAllowed            error = NewHTTPError(http.StatusMethodNotAllowed)
 	ErrRendererNotRegistered             = errors.New("renderer not registered")
 	ErrInvalidRedirectCode               = errors.New("invalid redirect status code")
+	ErrNotFoundFileInput                 = errors.New("The specified name file input was not found")
 
 	//----------------
 	// Error handlers

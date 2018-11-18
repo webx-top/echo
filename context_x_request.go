@@ -399,48 +399,80 @@ func (c *xContext) SaveUploadedFileToWriter(fieldName string, writer io.Writer) 
 	return fileHdr, nil
 }
 
-func (c *xContext) SaveUploadedFiles(fieldName string, savePath func(*multipart.FileHeader) string) error {
+func (c *xContext) SaveUploadedFiles(fieldName string, savePath func(*multipart.FileHeader) (string, error)) error {
 	m := c.Request().MultipartForm()
-	files := m.File[fieldName]
+	files, ok := m.File[fieldName]
+	if !ok {
+		return ErrNotFoundFileInput
+	}
+	var dstFile string
 	for _, fileHdr := range files {
 		//for each fileheader, get a handle to the actual file
 		file, err := fileHdr.Open()
-		defer file.Close()
 		if err != nil {
+			file.Close()
 			return err
 		}
-
-		//create destination file making sure the path is writeable.
-		dst, err := os.Create(savePath(fileHdr))
-		defer dst.Close()
+		dstFile, err = savePath(fileHdr)
 		if err != nil {
+			file.Close()
+			return err
+		}
+		if len(dstFile) == 0 {
+			file.Close()
+			continue
+		}
+		//create destination file making sure the path is writeable.
+		dst, err := os.Create(dstFile)
+		if err != nil {
+			file.Close()
 			return err
 		}
 		//copy the uploaded file to the destination file
 		if _, err := io.Copy(dst, file); err != nil {
+			file.Close()
+			dst.Close()
 			return err
 		}
+		file.Close()
+		dst.Close()
 	}
 	return nil
 }
 
-func (c *xContext) SaveUploadedFilesToWriter(fieldName string, writer func(*multipart.FileHeader) io.Writer) error {
+func (c *xContext) SaveUploadedFilesToWriter(fieldName string, writer func(*multipart.FileHeader) (io.Writer, error)) error {
 	m := c.Request().MultipartForm()
-	files := m.File[fieldName]
+	files, ok := m.File[fieldName]
+	if !ok {
+		return ErrNotFoundFileInput
+	}
+	var w io.Writer
 	for _, fileHdr := range files {
 		//for each fileheader, get a handle to the actual file
 		file, err := fileHdr.Open()
-		defer file.Close()
 		if err != nil {
+			file.Close()
 			return err
 		}
-		w := writer(fileHdr)
-		if v, ok := w.(Closer); ok {
-			defer v.Close()
+		w, err = writer(fileHdr)
+		if err != nil {
+			file.Close()
+			return err
+		}
+		if w == nil {
+			continue
 		}
 		//copy the uploaded file to the destination file
 		if _, err := io.Copy(w, file); err != nil {
+			file.Close()
+			if v, ok := w.(Closer); ok {
+				v.Close()
+			}
 			return err
+		}
+		file.Close()
+		if v, ok := w.(Closer); ok {
+			v.Close()
 		}
 	}
 	return nil
