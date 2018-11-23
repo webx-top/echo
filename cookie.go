@@ -21,6 +21,7 @@ package echo
 import (
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -37,6 +38,7 @@ type CookieOptions struct {
 	Domain   string
 	Secure   bool
 	HttpOnly bool
+	SameSite string // strict / lax
 }
 
 func (c *CookieOptions) Clone() *CookieOptions {
@@ -77,6 +79,9 @@ func NewCookie(name string, value string, opts ...*CookieOptions) *Cookie {
 			Secure:   opt.Secure,
 			HttpOnly: opt.HttpOnly,
 		},
+	}
+	if len(opt.SameSite) > 0 {
+		cookie.SameSite(opt.SameSite)
 	}
 	return cookie
 }
@@ -126,6 +131,19 @@ func (c *Cookie) HttpOnly(p bool) *Cookie {
 	return c
 }
 
+//SameSite 设置SameSite
+func (c *Cookie) SameSite(p string) *Cookie {
+	switch strings.ToLower(p) {
+	case `lax`:
+		c.cookie.SameSite = http.SameSiteLaxMode
+	case `strict`:
+		c.cookie.SameSite = http.SameSiteStrictMode
+	default:
+		c.cookie.SameSite = http.SameSiteDefaultMode
+	}
+	return c
+}
+
 //Send 发送cookie数据到响应头
 func (c *Cookie) Send(ctx Context) {
 	ctx.Response().SetCookie(c.cookie)
@@ -159,6 +177,10 @@ func (c *cookie) Set(key string, val string, args ...interface{}) Cookier {
 		cookie = NewCookie(key, val, c.context.CookieOptions())
 	}
 	switch len(args) {
+	case 6:
+		sameSite, _ := args[5].(string)
+		cookie.SameSite(sameSite)
+		fallthrough
 	case 5:
 		httpOnly, _ := args[4].(bool)
 		cookie.HttpOnly(httpOnly)
