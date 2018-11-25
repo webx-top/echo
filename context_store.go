@@ -294,7 +294,7 @@ func (s Store) Uint64(key string, defaults ...interface{}) uint64 {
 	return 0
 }
 
-func (s Store) Store(key string, defaults ...interface{}) Store {
+func (s Store) Child(key string, defaults ...interface{}) Store {
 	val := s.Get(key, defaults...)
 	switch v := val.(type) {
 	case Store:
