@@ -294,6 +294,72 @@ func (s Store) Uint64(key string, defaults ...interface{}) uint64 {
 	return 0
 }
 
+func (s Store) Store(key string, defaults ...interface{}) Store {
+	val := s.Get(key, defaults...)
+	switch v := val.(type) {
+	case Store:
+		return v
+	case map[string]interface{}:
+		return Store(v)
+	case map[string]uint64:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]int64:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]uint:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]int:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]uint32:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]int32:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]float32:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]float64:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]string:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	default:
+		return Store{}
+	}
+}
+
 func (s Store) Delete(keys ...string) {
 	mutex.Lock()
 	for _, key := range keys {
