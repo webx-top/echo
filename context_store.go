@@ -14,6 +14,7 @@ var (
 	emptyJS       = template.JS(``)
 	emptyCSS      = template.CSS(``)
 	emptyHTMLAttr = template.HTMLAttr(``)
+	emptyStore    = Store{}
 )
 
 type Store map[string]interface{}
@@ -380,7 +381,7 @@ func (s Store) Store(key string, defaults ...interface{}) Store {
 		}
 		return r
 	default:
-		return Store{}
+		return emptyStore
 	}
 }
 
