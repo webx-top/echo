@@ -16,10 +16,17 @@
 
 */
 
-
 package echo
 
 import "fmt"
+
+// T 标记为多语言文本
+func T(format string, args ...interface{}) string {
+	if len(args) > 0 {
+		return fmt.Sprintf(format, args...)
+	}
+	return format
+}
 
 type Translator interface {
 	T(format string, args ...interface{}) string
@@ -33,10 +40,7 @@ type NopTranslate struct {
 }
 
 func (n *NopTranslate) T(format string, args ...interface{}) string {
-	if len(args) > 0 {
-		return fmt.Sprintf(format, args...)
-	}
-	return format
+	return T(format, args...)
 }
 
 func (n *NopTranslate) Lang() string {
