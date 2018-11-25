@@ -2,6 +2,7 @@ package echo
 
 import (
 	"encoding/xml"
+	"fmt"
 	"html/template"
 	"strconv"
 	"sync"
@@ -99,125 +100,133 @@ func (s Store) Bool(key string, defaults ...interface{}) bool {
 
 func (s Store) Float64(key string, defaults ...interface{}) float64 {
 	val := s.Get(key, defaults...)
-	if v, y := val.(float64); y {
+	switch v := val.(type) {
+	case float64:
 		return v
-	}
-	if v, y := val.(int64); y {
+	case int64:
 		return float64(v)
-	}
-	if v, y := val.(uint64); y {
+	case uint64:
 		return float64(v)
-	}
-	if v, y := val.(float32); y {
+	case float32:
 		return float64(v)
-	}
-	if v, y := val.(int32); y {
+	case int32:
 		return float64(v)
-	}
-	if v, y := val.(uint32); y {
+	case uint32:
 		return float64(v)
-	}
-	if v, y := val.(int); y {
+	case int:
 		return float64(v)
-	}
-	if v, y := val.(uint); y {
+	case uint:
 		return float64(v)
+	case string:
+		i, _ := strconv.ParseFloat(v, 64)
+		return i
+	default:
+		s := fmt.Sprint(v)
+		i, _ := strconv.ParseFloat(s, 64)
+		return i
 	}
-	if v, y := val.(string); y {
-		v, _ := strconv.ParseFloat(v, 64)
-		return v
-	}
-	return 0
 }
 
 func (s Store) Float32(key string, defaults ...interface{}) float32 {
 	val := s.Get(key, defaults...)
-	if v, y := val.(float32); y {
+	switch v := val.(type) {
+	case float32:
 		return v
-	}
-	if v, y := val.(int32); y {
+	case int32:
 		return float32(v)
-	}
-	if v, y := val.(uint32); y {
+	case uint32:
 		return float32(v)
+	case string:
+		f, _ := strconv.ParseFloat(v, 32)
+		return float32(f)
+	default:
+		s := fmt.Sprint(val)
+		f, _ := strconv.ParseFloat(s, 32)
+		return float32(f)
 	}
-	if v, y := val.(string); y {
-		v, _ := strconv.ParseFloat(v, 32)
-		return float32(v)
-	}
-	return 0
 }
 
 func (s Store) Int8(key string, defaults ...interface{}) int8 {
 	val := s.Get(key, defaults...)
-	if v, y := val.(int8); y {
+	switch v := val.(type) {
+	case int8:
 		return v
+	case string:
+		i, _ := strconv.ParseInt(v, 10, 8)
+		return int8(i)
+	default:
+		s := fmt.Sprint(val)
+		i, _ := strconv.ParseInt(s, 10, 8)
+		return int8(i)
 	}
-	if v, y := val.(string); y {
-		v, _ := strconv.ParseInt(v, 10, 8)
-		return int8(v)
-	}
-	return 0
 }
 
 func (s Store) Int16(key string, defaults ...interface{}) int16 {
 	val := s.Get(key, defaults...)
-	if v, y := val.(int16); y {
+	switch v := val.(type) {
+	case int16:
 		return v
+	case string:
+		i, _ := strconv.ParseInt(v, 10, 16)
+		return int16(i)
+	default:
+		s := fmt.Sprint(v)
+		i, _ := strconv.ParseInt(s, 10, 16)
+		return int16(i)
 	}
-	if v, y := val.(string); y {
-		v, _ := strconv.ParseInt(v, 10, 16)
-		return int16(v)
-	}
-	return 0
 }
 
 func (s Store) Int(key string, defaults ...interface{}) int {
 	val := s.Get(key, defaults...)
-	if v, y := val.(int); y {
+	switch v := val.(type) {
+	case int:
 		return v
+	case string:
+		i, _ := strconv.Atoi(v)
+		return i
+	default:
+		s := fmt.Sprint(v)
+		i, _ := strconv.Atoi(s)
+		return i
 	}
-	if v, y := val.(string); y {
-		v, _ := strconv.Atoi(v)
-		return v
-	}
-	return 0
 }
 
 func (s Store) Int32(key string, defaults ...interface{}) int32 {
 	val := s.Get(key, defaults...)
-	if v, y := val.(int32); y {
+	switch v := val.(type) {
+	case int32:
 		return v
+	case string:
+		i, _ := strconv.ParseInt(v, 10, 32)
+		return int32(i)
+	default:
+		s := fmt.Sprint(v)
+		i, _ := strconv.ParseInt(s, 10, 32)
+		return int32(i)
 	}
-	if v, y := val.(string); y {
-		v, _ := strconv.ParseInt(v, 10, 32)
-		return int32(v)
-	}
-	return 0
 }
 
 func (s Store) Int64(key string, defaults ...interface{}) int64 {
 	val := s.Get(key, defaults...)
-	if v, y := val.(int64); y {
+	switch v := val.(type) {
+	case int64:
 		return v
-	}
-	if v, y := val.(int32); y {
+	case int32:
 		return int64(v)
-	}
-	if v, y := val.(uint32); y {
+	case uint32:
 		return int64(v)
-	}
-	if v, y := val.(int); y {
+	case int:
 		return int64(v)
-	}
-	if v, y := val.(uint); y {
+	case uint:
 		return int64(v)
+	case string:
+		i, _ := strconv.ParseInt(v, 10, 64)
+		return i
+	default:
+		s := fmt.Sprint(v)
+		i, _ := strconv.ParseInt(s, 10, 64)
+		return i
 	}
-	if v, y := val.(string); y {
-		v, _ := strconv.ParseInt(v, 10, 64)
-		return v
-	}
-	return 0
 }
 
 func (s Store) Decr(key string, n int64, defaults ...interface{}) int64 {
@@ -236,62 +245,77 @@ func (s Store) Incr(key string, n int64, defaults ...interface{}) int64 {
 
 func (s Store) Uint8(key string, defaults ...interface{}) uint8 {
 	val := s.Get(key, defaults...)
-	if v, y := val.(uint8); y {
+	switch v := val.(type) {
+	case uint8:
 		return v
+	case string:
+		i, _ := strconv.ParseUint(v, 10, 8)
+		return uint8(i)
+	default:
+		s := fmt.Sprint(v)
+		i, _ := strconv.ParseUint(s, 10, 8)
+		return uint8(i)
 	}
-	if v, y := val.(string); y {
-		v, _ := strconv.ParseUint(v, 10, 8)
-		return uint8(v)
-	}
-	return 0
 }
 
 func (s Store) Uint16(key string, defaults ...interface{}) uint16 {
 	val := s.Get(key, defaults...)
-	if v, y := val.(uint16); y {
+	switch v := val.(type) {
+	case uint16:
 		return v
+	case string:
+		i, _ := strconv.ParseUint(v, 10, 16)
+		return uint16(i)
+	default:
+		s := fmt.Sprint(v)
+		i, _ := strconv.ParseUint(s, 10, 16)
+		return uint16(i)
 	}
-	if v, y := val.(string); y {
-		v, _ := strconv.ParseUint(v, 10, 16)
-		return uint16(v)
-	}
-	return 0
 }
 
 func (s Store) Uint(key string, defaults ...interface{}) uint {
 	val := s.Get(key, defaults...)
-	if v, y := val.(uint); y {
+	switch v := val.(type) {
+	case uint:
 		return v
+	case string:
+		i, _ := strconv.ParseUint(v, 10, 32)
+		return uint(i)
+	default:
+		s := fmt.Sprint(v)
+		i, _ := strconv.ParseUint(s, 10, 32)
+		return uint(i)
 	}
-	if v, y := val.(string); y {
-		v, _ := strconv.ParseUint(v, 10, 32)
-		return uint(v)
-	}
-	return 0
 }
 
 func (s Store) Uint32(key string, defaults ...interface{}) uint32 {
 	val := s.Get(key, defaults...)
-	if v, y := val.(uint32); y {
+	switch v := val.(type) {
+	case uint32:
 		return v
+	case string:
+		i, _ := strconv.ParseUint(v, 10, 32)
+		return uint32(i)
+	default:
+		s := fmt.Sprint(v)
+		i, _ := strconv.ParseUint(s, 10, 32)
+		return uint32(i)
 	}
-	if v, y := val.(string); y {
-		v, _ := strconv.ParseUint(v, 10, 32)
-		return uint32(v)
-	}
-	return 0
 }
 
 func (s Store) Uint64(key string, defaults ...interface{}) uint64 {
 	val := s.Get(key, defaults...)
-	if v, y := val.(uint64); y {
+	switch v := val.(type) {
+	case uint64:
 		return v
+	case string:
+		i, _ := strconv.ParseUint(v, 10, 64)
+		return i
+	default:
+		s := fmt.Sprint(v)
+		i, _ := strconv.ParseUint(s, 10, 64)
+		return i
 	}
-	if v, y := val.(string); y {
-		v, _ := strconv.ParseUint(v, 10, 64)
-		return v
-	}
-	return 0
 }
 
 func (s Store) Store(key string, defaults ...interface{}) Store {
