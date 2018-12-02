@@ -245,6 +245,18 @@ func (c *xContext) Redirect(url string, codes ...int) error {
 	if err != nil {
 		return err
 	}
+	format := c.Format()
+	if format != `html` && c.auto {
+		if render, ok := c.echo.formatRenderers[format]; ok && render != nil {
+			if c.dataEngine.GetData() == nil {
+				c.Set(`Location`, url)
+				c.dataEngine.SetData(c.Stored(), c.dataEngine.GetCode().Int())
+			} else {
+				c.dataEngine.SetURL(url)
+			}
+			return render(c, c.dataEngine.GetData())
+		}
+	}
 	c.response.Redirect(url, code)
 	return nil
 }

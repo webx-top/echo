@@ -84,6 +84,7 @@ type Data interface {
 	Reset() Data
 	SetError(err error, args ...int) Data
 	SetCode(code int) Data
+	SetURL(url string) Data
 	SetInfo(info interface{}, args ...int) Data
 	SetZone(zone interface{}) Data
 	SetData(data interface{}, args ...int) Data
@@ -99,6 +100,7 @@ type RawData struct {
 	Code    State
 	State   string `json:",omitempty" xml:",omitempty"`
 	Info    interface{}
+	URL     string      `json:",omitempty" xml:",omitempty"`
 	Zone    interface{} `json:",omitempty" xml:",omitempty"`
 	Data    interface{} `json:",omitempty" xml:",omitempty"`
 }
@@ -161,6 +163,12 @@ func (d *RawData) SetError(err error, args ...int) Data {
 func (d *RawData) SetCode(code int) Data {
 	d.Code = State(code)
 	d.State = d.Code.String()
+	return d
+}
+
+//SetURL 设置跳转网址
+func (d *RawData) SetURL(url string) Data {
+	d.URL = url
 	return d
 }
 
