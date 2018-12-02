@@ -113,6 +113,7 @@ func (d *RawData) Reset() Data {
 	d.Code = State(0)
 	d.State = ``
 	d.Info = nil
+	d.URL = ``
 	d.Zone = nil
 	d.Data = nil
 	return d
@@ -279,6 +280,7 @@ func (d *RawData) Set(code int, args ...interface{}) Data {
 				Code:    d.Code,
 				State:   d.State,
 				Info:    d.Info,
+				URL:     d.URL,
 				Zone:    d.Zone,
 				Data:    nil,
 			}
