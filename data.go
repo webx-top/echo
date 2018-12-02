@@ -84,7 +84,7 @@ type Data interface {
 	Reset() Data
 	SetError(err error, args ...int) Data
 	SetCode(code int) Data
-	SetURL(url string) Data
+	SetURL(url string, args ...int) Data
 	SetInfo(info interface{}, args ...int) Data
 	SetZone(zone interface{}) Data
 	SetData(data interface{}, args ...int) Data
@@ -167,8 +167,11 @@ func (d *RawData) SetCode(code int) Data {
 }
 
 //SetURL 设置跳转网址
-func (d *RawData) SetURL(url string) Data {
+func (d *RawData) SetURL(url string, args ...int) Data {
 	d.URL = url
+	if len(args) > 0 {
+		d.SetCode(args[0])
+	}
 	return d
 }
 
