@@ -21,7 +21,6 @@ package echo
 import (
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -61,11 +60,7 @@ func NewCookier(ctx Context) Cookier {
 }
 
 //NewCookie create a cookie instance
-func NewCookie(name string, value string, opts ...*CookieOptions) *Cookie {
-	opt := &CookieOptions{}
-	if len(opts) > 0 {
-		opt = opts[0]
-	}
+func newCookie(name string, value string, opt *CookieOptions) *Cookie {
 	if len(opt.Path) == 0 {
 		opt.Path = `/`
 	}
@@ -79,9 +74,6 @@ func NewCookie(name string, value string, opts ...*CookieOptions) *Cookie {
 			Secure:   opt.Secure,
 			HttpOnly: opt.HttpOnly,
 		},
-	}
-	if len(opt.SameSite) > 0 {
-		cookie.SameSite(opt.SameSite)
 	}
 	return cookie
 }
@@ -128,19 +120,6 @@ func (c *Cookie) Secure(p bool) *Cookie {
 //HttpOnly 设置是否启用HttpOnly
 func (c *Cookie) HttpOnly(p bool) *Cookie {
 	c.cookie.HttpOnly = p
-	return c
-}
-
-//SameSite 设置SameSite
-func (c *Cookie) SameSite(p string) *Cookie {
-	switch strings.ToLower(p) {
-	case `lax`:
-		c.cookie.SameSite = http.SameSiteLaxMode
-	case `strict`:
-		c.cookie.SameSite = http.SameSiteStrictMode
-	default:
-		c.cookie.SameSite = http.SameSiteDefaultMode
-	}
 	return c
 }
 
