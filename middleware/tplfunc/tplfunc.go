@@ -116,6 +116,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 
 	"ToLower":        strings.ToLower,
 	"ToUpper":        strings.ToUpper,
+	"Title":          strings.Title,
 	"LowerCaseFirst": com.LowerCaseFirst,
 	"CamelCase":      com.CamelCase,
 	"PascalCase":     com.PascalCase,
