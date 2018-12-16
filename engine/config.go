@@ -80,12 +80,14 @@ func (c *Config) SupportAutoTLS(autoTLSManager *autocert.Manager, hosts ...strin
 			Prompt: autocert.AcceptTOS,
 		}
 		autoTLSManager.HostPolicy = autocert.HostWhitelist(hosts...) // Added security
-		home, err := homedir.Dir()
-		if err != nil {
-			panic(err)
-		}
 		if len(c.TLSCacheDir) == 0 {
-			c.TLSCacheDir = filepath.Join(home, ".webx-top-echo", "cache")
+			home, err := homedir.Dir()
+			if err != nil {
+				panic(err)
+			}
+			c.TLSCacheDir = filepath.Join(home, ".webx.top", "cache", "autocert")
+		}
+		if _, err := os.Stat(c.TLSCacheDir); os.IsNotExist(err) {
 			err = os.MkdirAll(c.TLSCacheDir, 0666)
 			if err != nil {
 				panic(err)
