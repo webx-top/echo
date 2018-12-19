@@ -25,6 +25,7 @@ import (
 	"log"
 	"math"
 	"net/url"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -122,7 +123,10 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"PascalCase":     com.PascalCase,
 	"SnakeCase":      com.SnakeCase,
 	"Reverse":        com.Reverse,
+	"Base":           filepath.Base,
 	"Ext":            filepath.Ext,
+	"Basename":       path.Base,
+	"Extension":      path.Ext,
 	"InExt":          InExt,
 
 	"Concat":    Concat,
