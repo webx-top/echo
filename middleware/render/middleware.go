@@ -19,7 +19,7 @@ package render
 
 import (
 	"net/http"
-	"text/template"
+	"time"
 
 	"github.com/webx-top/echo"
 )
@@ -29,7 +29,14 @@ var (
 		Skipper:              echo.DefaultSkipper,
 		ErrorPages:           make(map[int]string),
 		DefaultHTTPErrorCode: http.StatusInternalServerError,
-		FuncMap:              template.FuncMap{},
+		SetFuncMap: []echo.HandlerFunc{
+			func(c echo.Context) error {
+				c.SetFunc(`Lang`, c.Lang)
+				c.SetFunc(`Now`, time.Now)
+				c.SetFunc(`T`, c.T)
+				return nil
+			},
+		},
 	}
 )
 
@@ -37,7 +44,23 @@ type Options struct {
 	Skipper              echo.Skipper
 	ErrorPages           map[int]string
 	DefaultHTTPErrorCode int
-	FuncMap              template.FuncMap
+	SetFuncMap           []echo.HandlerFunc
+}
+
+func (opt *Options) AddFuncSetter(set ...echo.HandlerFunc) *Options {
+	if opt.SetFuncMap == nil {
+		opt.SetFuncMap = make([]echo.HandlerFunc, len(DefaultOptions.SetFuncMap))
+		for index, setter := range DefaultOptions.SetFuncMap {
+			opt.SetFuncMap[index] = setter
+		}
+	}
+	opt.SetFuncMap = append(opt.SetFuncMap, set...)
+	return opt
+}
+
+func (opt *Options) SetFuncSetter(set ...echo.HandlerFunc) *Options {
+	opt.SetFuncMap = set
+	return opt
 }
 
 // Middleware set renderer
@@ -69,8 +92,8 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 	if opt.DefaultHTTPErrorCode < 1 {
 		opt.DefaultHTTPErrorCode = DefaultOptions.DefaultHTTPErrorCode
 	}
-	if opt.FuncMap == nil {
-		opt.FuncMap = DefaultOptions.FuncMap
+	if opt.SetFuncMap == nil {
+		opt.SetFuncMap = DefaultOptions.SetFuncMap
 	}
 	tmplNum := len(opt.ErrorPages)
 	return func(err error, c echo.Context) {
@@ -107,9 +130,13 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 					if c.Format() == `html` {
 						c.SetCode(code)
 						c.SetFunc(`Lang`, c.Lang)
-						if len(opt.FuncMap) > 0 {
-							for name, function := range opt.FuncMap {
-								c.SetFunc(name, function)
+						if len(opt.SetFuncMap) > 0 {
+							for _, setFunc := range opt.SetFuncMap {
+								err = setFunc(c)
+								if err != nil {
+									c.String(err.Error())
+									return
+								}
 							}
 						}
 						data.SetData(echo.H{
