@@ -19,6 +19,7 @@ package render
 
 import (
 	"net/http"
+	"text/template"
 
 	"github.com/webx-top/echo"
 )
@@ -35,6 +36,7 @@ type Options struct {
 	Skipper              echo.Skipper
 	ErrorPages           map[int]string
 	DefaultHTTPErrorCode int
+	FuncMap              template.FuncMap
 }
 
 // Middleware set renderer
@@ -101,6 +103,11 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 					if c.Format() == `html` {
 						c.SetCode(code)
 						c.SetFunc(`Lang`, c.Lang)
+						if len(opt.FuncMap) > 0 {
+							for name, function := range opt.FuncMap {
+								c.SetFunc(name, function)
+							}
+						}
 						data.SetData(echo.H{
 							"title":   title,
 							"content": msg,
