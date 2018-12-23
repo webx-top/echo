@@ -29,6 +29,7 @@ var (
 		Skipper:              echo.DefaultSkipper,
 		ErrorPages:           make(map[int]string),
 		DefaultHTTPErrorCode: http.StatusInternalServerError,
+		FuncMap:              template.FuncMap{},
 	}
 )
 
@@ -67,6 +68,9 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 	}
 	if opt.DefaultHTTPErrorCode < 1 {
 		opt.DefaultHTTPErrorCode = DefaultOptions.DefaultHTTPErrorCode
+	}
+	if opt.FuncMap == nil {
+		opt.FuncMap = DefaultOptions.FuncMap
 	}
 	tmplNum := len(opt.ErrorPages)
 	return func(err error, c echo.Context) {
