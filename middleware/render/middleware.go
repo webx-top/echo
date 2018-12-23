@@ -100,6 +100,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 					data := c.Data().Reset().SetInfo(msg, 0)
 					if c.Format() == `html` {
 						c.SetCode(code)
+						c.SetFunc(`Lang`, c.Lang)
 						data.SetData(echo.H{
 							"title":   title,
 							"content": msg,
