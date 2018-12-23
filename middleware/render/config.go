@@ -23,6 +23,7 @@ type Config struct {
 	StaticOptions        *middleware.StaticOptions
 	Debug                bool
 	renderer             driver.Driver
+	errorPageFuncSetter  []echo.HandlerFunc
 }
 
 func (t *Config) Parser() func([]byte) []byte {
@@ -70,14 +71,32 @@ func (t *Config) NewRenderer(manager ...driver.Manager) driver.Driver {
 	return renderer
 }
 
+func (t *Config) AddFuncSetter(set ...echo.HandlerFunc) *Config {
+	if t.errorPageFuncSetter == nil {
+		t.errorPageFuncSetter = make([]echo.HandlerFunc, len(DefaultOptions.SetFuncMap))
+		for index, setter := range DefaultOptions.SetFuncMap {
+			t.errorPageFuncSetter[index] = setter
+		}
+	}
+	t.errorPageFuncSetter = append(t.errorPageFuncSetter, set...)
+	return t
+}
+
+func (t *Config) SetFuncSetter(set ...echo.HandlerFunc) *Config {
+	t.errorPageFuncSetter = set
+	return t
+}
+
 func (t *Config) ApplyTo(e *echo.Echo, manager ...driver.Manager) *Config {
 	if t.renderer != nil {
 		t.renderer.Close()
 	}
-	e.SetHTTPErrorHandler(HTTPErrorHandler(&Options{
+	opt := &Options{
 		ErrorPages:           t.ErrorPages,
 		DefaultHTTPErrorCode: t.DefaultHTTPErrorCode,
-	}))
+	}
+	opt.SetFuncSetter(t.errorPageFuncSetter...)
+	e.SetHTTPErrorHandler(HTTPErrorHandler(opt))
 	e.Use(middleware.FuncMap(tplfunc.New(), func(c echo.Context) bool {
 		return c.Format() != `html`
 	}))
