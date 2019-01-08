@@ -390,7 +390,7 @@ func (c *Context) NextURL(defaultURL ...string) string {
 
 // GotoNext 跳转到下一步
 func (c *Context) GotoNext(defaultURL ...string) error {
-	return c.Redir(c.NextURL(defaultURL...))
+	return c.Go(c.NextURL(defaultURL...))
 }
 
 // GetNextURL 自动获取下一步网址
@@ -495,7 +495,7 @@ func (c *Context) U(args ...string) (s string) {
 }
 
 // Redir 页面跳转
-func (c *Context) Redir(url string, args ...interface{}) error {
+func (c *Context) Go(url string, args ...interface{}) error {
 	var code = http.StatusFound //302. 307:http.StatusTemporaryRedirect
 	if len(args) > 0 {
 		if v, ok := args[0].(bool); ok && v {
@@ -530,7 +530,7 @@ func (c *Context) echoRedirect() bool {
 // Goto 页面跳转(根据路由生成网址后跳转)
 func (c *Context) Goto(goURL string, args ...interface{}) error {
 	goURL = c.U(goURL)
-	return c.Redir(goURL, args...)
+	return c.Go(goURL, args...)
 }
 
 // CheckPath 检查权限所用的网址路径
