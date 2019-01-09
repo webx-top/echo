@@ -494,7 +494,7 @@ func (c *Context) U(args ...string) (s string) {
 	return
 }
 
-// Redir 页面跳转
+// Go 页面跳转
 func (c *Context) Go(url string, args ...interface{}) error {
 	var code = http.StatusFound //302. 307:http.StatusTemporaryRedirect
 	if len(args) > 0 {
