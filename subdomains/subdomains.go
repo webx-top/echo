@@ -47,9 +47,9 @@ func (s *Subdomains) Get(args ...string) *Info {
 	name := s.Default
 	if len(args) > 0 {
 		name = args[0]
-		if e, ok := s.Alias[name]; ok {
-			return e
-		}
+	}
+	if e, ok := s.Alias[name]; ok {
+		return e
 	}
 	return nil
 }
