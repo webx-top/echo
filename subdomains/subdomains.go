@@ -59,7 +59,7 @@ func (s *Subdomains) FindByDomain(host string) (*echo.Echo, bool) {
 		if p := strings.LastIndexByte(host, ':'); p > -1 {
 			handler, exists = s.Hosts[host[0:p]]
 		}
-		if !exists && len(s.Default) > 0 {
+		if !exists {
 			var info *Info
 			info, exists = s.Alias[s.Default]
 			if exists {
