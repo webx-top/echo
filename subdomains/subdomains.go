@@ -25,9 +25,10 @@ type Info struct {
 }
 
 type Subdomains struct {
-	Hosts   map[string]*echo.Echo
-	Alias   map[string]*Info
-	Default string //default name
+	Hosts    map[string]*echo.Echo
+	Alias    map[string]*Info
+	Default  string //default name
+	Protocol string //http/https
 }
 
 func (s *Subdomains) Add(name string, e *echo.Echo) *Subdomains {
@@ -51,6 +52,17 @@ func (s *Subdomains) Get(args ...string) *Info {
 		}
 	}
 	return nil
+}
+
+func (s *Subdomains) URL(purl string, args ...string) string {
+	info := s.Get(args...)
+	if info == nil {
+		return purl
+	}
+	if len(s.Protocol) < 1 {
+		return `http://` + info.Host + purl
+	}
+	return s.Protocol + `://` + info.Host + purl
 }
 
 func (s *Subdomains) FindByDomain(host string) (*echo.Echo, bool) {
