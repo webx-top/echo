@@ -2,7 +2,6 @@ package echo
 
 import (
 	"bytes"
-	"encoding/json"
 	"encoding/xml"
 	"io"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/webx-top/echo/encoding/json"
 	"github.com/webx-top/echo/engine"
 )
 
