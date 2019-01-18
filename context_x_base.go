@@ -17,6 +17,7 @@ type xContext struct {
 	Validator
 	Translator
 	events.Emitter
+	Transaction
 	sessioner           Sessioner
 	cookier             Cookier
 	context             context.Context
@@ -40,24 +41,24 @@ type xContext struct {
 	dataEngine          Data
 	accept              *Accepts
 	auto                bool
-	transaction         Transaction
 }
 
 // NewContext creates a Context object.
 func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 	c := &xContext{
-		Validator:  DefaultNopValidate,
-		Translator: DefaultNopTranslate,
-		Emitter:    emitter.DefaultCondEmitter,
-		context:    context.Background(),
-		request:    req,
-		response:   res,
-		echo:       e,
-		pvalues:    make([]string, *e.maxParam),
-		store:      make(Store),
-		handler:    NotFoundHandler,
-		funcs:      make(map[string]interface{}),
-		sessioner:  DefaultSession,
+		Validator:   DefaultNopValidate,
+		Translator:  DefaultNopTranslate,
+		Emitter:     emitter.DefaultCondEmitter,
+		Transaction: DefaultNopTransaction,
+		context:     context.Background(),
+		request:     req,
+		response:    res,
+		echo:        e,
+		pvalues:     make([]string, *e.maxParam),
+		store:       make(Store),
+		handler:     NotFoundHandler,
+		funcs:       make(map[string]interface{}),
+		sessioner:   DefaultSession,
 	}
 	c.cookier = NewCookier(c)
 	c.dataEngine = NewData(c)
@@ -140,6 +141,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.Validator = DefaultNopValidate
 	c.Emitter = emitter.DefaultCondEmitter
 	c.Translator = DefaultNopTranslate
+	c.Transaction = DefaultNopTransaction
 	c.sessioner = DefaultSession
 	c.cookier = NewCookier(c)
 	c.context = context.Background()
@@ -161,7 +163,6 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.preResponseHook = nil
 	c.accept = nil
 	c.dataEngine = NewData(c)
-	c.transaction = nil
 	// NOTE: Don't reset because it has to have length c.echo.maxParam at all times
 	// c.pvalues = nil
 }
@@ -212,14 +213,7 @@ func (c *xContext) SetSessioner(s Sessioner) {
 }
 
 func (c *xContext) SetTransaction(t Transaction) {
-	c.transaction = t
-}
-
-func (c *xContext) Transaction() Transaction {
-	if c.transaction == nil {
-		c.transaction = DefaultNopTransaction
-	}
-	return c.transaction
+	c.Transaction = t
 }
 
 func (c *xContext) Atop(v string) param.String {

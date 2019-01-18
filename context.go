@@ -19,6 +19,8 @@ type Context interface {
 	context.Context
 	events.Emitter
 	SetEmitter(events.Emitter)
+	Transaction
+	SetTransaction(t Transaction)
 	StdContext() context.Context
 	SetStdContext(context.Context)
 	Validator
@@ -206,11 +208,4 @@ type Context interface {
 
 	AddPreResponseHook(func() error) Context
 	SetPreResponseHook(...func() error) Context
-
-	//----------------
-	// Transaction
-	//----------------
-
-	SetTransaction(t Transaction)
-	Transaction() Transaction
 }
