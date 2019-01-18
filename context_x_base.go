@@ -40,6 +40,7 @@ type xContext struct {
 	dataEngine          Data
 	accept              *Accepts
 	auto                bool
+	transaction         Transaction
 }
 
 // NewContext creates a Context object.
@@ -160,6 +161,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.preResponseHook = nil
 	c.accept = nil
 	c.dataEngine = NewData(c)
+	c.transaction = nil
 	// NOTE: Don't reset because it has to have length c.echo.maxParam at all times
 	// c.pvalues = nil
 }
@@ -207,6 +209,17 @@ func (c *xContext) SetRenderer(r Renderer) {
 
 func (c *xContext) SetSessioner(s Sessioner) {
 	c.sessioner = s
+}
+
+func (c *xContext) SetTransaction(t Transaction) {
+	c.transaction = t
+}
+
+func (c *xContext) Transaction() Transaction {
+	if c.transaction == nil {
+		c.transaction = DefaultNopTransaction
+	}
+	return c.transaction
 }
 
 func (c *xContext) Atop(v string) param.String {

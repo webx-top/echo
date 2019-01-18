@@ -206,4 +206,10 @@ type Context interface {
 
 	AddPreResponseHook(func() error) Context
 	SetPreResponseHook(...func() error) Context
+
+	//----------------
+	// Transaction
+	//----------------
+	SetTransaction(t Transaction)
+	Transaction() Transaction
 }
