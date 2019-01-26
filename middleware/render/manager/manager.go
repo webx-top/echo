@@ -65,7 +65,11 @@ type Manager struct {
 }
 
 func (self *Manager) closeMoniter() {
+	if self.done == nil {
+		return
+	}
 	close(self.done)
+	self.done = nil
 }
 
 func (self *Manager) AddCallback(rootDir string, callback func(name, typ, event string)) {
