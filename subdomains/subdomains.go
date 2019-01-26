@@ -13,7 +13,7 @@ var Default = New()
 
 func New() *Subdomains {
 	s := &Subdomains{
-		Hosts:   map[string]*echo.Echo{},
+		Hosts:   map[string]string{},
 		Alias:   map[string]*Info{},
 		Default: ``,
 	}
@@ -27,7 +27,7 @@ type Info struct {
 }
 
 type Subdomains struct {
-	Hosts    map[string]*echo.Echo
+	Hosts    map[string]string //{host:name}
 	Alias    map[string]*Info
 	Default  string //default name
 	Protocol string //http/https
@@ -40,7 +40,7 @@ func (s *Subdomains) Add(name string, e *echo.Echo) *Subdomains {
 		name = r[0]
 		host = r[1]
 	}
-	s.Hosts[host] = e
+	s.Hosts[host] = name
 	s.Alias[name] = &Info{Name: name, Host: host, Echo: e}
 	return s
 }
@@ -74,20 +74,21 @@ func (s *Subdomains) URL(purl string, args ...string) string {
 }
 
 func (s *Subdomains) FindByDomain(host string) (*echo.Echo, bool) {
-	handler, exists := s.Hosts[host]
+	name, exists := s.Hosts[host]
 	if !exists {
 		if p := strings.LastIndexByte(host, ':'); p > -1 {
-			handler, exists = s.Hosts[host[0:p]]
+			name, exists = s.Hosts[host[0:p]]
 		}
 		if !exists {
-			var info *Info
-			info, exists = s.Alias[s.Default]
-			if exists {
-				handler = info.Echo
-			}
+			name = s.Default
 		}
 	}
-	return handler, exists
+	var info *Info
+	info, exists = s.Alias[name]
+	if exists {
+		return info.Echo, true
+	}
+	return nil, false
 }
 
 func (s *Subdomains) ServeHTTP(r engine.Request, w engine.Response) {
