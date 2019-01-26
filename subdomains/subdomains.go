@@ -61,6 +61,12 @@ func (s *Subdomains) URL(purl string, args ...string) string {
 	if info == nil {
 		return purl
 	}
+	if len(info.Host) < 1 {
+		if s.Default == info.Name {
+			return purl
+		}
+		return `/` + info.Name + purl
+	}
 	if len(s.Protocol) < 1 {
 		return `http://` + info.Host + purl
 	}
