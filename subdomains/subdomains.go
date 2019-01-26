@@ -9,6 +9,8 @@ import (
 	"github.com/webx-top/echo/engine/standard"
 )
 
+var Default = New()
+
 func New() *Subdomains {
 	s := &Subdomains{
 		Hosts:   map[string]*echo.Echo{},
