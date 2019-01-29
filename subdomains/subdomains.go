@@ -80,6 +80,10 @@ func (s *Subdomains) Get(args ...string) *Info {
 	return nil
 }
 
+// URL 多域名场景下的网址生成功能
+// URL(网址路径,域名别名)，如果这里不传递域名别名，将使用默认别名的域名
+// 例如：URL("/list?cid=1","blog")
+// 对于一个别名对应有多个域名的情况，将总是使用第一个域名
 func (s *Subdomains) URL(purl string, args ...string) string {
 	info := s.Get(args...)
 	if info == nil {
