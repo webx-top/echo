@@ -44,13 +44,19 @@ func (s *Subdomains) SetDispatcher(dispatcher Dispatcher) *Subdomains {
 }
 
 func (s *Subdomains) Add(name string, e *echo.Echo) *Subdomains {
-	r := strings.SplitN(name, `@`, 2) //blog@www.blog.com
+	r := strings.SplitN(name, `@`, 2)
 	var hosts []string
-	if len(r) > 1 {
+	if len(r) > 1 { //blog@1.webx.top,2.webx.top
 		name = r[0]
 		hosts = strings.Split(r[1], `,`)
 	} else {
-		hosts = append(hosts, ``)
+		p := strings.Index(name, `.`)
+		if p > 0 { //blog.webx.top
+			hosts = strings.Split(name, `,`)
+			name = name[0:p]
+		} else { //blog
+			hosts = append(hosts, ``)
+		}
 	}
 	for _, host := range hosts {
 		s.Hosts[host] = name
