@@ -13,10 +13,12 @@ var Default = New()
 
 func New() *Subdomains {
 	s := &Subdomains{
-		Hosts:   map[string]string{},
-		Alias:   map[string]*Info{},
-		Default: ``,
+		Hosts:    map[string]string{},
+		Alias:    map[string]*Info{},
+		Default:  ``,
+		Protocol: `http`,
 	}
+	s.dispatcher = s.DefaultDispatcher
 	return s
 }
 
@@ -26,22 +28,34 @@ type Info struct {
 	*echo.Echo
 }
 
+type Dispatcher func(r engine.Request, w engine.Response) (*echo.Echo, bool)
+
 type Subdomains struct {
-	Hosts    map[string]string //{host:name}
-	Alias    map[string]*Info
-	Default  string //default name
-	Protocol string //http/https
+	Hosts      map[string]string //{host:name}
+	Alias      map[string]*Info
+	Default    string //default name
+	Protocol   string //http/https
+	dispatcher Dispatcher
+}
+
+func (s *Subdomains) SetDispatcher(dispatcher Dispatcher) *Subdomains {
+	s.dispatcher = dispatcher
+	return s
 }
 
 func (s *Subdomains) Add(name string, e *echo.Echo) *Subdomains {
 	r := strings.SplitN(name, `@`, 2) //blog@www.blog.com
-	var host string
+	var hosts []string
 	if len(r) > 1 {
 		name = r[0]
-		host = r[1]
+		hosts = strings.Split(r[1], `,`)
+	} else {
+		hosts = append(hosts, ``)
 	}
-	s.Hosts[host] = name
-	s.Alias[name] = &Info{Name: name, Host: host, Echo: e}
+	for _, host := range hosts {
+		s.Hosts[host] = name
+	}
+	s.Alias[name] = &Info{Name: name, Host: hosts[0], Echo: e}
 	return s
 }
 
@@ -91,9 +105,12 @@ func (s *Subdomains) FindByDomain(host string) (*echo.Echo, bool) {
 	return nil, false
 }
 
+func (s *Subdomains) DefaultDispatcher(r engine.Request, w engine.Response) (*echo.Echo, bool) {
+	return s.FindByDomain(r.Host())
+}
+
 func (s *Subdomains) ServeHTTP(r engine.Request, w engine.Response) {
-	domain := r.Host()
-	handler, exists := s.FindByDomain(domain)
+	handler, exists := s.dispatcher(r, w)
 	if exists && handler != nil {
 		handler.ServeHTTP(r, w)
 	} else {
@@ -102,6 +119,9 @@ func (s *Subdomains) ServeHTTP(r engine.Request, w engine.Response) {
 }
 
 func (s *Subdomains) Run(args ...interface{}) {
+	if s.dispatcher == nil {
+		s.dispatcher = s.DefaultDispatcher
+	}
 	var eng engine.Engine
 	var arg interface{}
 	size := len(args)
