@@ -43,6 +43,10 @@ func (s *Subdomains) SetDispatcher(dispatcher Dispatcher) *Subdomains {
 	return s
 }
 
+// Add 添加子域名，name的值支持以下三种格式：
+// 1. 别名@域名 ———— 一个别名可以对应多个域名，每个域名之间用半角逗号“,”分隔
+// 2. 域名 ———— 可以添加多个域名，每个域名之间用半角逗号“,”分隔。这里会自动将第一个域名中的首个点号“.”前面的部分作为别名，例如“blog.webx.top,news.webx.top”会自动将“blog”作为别名
+// 3. 别名 ———— 在不指定域名的情况下将无法访问，除非“默认访问别名”（Subdomains.Default的值）与此相同
 func (s *Subdomains) Add(name string, e *echo.Echo) *Subdomains {
 	r := strings.SplitN(name, `@`, 2)
 	var hosts []string
