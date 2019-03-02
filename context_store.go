@@ -26,6 +26,13 @@ func (s Store) Set(key string, value interface{}) Store {
 	return s
 }
 
+func (s Store) Has(key string) bool {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	_, y := s[key]
+	return y
+}
+
 func (s Store) Get(key string, defaults ...interface{}) interface{} {
 	mutex.RLock()
 	defer mutex.RUnlock()
