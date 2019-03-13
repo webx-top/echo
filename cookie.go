@@ -24,6 +24,12 @@ import (
 	"time"
 )
 
+var (
+	DefaultCookieOptions = &CookieOptions{
+		Path: `/`,
+	}
+)
+
 // CookieOptions cookie options
 type CookieOptions struct {
 	Prefix string
