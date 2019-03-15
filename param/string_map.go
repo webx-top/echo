@@ -24,6 +24,18 @@ func (p StringMap) String(key string) string {
 	return p[key].String()
 }
 
+func (p StringMap) Interface(key string) interface{} {
+	return p[key].Interface()
+}
+
+func (p StringMap) Interfaces() map[string]interface{} {
+	r := map[string]interface{}{}
+	for k, v := range p {
+		r[k] = interface{}(v)
+	}
+	return r
+}
+
 func (p StringMap) Int(key string) int {
 	return p[key].Int()
 }

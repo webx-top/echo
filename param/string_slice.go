@@ -29,6 +29,20 @@ func (p StringSlice) String() []string {
 	return []string(p)
 }
 
+func (p StringSlice) Interface(filters ...func(int, string) bool) []interface{} {
+	var filter func(int, string) bool
+	if len(filters) > 0 {
+		filter = filters[0]
+	}
+	var ids []interface{}
+	for idx, id := range p {
+		if filter == nil || filter(idx, id) {
+			ids = append(ids, interface{}(id))
+		}
+	}
+	return ids
+}
+
 func (p StringSlice) Int(filters ...func(int, int) bool) []int {
 	var filter func(int, int) bool
 	if len(filters) > 0 {

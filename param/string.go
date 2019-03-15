@@ -29,6 +29,14 @@ func (p String) String() string {
 	return strings.TrimSpace(string(p))
 }
 
+func (p String) Trim() String {
+	return String(strings.TrimSpace(string(p)))
+}
+
+func (p String) Interface() interface{} {
+	return interface{}(p)
+}
+
 func (p String) Int() int {
 	if len(p) > 0 {
 		r, _ := strconv.Atoi(p.String())
