@@ -18,6 +18,8 @@
 
 package param
 
+import "time"
+
 type StringMap map[string]String
 
 func (p StringMap) String(key string) string {
@@ -70,4 +72,12 @@ func (p StringMap) Float64(key string) float64 {
 
 func (p StringMap) Bool(key string) bool {
 	return p[key].Bool()
+}
+
+func (p StringMap) Timestamp(key string) time.Time {
+	return p[key].Timestamp()
+}
+
+func (p StringMap) DateTime(key string) time.Time {
+	return p[key].DateTime()
 }

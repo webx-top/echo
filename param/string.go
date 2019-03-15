@@ -21,6 +21,7 @@ package param
 import (
 	"strconv"
 	"strings"
+	"time"
 )
 
 type String string
@@ -107,4 +108,33 @@ func (p String) Bool() bool {
 		return r
 	}
 	return false
+}
+
+func (p String) Timestamp() time.Time {
+	if len(p) > 0 {
+		s := strings.SplitN(p.String(), `.`, 2)
+		var sec int64
+		var nsec int64
+		switch len(s) {
+		case 2:
+			nsec = String(s[1]).Int64()
+			fallthrough
+		case 1:
+			sec = String(s[0]).Int64()
+		}
+		return time.Unix(sec, nsec)
+	}
+	return time.Time{}
+}
+
+func (p String) DateTime(layouts ...string) time.Time {
+	if len(p) > 0 {
+		layout := `2006-01-02 15:04:05`
+		if len(layouts) > 0 {
+			layout = layouts[0]
+		}
+		t, _ := time.Parse(layout, p.String())
+		return t
+	}
+	return time.Time{}
 }
