@@ -227,8 +227,8 @@ func ServeHTTP(req engine.Request, res engine.Response) {
 }
 
 // Run starts the HTTP engine.
-func Run(eng engine.Engine, handler ...engine.Handler) {
-	Default.Run(eng, handler...)
+func Run(eng engine.Engine, handler ...engine.Handler) error {
+	return Default.Run(eng, handler...)
 }
 
 func Engine() engine.Engine {

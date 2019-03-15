@@ -627,11 +627,15 @@ func (e *Echo) ServeHTTP(req engine.Request, res engine.Response) {
 }
 
 // Run starts the HTTP engine.
-func (e *Echo) Run(eng engine.Engine, handler ...engine.Handler) {
-	e.setEngine(eng).start(handler...)
+func (e *Echo) Run(eng engine.Engine, handler ...engine.Handler) error {
+	err := e.setEngine(eng).start(handler...)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return err
 }
 
-func (e *Echo) start(handler ...engine.Handler) {
+func (e *Echo) start(handler ...engine.Handler) error {
 	if len(handler) > 0 {
 		e.engine.SetHandler(handler[0])
 	} else {
@@ -641,7 +645,7 @@ func (e *Echo) start(handler ...engine.Handler) {
 	if e.Debug() {
 		e.logger.Debug("running in debug mode")
 	}
-	e.engine.Start()
+	return e.engine.Start()
 }
 
 func (e *Echo) setEngine(eng engine.Engine) *Echo {
