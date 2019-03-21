@@ -30,6 +30,17 @@ func (p String) String() string {
 	return strings.TrimSpace(string(p))
 }
 
+func (p String) Split(sep string, limit ...int) StringSlice {
+	s := p.String()
+	if len(s) == 0 {
+		return StringSlice{}
+	}
+	if len(limit) > 0 {
+		return strings.SplitN(s, sep, limit[0])
+	}
+	return strings.Split(s, sep)
+}
+
 func (p String) Trim() String {
 	return String(strings.TrimSpace(string(p)))
 }
