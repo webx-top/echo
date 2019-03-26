@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"html/template"
 	"strconv"
+	"strings"
 	"sync"
+	"time"
+
+	"github.com/webx-top/echo/param"
 )
 
 var (
@@ -49,10 +53,26 @@ func (s Store) Get(key string, defaults ...interface{}) interface{} {
 }
 
 func (s Store) String(key string, defaults ...interface{}) string {
-	if v, y := s.Get(key, defaults...).(string); y {
+	p := s.Get(key, defaults...)
+	if v, y := p.(string); y {
 		return v
 	}
-	return ``
+	return fmt.Sprint(p)
+}
+
+func (s Store) Split(key string, sep string, limit ...int) param.StringSlice {
+	str := s.String(key)
+	if len(str) == 0 {
+		return param.StringSlice{}
+	}
+	if len(limit) > 0 {
+		return strings.SplitN(str, sep, limit[0])
+	}
+	return strings.Split(str, sep)
+}
+
+func (s Store) Trim(key string, defaults ...interface{}) param.String {
+	return param.String(strings.TrimSpace(s.String(key, defaults...)))
 }
 
 func (s Store) HTML(key string, defaults ...interface{}) template.HTML {
@@ -326,6 +346,37 @@ func (s Store) Uint64(key string, defaults ...interface{}) uint64 {
 	}
 }
 
+func (s Store) Timestamp(key string, defaults ...interface{}) time.Time {
+	p := s.String(key, defaults...)
+	if len(p) > 0 {
+		s := strings.SplitN(p, `.`, 2)
+		var sec int64
+		var nsec int64
+		switch len(s) {
+		case 2:
+			nsec = param.String(s[1]).Int64()
+			fallthrough
+		case 1:
+			sec = param.String(s[0]).Int64()
+		}
+		return time.Unix(sec, nsec)
+	}
+	return time.Time{}
+}
+
+func (s Store) DateTime(key string, layouts ...string) time.Time {
+	p := s.String(key)
+	if len(p) > 0 {
+		layout := `2006-01-02 15:04:05`
+		if len(layouts) > 0 {
+			layout = layouts[0]
+		}
+		t, _ := time.Parse(layout, p)
+		return t
+	}
+	return time.Time{}
+}
+
 func (s Store) Store(key string, defaults ...interface{}) Store {
 	val := s.Get(key, defaults...)
 	switch v := val.(type) {
@@ -436,10 +487,18 @@ func (s Store) ToData() *RawData {
 	}
 	var code State
 	if v, y := s["Code"]; y {
-		if c, y := v.(int); y {
-			code = State(c)
-		} else if c, y := v.(State); y {
+		switch c := v.(type) {
+		case State:
 			code = c
+		case int:
+			code = State(c)
+		case string:
+			i, _ := strconv.Atoi(c)
+			code = State(i)
+		default:
+			s := fmt.Sprint(c)
+			i, _ := strconv.Atoi(s)
+			code = State(i)
 		}
 	}
 	return &RawData{
