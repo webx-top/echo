@@ -360,6 +360,7 @@ func Append(renderArgs map[string]interface{}, key string, value interface{}) st
 
 //NlToBr Replaces newlines with <br />
 func NlToBr(text string) template.HTML {
+	text = com.HTMLEncode(text)
 	return template.HTML(Nl2br(text))
 }
 
