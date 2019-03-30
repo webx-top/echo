@@ -377,6 +377,14 @@ func (s Store) DateTime(key string, layouts ...string) time.Time {
 	return time.Time{}
 }
 
+func (s Store) Children(keys ...interface{}) Store {
+	r := s
+	for _, key := range keys {
+		r = r.Store(fmt.Sprint(key))
+	}
+	return r
+}
+
 func (s Store) Store(key string, defaults ...interface{}) Store {
 	val := s.Get(key, defaults...)
 	switch v := val.(type) {
