@@ -20,6 +20,14 @@ package param
 
 import "time"
 
+func ToStringMap(m map[string]string) StringMap {
+	r := StringMap{}
+	for k, v := range m {
+		r[k] = String(v)
+	}
+	return r
+}
+
 type StringMap map[string]String
 
 func (p StringMap) String(key string) string {
