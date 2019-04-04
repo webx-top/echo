@@ -74,7 +74,8 @@ func (p *OAuth) SetCompleteAuthHandler(handler func(ctx echo.Context) (goth.User
 // if user is not validated  or not found it returns nil
 // same as 'ctx.Get(config's ContextKey field).(goth.User)'
 func (p *OAuth) User(ctx echo.Context) (u goth.User) {
-	return ctx.Get(p.Config.ContextKey).(goth.User)
+	u, _ = ctx.Get(p.Config.ContextKey).(goth.User)
+	return u
 }
 
 // Wrapper register the oauth route
