@@ -120,8 +120,22 @@ func (s Store) CSS(key string, defaults ...interface{}) template.CSS {
 }
 
 func (s Store) Bool(key string, defaults ...interface{}) bool {
-	if v, y := s.Get(key, defaults...).(bool); y {
+	val := s.Get(key, defaults...)
+	switch v := val.(type) {
+	case bool:
 		return v
+	case string:
+		if len(v) > 0 {
+			r, _ := strconv.ParseBool(v)
+			return r
+		}
+		return false
+	default:
+		p := fmt.Sprint(v)
+		if len(p) > 0 {
+			r, _ := strconv.ParseBool(p)
+			return r
+		}
 	}
 	return false
 }
