@@ -116,7 +116,9 @@ func FormNames(s string) []string {
 		}
 		if r == ']' {
 			if hasLeft {
-				hasRight = true
+				res = append(res, string(val))
+				val = []rune{}
+				hasLeft = false
 			}
 			continue
 		}

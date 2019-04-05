@@ -7,11 +7,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var mapString = `{
+  "a": {
+    "d": "first",
+    "e": "second",
+    "f": "third",
+    "g": "fourth"
+  },
+  "b": [
+    [
+      "index_0",
+      "index_1"
+    ]
+  ],
+  "c": [
+    {
+      "a": "index 0.a"
+    },
+    {
+      "b": "index 1.b"
+    }
+  ]
+}`
+
 func TestMapx(t *testing.T) {
+	//panic(Dump(FormNames("a[]"), false))
 	assert.Equal(t, "[a b c d]", fmt.Sprint(FormNames("a[b][c][d]")))
 	assert.Equal(t, "[a b c d]", fmt.Sprint(FormNames("a[[b][c][d]")))
 	assert.Equal(t, "[a b c d]", fmt.Sprint(FormNames("a][[b][c][d]")))
 	assert.Equal(t, "[a  b c d]", fmt.Sprint(FormNames("a[][b][c][d]")))
+	assert.Equal(t, "[a ]", fmt.Sprint(FormNames("a[]")))
 	data := map[string][]string{
 		"a[d]":   []string{"first"},
 		"a[e]":   []string{"second"},
@@ -31,6 +56,8 @@ func TestMapx(t *testing.T) {
 	assert.Equal(t, "[index_0 index_1]", fmt.Sprint(mx.Values("b")))
 	assert.Equal(t, "index 0.a", mx.Value("c", "0", "a"))
 	assert.Equal(t, "index 1.b", mx.Value("c", "1", "b"))
+	//panic(Dump(mx.AsMap(), false))
+	assert.Equal(t, mapString, Dump(mx.AsMap(), false))
 }
 
 func TestKVList(t *testing.T) {

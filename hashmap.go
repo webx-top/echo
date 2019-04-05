@@ -93,6 +93,63 @@ func (m *Mapx) IsSlice() bool {
 	return len(m.Slice) > 0
 }
 
+func (m *Mapx) AsMap() map[string]interface{} {
+	r := map[string]interface{}{}
+	for key, mapx := range m.Map {
+		if mapx == nil {
+			continue
+		}
+		if mapx.IsMap() {
+			r[key] = mapx.AsMap()
+			continue
+		}
+		if mapx.IsSlice() {
+			r[key] = mapx.AsSlice()
+			continue
+		}
+		if len(mapx.Val) > 0 {
+			r[key] = mapx.Val[0]
+		} else {
+			r[key] = ``
+		}
+	}
+	return r
+}
+
+func (m *Mapx) AsSlice() []interface{} {
+	r := make([]interface{}, len(m.Slice))
+	for key, mapx := range m.Slice {
+		if mapx == nil {
+			continue
+		}
+		if mapx.IsMap() {
+			r[key] = mapx.AsMap()
+			continue
+		}
+		if mapx.IsSlice() {
+			r[key] = mapx.AsSlice()
+			continue
+		}
+		r[key] = mapx.Val
+	}
+	return r
+}
+
+func (m *Mapx) AsFlatSlice() []string {
+	r := []string{}
+	for _, mapx := range m.Slice {
+		if mapx == nil {
+			continue
+		}
+		if mapx.IsSlice() {
+			r = append(r, mapx.AsFlatSlice()...)
+			continue
+		}
+		r = append(r, mapx.Val...)
+	}
+	return r
+}
+
 func (m *Mapx) Parse(data map[string][]string, keySkipper ...func(string) bool) *Mapx {
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -202,6 +259,9 @@ func (m *Mapx) Values(names ...string) []string {
 	}
 	v := m.Get(names...)
 	if v != nil {
+		if v.IsSlice() {
+			return v.AsFlatSlice()
+		}
 		return v.Val
 	}
 	return []string{}
