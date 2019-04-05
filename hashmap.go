@@ -85,6 +85,14 @@ func (m *Mapx) Clone() *Mapx {
 	return mCopy
 }
 
+func (m *Mapx) IsMap() bool {
+	return len(m.Map) > 0
+}
+
+func (m *Mapx) IsSlice() bool {
+	return len(m.Slice) > 0
+}
+
 func (m *Mapx) Parse(data map[string][]string, keySkipper ...func(string) bool) *Mapx {
 	m.lock.Lock()
 	defer m.lock.Unlock()
