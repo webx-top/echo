@@ -116,6 +116,29 @@ func (m *Mapx) AsMap() map[string]interface{} {
 	return r
 }
 
+func (m *Mapx) AsStore() Store {
+	r := Store{}
+	for key, mapx := range m.Map {
+		if mapx == nil {
+			continue
+		}
+		if mapx.IsMap() {
+			r[key] = mapx.AsMap()
+			continue
+		}
+		if mapx.IsSlice() {
+			r[key] = mapx.AsSlice()
+			continue
+		}
+		if len(mapx.Val) > 0 {
+			r[key] = mapx.Val[0]
+		} else {
+			r[key] = ``
+		}
+	}
+	return r
+}
+
 func (m *Mapx) AsSlice() []interface{} {
 	r := make([]interface{}, len(m.Slice))
 	for key, mapx := range m.Slice {
