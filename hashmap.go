@@ -123,7 +123,7 @@ func (m *Mapx) AsStore() Store {
 			continue
 		}
 		if mapx.IsMap() {
-			r[key] = mapx.AsMap()
+			r[key] = mapx.AsStore()
 			continue
 		}
 		if mapx.IsSlice() {
