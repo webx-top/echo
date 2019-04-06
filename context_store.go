@@ -54,10 +54,14 @@ func (s Store) Get(key string, defaults ...interface{}) interface{} {
 
 func (s Store) String(key string, defaults ...interface{}) string {
 	p := s.Get(key, defaults...)
-	if v, y := p.(string); y {
+	switch v := p.(type) {
+	case string:
 		return v
+	case nil:
+		return ``
+	default:
+		return fmt.Sprint(p)
 	}
-	return fmt.Sprint(p)
 }
 
 func (s Store) Split(key string, sep string, limit ...int) param.StringSlice {
@@ -80,43 +84,58 @@ func (s Store) HTML(key string, defaults ...interface{}) template.HTML {
 	if v, y := val.(template.HTML); y {
 		return v
 	}
-	if v, y := val.(string); y {
+	switch v := val.(type) {
+	case template.HTML:
+		return v
+	case string:
 		return template.HTML(v)
+	case nil:
+		return emptyHTML
+	default:
+		return template.HTML(fmt.Sprint(v))
 	}
-	return emptyHTML
 }
 
 func (s Store) HTMLAttr(key string, defaults ...interface{}) template.HTMLAttr {
 	val := s.Get(key, defaults...)
-	if v, y := val.(template.HTMLAttr); y {
+	switch v := val.(type) {
+	case template.HTMLAttr:
 		return v
-	}
-	if v, y := val.(string); y {
+	case string:
 		return template.HTMLAttr(v)
+	case nil:
+		return emptyHTMLAttr
+	default:
+		return template.HTMLAttr(fmt.Sprint(v))
 	}
-	return emptyHTMLAttr
 }
 
 func (s Store) JS(key string, defaults ...interface{}) template.JS {
 	val := s.Get(key, defaults...)
-	if v, y := val.(template.JS); y {
+	switch v := val.(type) {
+	case template.JS:
 		return v
-	}
-	if v, y := val.(string); y {
+	case string:
 		return template.JS(v)
+	case nil:
+		return emptyJS
+	default:
+		return template.JS(fmt.Sprint(v))
 	}
-	return emptyJS
 }
 
 func (s Store) CSS(key string, defaults ...interface{}) template.CSS {
 	val := s.Get(key, defaults...)
-	if v, y := val.(template.CSS); y {
+	switch v := val.(type) {
+	case template.CSS:
 		return v
-	}
-	if v, y := val.(string); y {
+	case string:
 		return template.CSS(v)
+	case nil:
+		return emptyCSS
+	default:
+		return template.CSS(fmt.Sprint(v))
 	}
-	return emptyCSS
 }
 
 func (s Store) Bool(key string, defaults ...interface{}) bool {
@@ -129,6 +148,8 @@ func (s Store) Bool(key string, defaults ...interface{}) bool {
 			r, _ := strconv.ParseBool(v)
 			return r
 		}
+		return false
+	case nil:
 		return false
 	default:
 		p := fmt.Sprint(v)
@@ -162,6 +183,8 @@ func (s Store) Float64(key string, defaults ...interface{}) float64 {
 	case string:
 		i, _ := strconv.ParseFloat(v, 64)
 		return i
+	case nil:
+		return 0
 	default:
 		s := fmt.Sprint(v)
 		i, _ := strconv.ParseFloat(s, 64)
@@ -181,6 +204,8 @@ func (s Store) Float32(key string, defaults ...interface{}) float32 {
 	case string:
 		f, _ := strconv.ParseFloat(v, 32)
 		return float32(f)
+	case nil:
+		return 0
 	default:
 		s := fmt.Sprint(val)
 		f, _ := strconv.ParseFloat(s, 32)
@@ -196,6 +221,8 @@ func (s Store) Int8(key string, defaults ...interface{}) int8 {
 	case string:
 		i, _ := strconv.ParseInt(v, 10, 8)
 		return int8(i)
+	case nil:
+		return 0
 	default:
 		s := fmt.Sprint(val)
 		i, _ := strconv.ParseInt(s, 10, 8)
@@ -211,6 +238,8 @@ func (s Store) Int16(key string, defaults ...interface{}) int16 {
 	case string:
 		i, _ := strconv.ParseInt(v, 10, 16)
 		return int16(i)
+	case nil:
+		return 0
 	default:
 		s := fmt.Sprint(v)
 		i, _ := strconv.ParseInt(s, 10, 16)
@@ -226,6 +255,8 @@ func (s Store) Int(key string, defaults ...interface{}) int {
 	case string:
 		i, _ := strconv.Atoi(v)
 		return i
+	case nil:
+		return 0
 	default:
 		s := fmt.Sprint(v)
 		i, _ := strconv.Atoi(s)
@@ -241,6 +272,8 @@ func (s Store) Int32(key string, defaults ...interface{}) int32 {
 	case string:
 		i, _ := strconv.ParseInt(v, 10, 32)
 		return int32(i)
+	case nil:
+		return 0
 	default:
 		s := fmt.Sprint(v)
 		i, _ := strconv.ParseInt(s, 10, 32)
@@ -264,6 +297,8 @@ func (s Store) Int64(key string, defaults ...interface{}) int64 {
 	case string:
 		i, _ := strconv.ParseInt(v, 10, 64)
 		return i
+	case nil:
+		return 0
 	default:
 		s := fmt.Sprint(v)
 		i, _ := strconv.ParseInt(s, 10, 64)
@@ -293,6 +328,8 @@ func (s Store) Uint8(key string, defaults ...interface{}) uint8 {
 	case string:
 		i, _ := strconv.ParseUint(v, 10, 8)
 		return uint8(i)
+	case nil:
+		return 0
 	default:
 		s := fmt.Sprint(v)
 		i, _ := strconv.ParseUint(s, 10, 8)
@@ -308,6 +345,8 @@ func (s Store) Uint16(key string, defaults ...interface{}) uint16 {
 	case string:
 		i, _ := strconv.ParseUint(v, 10, 16)
 		return uint16(i)
+	case nil:
+		return 0
 	default:
 		s := fmt.Sprint(v)
 		i, _ := strconv.ParseUint(s, 10, 16)
@@ -323,6 +362,8 @@ func (s Store) Uint(key string, defaults ...interface{}) uint {
 	case string:
 		i, _ := strconv.ParseUint(v, 10, 32)
 		return uint(i)
+	case nil:
+		return 0
 	default:
 		s := fmt.Sprint(v)
 		i, _ := strconv.ParseUint(s, 10, 32)
@@ -338,6 +379,8 @@ func (s Store) Uint32(key string, defaults ...interface{}) uint32 {
 	case string:
 		i, _ := strconv.ParseUint(v, 10, 32)
 		return uint32(i)
+	case nil:
+		return 0
 	default:
 		s := fmt.Sprint(v)
 		i, _ := strconv.ParseUint(s, 10, 32)
@@ -353,6 +396,8 @@ func (s Store) Uint64(key string, defaults ...interface{}) uint64 {
 	case string:
 		i, _ := strconv.ParseUint(v, 10, 64)
 		return i
+	case nil:
+		return 0
 	default:
 		s := fmt.Sprint(v)
 		i, _ := strconv.ParseUint(s, 10, 64)
