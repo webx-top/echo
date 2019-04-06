@@ -174,6 +174,7 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 		)
 		length := len(names)
 		if length == 1 && strings.HasSuffix(k, `]`) {
+			k = strings.TrimRight(k, `[]`)
 			names = FormNames(k)
 			length = len(names)
 		}
