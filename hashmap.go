@@ -268,6 +268,9 @@ func (m *Mapx) ValuesOk(names ...string) ([]string, bool) {
 	}
 	v := m.Get(names...)
 	if v != nil {
+		if v.IsSlice() {
+			return v.AsFlatSlice(), true
+		}
 		return v.Val, true
 	}
 	return []string{}, false
