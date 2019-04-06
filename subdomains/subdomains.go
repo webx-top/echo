@@ -80,6 +80,13 @@ func (s *Subdomains) Get(args ...string) *Info {
 	return nil
 }
 
+func (s *Subdomains) SetDebug(on bool) *Subdomains {
+	for _, info := range s.Alias {
+		info.SetDebug(on)
+	}
+	return s
+}
+
 // URL 多域名场景下的网址生成功能
 // URL(网址路径,域名别名)，如果这里不传递域名别名，将使用默认别名的域名
 // 例如：URL("/list?cid=1","blog")
