@@ -22,6 +22,7 @@ import (
 	"errors"
 	"net/http"
 	"regexp"
+	"sync"
 )
 
 var (
@@ -70,4 +71,42 @@ var (
 			return h.Handle(c)
 		}
 	}
+
+	globalVars = sync.Map{} //Custom global variable
 )
+
+func Set(key, value interface{}) {
+	globalVars.Store(key, value)
+}
+
+func Get(key interface{}, defaults ...interface{}) interface{} {
+	value, ok := globalVars.Load(key)
+	if !ok && len(defaults) > 0 {
+		if fallback, ok := defaults[0].(func() interface{}); ok {
+			return fallback()
+		}
+		return defaults[0]
+	}
+	return value
+}
+
+func GetOk(key interface{}) (interface{}, bool) {
+	return globalVars.Load(key)
+}
+
+func Exists(key interface{}) bool {
+	_, ok := globalVars.Load(key)
+	return ok
+}
+
+func Delete(key interface{}) {
+	globalVars.Delete(key)
+}
+
+func Range(f func(key, value interface{}) bool) {
+	globalVars.Range(f)
+}
+
+func GetOrSet(key, value interface{}) (actual interface{}, loaded bool) {
+	return globalVars.LoadOrStore(key, value)
+}
