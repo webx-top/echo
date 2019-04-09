@@ -24,6 +24,8 @@ import (
 	"time"
 )
 
+var emptyTime = time.Time{}
+
 type String string
 
 func (p String) String() string {
@@ -135,7 +137,7 @@ func (p String) Timestamp() time.Time {
 		}
 		return time.Unix(sec, nsec)
 	}
-	return time.Time{}
+	return emptyTime
 }
 
 func (p String) DateTime(layouts ...string) time.Time {
@@ -147,5 +149,5 @@ func (p String) DateTime(layouts ...string) time.Time {
 		t, _ := time.Parse(layout, p.String())
 		return t
 	}
-	return time.Time{}
+	return emptyTime
 }

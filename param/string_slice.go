@@ -29,6 +29,10 @@ func (p StringSlice) String() []string {
 	return []string(p)
 }
 
+func (p StringSlice) Join(sep string) string {
+	return strings.Join([]string(p), sep)
+}
+
 func (p StringSlice) Interface(filters ...func(int, string) bool) []interface{} {
 	var filter func(int, string) bool
 	if len(filters) > 0 {

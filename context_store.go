@@ -19,6 +19,7 @@ var (
 	emptyCSS      = template.CSS(``)
 	emptyHTMLAttr = template.HTMLAttr(``)
 	emptyStore    = Store{}
+	emptyTime     = time.Time{}
 )
 
 type Store map[string]interface{}
@@ -81,9 +82,6 @@ func (s Store) Trim(key string, defaults ...interface{}) param.String {
 
 func (s Store) HTML(key string, defaults ...interface{}) template.HTML {
 	val := s.Get(key, defaults...)
-	if v, y := val.(template.HTML); y {
-		return v
-	}
 	switch v := val.(type) {
 	case template.HTML:
 		return v
@@ -420,7 +418,7 @@ func (s Store) Timestamp(key string, defaults ...interface{}) time.Time {
 		}
 		return time.Unix(sec, nsec)
 	}
-	return time.Time{}
+	return emptyTime
 }
 
 func (s Store) DateTime(key string, layouts ...string) time.Time {
@@ -433,7 +431,7 @@ func (s Store) DateTime(key string, layouts ...string) time.Time {
 		t, _ := time.Parse(layout, p)
 		return t
 	}
-	return time.Time{}
+	return emptyTime
 }
 
 func (s Store) Children(keys ...interface{}) Store {
