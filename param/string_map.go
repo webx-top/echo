@@ -34,6 +34,10 @@ func (p StringMap) String(key string) string {
 	return p[key].String()
 }
 
+func (p StringMap) Raw(key string) string {
+	return p[key].Raw()
+}
+
 func (p StringMap) Split(key string, sep string, limit ...int) StringSlice {
 	return p[key].Split(sep, limit...)
 }

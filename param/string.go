@@ -32,6 +32,10 @@ func (p String) String() string {
 	return strings.TrimSpace(string(p))
 }
 
+func (p String) Raw() string {
+	return string(p)
+}
+
 func (p String) Split(sep string, limit ...int) StringSlice {
 	s := p.String()
 	if len(s) == 0 {
