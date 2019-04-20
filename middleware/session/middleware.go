@@ -18,6 +18,8 @@
 package session
 
 import (
+	"errors"
+
 	"github.com/admpub/sessions"
 	"github.com/webx-top/echo"
 )
@@ -47,7 +49,12 @@ func Sessions(options *echo.SessionOptions, store sessions.Store) echo.Middlewar
 			})
 			err := h.Handle(c)
 			if e := s.Save(); e != nil {
-				c.Logger().Error(e)
+				if err != nil {
+					err = errors.New("Multiple errors:\n1. " + err.Error() + "\n2. " + e.Error())
+				} else {
+					err = e
+				}
+				c.Logger().Error(err)
 			}
 			return err
 		}
