@@ -28,7 +28,7 @@ type Config struct {
 }
 
 var DefaultFuncMapSkipper = func(c echo.Context) bool {
-	return c.Format() != `html`
+	return c.Format() != `html` && !c.IsAjax() && !c.IsPjax()
 }
 
 func (t *Config) SetFuncMapSkipper(skipper echo.Skipper) *Config {
