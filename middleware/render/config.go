@@ -24,6 +24,16 @@ type Config struct {
 	Debug                bool
 	renderer             driver.Driver
 	errorPageFuncSetter  []echo.HandlerFunc
+	FuncMapSkipper       echo.Skipper
+}
+
+var DefaultFuncMapSkipper = func(c echo.Context) bool {
+	return c.Format() != `html`
+}
+
+func (t *Config) SetFuncMapSkipper(skipper echo.Skipper) *Config {
+	t.FuncMapSkipper = skipper
+	return t
 }
 
 func (t *Config) Parser() func([]byte) []byte {
@@ -97,9 +107,13 @@ func (t *Config) ApplyTo(e *echo.Echo, manager ...driver.Manager) *Config {
 	}
 	opt.SetFuncSetter(t.errorPageFuncSetter...)
 	e.SetHTTPErrorHandler(HTTPErrorHandler(opt))
-	e.Use(middleware.FuncMap(tplfunc.New(), func(c echo.Context) bool {
-		return c.Format() != `html`
-	}))
+	var funcMapSkipper echo.Skipper
+	if t.FuncMapSkipper != nil {
+		funcMapSkipper = t.FuncMapSkipper
+	} else {
+		funcMapSkipper = DefaultFuncMapSkipper
+	}
+	e.Use(middleware.FuncMap(tplfunc.New(), funcMapSkipper))
 	renderer := t.NewRenderer(manager...)
 	if t.StaticOptions != nil {
 		e.Use(middleware.Static(t.StaticOptions))
