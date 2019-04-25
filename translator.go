@@ -18,7 +18,10 @@
 
 package echo
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // T 标记为多语言文本
 func T(format string, args ...interface{}) string {
@@ -28,8 +31,16 @@ func T(format string, args ...interface{}) string {
 	return format
 }
 
+func E(format string, args ...interface{}) error {
+	if len(args) > 0 {
+		return fmt.Errorf(format, args...)
+	}
+	return errors.New(format)
+}
+
 type Translator interface {
 	T(format string, args ...interface{}) string
+	E(format string, args ...interface{}) error
 	Lang() string
 }
 
@@ -41,6 +52,10 @@ type NopTranslate struct {
 
 func (n *NopTranslate) T(format string, args ...interface{}) string {
 	return T(format, args...)
+}
+
+func (n *NopTranslate) E(format string, args ...interface{}) error {
+	return E(format, args...)
 }
 
 func (n *NopTranslate) Lang() string {
