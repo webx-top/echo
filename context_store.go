@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -13,13 +12,8 @@ import (
 )
 
 var (
-	mutex         sync.RWMutex
-	emptyHTML     = template.HTML(``)
-	emptyJS       = template.JS(``)
-	emptyCSS      = template.CSS(``)
-	emptyHTMLAttr = template.HTMLAttr(``)
-	emptyStore    = Store{}
-	emptyTime     = time.Time{}
+	mutex      sync.RWMutex
+	emptyStore = Store{}
 )
 
 type Store map[string]interface{}
@@ -54,384 +48,103 @@ func (s Store) Get(key string, defaults ...interface{}) interface{} {
 }
 
 func (s Store) String(key string, defaults ...interface{}) string {
-	p := s.Get(key, defaults...)
-	switch v := p.(type) {
-	case string:
-		return v
-	case nil:
-		return ``
-	default:
-		return fmt.Sprint(p)
-	}
+	return param.AsString(s.Get(key, defaults...))
 }
 
 func (s Store) Split(key string, sep string, limit ...int) param.StringSlice {
-	str := s.String(key)
-	if len(str) == 0 {
-		return param.StringSlice{}
-	}
-	if len(limit) > 0 {
-		return strings.SplitN(str, sep, limit[0])
-	}
-	return strings.Split(str, sep)
+	return param.Split(s.Get(key), sep, limit...)
 }
 
 func (s Store) Trim(key string, defaults ...interface{}) param.String {
-	return param.String(strings.TrimSpace(s.String(key, defaults...)))
+	return param.Trim(s.Get(key, defaults...))
 }
 
 func (s Store) HTML(key string, defaults ...interface{}) template.HTML {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case template.HTML:
-		return v
-	case string:
-		return template.HTML(v)
-	case nil:
-		return emptyHTML
-	default:
-		return template.HTML(fmt.Sprint(v))
-	}
+	return param.AsHTML(s.Get(key, defaults...))
 }
 
 func (s Store) HTMLAttr(key string, defaults ...interface{}) template.HTMLAttr {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case template.HTMLAttr:
-		return v
-	case string:
-		return template.HTMLAttr(v)
-	case nil:
-		return emptyHTMLAttr
-	default:
-		return template.HTMLAttr(fmt.Sprint(v))
-	}
+	return param.AsHTMLAttr(s.Get(key, defaults...))
 }
 
 func (s Store) JS(key string, defaults ...interface{}) template.JS {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case template.JS:
-		return v
-	case string:
-		return template.JS(v)
-	case nil:
-		return emptyJS
-	default:
-		return template.JS(fmt.Sprint(v))
-	}
+	return param.AsJS(s.Get(key, defaults...))
 }
 
 func (s Store) CSS(key string, defaults ...interface{}) template.CSS {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case template.CSS:
-		return v
-	case string:
-		return template.CSS(v)
-	case nil:
-		return emptyCSS
-	default:
-		return template.CSS(fmt.Sprint(v))
-	}
+	return param.AsCSS(s.Get(key, defaults...))
 }
 
 func (s Store) Bool(key string, defaults ...interface{}) bool {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case bool:
-		return v
-	case string:
-		if len(v) > 0 {
-			r, _ := strconv.ParseBool(v)
-			return r
-		}
-		return false
-	case nil:
-		return false
-	default:
-		p := fmt.Sprint(v)
-		if len(p) > 0 {
-			r, _ := strconv.ParseBool(p)
-			return r
-		}
-	}
-	return false
+	return param.AsBool(s.Get(key, defaults...))
 }
 
 func (s Store) Float64(key string, defaults ...interface{}) float64 {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case float64:
-		return v
-	case int64:
-		return float64(v)
-	case uint64:
-		return float64(v)
-	case float32:
-		return float64(v)
-	case int32:
-		return float64(v)
-	case uint32:
-		return float64(v)
-	case int:
-		return float64(v)
-	case uint:
-		return float64(v)
-	case string:
-		i, _ := strconv.ParseFloat(v, 64)
-		return i
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseFloat(s, 64)
-		return i
-	}
+	return param.AsFloat64(s.Get(key, defaults...))
 }
 
 func (s Store) Float32(key string, defaults ...interface{}) float32 {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case float32:
-		return v
-	case int32:
-		return float32(v)
-	case uint32:
-		return float32(v)
-	case string:
-		f, _ := strconv.ParseFloat(v, 32)
-		return float32(f)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(val)
-		f, _ := strconv.ParseFloat(s, 32)
-		return float32(f)
-	}
+	return param.AsFloat32(s.Get(key, defaults...))
 }
 
 func (s Store) Int8(key string, defaults ...interface{}) int8 {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case int8:
-		return v
-	case string:
-		i, _ := strconv.ParseInt(v, 10, 8)
-		return int8(i)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(val)
-		i, _ := strconv.ParseInt(s, 10, 8)
-		return int8(i)
-	}
+	return param.AsInt8(s.Get(key, defaults...))
 }
 
 func (s Store) Int16(key string, defaults ...interface{}) int16 {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case int16:
-		return v
-	case string:
-		i, _ := strconv.ParseInt(v, 10, 16)
-		return int16(i)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseInt(s, 10, 16)
-		return int16(i)
-	}
+	return param.AsInt16(s.Get(key, defaults...))
 }
 
 func (s Store) Int(key string, defaults ...interface{}) int {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case int:
-		return v
-	case string:
-		i, _ := strconv.Atoi(v)
-		return i
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.Atoi(s)
-		return i
-	}
+	return param.AsInt(s.Get(key, defaults...))
 }
 
 func (s Store) Int32(key string, defaults ...interface{}) int32 {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case int32:
-		return v
-	case string:
-		i, _ := strconv.ParseInt(v, 10, 32)
-		return int32(i)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseInt(s, 10, 32)
-		return int32(i)
-	}
+	return param.AsInt32(s.Get(key, defaults...))
 }
 
 func (s Store) Int64(key string, defaults ...interface{}) int64 {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case int64:
-		return v
-	case int32:
-		return int64(v)
-	case uint32:
-		return int64(v)
-	case int:
-		return int64(v)
-	case uint:
-		return int64(v)
-	case string:
-		i, _ := strconv.ParseInt(v, 10, 64)
-		return i
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseInt(s, 10, 64)
-		return i
-	}
+	return param.AsInt64(s.Get(key, defaults...))
 }
 
 func (s Store) Decr(key string, n int64, defaults ...interface{}) int64 {
-	v, _ := s.Get(key, defaults...).(int64)
-	v -= n
+	v := param.Decr(s.Get(key, defaults...), n)
 	s.Set(key, v)
 	return v
 }
 
 func (s Store) Incr(key string, n int64, defaults ...interface{}) int64 {
-	v, _ := s.Get(key, defaults...).(int64)
-	v += n
+	v := param.Incr(s.Get(key, defaults...), n)
 	s.Set(key, v)
 	return v
 }
 
 func (s Store) Uint8(key string, defaults ...interface{}) uint8 {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case uint8:
-		return v
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 8)
-		return uint8(i)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseUint(s, 10, 8)
-		return uint8(i)
-	}
+	return param.AsUint8(s.Get(key, defaults...))
 }
 
 func (s Store) Uint16(key string, defaults ...interface{}) uint16 {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case uint16:
-		return v
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 16)
-		return uint16(i)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseUint(s, 10, 16)
-		return uint16(i)
-	}
+	return param.AsUint16(s.Get(key, defaults...))
 }
 
 func (s Store) Uint(key string, defaults ...interface{}) uint {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case uint:
-		return v
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 32)
-		return uint(i)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseUint(s, 10, 32)
-		return uint(i)
-	}
+	return param.AsUint(s.Get(key, defaults...))
 }
 
 func (s Store) Uint32(key string, defaults ...interface{}) uint32 {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case uint32:
-		return v
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 32)
-		return uint32(i)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseUint(s, 10, 32)
-		return uint32(i)
-	}
+	return param.AsUint32(s.Get(key, defaults...))
 }
 
 func (s Store) Uint64(key string, defaults ...interface{}) uint64 {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case uint64:
-		return v
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 64)
-		return i
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseUint(s, 10, 64)
-		return i
-	}
+	return param.AsUint64(s.Get(key, defaults...))
 }
 
 func (s Store) Timestamp(key string, defaults ...interface{}) time.Time {
-	p := s.String(key, defaults...)
-	if len(p) > 0 {
-		s := strings.SplitN(p, `.`, 2)
-		var sec int64
-		var nsec int64
-		switch len(s) {
-		case 2:
-			nsec = param.String(s[1]).Int64()
-			fallthrough
-		case 1:
-			sec = param.String(s[0]).Int64()
-		}
-		return time.Unix(sec, nsec)
-	}
-	return emptyTime
+	return param.AsTimestamp(s.Get(key, defaults...))
 }
 
 func (s Store) DateTime(key string, layouts ...string) time.Time {
-	p := s.String(key)
-	if len(p) > 0 {
-		layout := `2006-01-02 15:04:05`
-		if len(layouts) > 0 {
-			layout = layouts[0]
-		}
-		t, _ := time.Parse(layout, p)
-		return t
-	}
-	return emptyTime
+	return param.AsDateTime(s.Get(key), layouts...)
 }
 
 func (s Store) Children(keys ...interface{}) Store {
@@ -443,69 +156,7 @@ func (s Store) Children(keys ...interface{}) Store {
 }
 
 func (s Store) Store(key string, defaults ...interface{}) Store {
-	val := s.Get(key, defaults...)
-	switch v := val.(type) {
-	case Store:
-		return v
-	case map[string]interface{}:
-		return Store(v)
-	case map[string]uint64:
-		r := Store{}
-		for k, a := range v {
-			r[k] = interface{}(a)
-		}
-		return r
-	case map[string]int64:
-		r := Store{}
-		for k, a := range v {
-			r[k] = interface{}(a)
-		}
-		return r
-	case map[string]uint:
-		r := Store{}
-		for k, a := range v {
-			r[k] = interface{}(a)
-		}
-		return r
-	case map[string]int:
-		r := Store{}
-		for k, a := range v {
-			r[k] = interface{}(a)
-		}
-		return r
-	case map[string]uint32:
-		r := Store{}
-		for k, a := range v {
-			r[k] = interface{}(a)
-		}
-		return r
-	case map[string]int32:
-		r := Store{}
-		for k, a := range v {
-			r[k] = interface{}(a)
-		}
-		return r
-	case map[string]float32:
-		r := Store{}
-		for k, a := range v {
-			r[k] = interface{}(a)
-		}
-		return r
-	case map[string]float64:
-		r := Store{}
-		for k, a := range v {
-			r[k] = interface{}(a)
-		}
-		return r
-	case map[string]string:
-		r := Store{}
-		for k, a := range v {
-			r[k] = interface{}(a)
-		}
-		return r
-	default:
-		return emptyStore
-	}
+	return AsStore(s.Get(key, defaults...))
 }
 
 func (s Store) Delete(keys ...string) {
@@ -611,4 +262,69 @@ func (s Store) Clone() Store {
 		}
 	}
 	return r
+}
+
+func AsStore(val interface{}) Store {
+	switch v := val.(type) {
+	case Store:
+		return v
+	case map[string]interface{}:
+		return Store(v)
+	case map[string]uint64:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]int64:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]uint:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]int:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]uint32:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]int32:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]float32:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]float64:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]string:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	default:
+		return emptyStore
+	}
 }
