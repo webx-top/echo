@@ -20,7 +20,6 @@ package echo
 
 import (
 	"errors"
-	"fmt"
 	"html/template"
 	"net/http"
 	"regexp"
@@ -219,7 +218,7 @@ func DateTime(key interface{}, layouts ...string) time.Time {
 func Children(key interface{}, keys ...interface{}) Store {
 	r := GetStore(key)
 	for _, key := range keys {
-		r = GetStore(fmt.Sprint(key))
+		r = GetStore(key)
 	}
 	return r
 }
