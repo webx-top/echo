@@ -32,6 +32,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/admpub/decimal"
 	"github.com/webx-top/captcha"
 	"github.com/webx-top/com"
 )
@@ -99,8 +100,10 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"Float64":        com.Float64,
 	"ToFloat64":      ToFloat64,
 	"ToFixed":        ToFixed,
+	"ToDecimal":      ToDecimal,
 	"Math":           Math,
 	"NumberFormat":   NumberFormat,
+	"NumberTrim":     NumberTrim,
 	"DurationFormat": DurationFormat,
 
 	// ======================
@@ -846,19 +849,54 @@ func TimestampToTime(timestamp interface{}) time.Time {
 	return time.Unix(ts, 0)
 }
 
-func NumberFormat(number interface{}, precision int, delim ...string) string {
-	r := fmt.Sprintf(`%.*f`, precision, ToFloat64(number))
+func ToDecimal(number interface{}) decimal.Decimal {
+	money := ToFloat64(number)
+	return decimal.NewFromFloat(money)
+}
+
+func NumberTrim(number interface{}, precision int, separator ...string) string {
+	money := ToFloat64(number)
+	s := decimal.NewFromFloat(money).Truncate(int32(precision)).String()
+	if len(s) == 0 {
+		return `0`
+	}
+	p := strings.LastIndex(s, `.`)
+	if p < 0 {
+		return numberWithSeparator(s, separator...)
+	}
+	com.Dump(s)
+	if precision <= 0 {
+		return numberWithSeparator(s[0:p], separator...)
+	}
+	r := s[p+1:]
+	if len(r) >= precision {
+		return numberWithSeparator(s[0:p]+`.`+r[0:precision], separator...)
+	}
+	return numberWithSeparator(s, separator...)
+}
+
+func numberWithSeparator(r string, separator ...string) string {
 	d := `,`
-	if len(delim) > 0 {
-		d = delim[0]
+	if len(separator) > 0 {
+		d = separator[0]
 		if len(d) == 0 {
 			return r
 		}
 	}
-	i := len(r) - 1 - precision
+	p := strings.LastIndex(r, `.`)
+	var (
+		i int
+		v string
+	)
+	size := len(r)
+	if p <= 0 {
+		i = size
+	} else {
+		i = p
+		v = r[i:]
+	}
 	j := int(math.Ceil(float64(i) / float64(3)))
 	s := make([]string, j)
-	v := r[i:]
 	for i > 0 && j > 0 {
 		j--
 		start := i - 3
@@ -869,4 +907,9 @@ func NumberFormat(number interface{}, precision int, delim ...string) string {
 		i = start
 	}
 	return strings.Join(s, d) + v
+}
+
+func NumberFormat(number interface{}, precision int, separator ...string) string {
+	r := fmt.Sprintf(`%.*f`, precision, ToFloat64(number))
+	return numberWithSeparator(r, separator...)
 }
