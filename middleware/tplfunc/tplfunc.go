@@ -864,7 +864,6 @@ func NumberTrim(number interface{}, precision int, separator ...string) string {
 	if p < 0 {
 		return numberWithSeparator(s, separator...)
 	}
-	com.Dump(s)
 	if precision <= 0 {
 		return numberWithSeparator(s[0:p], separator...)
 	}
