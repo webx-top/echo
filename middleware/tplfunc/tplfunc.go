@@ -858,10 +858,16 @@ func NumberTrim(number interface{}, precision int, separator ...string) string {
 	money := ToFloat64(number)
 	s := decimal.NewFromFloat(money).Truncate(int32(precision)).String()
 	if len(s) == 0 {
-		return `0`
+		if precision <= 0 {
+			return `0`
+		}
+		return `0.` + strings.Repeat(`0`, precision)
 	}
 	p := strings.LastIndex(s, `.`)
 	if p < 0 {
+		if precision > 0 {
+			s += `.` + strings.Repeat(`0`, precision)
+		}
 		return numberWithSeparator(s, separator...)
 	}
 	if precision <= 0 {
