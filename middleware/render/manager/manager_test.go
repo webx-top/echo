@@ -10,12 +10,18 @@ import (
 	"github.com/admpub/log"
 )
 
+func TestManagerLoop(t *testing.T) {
+	for i := 0; i < 3; i++ {
+		TestManager(t)
+	}
+}
+
 func TestManager(t *testing.T) {
 	dirs := []string{
 		`./group_a/a`, `./group_b/b`,
 	}
 	changed := make(chan string)
-	Default.AddCallback(func(name, typ, event string) {
+	Default.AddCallback(`./`, func(name, typ, event string) {
 		changed <- fmt.Sprintln(name, typ, event)
 	})
 	go func() {
@@ -26,8 +32,8 @@ func TestManager(t *testing.T) {
 			}
 		}
 	}()
-	log.Sync()
-	log.GetLogger(`watcher`).SetLevel(`Fatal`)
+	defer log.Sync()
+	log.GetLogger(`watcher`).SetLevel(`Debug`)
 	var err error
 	for _, dir := range dirs {
 		err = os.MkdirAll(dir, os.ModePerm)
@@ -39,6 +45,9 @@ func TestManager(t *testing.T) {
 			panic(err)
 		}
 	}
+
+	Default.Start()
+	defer Default.Close()
 
 	err = ioutil.WriteFile(`./group_a/a/test.log`, []byte(time.Now().String()), os.ModePerm)
 	if err != nil {
@@ -56,7 +65,7 @@ func TestManager(t *testing.T) {
 		println(`cancel ./group_b`)
 		Default.CancelWatchDir(`./group_b`)
 	*/
-	for file := range Default.caches {
+	for file := range Default.(*Manager).caches {
 		println(`===>:`, file)
 	}
 	time.Sleep(2 * time.Second)
@@ -83,4 +92,6 @@ func TestManager(t *testing.T) {
 			panic(err)
 		}
 	}
+	os.RemoveAll(`./group_a`)
+	os.RemoveAll(`./group_b`)
 }

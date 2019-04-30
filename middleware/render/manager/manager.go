@@ -47,10 +47,10 @@ func New() *Manager {
 		Logger:   log.GetLogger(`watcher`),
 		done:     make(chan bool),
 	}
-	m.watcher, _ = fsnotify.NewWatcher()
 	return m
 }
 
+// Manager Tempate manager
 type Manager struct {
 	caches       map[string][]byte
 	lock         *sync.Once
@@ -65,11 +65,27 @@ type Manager struct {
 }
 
 func (self *Manager) closeMoniter() {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
 	if self.done == nil {
 		return
 	}
 	close(self.done)
 	self.done = nil
+	if self.watcher != nil {
+		self.watcher.Close()
+	}
+}
+
+func (self *Manager) getWatcher() *fsnotify.Watcher {
+	if self.watcher == nil {
+		var err error
+		self.watcher, err = fsnotify.NewWatcher()
+		if err != nil {
+			self.Logger.Error(err)
+		}
+	}
+	return self.watcher
 }
 
 func (self *Manager) AddCallback(rootDir string, callback func(name, typ, event string)) {
@@ -142,7 +158,7 @@ func (self *Manager) AddWatchDir(ppath string) (err error) {
 	if err != nil {
 		return
 	}
-	err = self.watcher.Add(ppath)
+	err = self.getWatcher().Add(ppath)
 	if err != nil {
 		self.Logger.Error(err.Error())
 		return
@@ -150,7 +166,7 @@ func (self *Manager) AddWatchDir(ppath string) (err error) {
 
 	err = filepath.Walk(ppath, func(f string, info os.FileInfo, err error) error {
 		if info.IsDir() {
-			return self.watcher.Add(f)
+			return self.getWatcher().Add(f)
 		}
 		return nil
 	})
@@ -174,12 +190,12 @@ func (self *Manager) CancelWatchDir(oldDir string) (err error) {
 	}
 	filepath.Walk(oldDir, func(f string, info os.FileInfo, err error) error {
 		if info.IsDir() {
-			self.watcher.Remove(f)
+			self.getWatcher().Remove(f)
 			return nil
 		}
 		return nil
 	})
-	self.watcher.Remove(oldDir)
+	self.getWatcher().Remove(oldDir)
 	return
 }
 
@@ -198,9 +214,12 @@ func (self *Manager) Start() error {
 }
 
 func (self *Manager) watch() error {
-	watcher := self.watcher
-	//fmt.Println("[webx] TemplateMgr watcher is start.")
-	defer watcher.Close()
+	watcher := self.getWatcher()
+	self.Logger.Debug("TemplateMgr watcher is start.")
+	defer func() {
+		watcher.Close()
+		self.watcher = nil
+	}()
 	go func() {
 		for {
 			select {
@@ -286,7 +305,7 @@ func (self *Manager) watch() error {
 	}()
 
 	<-self.done
-	//fmt.Println("[webx] TemplateMgr watcher is closed.")
+	self.Logger.Debug("TemplateMgr watcher is closed.")
 	return nil
 }
 
