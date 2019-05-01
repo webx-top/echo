@@ -750,6 +750,21 @@ func DurationFormat(lang interface{}, t interface{}, args ...string) *com.Durafm
 	return com.ParseDuration(duration, lang)
 }
 
+func ToTime(t interface{}) time.Time {
+	switch v := t.(type) {
+	case time.Time:
+		return v
+	case string:
+		t, err := time.ParseInLocation(`2006-01-02 15:04:05`, v, time.Local)
+		if err != nil {
+			panic(err)
+		}
+		return t
+	default:
+		return TsToTime(t)
+	}
+}
+
 func ToDuration(t interface{}, args ...string) time.Duration {
 	td := time.Second
 	if len(args) > 0 {
