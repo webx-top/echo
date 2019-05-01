@@ -84,7 +84,7 @@ func FuncMap(funcMap map[string]interface{}, skipper ...echo.Skipper) echo.Middl
 				if endDate.IsZero() {
 					endDate = time.Now().Local()
 				}
-				return humanizer.TimeDiff(startDate, endDate, 0)
+				return humanizer.TimeDiff(endDate, startDate, 0)
 			})
 			return h.Handle(c)
 		})
