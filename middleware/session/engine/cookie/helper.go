@@ -1,5 +1,8 @@
 package cookie
 
+// KeyPairs Convert hashKey and blockKey to bytes
+// @param hashKey
+// @param blockKey
 func KeyPairs(keys ...string) [][]byte {
 	var hashKey, blockKey string
 	if len(keys) > 0 {
