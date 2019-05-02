@@ -40,22 +40,8 @@ func RegWithOptions(opts *CookieOptions, args ...string) sessions.Store {
 }
 
 func NewCookieOptions(keys ...string) *CookieOptions {
-	var hashKey, blockKey string
-	if len(keys) > 0 {
-		hashKey = keys[0]
-	}
-	if len(keys) > 1 {
-		blockKey = keys[1]
-	}
 	options := &CookieOptions{
-		KeyPairs: [][]byte{},
-	}
-	if len(hashKey) > 0 {
-		options.KeyPairs = append(options.KeyPairs, []byte(hashKey))
-
-		if len(blockKey) > 0 && blockKey != hashKey {
-			options.KeyPairs = append(options.KeyPairs, []byte(blockKey))
-		}
+		KeyPairs: KeyPairs(keys...),
 	}
 	return options
 }
