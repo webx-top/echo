@@ -41,12 +41,7 @@ func Sessions(options *echo.SessionOptions, store sessions.Store) echo.Middlewar
 		return func(c echo.Context) error {
 			s := newSession(c)
 			c.SetSessioner(s)
-			c.AddPreResponseHook(func() error {
-				if options.Engine == `cookie` {
-					return s.Save()
-				}
-				return nil
-			})
+			c.AddPreResponseHook(s.Save)
 			err := h.Handle(c)
 			if e := s.Save(); e != nil {
 				if err != nil {

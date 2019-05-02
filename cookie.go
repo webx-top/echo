@@ -108,9 +108,10 @@ func (c *Cookie) MaxAge(p int) *Cookie {
 }
 
 //Expires 设置过期时间戳
-func (c *Cookie) Expires(p int64) *Cookie {
+func (c *Cookie) Expires(p int) *Cookie {
+	c.MaxAge(p)
 	if p > 0 {
-		c.cookie.Expires = time.Unix(time.Now().Unix()+p, 0)
+		c.cookie.Expires = time.Unix(time.Now().Unix()+int64(p), 0)
 	} else if p < 0 {
 		c.cookie.Expires = time.Unix(1, 0)
 	}
@@ -183,14 +184,14 @@ func (c *cookie) Set(key string, val string, args ...interface{}) Cookier {
 		cookie.Path(ppath)
 		fallthrough
 	case 1:
-		var liftTime int64
-		switch args[0].(type) {
+		var liftTime int
+		switch v := args[0].(type) {
 		case int:
-			liftTime = int64(args[0].(int))
+			liftTime = v
 		case int64:
-			liftTime = args[0].(int64)
+			liftTime = int(v)
 		case time.Duration:
-			liftTime = int64(args[0].(time.Duration).Seconds())
+			liftTime = int(v.Seconds())
 		}
 		cookie.Expires(liftTime)
 	}
