@@ -3,7 +3,6 @@ package mysql
 import (
 	"database/sql"
 	"encoding/base32"
-	"encoding/gob"
 	"fmt"
 	"log"
 	"strings"
@@ -70,11 +69,6 @@ type sessionRow struct {
 	created  null.Int64
 	modified null.Int64
 	expires  null.Int64
-}
-
-func init() {
-	_ = &mysql.MySQLError{}
-	gob.Register(time.Time{})
 }
 
 // NewMySQLStore takes the following paramaters
