@@ -31,7 +31,6 @@ func main() {
 		Name:    `test`,
 		Charset: `utf8`,
 	}, `session`, []byte(`123456789012345678901234567890ab`))
-	mysql.Reg(store)
 	e.Use(session.Sessions(sessionOptions, store))
 
 	e.Get(`/`, func(ctx echo.Context) error {

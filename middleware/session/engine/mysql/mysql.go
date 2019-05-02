@@ -27,6 +27,7 @@ func New(cfg *dbconfig.Config, tableName string, keyPairs ...[]byte) sessions.St
 		log.Println("sessions: Operation MySQL failed:", err)
 		return file.NewFilesystemStore(``, keyPairs...)
 	}
+	Reg(eng)
 	return eng
 }
 
