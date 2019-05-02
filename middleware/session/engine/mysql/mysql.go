@@ -19,15 +19,13 @@ import (
 	"github.com/webx-top/echo/middleware/session/engine/file"
 )
 
-func New(cfg *dbconfig.Config, tableName string, keyPairs ...[]byte) sessions.Store {
-	cfgCopy := *cfg
-	cfgCopy.Engine = `mysql`
-	eng, err := NewMySQLStore(cfg.String(), tableName, keyPairs...)
+func New(cfg *Options) sessions.Store {
+	cfg.Config.Engine = `mysql`
+	eng, err := NewMySQLStore(cfg.Config.String(), cfg.Table, cfg.KeyPairs...)
 	if err != nil {
 		log.Println("sessions: Operation MySQL failed:", err)
-		return file.NewFilesystemStore(``, keyPairs...)
+		return file.NewFilesystemStore(``, cfg.KeyPairs...)
 	}
-	Reg(eng)
 	return eng
 }
 
@@ -37,6 +35,18 @@ func Reg(store sessions.Store, args ...string) {
 		name = args[0]
 	}
 	ss.Reg(name, store)
+}
+
+func RegWithOptions(opts *Options, args ...string) sessions.Store {
+	store := New(opts)
+	Reg(store, args...)
+	return store
+}
+
+type Options struct {
+	Config   dbconfig.Config
+	Table    string
+	KeyPairs [][]byte
 }
 
 type MySQLStore struct {

@@ -18,8 +18,10 @@ func Reg(store sessions.Store, args ...string) {
 	ss.Reg(name, store)
 }
 
-func RegWithOptions(opts *FileOptions, args ...string) {
-	Reg(New(opts), args...)
+func RegWithOptions(opts *FileOptions, args ...string) sessions.Store {
+	store := New(opts)
+	Reg(store, args...)
+	return store
 }
 
 type FileOptions struct {

@@ -32,8 +32,10 @@ func Reg(store sessions.Store, args ...string) {
 	ss.Reg(name, store)
 }
 
-func RegWithOptions(opts *BoltOptions, args ...string) {
-	Reg(New(opts), args...)
+func RegWithOptions(opts *BoltOptions, args ...string) sessions.Store {
+	store := New(opts)
+	Reg(store, args...)
+	return store
 }
 
 type BoltOptions struct {

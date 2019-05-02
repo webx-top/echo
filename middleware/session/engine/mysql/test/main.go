@@ -23,14 +23,20 @@ func main() {
 			HttpOnly: true,
 		},
 	}
-	store := mysql.New(&dbconfig.Config{
-		Host:    `127.0.0.1`,
-		Engine:  `mysql`,
-		User:    `root`,
-		Pass:    `root`,
-		Name:    `test`,
-		Charset: `utf8`,
-	}, `session`, []byte(`123456789012345678901234567890ab`))
+	store := mysql.RegWithOptions(&mysql.Options{
+		Config: dbconfig.Config{
+			Host:    `127.0.0.1`,
+			Engine:  `mysql`,
+			User:    `root`,
+			Pass:    `root`,
+			Name:    `test`,
+			Charset: `utf8`,
+		},
+		Table: `session`,
+		KeyPairs: [][]byte{
+			[]byte(`123456789012345678901234567890ab`),
+		},
+	})
 	e.Use(session.Sessions(sessionOptions, store))
 
 	e.Get(`/`, func(ctx echo.Context) error {
