@@ -191,8 +191,8 @@ func Prefix() string {
 	return Default.Prefix()
 }
 
-func SetPrefix(prefix string) {
-	Default.SetPrefix(prefix)
+func SetPrefix(prefix string) *echo.Echo {
+	return Default.SetPrefix(prefix)
 }
 
 // MetaHandler Add meta information about endpoint

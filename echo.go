@@ -445,7 +445,10 @@ func (e *Echo) Prefix() string {
 	return e.prefix
 }
 
-func (e *Echo) SetPrefix(prefix string) {
+func (e *Echo) SetPrefix(prefix string) *Echo {
+	if len(prefix) == 0 {
+		return e
+	}
 	if !strings.HasPrefix(prefix, `/`) {
 		prefix = `/` + prefix
 	}
@@ -453,6 +456,7 @@ func (e *Echo) SetPrefix(prefix string) {
 		prefix = strings.TrimSuffix(prefix, `/`)
 	}
 	e.prefix = prefix
+	return e
 }
 
 func (e *Echo) add(method, prefix string, path string, h interface{}, middleware ...interface{}) {
