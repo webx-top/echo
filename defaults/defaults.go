@@ -187,6 +187,14 @@ func AddMiddlewareWrapper(funcs ...func(interface{}) echo.Middleware) {
 	Default.AddMiddlewareWrapper(funcs...)
 }
 
+func Prefix() string {
+	return Default.Prefix()
+}
+
+func SetPrefix(prefix string) {
+	Default.SetPrefix(prefix)
+}
+
 // MetaHandler Add meta information about endpoint
 func MetaHandler(m echo.H, handler interface{}) interface{} {
 	return Default.MetaHandler(m, handler)

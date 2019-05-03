@@ -17,6 +17,7 @@ import (
 type (
 	Echo struct {
 		engine            engine.Engine
+		prefix            string
 		middleware        []interface{}
 		head              Handler
 		maxParam          *int
@@ -440,11 +441,25 @@ func (e *Echo) AddMiddlewareWrapper(funcs ...func(interface{}) Middleware) {
 	e.middlewareWrapper = append(e.middlewareWrapper, funcs...)
 }
 
+func (e *Echo) Prefix() string {
+	return e.prefix
+}
+
+func (e *Echo) SetPrefix(prefix string) {
+	if !strings.HasPrefix(prefix, `/`) {
+		prefix = `/` + prefix
+	}
+	if strings.HasSuffix(prefix, `/`) {
+		prefix = strings.TrimSuffix(prefix, `/`)
+	}
+	e.prefix = prefix
+}
+
 func (e *Echo) add(method, prefix string, path string, h interface{}, middleware ...interface{}) {
 	r := &Route{
 		Method:     method,
 		Path:       path,
-		Prefix:     prefix,
+		Prefix:     e.prefix + prefix,
 		handler:    h,
 		middleware: middleware,
 	}
