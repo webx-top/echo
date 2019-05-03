@@ -462,8 +462,8 @@ func (e *Echo) SetPrefix(prefix string) *Echo {
 func (e *Echo) add(method, prefix string, path string, h interface{}, middleware ...interface{}) {
 	r := &Route{
 		Method:     method,
-		Path:       path,
-		Prefix:     e.prefix + prefix,
+		Path:       e.prefix + path,
+		Prefix:     prefix,
 		handler:    h,
 		middleware: middleware,
 	}
