@@ -56,10 +56,10 @@ func (t *Config) NewRenderer(manager ...driver.Manager) driver.Driver {
 		tmplDir = filepath.Join(tmplDir, t.Theme)
 	}
 	renderer := New(t.Engine, tmplDir)
-	renderer.Init()
-	if len(manager) > 0 {
+	if len(manager) > 0 && manager[0] != nil {
 		renderer.SetManager(manager[0])
 	}
+	renderer.Init()
 	renderer.SetContentProcessor(t.Parser())
 	if t.StaticOptions != nil {
 		st := t.NewStatic()
