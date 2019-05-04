@@ -52,6 +52,7 @@ func New() *Manager {
 // Manager Tempate manager
 type Manager struct {
 	caches       map[string][]byte
+	firstDir     string
 	mutex        *sync.RWMutex
 	ignores      map[string]bool
 	allows       map[string]bool
@@ -65,6 +66,7 @@ type Manager struct {
 func (self *Manager) closeMoniter() {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
+	self.firstDir = ``
 	if self.done == nil {
 		return
 	}
@@ -152,9 +154,14 @@ func (self *Manager) allowCached(name string) bool {
 }
 
 func (self *Manager) AddWatchDir(ppath string) (err error) {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
 	ppath, err = filepath.Abs(ppath)
 	if err != nil {
 		return
+	}
+	if len(self.firstDir) == 0 {
+		self.firstDir = ppath
 	}
 	err = self.getWatcher().Add(ppath)
 	if err != nil {
@@ -174,6 +181,8 @@ func (self *Manager) AddWatchDir(ppath string) (err error) {
 }
 
 func (self *Manager) CancelWatchDir(oldDir string) (err error) {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
 	oldDir, err = filepath.Abs(oldDir)
 	if err != nil {
 		return
@@ -213,7 +222,7 @@ func (self *Manager) Start() error {
 
 func (self *Manager) watch() error {
 	watcher := self.getWatcher()
-	self.Logger.Debug("TemplateMgr watcher is start.")
+	self.Logger.Debug("TemplateMgr watcher is start: " + self.firstDir + " etc.")
 	defer func() {
 		watcher.Close()
 		self.watcher = nil
@@ -297,7 +306,7 @@ func (self *Manager) watch() error {
 	}()
 
 	<-self.done
-	self.Logger.Debug("TemplateMgr watcher is closed.")
+	self.Logger.Debug("TemplateMgr watcher is closed: " + self.firstDir + " etc.")
 	return nil
 }
 
