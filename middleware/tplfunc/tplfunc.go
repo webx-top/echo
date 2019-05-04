@@ -368,10 +368,15 @@ func NlToBr(text string) template.HTML {
 
 //CaptchaForm 验证码表单域
 func CaptchaForm(args ...interface{}) template.HTML {
+	return CaptchaFormWithURLPrefix(``, args...)
+}
+
+//CaptchaFormWithURLPrefix 验证码表单域
+func CaptchaFormWithURLPrefix(urlPrefix string, args ...interface{}) template.HTML {
 	id := "captcha"
 	msg := "页面验证码已经失效，必须重新请求当前页面。确定要刷新本页面吗？"
 	onErr := "if(this.src.indexOf('?reload=')!=-1 && confirm('%s')) window.location.reload();"
-	format := `<img id="%[2]sImage" src="/captcha/%[1]s.png" alt="Captcha image" onclick="this.src=this.src.split('?')[0]+'?reload='+Math.random();" onerror="%[3]s" style="cursor:pointer" /><input type="hidden" name="captchaId" id="%[2]sId" value="%[1]s" />`
+	format := `<img id="%[2]sImage" src="` + urlPrefix + `/captcha/%[1]s.png" alt="Captcha image" onclick="this.src=this.src.split('?')[0]+'?reload='+Math.random();" onerror="%[3]s" style="cursor:pointer" /><input type="hidden" name="captchaId" id="%[2]sId" value="%[1]s" />`
 	var customOnErr bool
 	switch len(args) {
 	case 3:

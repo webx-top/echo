@@ -86,6 +86,9 @@ func FuncMap(funcMap map[string]interface{}, skipper ...echo.Skipper) echo.Middl
 				}
 				return humanizer.TimeDiff(endDate, startDate, 0)
 			})
+			c.SetFunc(`CaptchaForm`, func(args ...interface{}) template.HTML {
+				return tplfunc.CaptchaFormWithURLPrefix(c.Echo().Prefix(), args...)
+			})
 			return h.Handle(c)
 		})
 	}
