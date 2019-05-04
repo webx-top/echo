@@ -222,7 +222,11 @@ func (self *Manager) Start() error {
 
 func (self *Manager) watch() error {
 	watcher := self.getWatcher()
-	self.Logger.Debug("TemplateMgr watcher is start: " + self.firstDir + " etc.")
+	var logSuffix string
+	if len(self.firstDir) > 0 {
+		logSuffix = ": " + self.firstDir + " etc"
+	}
+	self.Logger.Debug("TemplateMgr watcher is start" + logSuffix + ".")
 	defer func() {
 		watcher.Close()
 		self.watcher = nil
@@ -306,7 +310,7 @@ func (self *Manager) watch() error {
 	}()
 
 	<-self.done
-	self.Logger.Debug("TemplateMgr watcher is closed: " + self.firstDir + " etc.")
+	self.Logger.Debug("TemplateMgr watcher is closed" + logSuffix + ".")
 	return nil
 }
 
