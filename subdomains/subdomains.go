@@ -98,14 +98,14 @@ func (s *Subdomains) URL(purl string, args ...string) string {
 	}
 	if len(info.Host) < 1 {
 		if s.Default == info.Name {
-			return purl
+			return info.Prefix() + purl
 		}
-		return `/` + info.Name + purl
+		return info.Prefix() + `/` + info.Name + purl
 	}
 	if len(s.Protocol) < 1 {
-		return `http://` + info.Host + purl
+		return `http://` + info.Host + info.Prefix() + purl
 	}
-	return s.Protocol + `://` + info.Host + purl
+	return s.Protocol + `://` + info.Host + info.Prefix() + purl
 }
 
 func (s *Subdomains) FindByDomain(host string) (*echo.Echo, bool) {
