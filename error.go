@@ -272,7 +272,7 @@ func (p *PanicError) Parse(stackSize int, disableStackAll bool) *PanicError {
 		return p
 	}
 	content := "[PANIC RECOVER] " + err.Error()
-	for i := 1; len(content) < stackSize; i++ {
+	for i := 2; len(content) < stackSize; i++ {
 		pc, file, line, ok := runtime.Caller(i)
 		if !ok {
 			break
