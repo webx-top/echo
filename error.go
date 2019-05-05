@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -62,12 +63,17 @@ func (e *HTTPError) Error() string {
 	return e.Message
 }
 
-func NewPanicError(recovered interface{}, err error) *PanicError {
+func NewPanicError(recovered interface{}, err error, debugs ...bool) *PanicError {
+	var debug bool
+	if len(debugs) > 0 {
+		debug = debugs[0]
+	}
 	return &PanicError{
 		error:    err,
 		Raw:      recovered,
 		Traces:   make([]*Trace, 0),
 		Snippets: make([]*SnippetGroup, 0),
+		debug:    debug,
 	}
 }
 
@@ -251,4 +257,34 @@ func (p *PanicError) SetDebug(on bool) *PanicError {
 
 func (p *PanicError) Debug() bool {
 	return p.debug
+}
+
+func (p *PanicError) Parse(stackSize int, disableStackAll bool) *PanicError {
+	var err error
+	switch r := p.Raw.(type) {
+	case error:
+		err = r
+	default:
+		err = fmt.Errorf("%v", r)
+	}
+	if disableStackAll {
+		p.SetError(err)
+		return p
+	}
+	content := "[PANIC RECOVER] " + err.Error()
+	for i := 1; len(content) < stackSize; i++ {
+		pc, file, line, ok := runtime.Caller(i)
+		if !ok {
+			break
+		}
+		t := &Trace{
+			File: file,
+			Line: line,
+			Func: runtime.FuncForPC(pc).Name(),
+		}
+		p.AddTrace(t)
+		content += "\n" + fmt.Sprintf(`%v:%v`, file, line)
+	}
+	p.SetErrorString(content)
+	return p
 }
