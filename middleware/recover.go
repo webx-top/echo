@@ -60,7 +60,7 @@ func RecoverWithConfig(config RecoverConfig) echo.MiddlewareFunc {
 
 			defer func() {
 				if r := recover(); r != nil {
-					panicErr := echo.NewPanicError(r, nil, c.Echo().Debug()).Parse(config.StackSize, config.DisableStackAll)
+					panicErr := echo.NewPanicError(r, nil, c.Echo().Debug(), config.DisableStackAll).Parse(config.StackSize)
 					c.Logger().Error(panicErr)
 					c.Error(panicErr)
 				}

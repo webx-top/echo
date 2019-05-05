@@ -32,7 +32,10 @@ import (
 	"strings"
 )
 
-const SnippetLineNumbers = 13
+const (
+	SnippetLineNumbers = 13
+	StackSize          = 4 << 10 // 4 KB
+)
 
 var workDir string
 
@@ -63,26 +66,33 @@ func (e *HTTPError) Error() string {
 	return e.Message
 }
 
-func NewPanicError(recovered interface{}, err error, debugs ...bool) *PanicError {
-	var debug bool
-	if len(debugs) > 0 {
-		debug = debugs[0]
+func NewPanicError(recovered interface{}, err error, debugAndDisableStackAll ...bool) *PanicError {
+	var debug, disableStackAll bool
+	switch len(debugAndDisableStackAll) {
+	case 2:
+		disableStackAll = debugAndDisableStackAll[1]
+		fallthrough
+	case 1:
+		debug = debugAndDisableStackAll[0]
 	}
+
 	return &PanicError{
-		error:    err,
-		Raw:      recovered,
-		Traces:   make([]*Trace, 0),
-		Snippets: make([]*SnippetGroup, 0),
-		debug:    debug,
+		error:           err,
+		Raw:             recovered,
+		Traces:          make([]*Trace, 0),
+		Snippets:        make([]*SnippetGroup, 0),
+		debug:           debug,
+		disableStackAll: disableStackAll,
 	}
 }
 
 type PanicError struct {
 	error
-	Raw      interface{}
-	Traces   []*Trace
-	Snippets []*SnippetGroup
-	debug    bool
+	Raw             interface{}
+	Traces          []*Trace
+	Snippets        []*SnippetGroup
+	debug           bool
+	disableStackAll bool
 }
 
 type SnippetGroup struct {
@@ -259,7 +269,11 @@ func (p *PanicError) Debug() bool {
 	return p.debug
 }
 
-func (p *PanicError) Parse(stackSize int, disableStackAll bool) *PanicError {
+func (p *PanicError) Parse(stackSizes ...int) *PanicError {
+	stackSize := StackSize
+	if len(stackSizes) > 0 {
+		stackSize = stackSizes[0]
+	}
 	var err error
 	switch r := p.Raw.(type) {
 	case error:
@@ -267,7 +281,7 @@ func (p *PanicError) Parse(stackSize int, disableStackAll bool) *PanicError {
 	default:
 		err = fmt.Errorf("%v", r)
 	}
-	if disableStackAll {
+	if p.disableStackAll {
 		p.SetError(err)
 		return p
 	}
