@@ -18,6 +18,7 @@ type Config struct {
 	Style                string
 	Reload               bool
 	ParseStrings         map[string]string
+	ParseStringFuncs     map[string]func() string
 	ErrorPages           map[int]string
 	DefaultHTTPErrorCode int
 	StaticOptions        *middleware.StaticOptions
@@ -44,6 +45,11 @@ func (t *Config) Parser() func([]byte) []byte {
 		s := string(b)
 		for oldVal, newVal := range t.ParseStrings {
 			s = strings.Replace(s, oldVal, newVal, -1)
+		}
+		if t.ParseStringFuncs != nil {
+			for oldVal, newVal := range t.ParseStringFuncs {
+				s = strings.Replace(s, oldVal, newVal(), -1)
+			}
 		}
 		return []byte(s)
 	}
