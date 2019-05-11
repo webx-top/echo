@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -105,17 +106,15 @@ func (c *Config) SupportAutoTLS(autoTLSManager *autocert.Manager, hosts ...strin
 	if autoTLSManager == nil {
 		autoTLSManager = c.NewAutoTLSManager(hosts...)
 	}
-	/*
-		if c.Listener == nil && AddressPort(c.Address) != 80 {
-			go func() {
-				log.Println(`Starting serve: ACME "http-01" challenge responses.`)
-				err := http.ListenAndServe(":http", autoTLSManager.HTTPHandler(nil))
-				if err != nil {
-					panic(err)
-				}
-			}()
-		}
-	*/
+	if c.Listener == nil && AddressPort(c.Address) != 80 {
+		go func() {
+			log.Println(`Starting serve: ACME "http-01" challenge responses.`)
+			err := http.ListenAndServe(":http", autoTLSManager.HTTPHandler(nil))
+			if err != nil {
+				log.Println(err)
+			}
+		}()
+	}
 	//c.TLSConfig.GetCertificate = autoTLSManager.GetCertificate
 	c.TLSConfig.BuildNameToCertificate()
 	c.TLSConfig.GetCertificate = func(clientHello *tls.ClientHelloInfo) (*tls.Certificate, error) {
