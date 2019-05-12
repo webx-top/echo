@@ -16,14 +16,17 @@ type tcpKeepAliveListener struct {
 	*net.TCPListener
 }
 
-func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
+func (ln tcpKeepAliveListener) Accept() (net.Conn, error) {
 	tc, err := ln.AcceptTCP()
 	if err != nil {
-		return
+		return tc, err
 	}
-	tc.SetKeepAlive(true)
-	tc.SetKeepAlivePeriod(3 * time.Minute)
-	return tc, nil
+	err = tc.SetKeepAlive(true)
+	if err != nil {
+		return tc, err
+	}
+	err = tc.SetKeepAlivePeriod(3 * time.Minute)
+	return tc, err
 }
 
 func NewListener(address string, reuse bool) (net.Listener, error) {
