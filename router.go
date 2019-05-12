@@ -21,6 +21,7 @@ type (
 	}
 
 	Route struct {
+		Host        string
 		Method      string
 		Path        string
 		Handler     Handler `json:"-" xml:"-"`

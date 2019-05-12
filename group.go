@@ -1,6 +1,7 @@
 package echo
 
 type Group struct {
+	host       string
 	prefix     string
 	middleware []interface{}
 	echo       *Echo
@@ -12,22 +13,6 @@ func (g *Group) URL(h interface{}, params ...interface{}) string {
 
 func (g *Group) SetRenderer(r Renderer) {
 	g.echo.renderer = r
-}
-
-func (g *Group) Any(path string, h interface{}, middleware ...interface{}) {
-	for _, m := range methods {
-		g.add(m, path, h, middleware...)
-	}
-}
-
-func (g *Group) Route(methods string, path string, h interface{}, middleware ...interface{}) {
-	g.Match(splitHTTPMethod.Split(methods, -1), path, h, middleware...)
-}
-
-func (g *Group) Match(methods []string, path string, h interface{}, middleware ...interface{}) {
-	for _, m := range methods {
-		g.add(m, path, h, middleware...)
-	}
 }
 
 func (g *Group) Use(middleware ...interface{}) {
@@ -58,39 +43,55 @@ func (g *Group) PreUse(middleware ...interface{}) {
 }
 
 func (g *Group) Connect(path string, h interface{}, m ...interface{}) {
-	g.add(CONNECT, path, h, m...)
+	g.Add(CONNECT, path, h, m...)
 }
 
 func (g *Group) Delete(path string, h interface{}, m ...interface{}) {
-	g.add(DELETE, path, h, m...)
+	g.Add(DELETE, path, h, m...)
 }
 
 func (g *Group) Get(path string, h interface{}, m ...interface{}) {
-	g.add(GET, path, h, m...)
+	g.Add(GET, path, h, m...)
 }
 
 func (g *Group) Head(path string, h interface{}, m ...interface{}) {
-	g.add(HEAD, path, h, m...)
+	g.Add(HEAD, path, h, m...)
 }
 
 func (g *Group) Options(path string, h interface{}, m ...interface{}) {
-	g.add(OPTIONS, path, h, m...)
+	g.Add(OPTIONS, path, h, m...)
 }
 
 func (g *Group) Patch(path string, h interface{}, m ...interface{}) {
-	g.add(PATCH, path, h, m...)
+	g.Add(PATCH, path, h, m...)
 }
 
 func (g *Group) Post(path string, h interface{}, m ...interface{}) {
-	g.add(POST, path, h, m...)
+	g.Add(POST, path, h, m...)
 }
 
 func (g *Group) Put(path string, h interface{}, m ...interface{}) {
-	g.add(PUT, path, h, m...)
+	g.Add(PUT, path, h, m...)
 }
 
 func (g *Group) Trace(path string, h interface{}, m ...interface{}) {
-	g.add(TRACE, path, h, m...)
+	g.Add(TRACE, path, h, m...)
+}
+
+func (g *Group) Any(path string, h interface{}, middleware ...interface{}) {
+	for _, m := range methods {
+		g.Add(m, path, h, middleware...)
+	}
+}
+
+func (g *Group) Route(methods string, path string, h interface{}, middleware ...interface{}) {
+	g.Match(splitHTTPMethod.Split(methods, -1), path, h, middleware...)
+}
+
+func (g *Group) Match(methods []string, path string, h interface{}, middleware ...interface{}) {
+	for _, m := range methods {
+		g.Add(m, path, h, middleware...)
+	}
 }
 
 func (g *Group) Group(prefix string, middleware ...interface{}) *Group {
@@ -123,7 +124,7 @@ func (g *Group) MetaHandler(m H, handler interface{}) Handler {
 	return &MetaHandler{m, g.echo.ValidHandler(handler)}
 }
 
-func (g *Group) add(method, path string, h interface{}, middleware ...interface{}) {
+func (g *Group) Add(method, path string, h interface{}, middleware ...interface{}) *Route {
 	// Combine into a new slice to avoid accidentally passing the same slice for
 	// multiple routes, which would lead to later add() calls overwriting the
 	// middleware from earlier calls.
@@ -131,5 +132,5 @@ func (g *Group) add(method, path string, h interface{}, middleware ...interface{
 	m = append(m, g.middleware...)
 	m = append(m, middleware...)
 
-	g.echo.add(method, g.prefix, g.prefix+path, h, m...)
+	return g.echo.add(g.host, method, g.prefix, g.prefix+path, h, m...)
 }
