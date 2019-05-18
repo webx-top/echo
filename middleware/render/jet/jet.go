@@ -46,6 +46,7 @@ func New(templateDir string, args ...logger.Logger) driver.Driver {
 		panic(err.Error())
 	}
 	a := &Jet{
+		NopRenderer: &driver.NopRenderer{},
 		templateDir: templateDir,
 		set:         NewHTMLSet(templateDir),
 	}
@@ -58,6 +59,7 @@ func New(templateDir string, args ...logger.Logger) driver.Driver {
 }
 
 type Jet struct {
+	*driver.NopRenderer
 	mutex         sync.RWMutex
 	set           *Set
 	templateDir   string
@@ -89,18 +91,6 @@ func (self *Jet) TmplDir() string {
 
 func (self *Jet) SetTmplPathFixer(fn func(string) string) {
 	self.tmplPathFixer = fn
-}
-
-func (self *Jet) MonitorEvent(fn func(string)) {
-}
-
-func (self *Jet) Init() {
-}
-
-func (self *Jet) SetManager(mgr driver.Manager) {
-}
-
-func (self *Jet) SetContentProcessor(fn func([]byte) []byte) {
 }
 
 func (self *Jet) SetFuncMap(fn func() map[string]interface{}) {
@@ -146,10 +136,4 @@ func (self *Jet) Fetch(tmpl string, data interface{}, funcMap map[string]interfa
 
 func (self *Jet) RawContent(tmpl string) (b []byte, e error) {
 	return nil, errors.New(`unsupported`)
-}
-
-func (self *Jet) ClearCache() {
-}
-
-func (self *Jet) Close() {
 }

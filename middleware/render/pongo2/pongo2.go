@@ -185,6 +185,10 @@ func (a *Pongo2) SetManager(mgr driver.Manager) {
 	a.Mgr = mgr
 }
 
+func (a *Pongo2) Manager() driver.Manager {
+	return a.Mgr
+}
+
 func (a *Pongo2) SetContentProcessor(fn func([]byte) []byte) {
 	if fn == nil {
 		return
