@@ -33,7 +33,9 @@ func setWorkDir() {
 }
 
 func init() {
-	setWorkDir()
+	if len(workDir) == 0 {
+		setWorkDir()
+	}
 }
 
 func Wd() string {
