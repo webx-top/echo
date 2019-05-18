@@ -58,11 +58,12 @@ func New(templateDir string, args ...logger.Logger) driver.Driver {
 }
 
 type Jet struct {
-	mutex       sync.RWMutex
-	set         *Set
-	templateDir string
-	logger      logger.Logger
-	debug       bool
+	mutex         sync.RWMutex
+	set           *Set
+	templateDir   string
+	logger        logger.Logger
+	debug         bool
+	tmplPathFixer func(string) string
 }
 
 func (self *Jet) Debug() bool {
@@ -86,6 +87,10 @@ func (self *Jet) TmplDir() string {
 	return self.templateDir
 }
 
+func (self *Jet) SetTmplPathFixer(fn func(string) string) {
+	self.tmplPathFixer = fn
+}
+
 func (self *Jet) MonitorEvent(fn func(string)) {
 }
 
@@ -105,6 +110,9 @@ func (self *Jet) SetFuncMap(fn func() map[string]interface{}) {
 }
 
 func (self *Jet) Render(w io.Writer, tmpl string, data interface{}, c echo.Context) error {
+	if self.tmplPathFixer != nil {
+		tmpl = self.tmplPathFixer(tmpl)
+	}
 	t, err := self.set.GetTemplate(tmpl)
 	if err != nil {
 		return err
@@ -117,6 +125,9 @@ func (self *Jet) Render(w io.Writer, tmpl string, data interface{}, c echo.Conte
 }
 
 func (self *Jet) Fetch(tmpl string, data interface{}, funcMap map[string]interface{}) string {
+	if self.tmplPathFixer != nil {
+		tmpl = self.tmplPathFixer(tmpl)
+	}
 	w := new(bytes.Buffer)
 	t, err := self.set.GetTemplate(tmpl)
 	if err != nil {
