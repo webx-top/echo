@@ -38,6 +38,19 @@ func (t *Config) SetFuncMapSkipper(skipper echo.Skipper) *Config {
 	return t
 }
 
+func (t *Config) SetRendererDo(rd ...func(driver.Driver)) *Config {
+	t.RendererDo = rd
+	return t
+}
+
+func (t *Config) AddRendererDo(rd ...func(driver.Driver)) *Config {
+	if t.RendererDo == nil {
+		t.RendererDo = []func(driver.Driver){}
+	}
+	t.RendererDo = append(t.RendererDo, rd...)
+	return t
+}
+
 func (t *Config) Parser() func([]byte) []byte {
 	if t.ParseStrings == nil {
 		return nil
