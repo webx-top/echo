@@ -14,31 +14,31 @@ import (
 
 var workDir string
 
-var CustomWorkDir string
-
-func SetWorkDir(dir ...string) {
-	if len(dir) == 0 || len(dir[0]) == 0 {
-		if len(CustomWorkDir) > 0 {
-			SetWorkDir(CustomWorkDir)
-			return
+func SetWorkDir(dir string) {
+	if len(dir) == 0 {
+		if len(workDir) == 0 {
+			setWorkDir()
 		}
-		workDir, _ = os.Getwd()
-		workDir = workDir + FilePathSeparator
 		return
 	}
-	workDir = dir[0]
-	if !strings.HasSuffix(workDir, FilePathSeparator) {
-		workDir += FilePathSeparator
+	if !strings.HasSuffix(dir, FilePathSeparator) {
+		dir += FilePathSeparator
 	}
+	workDir = dir
+}
+
+func setWorkDir() {
+	workDir, _ = os.Getwd()
+	workDir = workDir + FilePathSeparator
 }
 
 func init() {
-	SetWorkDir()
+	setWorkDir()
 }
 
 func Wd() string {
 	if len(workDir) == 0 {
-		SetWorkDir()
+		setWorkDir()
 	}
 	return workDir
 }
