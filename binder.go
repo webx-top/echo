@@ -11,6 +11,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/admpub/log"
 	"github.com/webx-top/echo/encoding/json"
 	"github.com/webx-top/tagfast"
 	"github.com/webx-top/validation"
@@ -490,6 +491,25 @@ var (
 			fName = topName + "." + fieldName
 		}
 		return fName
+	}
+
+	//DateToTimestamp 日期时间转时间戳
+	DateToTimestamp = func(layouts ...string) FormDataFilter {
+		layout := `2006-01-02`
+		if len(layouts) > 0 && len(layouts[0]) > 0 {
+			layout = layouts[0]
+		}
+		return func(k string, v []string) (string, []string) {
+			if len(v) > 0 && len(v[0]) > 0 {
+				t, e := time.Parse(layout, v[0])
+				if e != nil {
+					log.Error(e)
+					return k, []string{`0`}
+				}
+				return k, []string{fmt.Sprint(t.Unix())}
+			}
+			return k, []string{`0`}
+		}
 	}
 )
 
