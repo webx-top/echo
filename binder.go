@@ -539,19 +539,19 @@ func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter
 			continue
 		}
 		switch fTyp.Type.String() {
-		case "time.Time":
+		case `time.Time`:
 			if t, y := fVal.Interface().(time.Time); y {
 				dateformat := tagfast.Value(tc, fTyp, `form_format`)
 				if len(dateformat) > 0 {
-					f.Add(fName, t.Format(dateformat))
+					f.Set(fName, t.Format(dateformat))
 				} else {
-					f.Add(fName, t.Format(`2006-01-02 15:04:05`))
+					f.Set(fName, t.Format(`2006-01-02 15:04:05`))
 				}
 			}
-		case "struct":
+		case `struct`:
 			StructToForm(ctx, fVal.Interface(), fName, fieldNameFormatter)
 		default:
-			f.Add(fName, fmt.Sprint(fVal.Interface()))
+			f.Set(fName, fmt.Sprint(fVal.Interface()))
 		}
 	}
 }
