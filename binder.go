@@ -13,6 +13,7 @@ import (
 
 	"github.com/admpub/log"
 	"github.com/webx-top/echo/encoding/json"
+	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/tagfast"
 	"github.com/webx-top/validation"
 )
@@ -513,6 +514,14 @@ var (
 	}
 )
 
+func SetFormValue(f engine.URLValuer, fName string, index int, value interface{}) {
+	if index == 0 {
+		f.Set(fName, fmt.Sprint(value))
+	} else {
+		f.Add(fName, fmt.Sprint(value))
+	}
+}
+
 //StructToForm 映射struct到form
 func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter FieldNameFormatter) {
 	vc := reflect.ValueOf(m)
@@ -551,7 +560,63 @@ func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter
 		case `struct`:
 			StructToForm(ctx, fVal.Interface(), fName, fieldNameFormatter)
 		default:
-			f.Set(fName, fmt.Sprint(fVal.Interface()))
+			switch fTyp.Type.Kind() {
+			case reflect.Slice:
+				switch sl := fVal.Interface().(type) {
+				case []uint:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []uint16:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []uint32:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []uint64:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []int:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []int16:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []int32:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []int64:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []float32:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []float64:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []string:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []interface{}:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				default:
+					// ignore
+				}
+			default:
+				f.Set(fName, fmt.Sprint(fVal.Interface()))
+			}
 		}
 	}
 }
