@@ -143,18 +143,14 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 	default:
 		return errors.New(`binder: unsupported type ` + tc.Kind().String())
 	}
-	var (
-		validator *validation.Validation
-		filter    FormDataFilter
-	)
-	if len(filters) > 0 {
-		filter = filters[0]
-	}
-	if filter == nil {
-		filter = DefaultNopFilter
-	}
+	var validator *validation.Validation
 	for k, t := range data {
-		k, t = filter(k, t)
+		for _,filter:=range filters{
+			k, t = filter(k, t)
+			if len(k)==0 {
+				break
+			}
+		}
 		if len(k) == 0 || k[0] == '_' {
 			continue
 		}
@@ -492,6 +488,36 @@ var (
 		return fName
 	}
 )
+
+func IncludeFieldName(fieldNames ...string) FormDataFilter {
+	for k, v := range fieldNames {
+		fieldNames[k] = strings.Title(v)
+	}
+	return func(k string, v []string) (string, []string) {
+		tk := strings.Title(k)
+		for fk, fv := range fieldNames {
+			if fv == tk {
+				return k, v
+			}
+		}
+		return ``, v
+	}
+}
+
+func ExcludeFieldName(fieldNames ...string) FormDataFilter {
+	for k, v := range fieldNames {
+		fieldNames[k] = strings.Title(v)
+	}
+	return func(k string, v []string) (string, []string) {
+		tk := strings.Title(k)
+		for fk, fv := range fieldNames {
+			if fv == tk {
+				return ``, v
+			}
+		}
+		return k, v
+	}
+}
 
 //StructToForm 映射struct到form
 func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter FieldNameFormatter) {
