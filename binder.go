@@ -11,7 +11,10 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/admpub/log"
 	"github.com/webx-top/echo/encoding/json"
+	"github.com/webx-top/echo/engine"
+	"github.com/webx-top/echo/param"
 	"github.com/webx-top/tagfast"
 	"github.com/webx-top/validation"
 )
@@ -143,18 +146,14 @@ func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 	default:
 		return errors.New(`binder: unsupported type ` + tc.Kind().String())
 	}
-	var (
-		validator *validation.Validation
-		filter    FormDataFilter
-	)
-	if len(filters) > 0 {
-		filter = filters[0]
-	}
-	if filter == nil {
-		filter = DefaultNopFilter
-	}
+	var validator *validation.Validation
 	for k, t := range data {
-		k, t = filter(k, t)
+		for _, filter := range filters {
+			k, t = filter(k, t)
+			if len(k) == 0 {
+				break
+			}
+		}
 		if len(k) == 0 || k[0] == '_' {
 			continue
 		}
@@ -491,7 +490,129 @@ var (
 		}
 		return fName
 	}
+	//DateToTimestamp 日期时间转时间戳
+	DateToTimestamp = func(layouts ...string) FormDataFilter {
+		layout := `2006-01-02`
+		if len(layouts) > 0 && len(layouts[0]) > 0 {
+			layout = layouts[0]
+		}
+		return func(k string, v []string) (string, []string) {
+			if len(v) > 0 && len(v[0]) > 0 {
+				t, e := time.Parse(layout, v[0])
+				if e != nil {
+					log.Error(e)
+					return k, []string{`0`}
+				}
+				return k, []string{fmt.Sprint(t.Unix())}
+			}
+			return k, []string{`0`}
+		}
+	}
+	//TimestampToDate 时间戳转日期时间
+	TimestampToDate = func(layouts ...string) FormDataFilter {
+		layout := `2006-01-02 15:04:05`
+		if len(layouts) > 0 && len(layouts[0]) > 0 {
+			layout = layouts[0]
+		}
+		return func(k string, v []string) (string, []string) {
+			if len(v) > 0 && len(v[0]) > 0 {
+				tsi := strings.SplitN(v[0], `.`, 2)
+				var sec, nsec int64
+				switch len(tsi) {
+				case 2:
+					nsec = param.AsInt64(tsi[1])
+					fallthrough
+				case 1:
+					sec = param.AsInt64(tsi[0])
+				}
+				t := time.Unix(sec, nsec)
+				if t.IsZero() {
+					return k, []string{``}
+				}
+				return k, []string{t.Format(layout)}
+			}
+			return k, v
+		}
+	}
+	//JoinValues 组合数组为字符串
+	JoinValues = func(seperators ...string) FormDataFilter {
+		sep := `,`
+		if len(seperators) > 0 {
+			sep = seperators[0]
+		}
+		return func(k string, v []string) (string, []string) {
+			return k, []string{strings.Join(v, sep)}
+		}
+	}
+	//SplitValues 拆分字符串为数组
+	SplitValues = func(seperators ...string) FormDataFilter {
+		sep := `,`
+		if len(seperators) > 0 {
+			sep = seperators[0]
+		}
+		return func(k string, v []string) (string, []string) {
+			if len(v) > 0 && len(v[0]) > 0 {
+				v = strings.Split(v[0], sep)
+			}
+			return k, v
+		}
+	}
 )
+
+//FormatFieldValue 格式化字段值
+func FormatFieldValue(formatters map[string]FormDataFilter) FormDataFilter {
+	newFormatters := map[string]FormDataFilter{}
+	for k, v := range formatters {
+		newFormatters[strings.Title(k)] = v
+	}
+	return func(k string, v []string) (string, []string) {
+		tk := strings.Title(k)
+		if formatter, ok := newFormatters[tk]; ok {
+			return formatter(k, v)
+		}
+		return k, v
+	}
+}
+
+//IncludeFieldName 包含字段
+func IncludeFieldName(fieldNames ...string) FormDataFilter {
+	for k, v := range fieldNames {
+		fieldNames[k] = strings.Title(v)
+	}
+	return func(k string, v []string) (string, []string) {
+		tk := strings.Title(k)
+		for _, fv := range fieldNames {
+			if fv == tk {
+				return k, v
+			}
+		}
+		return ``, v
+	}
+}
+
+//ExcludeFieldName 排除字段
+func ExcludeFieldName(fieldNames ...string) FormDataFilter {
+	for k, v := range fieldNames {
+		fieldNames[k] = strings.Title(v)
+	}
+	return func(k string, v []string) (string, []string) {
+		tk := strings.Title(k)
+		for _, fv := range fieldNames {
+			if fv == tk {
+				return ``, v
+			}
+		}
+		return k, v
+	}
+}
+
+func SetFormValue(f engine.URLValuer, fName string, index int, value interface{}) {
+	if index == 0 {
+		f.Set(fName, fmt.Sprint(value))
+	} else {
+		f.Add(fName, fmt.Sprint(value))
+	}
+}
 
 //StructToForm 映射struct到form
 func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter FieldNameFormatter) {
@@ -519,19 +640,75 @@ func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter
 			continue
 		}
 		switch fTyp.Type.String() {
-		case "time.Time":
+		case `time.Time`:
 			if t, y := fVal.Interface().(time.Time); y {
 				dateformat := tagfast.Value(tc, fTyp, `form_format`)
 				if len(dateformat) > 0 {
-					f.Add(fName, t.Format(dateformat))
+					f.Set(fName, t.Format(dateformat))
 				} else {
-					f.Add(fName, t.Format(`2006-01-02 15:04:05`))
+					f.Set(fName, t.Format(`2006-01-02 15:04:05`))
 				}
 			}
-		case "struct":
+		case `struct`:
 			StructToForm(ctx, fVal.Interface(), fName, fieldNameFormatter)
 		default:
-			f.Add(fName, fmt.Sprint(fVal.Interface()))
+			switch fTyp.Type.Kind() {
+			case reflect.Slice:
+				switch sl := fVal.Interface().(type) {
+				case []uint:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []uint16:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []uint32:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []uint64:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []int:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []int16:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []int32:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []int64:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []float32:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []float64:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []string:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				case []interface{}:
+					for k, v := range sl {
+						SetFormValue(f, fName, k, v)
+					}
+				default:
+					// ignore
+				}
+			default:
+				f.Set(fName, fmt.Sprint(fVal.Interface()))
+			}
 		}
 	}
 }

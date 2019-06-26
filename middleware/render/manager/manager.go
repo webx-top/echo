@@ -52,6 +52,7 @@ func New() *Manager {
 // Manager Tempate manager
 type Manager struct {
 	caches       map[string][]byte
+	mapping      map[string]string
 	firstDir     string
 	mutex        *sync.RWMutex
 	ignores      map[string]bool
@@ -61,6 +62,7 @@ type Manager struct {
 	callback     map[string]func(string, string, string) //参数为：目标名称，类型(file/dir)，事件名(create/delete/modify/rename)
 	done         chan bool
 	watcher      *fsnotify.Watcher
+	fallback     []func(string) (string, bool)
 }
 
 func (self *Manager) closeMoniter() {
@@ -253,14 +255,13 @@ func (self *Manager) watch() error {
 					}
 					self.onChange(ev.Name, "file", "create")
 					if self.allowCached(ev.Name) {
-						tmpl := ev.Name
 						content, err := ioutil.ReadFile(ev.Name)
 						if err != nil {
-							self.Logger.Infof("loaded template %v failed: %v", tmpl, err)
+							self.Logger.Infof("loaded template %v failed: %v", ev.Name, err)
 							return
 						}
-						self.Logger.Infof("loaded template file %v success", tmpl)
-						self.CacheTemplate(tmpl, content)
+						self.Logger.Infof("loaded template file %v success", ev.Name)
+						self.CacheTemplate(ev.Name, content)
 					}
 				} else if ev.Op&fsnotify.Remove == fsnotify.Remove {
 					if d.IsDir() {
@@ -270,8 +271,7 @@ func (self *Manager) watch() error {
 					}
 					self.onChange(ev.Name, "file", "delete")
 					if self.allowCached(ev.Name) {
-						tmpl := ev.Name
-						self.CacheDelete(tmpl)
+						self.CacheDelete(ev.Name)
 					}
 				} else if ev.Op&fsnotify.Write == fsnotify.Write {
 					if d.IsDir() {
@@ -280,14 +280,13 @@ func (self *Manager) watch() error {
 					}
 					self.onChange(ev.Name, "file", "modify")
 					if self.allowCached(ev.Name) {
-						tmpl := ev.Name
 						content, err := ioutil.ReadFile(ev.Name)
 						if err != nil {
-							self.Logger.Errorf("reloaded template %v failed: %v", tmpl, err)
+							self.Logger.Errorf("reloaded template %v failed: %v", ev.Name, err)
 							return
 						}
-						self.CacheTemplate(tmpl, content)
-						self.Logger.Infof("reloaded template %v success", tmpl)
+						self.CacheTemplate(ev.Name, content)
+						self.Logger.Infof("reloaded template %v success", ev.Name)
 					}
 				} else if ev.Op&fsnotify.Rename == fsnotify.Rename {
 					if d.IsDir() {
@@ -297,8 +296,7 @@ func (self *Manager) watch() error {
 					}
 					self.onChange(ev.Name, "file", "rename")
 					if self.allowCached(ev.Name) {
-						tmpl := ev.Name
-						self.CacheDelete(tmpl)
+						self.CacheDelete(ev.Name)
 					}
 				}
 			case err := <-watcher.Errors:
@@ -346,24 +344,22 @@ func (self *Manager) Close() {
 }
 
 func (self *Manager) GetTemplate(tmpl string) ([]byte, error) {
-	var err error
-	tmpl, err = filepath.Abs(tmpl)
+	tmplPath, err := filepath.Abs(tmpl)
 	if err != nil {
 		return nil, err
 	}
-
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
-	if content, ok := self.caches[tmpl]; ok {
-		self.Logger.Debugf("load template %v from cache", tmpl)
+	if content, ok := self.caches[tmplPath]; ok {
+		self.Logger.Debugf("load template %v from cache", tmplPath)
 		return content, nil
 	}
-
-	content, err := ioutil.ReadFile(tmpl)
-	if err == nil {
-		self.Logger.Debugf("load template %v from the file", tmpl)
-		self.caches[tmpl] = content
+	content, err := ioutil.ReadFile(tmplPath)
+	if err != nil {
+		return nil, err
 	}
+	self.Logger.Debugf("load template %v from the file", tmplPath)
+	self.caches[tmplPath] = content
 	return content, err
 }
 

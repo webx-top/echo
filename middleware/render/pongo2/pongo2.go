@@ -76,6 +76,7 @@ type Pongo2 struct {
 	fileEvents        []func(string)
 	contentProcessors []func([]byte) []byte
 	debug             bool
+	tmplPathFixer     func(string) string
 }
 
 type templateLoader struct {
@@ -94,6 +95,9 @@ func (a *templateLoader) Abs(base, name string) string {
 func (a *templateLoader) Get(tmpl string) (io.Reader, error) {
 	tmpl += a.ext
 	tmpl = strings.TrimPrefix(tmpl, a.templateDir)
+	if a.template.tmplPathFixer != nil {
+		tmpl = a.template.tmplPathFixer(tmpl)
+	}
 	b, e := a.template.RawContent(tmpl)
 	if e != nil {
 		a.logger.Error(e)
@@ -124,6 +128,10 @@ func (self *Pongo2) Logger() logger.Logger {
 
 func (self *Pongo2) TmplDir() string {
 	return self.templateDir
+}
+
+func (self *Pongo2) SetTmplPathFixer(fn func(string) string) {
+	self.tmplPathFixer = fn
 }
 
 func (a *Pongo2) MonitorEvent(fn func(string)) {
@@ -175,6 +183,10 @@ func (a *Pongo2) SetManager(mgr driver.Manager) {
 		a.Mgr.Close()
 	}
 	a.Mgr = mgr
+}
+
+func (a *Pongo2) Manager() driver.Manager {
+	return a.Mgr
 }
 
 func (a *Pongo2) SetContentProcessor(fn func([]byte) []byte) {
