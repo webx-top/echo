@@ -121,7 +121,7 @@ func (a *URLBuilder) BuildFromPath(ppath string, args ...map[string]interface{})
 }
 
 func (a *URLBuilder) Set(h interface{}) (pkg string, ctl string, act string) {
-	key := echo.Name(h)
+	key := echo.HandlerName(h)
 	if _, ok := a.extensions[key]; !ok {
 		a.extensions[key] = map[string]int{}
 	}

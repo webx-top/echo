@@ -196,7 +196,7 @@ func (a *Wrapper) wrapHandler(v interface{}, ctl string, act string) func(echo.C
 }
 
 func (a *Wrapper) HandlerName(h interface{}) string {
-	return echo.Name(h)
+	return echo.HandlerName(h)
 }
 
 // Register 路由注册方案1：注册函数(可匿名)或静态实例的成员函数
