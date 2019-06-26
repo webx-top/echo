@@ -21,17 +21,17 @@ type (
 	}
 
 	Route struct {
-		Host        string
-		Method      string
-		Path        string
-		Handler     Handler `json:"-" xml:"-"`
-		HandlerName string
-		Format      string
-		Params      []string //param names
-		Prefix      string
-		Meta        H
-		handler     interface{}   //原始handler
-		middleware  []interface{} //中间件
+		Host       string
+		Method     string
+		Path       string
+		Handler    Handler `json:"-" xml:"-"`
+		Name       string
+		Format     string
+		Params     []string //param names
+		Prefix     string
+		Meta       H
+		handler    interface{}   //原始handler
+		middleware []interface{} //中间件
 	}
 
 	Routes []*Route
@@ -80,7 +80,7 @@ func (r Routes) SetName(name string) IRouter {
 }
 
 func (r *Route) SetName(name string) IRouter {
-	r.HandlerName = name
+	r.Name = name
 	return r
 }
 
@@ -92,10 +92,10 @@ func (r *Route) apply(e *Echo) *Route {
 	handler := e.ValidHandler(r.handler)
 	middleware := r.middleware
 	if hn, ok := handler.(Name); ok {
-		r.HandlerName = hn.Name()
+		r.Name = hn.Name()
 	}
-	if len(r.HandlerName) == 0 {
-		r.HandlerName = HandlerName(handler)
+	if len(r.Name) == 0 {
+		r.Name = HandlerName(handler)
 	}
 	if mt, ok := handler.(Meta); ok {
 		r.Meta = mt.Meta()

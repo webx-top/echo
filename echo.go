@@ -511,13 +511,13 @@ func (e *Echo) RebuildRouter(args ...[]*Route) *Echo {
 		r.apply(e)
 		router.Add(r, i)
 		if e.RouteDebug {
-			e.logger.Debugf(`Route: %7v %-30v -> %v`, r.Method, r.Host+r.Format, r.HandlerName)
+			e.logger.Debugf(`Route: %7v %-30v -> %v`, r.Method, r.Host+r.Format, r.Name)
 		}
 
-		if _, ok := e.router.nroute[r.HandlerName]; !ok {
-			e.router.nroute[r.HandlerName] = []int{i}
+		if _, ok := e.router.nroute[r.Name]; !ok {
+			e.router.nroute[r.Name] = []int{i}
 		} else {
-			e.router.nroute[r.HandlerName] = append(e.router.nroute[r.HandlerName], i)
+			e.router.nroute[r.Name] = append(e.router.nroute[r.Name], i)
 		}
 	}
 	e.router.routes = routes
@@ -532,10 +532,10 @@ func (e *Echo) AppendRouter(routes []*Route) *Echo {
 		i = len(e.router.routes)
 		r.apply(e)
 		router.Add(r, i)
-		if _, ok := e.router.nroute[r.HandlerName]; !ok {
-			e.router.nroute[r.HandlerName] = []int{i}
+		if _, ok := e.router.nroute[r.Name]; !ok {
+			e.router.nroute[r.Name] = []int{i}
 		} else {
-			e.router.nroute[r.HandlerName] = append(e.router.nroute[r.HandlerName], i)
+			e.router.nroute[r.Name] = append(e.router.nroute[r.Name], i)
 		}
 		e.router.routes = append(e.router.routes, r)
 	}
@@ -567,15 +567,16 @@ func (e *Echo) Group(prefix string, m ...interface{}) *Group {
 // URI generates a URI from handler.
 func (e *Echo) URI(handler interface{}, params ...interface{}) string {
 	var uri, name string
-	if h, ok := handler.(Handler); ok {
+	switch h := handler.(type) {
+	case Handler:
 		if hn, ok := h.(Name); ok {
 			name = hn.Name()
 		} else {
 			name = HandlerName(h)
 		}
-	} else if h, ok := handler.(string); ok {
+	case string:
 		name = h
-	} else {
+	default:
 		return uri
 	}
 	if indexes, ok := e.router.nroute[name]; ok && len(indexes) > 0 {

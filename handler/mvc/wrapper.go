@@ -196,7 +196,7 @@ func (a *Wrapper) wrapHandler(v interface{}, ctl string, act string) func(echo.C
 }
 
 func (a *Wrapper) HandlerName(h interface{}) string {
-	return echo.HandlerName(h)
+	return echo.Name(h)
 }
 
 // Register 路由注册方案1：注册函数(可匿名)或静态实例的成员函数
@@ -206,7 +206,7 @@ func (a *Wrapper) Register(p string, h interface{}, methods ...string) *Wrapper 
 		methods = append(methods, "GET")
 	}
 	_, ctl, act := a.Module.Application.URLBuilder.Set(h)
-	a.Module.Router().Match(methods, p, NewHandler(a.wrapHandler(h, ctl, act), a.HandlerName(h)))
+	a.Module.Router().Match(methods, p, NewHandler(a.wrapHandler(h, ctl, act), a.Name(h)))
 	return a
 }
 

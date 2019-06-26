@@ -170,12 +170,14 @@ func TestEchoHandler(t *testing.T) {
 	})
 	e.Get("/view/:id", func(c Context) error {
 		return c.String(c.Param(`id`))
-	})
+	}).SetName(`view`)
 	e.Get("/file/*", func(c Context) error {
 		return c.String(c.P(0))
 	})
 
 	e.RebuildRouter()
+
+	assert.Equal(t, `/view/8`, e.URI(`view`, 8))
 
 	c, b := request(GET, "/ok", e)
 	assert.Equal(t, http.StatusOK, c)
