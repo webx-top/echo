@@ -18,7 +18,6 @@
 package middleware
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -56,6 +55,7 @@ type (
 		// Possible values:
 		// - "header:<name>"
 		// - "query:<name>"
+		// - "param:<name>"
 		// - "cookie:<name>"
 		TokenLookup string `json:"token_lookup"`
 
@@ -72,6 +72,11 @@ const (
 // Algorithims
 const (
 	AlgorithmHS256 = "HS256"
+)
+
+// Errors
+var (
+	ErrJWTMissing = echo.NewHTTPError(http.StatusBadRequest, "missing or malformed jwt")
 )
 
 var (
@@ -135,6 +140,8 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 	switch parts[0] {
 	case "query":
 		extractor = jwtFromQuery(parts[1])
+	case "param":
+		extractor = jwtFromParam(parts[1])
 	case "cookie":
 		extractor = jwtFromCookie(parts[1])
 	}
@@ -175,7 +182,7 @@ func jwtFromHeader(header string) jwtExtractor {
 		if len(auth) > l+1 && auth[:l] == bearer {
 			return auth[l+1:], nil
 		}
-		return "", errors.New("empty or invalid jwt in request header")
+		return "", ErrJWTMissing
 	}
 }
 
@@ -185,9 +192,20 @@ func jwtFromQuery(param string) jwtExtractor {
 		token := c.Query(param)
 		var err error
 		if len(token) == 0 {
-			return "", errors.New("empty jwt in query string")
+			return "", ErrJWTMissing
 		}
 		return token, err
+	}
+}
+
+// jwtFromParam returns a `jwtExtractor` that extracts token from the url param string.
+func jwtFromParam(param string) jwtExtractor {
+	return func(c echo.Context) (string, error) {
+		token := c.Param(param)
+		if token == "" {
+			return "", ErrJWTMissing
+		}
+		return token, nil
 	}
 }
 
@@ -196,7 +214,7 @@ func jwtFromCookie(name string) jwtExtractor {
 	return func(c echo.Context) (string, error) {
 		token := c.GetCookie(name)
 		if len(token) == 0 {
-			return "", errors.New("empty jwt in cookie")
+			return "", ErrJWTMissing
 		}
 		return token, nil
 	}

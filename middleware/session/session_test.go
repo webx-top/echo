@@ -31,7 +31,7 @@ func TestSession(t *testing.T) {
 	e.Get(`/result`, func(ctx echo.Context) error {
 		return ctx.String(fmt.Sprintf(`%v:%v`, ctx.Session().Get(`count`), ctx.GetCookie(`user`)))
 	})
-
+	e.RebuildRouter()
 	headers := http.Header{}
 	rew := func(headers http.Header) func(req *http.Request) {
 		return func(req *http.Request) {

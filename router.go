@@ -34,6 +34,8 @@ type (
 		middleware  []interface{} //中间件
 	}
 
+	Routes []*Route
+
 	endpoint struct {
 		handler Handler
 		rid     int //routes index
@@ -69,6 +71,18 @@ const (
 	pkind
 	akind
 )
+
+func (r Routes) SetName(name string) IRouter {
+	for _, route := range r {
+		route.SetName(name)
+	}
+	return r
+}
+
+func (r *Route) SetName(name string) IRouter {
+	r.HandlerName = name
+	return r
+}
 
 func (r *Route) IsZero() bool {
 	return r.Handler == nil

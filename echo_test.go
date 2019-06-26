@@ -57,6 +57,8 @@ func TestEchoMiddleware(t *testing.T) {
 		return c.String("OK")
 	})
 
+	e.RebuildRouter()
+
 	c, b := request(GET, "/", e)
 	assert.Equal(t, "-1123", buf.String())
 	assert.Equal(t, http.StatusOK, c)
@@ -71,6 +73,9 @@ func TestEchoMiddlewareError(t *testing.T) {
 		}
 	})
 	e.Get("/", NotFoundHandler)
+
+	e.RebuildRouter()
+
 	c, _ := request(GET, "/", e)
 	assert.Equal(t, http.StatusInternalServerError, c)
 }
@@ -141,6 +146,8 @@ func TestGroupMiddleware(t *testing.T) {
 		}
 	})
 
+	e.RebuildRouter()
+
 	c, b := request(GET, "/", e)
 	assert.Equal(t, "-3-2-1012345", buf.String())
 	assert.Equal(t, http.StatusOK, c)
@@ -168,6 +175,8 @@ func TestEchoHandler(t *testing.T) {
 		return c.String(c.P(0))
 	})
 
+	e.RebuildRouter()
+
 	c, b := request(GET, "/ok", e)
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "OK", b)
@@ -193,6 +202,8 @@ func TestEchoMeta(t *testing.T) {
 			return c.JSON(c.Route().Meta)
 		},
 	))
+
+	e.RebuildRouter()
 
 	var meta H
 
