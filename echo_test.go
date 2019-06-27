@@ -14,8 +14,8 @@ import (
 	test "github.com/webx-top/echo/testing"
 )
 
-func request(method, path string, e *Echo) (int, string) {
-	rec := test.Request(method, path, e)
+func request(method, path string, e *Echo, afters ...func(*http.Request)) (int, string) {
+	rec := test.Request(method, path, e, afters...)
 	return rec.Code, rec.Body.String()
 }
 
@@ -174,6 +174,10 @@ func TestEchoHandler(t *testing.T) {
 	e.Get("/file/*", func(c Context) error {
 		return c.String(c.P(0))
 	})
+	g := e.Host(".admpub.com")
+	g.Get("/host", func(c Context) error {
+		return c.String(c.Host())
+	})
 
 	e.RebuildRouter()
 
@@ -191,6 +195,11 @@ func TestEchoHandler(t *testing.T) {
 	c, b = request(GET, "/file/path/to/file.js", e)
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "path/to/file.js", b)
+	c, b = request(GET, "/host", e, func(req *http.Request) {
+		req.Host = "test.admpub.com"
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "test.admpub.com", b)
 }
 
 func TestEchoRouter(t *testing.T) {
