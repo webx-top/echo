@@ -193,6 +193,36 @@ func TestEchoHandler(t *testing.T) {
 	assert.Equal(t, "path/to/file.js", b)
 }
 
+func TestEchoRouter(t *testing.T) {
+	e := New()
+
+	e.Get("/router/:n/list", func(c Context) error {
+		//Dump(c.Route())
+		return c.String(c.Param(`n`))
+	})
+	e.Get("/router2/{n}", func(c Context) error {
+		//Dump(c.Route())
+		return c.String(c.Param(`n`))
+	})
+	e.Get("/router3/{n}/list", func(c Context) error {
+		//Dump(c.Route())
+		return c.String(c.Param(`n`))
+	})
+
+	e.RebuildRouter()
+
+	c, b := request(GET, "/router/123/list", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "123", b)
+	c, b = request(GET, "/router2/123", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "123", b)
+	c, b = request(GET, "/router3/123/list", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "123", b)
+
+}
+
 func TestEchoMeta(t *testing.T) {
 	e := New()
 

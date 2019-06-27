@@ -223,31 +223,41 @@ func (r *Router) Add(rt *Route, rid int) {
 	defer func() {
 		rt.Format = uri.String()
 		rt.Params = pnames
+		//Dump(rt)
 	}()
 	for i, l := 0, len(path); i < l; i++ {
-		if path[i] == ':' {
+		if path[i] == ':' || path[i] == '{' {
 			uri.WriteString(`%v`)
 			j := i + 1
 
+			var (
+				endChar byte = '/'
+				skip    int
+			)
+			if path[i] == '{' {
+				endChar = '}'
+				skip = 1
+			}
+
 			r.insert(rt.Method, path[:i], nil, skind, "", nil, -1)
-			for ; i < l && path[i] != '/'; i++ {
+			for ; i < l && path[i] != endChar; i++ {
 			}
 
 			pnames = append(pnames, path[j:i])
+			i += skip
 			path = path[:j] + path[i:]
 			i, l = j, len(path)
 
 			if i == l {
 				r.insert(rt.Method, path[:i], rt.Handler, pkind, ppath, pnames, rid)
-				return
+			} else {
+				r.insert(rt.Method, path[:i], nil, pkind, "", nil, -1)
 			}
-			r.insert(rt.Method, path[:i], nil, pkind, ppath, pnames, -1)
 		} else if path[i] == '*' {
 			uri.WriteString(`%v`)
 			r.insert(rt.Method, path[:i], nil, skind, "", nil, -1)
 			pnames = append(pnames, "*")
 			r.insert(rt.Method, path[:i+1], rt.Handler, akind, ppath, pnames, rid)
-			return
 		}
 
 		if i < l {
@@ -263,7 +273,7 @@ func (r *Router) Add(rt *Route, rid int) {
 		m.addHandler(rt.Method, rt.Handler, rid)
 		r.static[path] = m
 	}
-	//r.insert(method, path, h, skind, ppath, pnames, e)
+	r.insert(rt.Method, path, rt.Handler, skind, ppath, pnames, rid)
 	return
 }
 
@@ -277,7 +287,7 @@ func (r *Router) insert(method, path string, h Handler, t kind, ppath string, pn
 
 	cn := r.tree // Current node as root
 	if cn == nil {
-		panic("echo => invalid method")
+		panic("echo: invalid method")
 	}
 	search := path
 
@@ -348,7 +358,9 @@ func (r *Router) insert(method, path string, h Handler, t kind, ppath string, pn
 			if h != nil {
 				cn.addHandler(method, h, rid)
 				cn.ppath = ppath
-				cn.pnames = pnames
+				if len(cn.pnames) == 0 {
+					cn.pnames = pnames
+				}
 			}
 		}
 		return
@@ -365,6 +377,27 @@ func newNode(t kind, pre string, p *node, c children, mh *methodHandler, ppath s
 		ppath:         ppath,
 		pnames:        pnames,
 		methodHandler: mh,
+	}
+}
+
+func (n *node) String() string {
+	return Dump(n.Tree(), false)
+}
+
+func (n *node) Tree() H {
+	children := make([]H, len(n.children))
+	for k, v := range n.children {
+		children[k] = v.Tree()
+	}
+	return H{
+		"kind":          n.kind,
+		"label":         string([]byte{n.label}),
+		"prefix":        n.prefix,
+		"parent":        n.parent,
+		"children":      children,
+		"ppath":         n.ppath,
+		"pnames":        n.pnames,
+		"methodHandler": n.methodHandler,
 	}
 }
 
@@ -447,13 +480,22 @@ func (r *Router) Find(method, path string, context Context) {
 	// Search order static > param > any
 	for {
 		if search == "" {
-			goto End
+			break
 		}
 
 		pl := 0 // Prefix length
 		l := 0  // LCP length
 
-		if cn.label != ':' {
+		var (
+			endChar byte = '/'
+			skip    int
+		)
+		if cn.label == '{' {
+			endChar = '}'
+			skip = 1
+		}
+
+		if cn.label != ':' && cn.label != '{' {
 			sl := len(search)
 			pl = len(cn.prefix)
 
@@ -482,13 +524,13 @@ func (r *Router) Find(method, path string, context Context) {
 		}
 
 		if search == "" {
-			goto End
+			break
 		}
 
 		// Static node
 		if c = cn.findChild(search[0], skind); c != nil {
 			// Save next
-			if cn.prefix[len(cn.prefix)-1] == '/' {
+			if cn.prefix[len(cn.prefix)-1] == endChar {
 				nk = pkind
 				nn = cn
 				ns = search
@@ -506,7 +548,7 @@ func (r *Router) Find(method, path string, context Context) {
 			}
 
 			// Save next
-			if cn.prefix[len(cn.prefix)-1] == '/' {
+			if cn.prefix[len(cn.prefix)-1] == endChar {
 				nk = akind
 				nn = cn
 				ns = search
@@ -514,10 +556,11 @@ func (r *Router) Find(method, path string, context Context) {
 
 			cn = c
 			i, l := 0, len(search)
-			for ; i < l && search[i] != '/'; i++ {
+			for ; i < l && search[i] != endChar; i++ {
 			}
 			pvalues[n] = search[:i]
 			n++
+			i += skip
 			search = search[i:]
 			continue
 		}
@@ -527,7 +570,7 @@ func (r *Router) Find(method, path string, context Context) {
 		if cn = cn.findChildByKind(akind); cn == nil {
 			if nn != nil {
 				cn = nn
-				nn = nil // Next
+				nn = cn.parent // Next
 				search = ns
 				if nk == pkind {
 					goto Param
@@ -539,10 +582,9 @@ func (r *Router) Find(method, path string, context Context) {
 			return
 		}
 		pvalues[len(cn.pnames)-1] = search
-		goto End
+		break
 	}
 
-End:
 	cn.applyHandler(method, ctx)
 
 	// NOTE: Slow zone...
