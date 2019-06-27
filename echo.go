@@ -740,6 +740,18 @@ func (e *Echo) findRouter(host string) (*Router, bool) {
 		if r, ok := e.routers[host]; ok {
 			return r, true
 		}
+		l := len(host)
+		for h, r := range e.routers {
+			if l <= len(h) {
+				continue
+			}
+			if h[0] == '.' && strings.HasSuffix(host, h) { //.host(xxx.host)
+				return r, true
+			}
+			if h[len(h)-1] == '.' && strings.HasPrefix(host, h) { //host.(host.xxx)
+				return r, true
+			}
+		}
 	}
 	return e.router, false
 }
