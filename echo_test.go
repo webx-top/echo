@@ -208,6 +208,10 @@ func TestEchoRouter(t *testing.T) {
 		//Dump(c.Route())
 		return c.String(c.Param(`n`))
 	})
+	e.Get("/router4/{n}/list/{m}", func(c Context) error {
+		//Dump(c.Route())
+		return c.String(c.Param(`n`) + `:` + c.Param(`m`))
+	})
 
 	e.RebuildRouter()
 
@@ -220,7 +224,9 @@ func TestEchoRouter(t *testing.T) {
 	c, b = request(GET, "/router3/123/list", e)
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "123", b)
-
+	c, b = request(GET, "/router4/123/list/456", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "123:456", b)
 }
 
 func TestEchoMeta(t *testing.T) {
