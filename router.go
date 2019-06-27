@@ -226,25 +226,14 @@ func (r *Router) Add(rt *Route, rid int) {
 		//Dump(rt)
 	}()
 	for i, l := 0, len(path); i < l; i++ {
-		if path[i] == ':' || path[i] == '{' {
+		if path[i] == ':' {
 			uri.WriteString(`%v`)
 			j := i + 1
-
-			var (
-				endChar byte = '/'
-				skip    int
-			)
-			if path[i] == '{' {
-				endChar = '}'
-				skip = 1
-			}
-
 			r.insert(rt.Method, path[:i], nil, skind, "", nil, -1)
-			for ; i < l && path[i] != endChar; i++ {
+			for ; i < l && path[i] != '/'; i++ {
 			}
 
 			pnames = append(pnames, path[j:i])
-			i += skip
 			path = path[:j] + path[i:]
 			i, l = j, len(path)
 
@@ -486,16 +475,7 @@ func (r *Router) Find(method, path string, context Context) {
 		pl := 0 // Prefix length
 		l := 0  // LCP length
 
-		var (
-			endChar byte = '/'
-			skip    int
-		)
-		if cn.label == '{' {
-			endChar = '}'
-			skip = 1
-		}
-
-		if cn.label != ':' && cn.label != '{' {
+		if cn.label != ':' {
 			sl := len(search)
 			pl = len(cn.prefix)
 
@@ -530,7 +510,7 @@ func (r *Router) Find(method, path string, context Context) {
 		// Static node
 		if c = cn.findChild(search[0], skind); c != nil {
 			// Save next
-			if cn.prefix[len(cn.prefix)-1] == endChar {
+			if cn.prefix[len(cn.prefix)-1] == '/' {
 				nk = pkind
 				nn = cn
 				ns = search
@@ -548,7 +528,7 @@ func (r *Router) Find(method, path string, context Context) {
 			}
 
 			// Save next
-			if cn.prefix[len(cn.prefix)-1] == endChar {
+			if cn.prefix[len(cn.prefix)-1] == '/' {
 				nk = akind
 				nn = cn
 				ns = search
@@ -556,11 +536,10 @@ func (r *Router) Find(method, path string, context Context) {
 
 			cn = c
 			i, l := 0, len(search)
-			for ; i < l && search[i] != endChar; i++ {
+			for ; i < l && search[i] != '/'; i++ {
 			}
 			pvalues[n] = search[:i]
 			n++
-			i += skip
 			search = search[i:]
 			continue
 		}
