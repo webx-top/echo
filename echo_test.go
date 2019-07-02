@@ -200,6 +200,11 @@ func TestEchoHandler(t *testing.T) {
 	})
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "test.admpub.com", b)
+	c, b = request(GET, "/host", e, func(req *http.Request) {
+		req.Host = "test-b.admpub.com"
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "test-b.admpub.com", b)
 }
 
 func TestEchoRouter(t *testing.T) {
