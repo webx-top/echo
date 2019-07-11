@@ -562,7 +562,7 @@ func (e *Echo) Host(name string, m ...interface{}) *Group {
 	if len(m) > 0 {
 		h.group.Use(m...)
 	}
-	return g
+	return h.group
 }
 
 // Group creates a new sub-router with prefix.
@@ -749,20 +749,20 @@ func (e *Echo) Stop() error {
 }
 
 func (e *Echo) findRouter(host string) (*Router, bool) {
-	if len(e.routers) > 0 {
-		if r, ok := e.routers[host]; ok {
-			return r, true
+	if len(e.hosts) > 0 {
+		if r, ok := e.hosts[host]; ok {
+			return r.Router, true
 		}
 		l := len(host)
-		for h, r := range e.routers {
+		for h, r := range e.hosts {
 			if l <= len(h) {
 				continue
 			}
 			if h[0] == '.' && strings.HasSuffix(host, h) { //.host(xxx.host)
-				return r, true
+				return r.Router, true
 			}
 			if h[len(h)-1] == '.' && strings.HasPrefix(host, h) { //host.(host.xxx)
-				return r, true
+				return r.Router, true
 			}
 		}
 	}

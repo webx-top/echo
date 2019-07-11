@@ -105,7 +105,7 @@ func (g *Group) Group(prefix string, middleware ...interface{}) *Group {
 	if len(g.host) > 0 {
 		subG, y := g.echo.hosts[g.host].groups[prefix]
 		if !y {
-			subG = &Group{prefix: prefix, echo: e}
+			subG = &Group{host: g.host, prefix: prefix, echo: g.echo}
 			g.echo.hosts[g.host].groups[prefix] = subG
 		}
 		if len(m) > 0 {
