@@ -15,12 +15,18 @@ import (
 )
 
 type (
+	Host struct {
+		head   Handler
+		group  *Group
+		groups map[string]*Group
+		Router *Router
+	}
 	Echo struct {
 		engine            engine.Engine
 		prefix            string
 		middleware        []interface{}
 		head              Handler
-		heads             map[string]Handler
+		hosts             map[string]*Host
 		maxParam          *int
 		notFoundHandler   HandlerFunc
 		httpErrorHandler  HTTPErrorHandler
@@ -29,7 +35,6 @@ type (
 		pool              sync.Pool
 		debug             bool
 		router            *Router
-		routers           map[string]*Router
 		logger            logger.Logger
 		groups            map[string]*Group
 		handlerWrapper    []func(interface{}) Handler
@@ -91,8 +96,8 @@ func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 		return fn(e)
 	}
 	e.router = NewRouter(e)
-	e.routers = map[string]*Router{}
 	e.groups = make(map[string]*Group)
+	e.hosts = make(map[string]*Host)
 
 	//----------
 	// Defaults
@@ -189,9 +194,9 @@ func (e *Echo) Router() *Router {
 	return e.router
 }
 
-// Routers returns the map of host => router.
-func (e *Echo) Routers() map[string]*Router {
-	return e.routers
+// Hosts returns the map of host => Host.
+func (e *Echo) Hosts() map[string]*Host {
+	return e.hosts
 }
 
 // SetLogger sets the logger instance.
@@ -545,9 +550,18 @@ func (e *Echo) AppendRouter(routes []*Route) {
 
 // Host creates a new router group for the provided host and optional host-level middleware.
 func (e *Echo) Host(name string, m ...interface{}) *Group {
-	e.routers[name] = NewRouter(e)
-	g := &Group{host: name, echo: e}
-	g.Use(m...)
+	h, y := e.hosts[name]
+	if !y {
+		h = &Host{
+			group:  &Group{host: name, echo: e},
+			groups: map[string]*Group{},
+			Router: NewRouter(e),
+		}
+		e.hosts[name] = h
+	}
+	if len(m) > 0 {
+		h.group.Use(m...)
+	}
 	return g
 }
 
@@ -661,18 +675,17 @@ func (e *Echo) chainMiddleware() Handler {
 }
 
 func (e *Echo) chainMiddlewareByHost(host string, router *Router) Handler {
-	if e.heads != nil {
-		if handler, ok := e.heads[host]; ok {
-			return handler
-		}
-	} else {
-		e.heads = map[string]Handler{}
+	h, ok := e.hosts[host]
+	if !ok {
+		e.hosts[host] = &Host{}
+	} else if h.head != nil {
+		return h.head
 	}
 	handler := router.Handle(nil)
 	for i := len(e.middleware) - 1; i >= 0; i-- {
 		handler = e.ValidMiddleware(e.middleware[i]).Handle(handler)
 	}
-	e.heads[host] = handler
+	e.hosts[host].head = handler
 	return handler
 }
 

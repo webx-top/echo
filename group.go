@@ -98,6 +98,17 @@ func (g *Group) Group(prefix string, middleware ...interface{}) *Group {
 	m := []interface{}{}
 	m = append(m, g.middleware...)
 	m = append(m, middleware...)
+	if len(g.host) > 0 {
+		subG, y := g.echo.hosts[g.host].groups[prefix]
+		if !y {
+			subG = &Group{prefix: prefix, echo: e}
+			g.echo.hosts[g.host].groups[prefix] = subG
+		}
+		if len(m) > 0 {
+			subG.Use(m...)
+		}
+		return subG
+	}
 	return g.echo.Group(g.prefix+prefix, m...)
 }
 
