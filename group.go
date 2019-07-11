@@ -42,56 +42,60 @@ func (g *Group) PreUse(middleware ...interface{}) {
 	g.middleware = append(middlewares, g.middleware...)
 }
 
-func (g *Group) Connect(path string, h interface{}, m ...interface{}) {
-	g.Add(CONNECT, path, h, m...)
+func (g *Group) Connect(path string, h interface{}, m ...interface{}) IRouter {
+	return g.Add(CONNECT, path, h, m...)
 }
 
-func (g *Group) Delete(path string, h interface{}, m ...interface{}) {
-	g.Add(DELETE, path, h, m...)
+func (g *Group) Delete(path string, h interface{}, m ...interface{}) IRouter {
+	return g.Add(DELETE, path, h, m...)
 }
 
-func (g *Group) Get(path string, h interface{}, m ...interface{}) {
-	g.Add(GET, path, h, m...)
+func (g *Group) Get(path string, h interface{}, m ...interface{}) IRouter {
+	return g.Add(GET, path, h, m...)
 }
 
-func (g *Group) Head(path string, h interface{}, m ...interface{}) {
-	g.Add(HEAD, path, h, m...)
+func (g *Group) Head(path string, h interface{}, m ...interface{}) IRouter {
+	return g.Add(HEAD, path, h, m...)
 }
 
-func (g *Group) Options(path string, h interface{}, m ...interface{}) {
-	g.Add(OPTIONS, path, h, m...)
+func (g *Group) Options(path string, h interface{}, m ...interface{}) IRouter {
+	return g.Add(OPTIONS, path, h, m...)
 }
 
-func (g *Group) Patch(path string, h interface{}, m ...interface{}) {
-	g.Add(PATCH, path, h, m...)
+func (g *Group) Patch(path string, h interface{}, m ...interface{}) IRouter {
+	return g.Add(PATCH, path, h, m...)
 }
 
-func (g *Group) Post(path string, h interface{}, m ...interface{}) {
-	g.Add(POST, path, h, m...)
+func (g *Group) Post(path string, h interface{}, m ...interface{}) IRouter {
+	return g.Add(POST, path, h, m...)
 }
 
-func (g *Group) Put(path string, h interface{}, m ...interface{}) {
-	g.Add(PUT, path, h, m...)
+func (g *Group) Put(path string, h interface{}, m ...interface{}) IRouter {
+	return g.Add(PUT, path, h, m...)
 }
 
-func (g *Group) Trace(path string, h interface{}, m ...interface{}) {
-	g.Add(TRACE, path, h, m...)
+func (g *Group) Trace(path string, h interface{}, m ...interface{}) IRouter {
+	return g.Add(TRACE, path, h, m...)
 }
 
-func (g *Group) Any(path string, h interface{}, middleware ...interface{}) {
+func (g *Group) Any(path string, h interface{}, middleware ...interface{}) IRouter {
+	routes := Routes{}
 	for _, m := range methods {
-		g.Add(m, path, h, middleware...)
+		routes = append(routes, g.Add(m, path, h, middleware...))
 	}
+	return routes
 }
 
-func (g *Group) Route(methods string, path string, h interface{}, middleware ...interface{}) {
-	g.Match(splitHTTPMethod.Split(methods, -1), path, h, middleware...)
+func (g *Group) Route(methods string, path string, h interface{}, middleware ...interface{}) IRouter {
+	return g.Match(splitHTTPMethod.Split(methods, -1), path, h, middleware...)
 }
 
-func (g *Group) Match(methods []string, path string, h interface{}, middleware ...interface{}) {
+func (g *Group) Match(methods []string, path string, h interface{}, middleware ...interface{}) IRouter {
+	routes := Routes{}
 	for _, m := range methods {
-		g.Add(m, path, h, middleware...)
+		routes = append(routes, g.Add(m, path, h, middleware...))
 	}
+	return routes
 }
 
 func (g *Group) Group(prefix string, middleware ...interface{}) *Group {

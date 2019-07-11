@@ -14,8 +14,8 @@ import (
 	test "github.com/webx-top/echo/testing"
 )
 
-func request(method, path string, e *Echo) (int, string) {
-	rec := test.Request(method, path, e)
+func request(method, path string, e *Echo, afters ...func(*http.Request)) (int, string) {
+	rec := test.Request(method, path, e, afters...)
 	return rec.Code, rec.Body.String()
 }
 
@@ -57,6 +57,8 @@ func TestEchoMiddleware(t *testing.T) {
 		return c.String("OK")
 	})
 
+	e.RebuildRouter()
+
 	c, b := request(GET, "/", e)
 	assert.Equal(t, "-1123", buf.String())
 	assert.Equal(t, http.StatusOK, c)
@@ -71,6 +73,9 @@ func TestEchoMiddlewareError(t *testing.T) {
 		}
 	})
 	e.Get("/", NotFoundHandler)
+
+	e.RebuildRouter()
+
 	c, _ := request(GET, "/", e)
 	assert.Equal(t, http.StatusInternalServerError, c)
 }
@@ -141,6 +146,8 @@ func TestGroupMiddleware(t *testing.T) {
 		}
 	})
 
+	e.RebuildRouter()
+
 	c, b := request(GET, "/", e)
 	assert.Equal(t, "-3-2-1012345", buf.String())
 	assert.Equal(t, http.StatusOK, c)
@@ -163,10 +170,18 @@ func TestEchoHandler(t *testing.T) {
 	})
 	e.Get("/view/:id", func(c Context) error {
 		return c.String(c.Param(`id`))
-	})
+	}).SetName(`view`)
 	e.Get("/file/*", func(c Context) error {
 		return c.String(c.P(0))
 	})
+	g := e.Host(".admpub.com")
+	g.Get("/host", func(c Context) error {
+		return c.String(c.Host())
+	})
+
+	e.RebuildRouter()
+
+	assert.Equal(t, `/view/8`, e.URI(`view`, 8))
 
 	c, b := request(GET, "/ok", e)
 	assert.Equal(t, http.StatusOK, c)
@@ -180,6 +195,30 @@ func TestEchoHandler(t *testing.T) {
 	c, b = request(GET, "/file/path/to/file.js", e)
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "path/to/file.js", b)
+	c, b = request(GET, "/host", e, func(req *http.Request) {
+		req.Host = "test.admpub.com"
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "test.admpub.com", b)
+	c, b = request(GET, "/host", e, func(req *http.Request) {
+		req.Host = "test-b.admpub.com"
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "test-b.admpub.com", b)
+}
+
+func TestEchoRouter(t *testing.T) {
+	e := New()
+
+	e.Get("/router/:n/list", func(c Context) error {
+		//Dump(c.Route())
+		return c.String(c.Param(`n`))
+	})
+	e.RebuildRouter()
+
+	c, b := request(GET, "/router/123/list", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "123", b)
 }
 
 func TestEchoMeta(t *testing.T) {
@@ -193,6 +232,8 @@ func TestEchoMeta(t *testing.T) {
 			return c.JSON(c.Route().Meta)
 		},
 	))
+
+	e.RebuildRouter()
 
 	var meta H
 

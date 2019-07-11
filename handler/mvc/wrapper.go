@@ -206,7 +206,7 @@ func (a *Wrapper) Register(p string, h interface{}, methods ...string) *Wrapper 
 		methods = append(methods, "GET")
 	}
 	_, ctl, act := a.Module.Application.URLBuilder.Set(h)
-	a.Module.Router().Match(methods, p, NewHandler(a.wrapHandler(h, ctl, act), a.HandlerName(h)))
+	a.Module.Router().Match(methods, p, NewHandler(a.wrapHandler(h, ctl, act), a.Name(h)))
 	return a
 }
 

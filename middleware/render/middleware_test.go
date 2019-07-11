@@ -47,6 +47,8 @@ func TestEchoMiddleware(t *testing.T) {
 		return c.Render(`no`, "OK")
 	})
 
+	e.RebuildRouter()
+
 	c, b := request2(echo.GET, "/", e)
 	assert.Equal(t, "0json1", buf.String())
 	assert.Equal(t, http.StatusOK, c)
