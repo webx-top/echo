@@ -77,7 +77,7 @@ func NewModule(name string, domain string, s *Application, middlewares ...interf
 		a.Dir = `/`
 	}
 	if s.RootModuleName == name {
-		a.Installed = int(time.Now().Unix())
+		a.Installed = time.Now().Unix()
 	}
 	return
 }
@@ -98,9 +98,9 @@ type Module struct {
 	Dir                string
 
 	// 模块附加信息
-	Disabled    int    // 禁用时间戳，为0时为启用状态
-	Installed   int    // 安装时间戳，为0时为未安装
-	Expired     int    // 过期时间戳，为0时为永不过期
+	Disabled    int64  // 禁用时间戳，为0时为启用状态
+	Installed   int64  // 安装时间戳，为0时为未安装
+	Expired     int64  // 过期时间戳，为0时为永不过期
 	Author      string // 作者名称
 	Website     string // 作者网址
 	Email       string // 作者邮箱
@@ -121,7 +121,7 @@ func (a *Module) Valid() error {
 	if a.Disabled > 0 {
 		return ErrModuleHasBeenDisabled
 	}
-	if a.Expired > 0 && int64(a.Expired) < time.Now().Unix() {
+	if a.Expired < time.Now().Unix() {
 		return ErrModuleHasExpired
 	}
 	return nil
