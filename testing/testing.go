@@ -8,6 +8,7 @@ import (
 	"github.com/webx-top/echo/engine/standard"
 )
 
+// Request testing
 func Request(method, path string, handler engine.Handler, reqRewrite ...func(*http.Request)) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(method, path, nil)
 	if len(reqRewrite) > 0 && reqRewrite[0] != nil {
