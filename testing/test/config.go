@@ -12,6 +12,7 @@ type Config struct {
 	Handler      HandlerTest
 	ReqRewrite   []func(*http.Request)
 	Checker      func(*testing.T, *httptest.ResponseRecorder, *bytes.Buffer)
+	Middlewares  []MiddlewareTest
 }
 
 func DefaultChecker(value string) func(t *testing.T, r *httptest.ResponseRecorder, buf *bytes.Buffer) {

@@ -16,11 +16,14 @@ func Hit(t *testing.T, configs []*Config, middelwares ...MiddlewareTest) {
 	e := echo.New()
 	buf := new(bytes.Buffer)
 	for _, h := range middelwares {
-		m := h(buf)
-		e.Use(m)
+		e.Use(h(buf))
 	}
 	for _, cfg := range configs {
-		e.Match([]string{cfg.Method}, cfg.Path, cfg.Handler(buf))
+		ms := make([]interface{}, len(cfg.Middlewares))
+		for k, m := range cfg.Middlewares {
+			ms[k] = m(buf)
+		}
+		e.Match([]string{cfg.Method}, cfg.Path, cfg.Handler(buf), ms...)
 		r := testings.Request(cfg.Method, cfg.Path, e, cfg.ReqRewrite...)
 		//assert.Equal(t, "-1123", buf.String())
 		//assert.Equal(t, http.StatusOK, r.Code)

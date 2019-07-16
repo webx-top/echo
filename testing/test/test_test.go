@@ -36,6 +36,27 @@ func TestTest(t *testing.T) {
 			},
 			Checker: DefaultChecker(`12`),
 		},
+		{
+			Method: `GET`,
+			Path:   `/3`,
+			Handler: func(buf *bytes.Buffer) echo.HandlerFunc {
+				return func(c echo.Context) error {
+					buf.WriteString(`3`)
+					return c.String(`OK`)
+				}
+			},
+			Middlewares: []MiddlewareTest{
+				func(buf *bytes.Buffer) echo.MiddlewareFuncd {
+					return func(h echo.Handler) echo.HandlerFunc {
+						return func(c echo.Context) error {
+							buf.WriteString(`-`)
+							return h.Handle(c)
+						}
+					}
+				},
+			},
+			Checker: DefaultChecker(`12-3`),
+		},
 	}
 	Hit(t, configs)
 }
