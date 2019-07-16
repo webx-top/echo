@@ -14,6 +14,15 @@ type MiddlewareTest func(*bytes.Buffer) echo.MiddlewareFuncd
 
 func Hit(t *testing.T, configs []*Config, middelwares ...MiddlewareTest) {
 	e := echo.New()
+	hit(e, t, configs, middelwares...)
+}
+
+func HitBy(custom func(e *echo.Echo) echo.Context, t *testing.T, configs []*Config, middelwares ...MiddlewareTest) {
+	e := echo.NewWithContext(custom)
+	hit(e, t, configs, middelwares...)
+}
+
+func hit(e *echo.Echo, t *testing.T, configs []*Config, middelwares ...MiddlewareTest) {
 	buf := new(bytes.Buffer)
 	for _, h := range middelwares {
 		e.Use(h(buf))
@@ -25,9 +34,6 @@ func Hit(t *testing.T, configs []*Config, middelwares ...MiddlewareTest) {
 		}
 		e.Match([]string{cfg.Method}, cfg.Path, cfg.Handler(buf), ms...)
 		r := testings.Request(cfg.Method, cfg.Path, e, cfg.ReqRewrite...)
-		//assert.Equal(t, "-1123", buf.String())
-		//assert.Equal(t, http.StatusOK, r.Code)
-		//assert.Equal(t, "OK", r.Body.String())
 		cfg.Checker(t, r, buf)
 	}
 }
