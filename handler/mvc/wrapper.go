@@ -195,7 +195,7 @@ func (a *Wrapper) wrapHandler(v interface{}, ctl string, act string) func(echo.C
 	}
 }
 
-func (a *Wrapper) HandlerName(h interface{}) string {
+func (a *Wrapper) Name(h interface{}) string {
 	return echo.HandlerName(h)
 }
 
