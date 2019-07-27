@@ -20,10 +20,19 @@ type Context interface {
 	context.Context
 	events.Emitter
 	SetEmitter(events.Emitter)
-	Transaction
+
+	//Transaction
 	SetTransaction(t Transaction)
+	Transaction() Transaction
+	Begin() error
+	Rollback() error
+	Commit() error
+	End(succeed bool) error
+
+	//Standard Context
 	StdContext() context.Context
 	SetStdContext(context.Context)
+
 	Validator
 	SetValidator(Validator)
 	Translator
@@ -108,7 +117,7 @@ type Context interface {
 	Stream(func(io.Writer) bool)
 	SSEvent(string, chan interface{}) error
 	File(string, ...http.FileSystem) error
-	Attachment(io.ReadSeeker, string) error
+	Attachment(io.Reader, string, ...bool) error
 	NoContent(...int) error
 	Redirect(string, ...int) error
 	Error(err error)

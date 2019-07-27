@@ -2,12 +2,11 @@ package echo_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"testing"
-
-	"encoding/json"
 
 	"github.com/stretchr/testify/assert"
 	. "github.com/webx-top/echo"
