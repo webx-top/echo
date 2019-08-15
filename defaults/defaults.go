@@ -168,7 +168,7 @@ func Route(methods string, path string, h interface{}, m ...interface{}) echo.IR
 
 // Match adds a route > handler to the router for multiple HTTP methods provided.
 func Match(methods []string, path string, h interface{}, m ...interface{}) echo.IRouter {
-	Default.Match(methods, path, h, m...)
+	return Default.Match(methods, path, h, m...)
 }
 
 func SetHandlerWrapper(funcs ...func(interface{}) echo.Handler) {
