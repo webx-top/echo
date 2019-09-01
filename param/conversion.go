@@ -1,6 +1,8 @@
 package param
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"html/template"
 	"strconv"
@@ -30,6 +32,25 @@ func AsString(val interface{}) string {
 		return ``
 	default:
 		return fmt.Sprint(val)
+	}
+}
+
+func AsBytes(val interface{}) []byte {
+	switch v := val.(type) {
+	case []byte:
+		return v
+	case nil:
+		return nil
+	case string:
+		return []byte(v)
+	default:
+		var buf bytes.Buffer
+		enc := gob.NewEncoder(&buf)
+		err := enc.Encode(val)
+		if err != nil {
+			return nil
+		}
+		return buf.Bytes()
 	}
 }
 
