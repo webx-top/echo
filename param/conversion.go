@@ -28,7 +28,7 @@ func AsType(typ string, val interface{}) interface{} {
 	switch typ {
 	case `string`:
 		return AsString(val)
-	case `bytes`:
+	case `bytes`, `[]byte`:
 		return AsBytes(val)
 	case `bool`:
 		return AsBool(val)
