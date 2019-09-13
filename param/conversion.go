@@ -440,3 +440,68 @@ func AsDateTime(val interface{}, layouts ...string) time.Time {
 	}
 	return emptyTime
 }
+
+func AsStore(val interface{}) Store {
+	switch v := val.(type) {
+	case Store:
+		return v
+	case map[string]interface{}:
+		return Store(v)
+	case map[string]uint64:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]int64:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]uint:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]int:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]uint32:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]int32:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]float32:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]float64:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]string:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	default:
+		return emptyStore
+	}
+}
