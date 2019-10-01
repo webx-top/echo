@@ -88,6 +88,7 @@ func TestTransaction(t *testing.T) {
 		b.WriteString(`<Rollback`)
 	}
 	w.End(nil, err == nil)
+	//w.Commit(nil) //panic
 	b.WriteString(`>`)
 	assert.Equal(t, `<Begin[Begin]><f2:Begin><f:Begin><f:Commit><f2:Commit><Commit[Commit]>`, b.String())
 
