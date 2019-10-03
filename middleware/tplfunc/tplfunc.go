@@ -809,7 +809,7 @@ func ToDuration(t interface{}, args ...string) time.Duration {
 	return td
 }
 
-func FriendlyTime(t interface{}, args ...string) string {
+func FriendlyTime(t interface{}, args ...interface{}) string {
 	var td time.Duration
 	switch v := t.(type) {
 	case time.Duration:
