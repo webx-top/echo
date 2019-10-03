@@ -102,7 +102,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"ToFixed":        ToFixed,
 	"ToDecimal":      ToDecimal,
 	"Math":           Math,
-	"NumberFormat":   com.NumberFormat,
+	"NumberFormat":   NumberFormat,
 	"NumberTrim":     NumberTrim,
 	"DurationFormat": DurationFormat,
 
@@ -879,3 +879,5 @@ func NumberTrim(number interface{}, precision int, separator ...string) string {
 	s := decimal.NewFromFloat(money).Truncate(int32(precision)).String()
 	return com.NumberTrim(s, precision, separator...)
 }
+
+type NumberFormat = com.NumberFormat
