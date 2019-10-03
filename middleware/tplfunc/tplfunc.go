@@ -53,7 +53,8 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"ElapsedMemory":   com.ElapsedMemory, //内存消耗
 	"TotalRunTime":    com.TotalRunTime,  //运行时长(从启动服务时算起)
 	"CaptchaForm":     CaptchaForm,       //验证码图片
-	"FormatByte":      com.FormatByte,    //字节转为适合理解的格式
+	"FormatByte":      com.FormatBytes,   //字节转为适合理解的格式
+	"FormatBytes":     com.FormatBytes,   //字节转为适合理解的格式
 	"FriendlyTime":    FriendlyTime,
 	"FormatPastTime":  com.FormatPastTime, //以前距离现在多长时间
 	"DateFormat":      com.DateFormat,
