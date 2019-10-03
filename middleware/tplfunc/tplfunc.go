@@ -880,4 +880,4 @@ func NumberTrim(number interface{}, precision int, separator ...string) string {
 	return com.NumberTrim(s, precision, separator...)
 }
 
-type NumberFormat = com.NumberFormat
+var NumberFormat = com.NumberFormat
