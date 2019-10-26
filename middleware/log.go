@@ -27,10 +27,10 @@ type VisitorInfo struct {
 
 var (
 	terminalColors = map[StatusColor]*color.Color{
-		`green`:  color.New(color.FgHiGreen),
-		`red`:    color.New(color.FgHiRed),
-		`yellow`: color.New(color.FgHiYellow),
-		`cyan`:   color.New(color.FgHiCyan),
+		`green`:  color.New(color.BgGreen, color.FgWhite),
+		`red`:    color.New(color.BgRed, color.FgWhite),
+		`yellow`: color.New(color.BgYellow, color.FgWhite),
+		`cyan`:   color.New(color.BgCyan, color.FgWhite),
 	}
 )
 
