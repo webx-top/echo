@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/admpub/color"
 	"github.com/admpub/log"
 
 	"github.com/webx-top/echo"
@@ -24,6 +25,41 @@ type VisitorInfo struct {
 	ResponseCode int
 }
 
+var (
+	terminalColors = map[StatusColor]*color.Color{
+		`green`:  color.New(color.FgHiGreen),
+		`red`:    color.New(color.FgHiRed),
+		`yellow`: color.New(color.FgHiYellow),
+		`cyan`:   color.New(color.FgHiCyan),
+	}
+)
+
+// StatusColor 状态色
+type StatusColor string
+
+func (s StatusColor) String() string {
+	return string(s)
+}
+
+// Terminal 控制台样式
+func (s StatusColor) Terminal() *color.Color {
+	return terminalColors[s]
+}
+
+// HTTPStatusColor HTTP状态码相应颜色
+func HTTPStatusColor(httpCode int) StatusColor {
+	s := `green`
+	switch {
+	case httpCode >= 500:
+		s = `red`
+	case httpCode >= 400:
+		s = `yellow`
+	case httpCode >= 300:
+		s = `cyan`
+	}
+	return StatusColor(s)
+}
+
 func Log(recv ...func(*VisitorInfo)) echo.MiddlewareFunc {
 	var logging func(*VisitorInfo)
 	if len(recv) > 0 {
@@ -32,16 +68,8 @@ func Log(recv ...func(*VisitorInfo)) echo.MiddlewareFunc {
 	if logging == nil {
 		logger := log.GetLogger(`HTTP`)
 		logging = func(v *VisitorInfo) {
-			icon := "●"
-			switch {
-			case v.ResponseCode >= 500:
-				icon = "▣"
-			case v.ResponseCode >= 400:
-				icon = "■"
-			case v.ResponseCode >= 300:
-				icon = "▲"
-			}
-			logger.Info(" " + icon + " " + fmt.Sprint(v.ResponseCode) + " " + v.RealIP + " " + v.Method + " " + v.Scheme + " " + v.Host + " " + v.URI + " " + v.Elapsed.String() + " " + fmt.Sprint(v.ResponseSize))
+			colorSprint := HTTPStatusColor(v.ResponseCode).Terminal().SprintFunc()
+			logger.Info(" " + colorSprint(v.ResponseCode) + " " + v.RealIP + " " + v.Method + " " + v.Scheme + " " + v.Host + " " + v.URI + " " + v.Elapsed.String() + " " + fmt.Sprint(v.ResponseSize))
 		}
 	}
 	return func(h echo.Handler) echo.Handler {
