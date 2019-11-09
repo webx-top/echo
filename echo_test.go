@@ -20,8 +20,8 @@ func init() {
 	mw.DefaultLogWriter = log.Writer(log.LevelInfo)
 }
 
-func request(method, path string, e *Echo) (int, string) {
-	rec := test.Request(method, path, e)
+func request(method, path string, e *Echo, reqRewrite ...func(*http.Request)) (int, string) {
+	rec := test.Request(method, path, e, reqRewrite...)
 	return rec.Code, rec.Body.String()
 }
 
