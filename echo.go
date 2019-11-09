@@ -705,11 +705,9 @@ func (e *Echo) chainMiddlewareByHost(host string, router *Router) Handler {
 func (e *Echo) ServeHTTP(req engine.Request, res engine.Response) {
 	c := e.pool.Get().(Context)
 	c.Reset(req, res)
-
 	host := req.Host()
-	router, exist := e.findRouter(host)
 	var handler Handler
-	if exist {
+	if router, exist := e.findRouter(host); exist {
 		handler = e.chainMiddlewareByHost(host, router)
 	} else {
 		handler = e.chainMiddleware()

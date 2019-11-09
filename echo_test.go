@@ -182,8 +182,11 @@ func TestEchoHandler(t *testing.T) {
 	})
 	g := e.Host(".admpub.com")
 	g.Get("/host", func(c Context) error {
+		if c.Queryx(`route`).Bool() {
+			return c.JSON(c.Route())
+		}
 		return c.String(c.Host())
-	})
+	}).SetName(`host`)
 
 	e.RebuildRouter()
 
@@ -211,6 +214,11 @@ func TestEchoHandler(t *testing.T) {
 	})
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "test-b.admpub.com", b)
+	c, b = request(GET, "/host?route=1", e, func(req *http.Request) {
+		req.Host = "test-b.admpub.com"
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `{"Host":".admpub.com","Method":"GET","Path":"/host","Name":"host","Format":"/host","Params":[],"Prefix":"","Meta":{}}`, b)
 }
 
 func TestEchoRouter(t *testing.T) {
