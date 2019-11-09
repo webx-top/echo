@@ -188,8 +188,11 @@ func (s *Subdomains) Run(args ...interface{}) {
 	e := s.Get()
 	if e == nil {
 		for _, info := range s.Alias {
-			e = info
-			break
+			if e == nil {
+				e = info
+				continue
+			}
+			e.Echo.Commit()
 		}
 	}
 	e.Logger().Info(`Server has been launched.`)
