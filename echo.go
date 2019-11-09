@@ -784,7 +784,7 @@ func (e *Echo) findRouter(host string) (*Router, []string, []string, bool) {
 	}
 	l := len(host)
 	for h, r := range e.hosts {
-		if r.group.host != nil {
+		if r.group != nil && r.group.host != nil {
 			values, hasExpr := r.group.host.Match(host)
 			if hasExpr {
 				if len(values) > 0 {
