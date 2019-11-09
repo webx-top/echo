@@ -681,9 +681,7 @@ func (e *Echo) chainMiddleware() Handler {
 		return e.head
 	}
 	e.head = e.router.Handle(nil)
-	for i := len(e.middleware) - 1; i >= 0; i-- {
-		e.head = e.ValidMiddleware(e.middleware[i]).Handle(e.head)
-	}
+	e.head = e.applyMiddleware(e.head, e.middleware...)
 	return e.head
 }
 
@@ -695,11 +693,15 @@ func (e *Echo) chainMiddlewareByHost(host string, router *Router) Handler {
 		return h.head
 	}
 	handler := router.Handle(nil)
-	for i := len(e.middleware) - 1; i >= 0; i-- {
-		handler = e.ValidMiddleware(e.middleware[i]).Handle(handler)
-	}
-	e.hosts[host].head = handler
+	e.hosts[host].head = e.applyMiddleware(router.Handle(nil), e.middleware...)
 	return handler
+}
+
+func (e *Echo) applyMiddleware(h Handler, middleware ...interface{}) Handler {
+	for i := len(middleware) - 1; i >= 0; i-- {
+		h = e.ValidMiddleware(middleware[i]).Handle(h)
+	}
+	return h
 }
 
 func (e *Echo) ServeHTTP(req engine.Request, res engine.Response) {
@@ -759,21 +761,22 @@ func (e *Echo) Stop() error {
 }
 
 func (e *Echo) findRouter(host string) (*Router, bool) {
-	if len(e.hosts) > 0 {
-		if r, ok := e.hosts[host]; ok {
+	if len(e.hosts) == 0 {
+		return e.router, false
+	}
+	if r, ok := e.hosts[host]; ok {
+		return r.Router, true
+	}
+	l := len(host)
+	for h, r := range e.hosts {
+		if l <= len(h) {
+			continue
+		}
+		if h[0] == '.' && strings.HasSuffix(host, h) { //.host(xxx.host)
 			return r.Router, true
 		}
-		l := len(host)
-		for h, r := range e.hosts {
-			if l <= len(h) {
-				continue
-			}
-			if h[0] == '.' && strings.HasSuffix(host, h) { //.host(xxx.host)
-				return r.Router, true
-			}
-			if h[len(h)-1] == '.' && strings.HasPrefix(host, h) { //host.(host.xxx)
-				return r.Router, true
-			}
+		if h[len(h)-1] == '.' && strings.HasPrefix(host, h) { //host.(host.xxx)
+			return r.Router, true
 		}
 	}
 	return e.router, false
