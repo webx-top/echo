@@ -295,7 +295,9 @@ func (r *Router) insert(method, path string, h Handler, t kind, ppath string, pn
 
 		if l == 0 {
 			// At root node
-			cn.label = search[0]
+			if len(search) > 0 {
+				cn.label = search[0]
+			}
 			cn.prefix = search
 			if h != nil {
 				cn.kind = t
