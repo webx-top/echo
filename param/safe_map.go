@@ -20,7 +20,7 @@ func (s *SafeMap) Set(key, value interface{}) {
 
 func (s *SafeMap) Get(key interface{}, defaults ...interface{}) interface{} {
 	value, ok := s.Load(key)
-	if !ok && len(defaults) > 0 {
+	if (!ok || value == nil) && len(defaults) > 0 {
 		if fallback, ok := defaults[0].(func() interface{}); ok {
 			return fallback()
 		}
@@ -36,14 +36,6 @@ func (s *SafeMap) GetOk(key interface{}) (interface{}, bool) {
 func (s *SafeMap) Has(key interface{}) bool {
 	_, ok := s.Load(key)
 	return ok
-}
-
-func (s *SafeMap) Delete(key interface{}) {
-	s.Delete(key)
-}
-
-func (s *SafeMap) Range(f func(key, value interface{}) bool) {
-	s.Range(f)
 }
 
 func (s *SafeMap) GetOrSet(key, value interface{}) (actual interface{}, loaded bool) {

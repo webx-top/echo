@@ -1,6 +1,8 @@
 package param
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"html/template"
 	"strconv"
@@ -8,12 +10,56 @@ import (
 	"time"
 )
 
-var (
-	emptyHTML     = template.HTML(``)
-	emptyJS       = template.JS(``)
-	emptyCSS      = template.CSS(``)
-	emptyHTMLAttr = template.HTMLAttr(``)
+const (
+	EmptyHTML      = template.HTML(``)
+	EmptyJS        = template.JS(``)
+	EmptyCSS       = template.CSS(``)
+	EmptyHTMLAttr  = template.HTMLAttr(``)
+	DateTimeLayout = `2006-01-02 15:04:05`
+	DateTimeShort  = `2006-01-02 15:04`
+	DateLayout     = `2006-01-02`
+	TimeLayout     = `15:04:05`
+	DateMd         = `01-02`
+	DateShort      = `06-01-02`
+	TimeShort      = `15:04`
 )
+
+func AsType(typ string, val interface{}) interface{} {
+	switch typ {
+	case `string`:
+		return AsString(val)
+	case `bytes`, `[]byte`:
+		return AsBytes(val)
+	case `bool`:
+		return AsBool(val)
+	case `float64`:
+		return AsFloat64(val)
+	case `float32`:
+		return AsFloat32(val)
+	case `int8`:
+		return AsInt8(val)
+	case `int16`:
+		return AsInt16(val)
+	case `int`:
+		return AsInt(val)
+	case `int32`:
+		return AsInt32(val)
+	case `int64`:
+		return AsInt64(val)
+	case `uint8`:
+		return AsUint8(val)
+	case `uint16`:
+		return AsUint16(val)
+	case `uint`:
+		return AsUint(val)
+	case `uint32`:
+		return AsUint32(val)
+	case `uint64`:
+		return AsUint64(val)
+	default:
+		return val
+	}
+}
 
 func AsString(val interface{}) string {
 	switch v := val.(type) {
@@ -23,6 +69,25 @@ func AsString(val interface{}) string {
 		return ``
 	default:
 		return fmt.Sprint(val)
+	}
+}
+
+func AsBytes(val interface{}) []byte {
+	switch v := val.(type) {
+	case []byte:
+		return v
+	case nil:
+		return nil
+	case string:
+		return []byte(v)
+	default:
+		var buf bytes.Buffer
+		enc := gob.NewEncoder(&buf)
+		err := enc.Encode(val)
+		if err != nil {
+			return nil
+		}
+		return buf.Bytes()
 	}
 }
 
@@ -48,7 +113,7 @@ func AsHTML(val interface{}) template.HTML {
 	case string:
 		return template.HTML(v)
 	case nil:
-		return emptyHTML
+		return EmptyHTML
 	default:
 		return template.HTML(fmt.Sprint(v))
 	}
@@ -61,7 +126,7 @@ func AsHTMLAttr(val interface{}) template.HTMLAttr {
 	case string:
 		return template.HTMLAttr(v)
 	case nil:
-		return emptyHTMLAttr
+		return EmptyHTMLAttr
 	default:
 		return template.HTMLAttr(fmt.Sprint(v))
 	}
@@ -74,7 +139,7 @@ func AsJS(val interface{}) template.JS {
 	case string:
 		return template.JS(v)
 	case nil:
-		return emptyJS
+		return EmptyJS
 	default:
 		return template.JS(fmt.Sprint(v))
 	}
@@ -87,7 +152,7 @@ func AsCSS(val interface{}) template.CSS {
 	case string:
 		return template.CSS(v)
 	case nil:
-		return emptyCSS
+		return EmptyCSS
 	default:
 		return template.CSS(fmt.Sprint(v))
 	}
@@ -366,7 +431,7 @@ func AsTimestamp(val interface{}) time.Time {
 func AsDateTime(val interface{}, layouts ...string) time.Time {
 	p := AsString(val)
 	if len(p) > 0 {
-		layout := `2006-01-02 15:04:05`
+		layout := DateTimeLayout
 		if len(layouts) > 0 {
 			layout = layouts[0]
 		}
@@ -374,4 +439,69 @@ func AsDateTime(val interface{}, layouts ...string) time.Time {
 		return t
 	}
 	return emptyTime
+}
+
+func AsStore(val interface{}) Store {
+	switch v := val.(type) {
+	case Store:
+		return v
+	case map[string]interface{}:
+		return Store(v)
+	case map[string]uint64:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]int64:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]uint:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]int:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]uint32:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]int32:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]float32:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]float64:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	case map[string]string:
+		r := Store{}
+		for k, a := range v {
+			r[k] = interface{}(a)
+		}
+		return r
+	default:
+		return emptyStore
+	}
 }

@@ -8,13 +8,20 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/admpub/log"
 	"github.com/stretchr/testify/assert"
+
 	. "github.com/webx-top/echo"
+	mw "github.com/webx-top/echo/middleware"
 	test "github.com/webx-top/echo/testing"
 )
 
-func request(method, path string, e *Echo, afters ...func(*http.Request)) (int, string) {
-	rec := test.Request(method, path, e, afters...)
+func init() {
+	mw.DefaultLogWriter = log.Writer(log.LevelInfo)
+}
+
+func request(method, path string, e *Echo) (int, string) {
+	rec := test.Request(method, path, e)
 	return rec.Code, rec.Body.String()
 }
 
@@ -44,7 +51,7 @@ func TestEchoMiddleware(t *testing.T) {
 		}
 	})
 
-	e.Use(func(next HandlerFunc) HandlerFunc {
+	e.Use(mw.Log(), func(next HandlerFunc) HandlerFunc {
 		return func(c Context) error {
 			buf.WriteString("3")
 			return next.Handle(c)
@@ -66,7 +73,7 @@ func TestEchoMiddleware(t *testing.T) {
 
 func TestEchoMiddlewareError(t *testing.T) {
 	e := New()
-	e.Use(func(next HandlerFunc) HandlerFunc {
+	e.Use(mw.Log(), func(next HandlerFunc) HandlerFunc {
 		return func(c Context) error {
 			return errors.New("error")
 		}
@@ -111,7 +118,7 @@ func TestGroupMiddleware(t *testing.T) {
 		}
 	})
 
-	e.Use(func(next HandlerFunc) HandlerFunc {
+	e.Use(mw.Log(), func(next HandlerFunc) HandlerFunc {
 		return func(c Context) error {
 			buf.WriteString("1")
 			return next.Handle(c)
