@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/webx-top/echo"
 	mw "github.com/webx-top/echo/middleware"
 	"github.com/webx-top/echo/middleware/render"
@@ -60,6 +61,8 @@ func TestChangeDomain(t *testing.T) {
 	blog.Register(`/index`, func(ctx *Context) error {
 		return ctx.String(`OK:/blog/index`)
 	})
+
+	s.Commit()
 
 	c, b := request(echo.GET, "/blog/index", s)
 	assert.Equal(t, http.StatusOK, c)
@@ -209,6 +212,7 @@ func TestMiddleware(t *testing.T) {
 			return next.Handle(c)
 		}
 	})
+	s.Commit()
 	c, b := request(echo.GET, "/", s)
 	assert.Equal(t, "-3-2-1012345", buf.String())
 	assert.Equal(t, http.StatusOK, c)

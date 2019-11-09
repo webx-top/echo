@@ -730,6 +730,11 @@ func (e *Echo) Run(eng engine.Engine, handler ...engine.Handler) error {
 	return err
 }
 
+func (e *Echo) Commit() *Echo {
+	e.buildRouter()
+	return e
+}
+
 func (e *Echo) start(handler ...engine.Handler) error {
 	if len(handler) > 0 {
 		e.engine.SetHandler(handler[0])

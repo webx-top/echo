@@ -28,6 +28,7 @@ import (
 
 	"github.com/admpub/confl"
 	codec "github.com/admpub/securecookie"
+
 	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine"
@@ -532,7 +533,17 @@ func (s *Application) Debug(on bool) *Application {
 
 // 运行之前准备数据
 func (s *Application) ready() {
-	s.Event(`mvc.serverReady`, func(_ bool) {})
+	s.Event(`mvc.serverReady`, func(_ bool) {
+		s.Commit()
+	})
+}
+
+// Commit 提交并构建路由
+func (s *Application) Commit() {
+	s.Core.Commit()
+	for _, r := range s.moduleNames {
+		r.Commit()
+	}
 }
 
 // AddEvent 添加事件

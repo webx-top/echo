@@ -23,7 +23,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
 	"sync"
 
 	"github.com/webx-top/echo"
@@ -267,6 +266,13 @@ func (a *Module) SafelyCall(fn reflect.Value, args []reflect.Value) (resp []refl
 
 func (a *Module) ClearCachedHandlerNames() {
 	a.cachedHandlerNames = map[string]string{}
+}
+
+func (a *Module) Commit() {
+	if a.Group != nil {
+		return
+	}
+	a.Handler.Commit()
 }
 
 // ExecAction 执行Action的通用方式

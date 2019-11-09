@@ -234,6 +234,10 @@ func ServeHTTP(req engine.Request, res engine.Response) {
 	Default.ServeHTTP(req, res)
 }
 
+func Commit() *echo.Echo {
+	return Default.Commit()
+}
+
 // Run starts the HTTP engine.
 func Run(eng engine.Engine, handler ...engine.Handler) error {
 	return Default.Run(eng, handler...)
