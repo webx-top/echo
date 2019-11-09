@@ -1,7 +1,7 @@
 package echo
 
 type Group struct {
-	host       string
+	host       *host
 	prefix     string
 	middleware []interface{}
 	echo       *Echo
@@ -102,11 +102,11 @@ func (g *Group) Group(prefix string, middleware ...interface{}) *Group {
 	m := []interface{}{}
 	m = append(m, g.middleware...)
 	m = append(m, middleware...)
-	if len(g.host) > 0 {
-		subG, y := g.echo.hosts[g.host].groups[prefix]
+	if g.host != nil {
+		subG, y := g.echo.hosts[g.host.name].groups[prefix]
 		if !y {
 			subG = &Group{host: g.host, prefix: prefix, echo: g.echo}
-			g.echo.hosts[g.host].groups[prefix] = subG
+			g.echo.hosts[g.host.name].groups[prefix] = subG
 		}
 		if len(m) > 0 {
 			subG.Use(m...)
@@ -146,6 +146,9 @@ func (g *Group) Add(method, path string, h interface{}, middleware ...interface{
 	m := []interface{}{}
 	m = append(m, g.middleware...)
 	m = append(m, middleware...)
-
-	return g.echo.add(g.host, method, g.prefix, g.prefix+path, h, m...)
+	var host string
+	if g.host != nil {
+		host = g.host.name
+	}
+	return g.echo.add(host, method, g.prefix, g.prefix+path, h, m...)
 }

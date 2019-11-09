@@ -524,7 +524,7 @@ func (e *Echo) RebuildRouter(args ...[]*Route) *Echo {
 	}
 	e.router = NewRouter(e)
 	for i, r := range routes {
-		router, _ := e.findRouter(r.Host)
+		router, _, _, _ := e.findRouter(r.Host)
 		r.apply(e)
 		router.Add(r, i)
 		if e.RouteDebug {
@@ -545,7 +545,7 @@ func (e *Echo) RebuildRouter(args ...[]*Route) *Echo {
 // AppendRouter append router
 func (e *Echo) AppendRouter(routes []*Route) *Echo {
 	for i, r := range routes {
-		router, _ := e.findRouter(r.Host)
+		router, _, _, _ := e.findRouter(r.Host)
 		i = len(e.router.routes)
 		r.apply(e)
 		router.Add(r, i)
@@ -560,12 +560,19 @@ func (e *Echo) AppendRouter(routes []*Route) *Echo {
 	return e
 }
 
+func parseHostConfig(name string) *host {
+	vhost := &host{
+		name: name,
+	}
+	return vhost.Parse()
+}
+
 // Host creates a new router group for the provided host and optional host-level middleware.
 func (e *Echo) Host(name string, m ...interface{}) *Group {
 	h, y := e.hosts[name]
 	if !y {
 		h = &Host{
-			group:  &Group{host: name, echo: e},
+			group:  &Group{host: parseHostConfig(name), echo: e},
 			groups: map[string]*Group{},
 			Router: NewRouter(e),
 		}
@@ -709,7 +716,10 @@ func (e *Echo) ServeHTTP(req engine.Request, res engine.Response) {
 	c.Reset(req, res)
 	host := req.Host()
 	var handler Handler
-	if router, exist := e.findRouter(host); exist {
+	if router, names, values, exist := e.findRouter(host); exist {
+		if len(names) > 0 {
+			c.setHostParamValues(names, values)
+		}
 		handler = e.chainMiddlewareByHost(host, router)
 	} else {
 		handler = e.chainMiddleware()
@@ -765,26 +775,35 @@ func (e *Echo) Stop() error {
 	return e.engine.Stop()
 }
 
-func (e *Echo) findRouter(host string) (*Router, bool) {
+func (e *Echo) findRouter(host string) (*Router, []string, []string, bool) {
 	if len(e.hosts) == 0 {
-		return e.router, false
+		return e.router, nil, nil, false
 	}
 	if r, ok := e.hosts[host]; ok {
-		return r.Router, true
+		return r.Router, nil, nil, true
 	}
 	l := len(host)
 	for h, r := range e.hosts {
+		if r.group.host != nil {
+			values, hasExpr := r.group.host.Match(host)
+			if hasExpr {
+				if len(values) > 0 {
+					return r.Router, r.group.host.names, values, true
+				}
+				continue
+			}
+		}
 		if l <= len(h) {
 			continue
 		}
 		if h[0] == '.' && strings.HasSuffix(host, h) { //.host(xxx.host)
-			return r.Router, true
+			return r.Router, nil, nil, true
 		}
 		if h[len(h)-1] == '.' && strings.HasPrefix(host, h) { //host.(host.xxx)
-			return r.Router, true
+			return r.Router, nil, nil, true
 		}
 	}
-	return e.router, false
+	return e.router, nil, nil, false
 }
 
 func (e *Echo) NewContext(req engine.Request, resp engine.Response) Context {
