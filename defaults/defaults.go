@@ -200,6 +200,14 @@ func RebuildRouter(args ...[]*echo.Route) *echo.Echo {
 	return Default.RebuildRouter(args...)
 }
 
+func Host(name string, m ...interface{}) *echo.Group {
+	return Default.Host(name, m...)
+}
+
+func TypeHost(alias string, args ...interface{}) echo.TypeHost {
+	return Default.TypeHost(alias, args...)
+}
+
 // Group creates a new sub-router with prefix.
 func Group(prefix string, m ...interface{}) *echo.Group {
 	return Default.Group(prefix, m...)
