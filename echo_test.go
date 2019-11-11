@@ -11,6 +11,7 @@ import (
 	"github.com/admpub/log"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/webx-top/echo"
 	. "github.com/webx-top/echo"
 	mw "github.com/webx-top/echo/middleware"
 	test "github.com/webx-top/echo/testing"
@@ -187,7 +188,7 @@ func TestEchoHandler(t *testing.T) {
 		}
 		return c.String(c.Host())
 	}).SetName(`host`)
-	g = e.Host("<uid:[0-9]+>.<name>.com")
+	g = e.Host("<uid:[0-9]+>.<name>.com").SetAlias(`user`)
 	g.Get("/host2", func(c Context) error {
 		if c.Queryx(`route`).Bool() {
 			return c.JSON(c.Route())
@@ -232,6 +233,8 @@ func TestEchoHandler(t *testing.T) {
 	})
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "123.coscms.com", b)
+	assert.Equal(t, "10000.admpub.com/host2", e.TypeHost(`user`, 10000, `admpub`).URI(`host2`))
+	assert.Equal(t, "10001.admpub.com/host2", e.TypeHost(`user`, echo.H{`uid`: 10001, `name`: `admpub`}).URI(`host2`))
 }
 
 func TestEchoRouter(t *testing.T) {

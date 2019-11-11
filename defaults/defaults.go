@@ -102,11 +102,6 @@ func Pre(middleware ...interface{}) {
 	Default.Pre(middleware...)
 }
 
-// PreUse adds handler to the middleware chain.
-func PreUse(middleware ...interface{}) {
-	Default.PreUse(middleware...)
-}
-
 // Clear middleware
 func Clear(middleware ...interface{}) {
 	Default.Clear(middleware...)
