@@ -30,12 +30,6 @@ type Config struct {
 }
 
 var DefaultFuncMapSkipper = func(c echo.Context) bool {
-	if c.Internal().Bool(`needFuncMap`) {
-		return false
-	}
-	if c.Internal().Bool(`skipFuncMap`) {
-		return true
-	}
 	return c.Format() != `html` && !c.IsAjax() && !c.IsPjax()
 }
 
