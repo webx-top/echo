@@ -30,6 +30,12 @@ type Config struct {
 }
 
 var DefaultFuncMapSkipper = func(c echo.Context) bool {
+	if c.Internal().Bool(`needFuncMap`) {
+		return false
+	}
+	if c.Internal().Bool(`skipFuncMap`) {
+		return true
+	}
 	return c.Format() != `html` && !c.IsAjax() && !c.IsPjax()
 }
 
@@ -163,7 +169,7 @@ func (t *Config) ApplyTo(e *echo.Echo, manager ...driver.Manager) *Config {
 	return t
 }
 
-func (t *Config) MakeRenderer(manager ...driver.Manager) driver.Driver{
+func (t *Config) MakeRenderer(manager ...driver.Manager) driver.Driver {
 	renderer := t.NewRenderer(manager...)
 	t.renderer = renderer
 	return renderer
