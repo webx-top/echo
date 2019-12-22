@@ -62,9 +62,16 @@ func (s *StaticOptions) Init() *StaticOptions {
 	if s.Skipper == nil {
 		s.Skipper = echo.DefaultSkipper
 	}
+	var err error
 	s.Root, _ = filepath.Abs(s.Root)
+	if err != nil {
+		panic(err)
+	}
 	for index, fallback := range s.Fallback {
-		s.Fallback[index], _ = filepath.Abs(fallback)
+		s.Fallback[index], err = filepath.Abs(fallback)
+		if err != nil {
+			panic(err)
+		}
 	}
 	if len(s.Path) > 0 && s.Path[0] != '/' {
 		s.Path = `/` + s.Path
@@ -76,7 +83,11 @@ func (s *StaticOptions) Init() *StaticOptions {
 }
 
 func (s *StaticOptions) AddFallback(fallback string) *StaticOptions {
-	fallback, _ = filepath.Abs(fallback)
+	var err error
+	fallback, err = filepath.Abs(fallback)
+	if err != nil {
+		panic(err)
+	}
 	s.Fallback = append(s.Fallback, fallback)
 	return s
 }
@@ -109,9 +120,9 @@ func (s *StaticOptions) getRender() func(c echo.Context, data interface{}) error
 		}
 	} else {
 		t := template.New(s.Template)
-		_, e := t.Parse(ListDirTemplate)
-		if e != nil {
-			panic(e)
+		_, err := t.Parse(ListDirTemplate)
+		if err != nil {
+			panic(err)
 		}
 		s.render = func(c echo.Context, data interface{}) error {
 			w := c.Response()
