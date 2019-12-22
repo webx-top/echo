@@ -75,6 +75,12 @@ func (s *StaticOptions) Init() *StaticOptions {
 	return s
 }
 
+func (s *StaticOptions) AddFallback(fallback string) *StaticOptions {
+	fallback, _ = filepath.Abs(fallback)
+	s.Fallback = append(s.Fallback, fallback)
+	return s
+}
+
 func (s *StaticOptions) getOpener() func(file string) (http.File, error) {
 	if s.open != nil {
 		return s.open
