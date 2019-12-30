@@ -70,7 +70,7 @@ func TestKVList(t *testing.T) {
 	assert.Equal(t, "k2", list[1].K)
 	assert.Equal(t, "v2", list[1].V)
 
-	list.Del(1)
+	list.Delete(1)
 	assert.Equal(t, 1, len(list))
 
 	list.Reset()
