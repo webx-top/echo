@@ -337,10 +337,19 @@ func NewData(ctx Context) *RawData {
 
 //KV 键值对
 type KV struct {
-	K string
-	V string
-	X interface{}        `json:",omitempty" xml:",omitempty"`
-	F func() interface{} `json:"-" xml:"-"`
+	K  string
+	V  string
+	X  interface{} `json:",omitempty" xml:",omitempty"`
+	fn func() interface{}
+}
+
+func (a *KV) SetFn(fn func() interface{}) *KV {
+	a.fn = fn
+	return a
+}
+
+func (a *KV) Fn() func() interface{} {
+	return a.fn
 }
 
 type KVList []*KV
