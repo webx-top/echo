@@ -139,7 +139,7 @@ func (r *Request) FormFile(string) (multipart.File, *multipart.FileHeader, error
 	return nil, nil, ErrNotImplemented
 }
 
-// ContentLength returns the size of request's body.
+// Size returns the size of request's body.
 func (r *Request) Size() int64 {
 	return 0
 }
