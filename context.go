@@ -136,6 +136,7 @@ type Context interface {
 	// via `If-Modified-Since` request header. It automatically sets `Content-Type`
 	// and `Last-Modified` response headers.
 	ServeContent(io.Reader, string, time.Time) error
+	ServeCallbackContent(func(Context) (io.Reader, error), string, time.Time) error
 
 	//----------------
 	// FuncMap
