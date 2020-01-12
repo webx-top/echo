@@ -208,7 +208,7 @@ func (c *xContext) File(file string, fs ...http.FileSystem) (err error) {
 	return c.ServeContent(f, fi.Name(), fi.ModTime())
 }
 
-func (c *xContext) ServeContent(content io.ReadSeeker, name string, modtime time.Time) error {
+func (c *xContext) ServeContent(content io.Reader, name string, modtime time.Time) error {
 	rq := c.Request()
 	rs := c.Response()
 
