@@ -5,6 +5,22 @@ type Transfer interface {
 	Destination() string
 }
 
+type Transfers map[string]Transfer
+
+func (t *Transfers) Add(name string, transfer Transfer) *Transfers {
+	(*t)[name] = transfer
+	return t
+}
+
+func (t *Transfers) Delete(names ...string) *Transfers {
+	for _, name := range names {
+		if _, ok := (*t)[name]; ok {
+			delete(*t, name)
+		}
+	}
+	return t
+}
+
 func NewTransform() *Transform {
 	return &Transform{}
 }
