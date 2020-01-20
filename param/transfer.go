@@ -1,7 +1,7 @@
 package param
 
 type Transfer interface {
-	Transform(interface{}) interface{}
+	Transform(interface{}, Store) interface{}
 	Destination() string
 }
 
@@ -11,14 +11,14 @@ func NewTransform() *Transform {
 
 type Transform struct {
 	Key  string
-	Func func(interface{}) interface{}
+	Func func(interface{}, Store) interface{}
 }
 
-func (t *Transform) Transform(v interface{}) interface{} {
+func (t *Transform) Transform(v interface{}, r Store) interface{} {
 	if t.Func == nil {
 		return v
 	}
-	return t.Func(v)
+	return t.Func(v, r)
 }
 
 func (t *Transform) Destination() string {
@@ -30,7 +30,7 @@ func (t *Transform) SetKey(key string) *Transform {
 	return t
 }
 
-func (t *Transform) SetFunc(fn func(interface{}) interface{}) *Transform {
+func (t *Transform) SetFunc(fn func(interface{}, Store) interface{}) *Transform {
 	t.Func = fn
 	return t
 }
