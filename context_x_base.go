@@ -18,7 +18,7 @@ type xContext struct {
 	Validator
 	Translator
 	events.Emitter
-	transaction         Transaction
+	transaction         *BaseTransaction
 	sessioner           Sessioner
 	cookier             Cookier
 	context             context.Context
@@ -53,7 +53,7 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 		Validator:   DefaultNopValidate,
 		Translator:  DefaultNopTranslate,
 		Emitter:     emitter.DefaultCondEmitter,
-		transaction: DefaultNopTransaction,
+		transaction: DefaultNopBaseTransaction,
 		context:     context.Background(),
 		request:     req,
 		response:    res,
@@ -150,7 +150,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.Validator = DefaultNopValidate
 	c.Emitter = emitter.DefaultCondEmitter
 	c.Translator = DefaultNopTranslate
-	c.transaction = DefaultNopTransaction
+	c.transaction = DefaultNopBaseTransaction
 	c.sessioner = DefaultSession
 	c.cookier = NewCookier(c)
 	c.context = context.Background()
