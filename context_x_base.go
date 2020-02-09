@@ -53,7 +53,7 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 		Validator:   DefaultNopValidate,
 		Translator:  DefaultNopTranslate,
 		Emitter:     emitter.DefaultCondEmitter,
-		transaction: NewTransaction(DefaultNopTransaction),
+		transaction: DefaultNopTransaction,
 		context:     context.Background(),
 		request:     req,
 		response:    res,
@@ -150,7 +150,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.Validator = DefaultNopValidate
 	c.Emitter = emitter.DefaultCondEmitter
 	c.Translator = DefaultNopTranslate
-	c.transaction = NewTransaction(DefaultNopTransaction)
+	c.transaction = DefaultNopTransaction
 	c.sessioner = DefaultSession
 	c.cookier = NewCookier(c)
 	c.context = context.Background()
