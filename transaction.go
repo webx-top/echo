@@ -32,10 +32,9 @@ type Transaction interface {
 }
 
 var (
-	_                         Transaction = NewTransaction(nil)
-	DefaultNopTransaction     Transaction = &NopTransaction{}
-	DefaultNopBaseTransaction             = NewTransaction(DefaultNopTransaction)
-	DefaultDebugTransaction   Transaction = &DebugTransaction{}
+	_                       Transaction = NewTransaction(nil)
+	DefaultNopTransaction   Transaction = &NopTransaction{}
+	DefaultDebugTransaction Transaction = &DebugTransaction{}
 )
 
 type NopTransaction struct {
