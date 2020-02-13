@@ -71,7 +71,10 @@ func NewResponse(args ...interface{}) *Response {
 		}
 	}
 	if w == nil {
-		w = NewResponseWriter(&http.Response{Request: r})
+		w = NewResponseWriter(&http.Response{
+			Request: r,
+			Header:  http.Header{},
+		})
 	}
 	if l == nil {
 		l = log.GetLogger(`mock`)
