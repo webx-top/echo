@@ -2,129 +2,77 @@ package mock
 
 import (
 	"bytes"
-	"io"
-	"net"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/admpub/log"
 
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/engine/standard"
+	"github.com/webx-top/echo/logger"
 )
 
 type Response struct {
-	header    engine.Header
-	status    int
-	size      int64
-	committed bool
-	writer    io.Writer
-	body      []byte
-	keepBody  bool
+	*standard.Response
 }
 
-func NewResponse(writers ...io.Writer) *Response {
-	var writer io.Writer
-	if len(writers) > 0 {
-		writer = writers[0]
+func NewResponseWriter(w *http.Response) http.ResponseWriter {
+	b := bytes.NewBuffer(nil)
+	w.Body = ioutil.NopCloser(b)
+	return &ResponseWriter{
+		Response: w,
+		bytes:    b,
 	}
-	if writer == nil {
-		writer = bytes.NewBuffer(nil)
+}
+
+type ResponseWriter struct {
+	*http.Response
+	bytes *bytes.Buffer
+}
+
+func (w *ResponseWriter) Header() http.Header {
+	return w.Response.Header
+}
+
+func (w *ResponseWriter) Write(b []byte) (int, error) {
+	return w.bytes.Write(b)
+}
+
+func (w *ResponseWriter) WriteHeader(statusCode int) {
+	w.Response.StatusCode = statusCode
+	w.Response.Status = http.StatusText(statusCode)
+}
+
+func NewResponse(args ...interface{}) *Response {
+	var w http.ResponseWriter
+	var r *http.Request
+	var l logger.Logger
+	for _, arg := range args {
+		switch a := arg.(type) {
+		case http.ResponseWriter:
+			w = a
+		case *http.Request:
+			r = a
+		case logger.Logger:
+			l = a
+		case engine.Request:
+			r = a.StdRequest()
+		case *standard.Request:
+			r = a.StdRequest()
+		case *Request:
+			r = a.StdRequest()
+		}
+	}
+	if r == nil {
+		r = &http.Request{}
+	}
+	if w == nil {
+		w = NewResponseWriter(&http.Response{Request: r})
+	}
+	if l == nil {
+		l = log.GetLogger(`mock`)
 	}
 	return &Response{
-		header: &standard.Header{Header: http.Header{}},
-		writer: writer,
+		Response: standard.NewResponse(w, r, l),
 	}
-}
-
-func (r *Response) Header() engine.Header {
-	return r.header
-}
-
-func (r *Response) WriteHeader(code int) {
-	if r.committed {
-		log.Warn("response already committed")
-		return
-	}
-	r.status = code
-	r.committed = true
-}
-
-func (r *Response) KeepBody(on bool) {
-	r.keepBody = on
-}
-
-func (r *Response) Write(b []byte) (n int, err error) {
-	if !r.committed {
-		if r.status == 0 {
-			r.status = http.StatusOK
-		}
-		r.WriteHeader(r.status)
-	}
-	if r.keepBody {
-		r.body = append(r.body, b...)
-	}
-	n, err = r.writer.Write(b)
-	r.size += int64(n)
-	return
-}
-
-func (r *Response) Status() int {
-	return r.status
-}
-
-func (r *Response) Size() int64 {
-	return r.size
-}
-
-func (r *Response) Committed() bool {
-	return r.committed
-}
-
-func (r *Response) SetWriter(w io.Writer) {
-	r.writer = w
-}
-
-func (r *Response) Writer() io.Writer {
-	return r.writer
-}
-
-func (r *Response) Object() interface{} {
-	return nil
-}
-
-func (r *Response) Error(errMsg string, args ...int) {
-	if len(args) > 0 {
-		r.status = args[0]
-	} else {
-		r.status = http.StatusInternalServerError
-	}
-	r.Write(engine.Str2bytes(errMsg))
-	r.WriteHeader(r.status)
-}
-
-func (r *Response) Hijack(fn func(net.Conn)) {
-}
-
-func (r *Response) Body() []byte {
-	return r.body
-}
-
-func (r *Response) Redirect(url string, code int) {
-}
-
-func (r *Response) NotFound() {
-}
-
-func (r *Response) SetCookie(cookie *http.Cookie) {
-	r.header.Add(engine.HeaderSetCookie, cookie.String())
-}
-
-func (r *Response) ServeFile(file string) {
-}
-
-func (r *Response) Stream(step func(io.Writer) bool) {
-}
-
-func (r *Response) StdResponseWriter() http.ResponseWriter {
-	return nil
 }
