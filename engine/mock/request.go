@@ -3,6 +3,7 @@ package mock
 import (
 	"errors"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 
@@ -23,6 +24,7 @@ type Request struct {
 	header *Header
 	form   *Value
 	url    *URL
+	body   io.ReadCloser
 }
 
 // Scheme returns the HTTP protocol scheme, `http` or `https`.
@@ -91,16 +93,22 @@ func (r *Request) SetMethod(string) {
 
 // Body returns request's body.
 func (r *Request) Body() io.ReadCloser {
-	return nil
+	return r.body
 }
 
-func (r *Request) SetBody(io.Reader) {
+func (r *Request) SetBody(reader io.Reader) {
+	if readCloser, ok := reader.(io.ReadCloser); ok {
+		r.body = readCloser
+	} else {
+		r.body = ioutil.NopCloser(reader)
+	}
 }
 
 // FormValue returns the form field value for the provided name.
-func (r *Request) FormValue(string) string {
-	return ``
+func (r *Request) FormValue(key string) string {
+	return r.form.Get(key)
 }
+
 func (r *Request) Object() interface{} {
 	return nil
 }
@@ -122,9 +130,11 @@ func (r *Request) MultipartForm() *multipart.Form {
 func (r *Request) IsTLS() bool {
 	return false
 }
+
 func (r *Request) Cookie(string) string {
 	return ``
 }
+
 func (r *Request) Referer() string {
 	return ``
 }
