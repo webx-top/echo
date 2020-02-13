@@ -9,10 +9,11 @@ import (
 	"github.com/admpub/log"
 
 	"github.com/webx-top/echo/engine"
+	"github.com/webx-top/echo/engine/standard"
 )
 
 type Response struct {
-	header    *Header
+	header    engine.Header
 	status    int
 	size      int64
 	committed bool
@@ -30,7 +31,7 @@ func NewResponse(writers ...io.Writer) *Response {
 		writer = bytes.NewBuffer(nil)
 	}
 	return &Response{
-		header: &Header{},
+		header: &standard.Header{Header: http.Header{}},
 		writer: writer,
 	}
 }
