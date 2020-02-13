@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 
 	"github.com/admpub/log"
 
@@ -64,7 +65,10 @@ func NewResponse(args ...interface{}) *Response {
 		}
 	}
 	if r == nil {
-		r = &http.Request{}
+		r = &http.Request{
+			URL:    &url.URL{},
+			Header: http.Header{},
+		}
 	}
 	if w == nil {
 		w = NewResponseWriter(&http.Response{Request: r})

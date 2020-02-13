@@ -2,6 +2,7 @@ package mock
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/engine/standard"
@@ -13,7 +14,10 @@ func NewRequest(reqs ...*http.Request) engine.Request {
 		req = reqs[0]
 	}
 	if req == nil {
-		req = &http.Request{}
+		req = &http.Request{
+			URL:    &url.URL{},
+			Header: http.Header{},
+		}
 	}
 	return &Request{
 		Request: standard.NewRequest(req),
