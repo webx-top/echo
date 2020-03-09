@@ -27,6 +27,7 @@ import (
 
 	. "github.com/admpub/jet"
 	"github.com/admpub/log"
+
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/logger"
 	"github.com/webx-top/echo/middleware/render"
@@ -65,7 +66,7 @@ type Jet struct {
 	templateDir   string
 	logger        logger.Logger
 	debug         bool
-	tmplPathFixer func(string) string
+	tmplPathFixer func(echo.Context, string) string
 }
 
 func (self *Jet) Debug() bool {
@@ -89,7 +90,7 @@ func (self *Jet) TmplDir() string {
 	return self.templateDir
 }
 
-func (self *Jet) SetTmplPathFixer(fn func(string) string) {
+func (self *Jet) SetTmplPathFixer(fn func(echo.Context, string) string) {
 	self.tmplPathFixer = fn
 }
 
@@ -101,7 +102,7 @@ func (self *Jet) SetFuncMap(fn func() map[string]interface{}) {
 
 func (self *Jet) Render(w io.Writer, tmpl string, data interface{}, c echo.Context) error {
 	if self.tmplPathFixer != nil {
-		tmpl = self.tmplPathFixer(tmpl)
+		tmpl = self.tmplPathFixer(c, tmpl)
 	}
 	t, err := self.set.GetTemplate(tmpl)
 	if err != nil {
@@ -114,9 +115,9 @@ func (self *Jet) Render(w io.Writer, tmpl string, data interface{}, c echo.Conte
 	return t.Execute(w, vars, data)
 }
 
-func (self *Jet) Fetch(tmpl string, data interface{}, funcMap map[string]interface{}) string {
+func (self *Jet) Fetch(tmpl string, data interface{}, c echo.Context) string {
 	if self.tmplPathFixer != nil {
-		tmpl = self.tmplPathFixer(tmpl)
+		tmpl = self.tmplPathFixer(c, tmpl)
 	}
 	w := new(bytes.Buffer)
 	t, err := self.set.GetTemplate(tmpl)
@@ -124,7 +125,7 @@ func (self *Jet) Fetch(tmpl string, data interface{}, funcMap map[string]interfa
 		return fmt.Sprintf("Parse %v err: %v", tmpl, err)
 	}
 	vars := make(VarMap)
-	for name, fn := range funcMap {
+	for name, fn := range c.Funcs() {
 		vars.Set(name, fn)
 	}
 	err = t.Execute(w, vars, data)

@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	. "github.com/webx-top/echo/middleware/render/pongo2"
-
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/defaults"
+	"github.com/webx-top/echo/engine/mock"
 	"github.com/webx-top/echo/engine/standard"
 	mw "github.com/webx-top/echo/middleware"
 	"github.com/webx-top/echo/middleware/render"
+	. "github.com/webx-top/echo/middleware/render/pongo2"
 )
 
 func main() {
@@ -22,10 +22,11 @@ func main() {
 		"r":    []string{"one", "two", "three"},
 	}
 	//t.SetDebug(true)
+	ctx := echo.NewContext(mock.NewRequest(), mock.NewResponse(), defaults.Default)
 	for i := 0; i < 5; i++ {
 		ts := time.Now()
 		fmt.Printf("==========%v: %v========\\\n", i, ts)
-		str := t.Fetch("test", demo, nil)
+		str := t.Fetch("test", demo, ctx)
 		fmt.Printf("%v\n", str)
 		fmt.Printf("==========cost: %v========/\n", time.Now().Sub(ts).Seconds())
 	}

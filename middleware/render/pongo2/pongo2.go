@@ -22,13 +22,13 @@ import (
 	"io"
 	"io/ioutil"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 
-	"regexp"
-
 	"github.com/admpub/log"
 	. "github.com/admpub/pongo2"
+
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/logger"
 	"github.com/webx-top/echo/middleware/render"
@@ -76,14 +76,12 @@ type Pongo2 struct {
 	fileEvents        []func(string)
 	contentProcessors []func([]byte) []byte
 	debug             bool
-	tmplPathFixer     func(string) string
+	tmplPathFixer     func(echo.Context, string) string
 }
 
 type templateLoader struct {
-	templateDir string
-	ext         string
-	logger      logger.Logger
-	template    *Pongo2
+	logger   logger.Logger
+	template *Pongo2
 }
 
 func (a *templateLoader) Abs(base, name string) string {
@@ -93,12 +91,7 @@ func (a *templateLoader) Abs(base, name string) string {
 
 // Get returns an io.Reader where the template's content can be read from.
 func (a *templateLoader) Get(tmpl string) (io.Reader, error) {
-	tmpl += a.ext
-	tmpl = strings.TrimPrefix(tmpl, a.templateDir)
-	if a.template.tmplPathFixer != nil {
-		tmpl = a.template.tmplPathFixer(tmpl)
-	}
-	b, e := a.template.RawContent(tmpl)
+	b, e := a.template.RawContent(tmpl + a.template.ext)
 	if e != nil {
 		a.logger.Error(e)
 	}
@@ -130,7 +123,7 @@ func (self *Pongo2) TmplDir() string {
 	return self.templateDir
 }
 
-func (self *Pongo2) SetTmplPathFixer(fn func(string) string) {
+func (self *Pongo2) SetTmplPathFixer(fn func(echo.Context, string) string) {
 	self.tmplPathFixer = fn
 }
 
@@ -168,10 +161,8 @@ func (a *Pongo2) Init() {
 	a.Mgr.AddWatchDir(a.templateDir)
 	a.templates = map[string]*Template{}
 	loader := &templateLoader{
-		templateDir: a.templateDir,
-		ext:         a.ext,
-		logger:      a.logger,
-		template:    a,
+		logger:   a.logger,
+		template: a,
 	}
 	a.loader = loader
 	a.set = NewSet(a.templateDir, a.loader)
@@ -209,15 +200,20 @@ func (a *Pongo2) Render(w io.Writer, tmpl string, data interface{}, c echo.Conte
 			c.Delete(`webx:render.locked`)
 		}()
 	}
-	t, context := a.parse(tmpl, data, c.Funcs())
+	t, context := a.parse(c, tmpl, data)
 	return t.ExecuteWriter(context, w)
 }
 
-func (a *Pongo2) parse(tmpl string, data interface{}, funcMap map[string]interface{}) (*Template, Context) {
+func (a *Pongo2) parse(c echo.Context, tmpl string, data interface{}) (*Template, Context) {
 	k := tmpl
+	funcMap := c.Funcs()
 	t, ok := a.templates[k]
 	if !ok {
 		var err error
+		tmpl = strings.TrimPrefix(tmpl, a.templateDir)
+		if a.tmplPathFixer != nil {
+			tmpl = a.tmplPathFixer(c, tmpl)
+		}
 		t, err = a.set.FromFile(tmpl)
 		if err != nil {
 			a.logger.Error(err)
@@ -264,8 +260,8 @@ func (a *Pongo2) parse(tmpl string, data interface{}, funcMap map[string]interfa
 	return t, context
 }
 
-func (a *Pongo2) Fetch(tmpl string, data interface{}, funcMap map[string]interface{}) string {
-	t, context := a.parse(tmpl, data, funcMap)
+func (a *Pongo2) Fetch(tmpl string, data interface{}, c echo.Context) string {
+	t, context := a.parse(c, tmpl, data)
 	r, err := t.Execute(context)
 	if err != nil {
 		r = err.Error()

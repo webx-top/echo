@@ -9,6 +9,7 @@ import (
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/defaults"
 	"github.com/webx-top/echo/engine/standard"
+	"github.com/webx-top/echo/engine/mock"
 	mw "github.com/webx-top/echo/middleware"
 	"github.com/webx-top/echo/middleware/render"
 )
@@ -29,6 +30,7 @@ func main() {
 
 	tpl := render.New("standard", "./template/")
 	tpl.Init()
+	ctx := echo.NewContext(mock.NewRequest(), mock.NewResponse(), defaults.Default)
 	demo := map[string]interface{}{
 		"test": "one---",
 		"r":    []string{"one", "two", "three"},
@@ -83,7 +85,7 @@ func main() {
 	for i := 0; i < 5; i++ {
 		ts := time.Now()
 		fmt.Printf("==========%v: %v========\\\n", i, ts)
-		str := tpl.Fetch("test", demo, nil)
+		str := tpl.Fetch("test", demo, ctx)
 		fmt.Printf("%v\n", str)
 		fmt.Printf("==========cost: %v========/\n", time.Now().Sub(ts).Seconds())
 	}
