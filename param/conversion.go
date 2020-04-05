@@ -431,7 +431,7 @@ func AsTimestamp(val interface{}) time.Time {
 func AsDateTime(val interface{}, layouts ...string) time.Time {
 	p := AsString(val)
 	if len(p) > 0 {
-		layout := DateTimeLayout
+		layout := DateTimeNormal
 		if len(layouts) > 0 {
 			layout = layouts[0]
 		}
