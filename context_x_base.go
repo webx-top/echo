@@ -54,6 +54,7 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 		Translator:  DefaultNopTranslate,
 		Emitter:     emitter.DefaultCondEmitter,
 		transaction: DefaultNopTransaction,
+		context:     context.Background(),
 		request:     req,
 		response:    res,
 		echo:        e,
@@ -64,14 +65,9 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 		funcs:       make(map[string]interface{}),
 		sessioner:   DefaultSession,
 	}
-	c.context = newStdContext(c)
 	c.cookier = NewCookier(c)
 	c.dataEngine = NewData(c)
 	return c
-}
-
-func newStdContext(c Context) context.Context {
-	return context.WithValue(context.Background(), `context`, c)
 }
 
 func (c *xContext) StdContext() context.Context {
@@ -157,7 +153,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.transaction = DefaultNopTransaction
 	c.sessioner = DefaultSession
 	c.cookier = NewCookier(c)
-	c.context = newStdContext(c)
+	c.context = context.Background()
 	c.request = req
 	c.response = res
 	c.internal = param.NewMap()
