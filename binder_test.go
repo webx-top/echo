@@ -24,9 +24,9 @@ func TestMapToStruct(t *testing.T) {
 	e := New()
 	m := &TestForm{}
 	NamedStructMap(e, m, map[string][]string{
-		`files[]`:             []string{`a.txt`, `b.txt`, `c.txt`},
-		`data[file][users][]`: []string{`1`, `2`, `3`},
-		`IDs[]`:               []string{`1`, `2`, `3`},
+		`files[]`:             {`a.txt`, `b.txt`, `c.txt`},
+		`data[file][users][]`: {`1`, `2`, `3`},
+		`IDs[]`:               {`1`, `2`, `3`},
 	}, ``)
 	assert.Equal(t, &TestForm{
 		Files: []string{`a.txt`, `b.txt`, `c.txt`},
@@ -43,9 +43,9 @@ func TestMapToStruct2(t *testing.T) {
 	e := New()
 	m := &TestForm{}
 	NamedStructMap(e, m, map[string][]string{
-		`files`:             []string{`a.txt`, `b.txt`, `c.txt`},
-		`data[file][users]`: []string{`1`, `2`, `3`},
-		`IDs`:               []string{`1`, `2`, `3`},
+		`files`:             {`a.txt`, `b.txt`, `c.txt`},
+		`data[file][users]`: {`1`, `2`, `3`},
+		`IDs`:               {`1`, `2`, `3`},
 	}, ``)
 	assert.Equal(t, &TestForm{
 		Files: []string{`a.txt`, `b.txt`, `c.txt`},

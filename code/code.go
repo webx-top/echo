@@ -5,42 +5,41 @@ import (
 )
 
 type (
-	Code int
+	Code         int
 	TextHTTPCode struct {
-		Text string
+		Text     string
 		HTTPCode int
 	}
 	CodeMap map[Code]TextHTTPCode
 )
 
 const (
-	RequestTimeout Code = -9 //提交超时
+	RequestTimeout   Code = -9 //提交超时
 	AbnormalResponse Code = -8 //响应异常
 	OperationTimeout Code = -7 //操作超时
-	Unsupported Code = -6 //不支持的操作
-	RepeatOperation Code = -5 //重复操作
-	DataNotFound Code = -4 //数据未找到
-	UserNotFound Code = -3 //用户未找到
-	NonPrivileged Code = -2 //无权限
-	Unauthenticated Code = -1 //未登录
-	Failure Code = 0 //操作失败
-	Success Code = 1 //操作成功
+	Unsupported      Code = -6 //不支持的操作
+	RepeatOperation  Code = -5 //重复操作
+	DataNotFound     Code = -4 //数据未找到
+	UserNotFound     Code = -3 //用户未找到
+	NonPrivileged    Code = -2 //无权限
+	Unauthenticated  Code = -1 //未登录
+	Failure          Code = 0  //操作失败
+	Success          Code = 1  //操作成功
 )
 
-
 // CodeDict 状态码字典
-var CodeDict = CodeMap {
-	RequestTimeout : {"RequestTimeout", http.StatusOK},
-	AbnormalResponse : {"AbnormalResponse", http.StatusOK},
-	OperationTimeout : {"OperationTimeout", http.StatusOK},
-	Unsupported : {"Unsupported", http.StatusOK},
-	RepeatOperation : {"RepeatOperation", http.StatusOK},
-	DataNotFound : {"DataNotFound", http.StatusOK},
-	UserNotFound : {"UserNotFound", http.StatusOK},
-	NonPrivileged : {"NonPrivileged", http.StatusOK},
-	Unauthenticated : {"Unauthenticated", http.StatusOK},
-	Failure : {"Failure", http.StatusOK},
-	Success : {"Success", http.StatusOK},
+var CodeDict = CodeMap{
+	RequestTimeout:   {"RequestTimeout", http.StatusOK},
+	AbnormalResponse: {"AbnormalResponse", http.StatusOK},
+	OperationTimeout: {"OperationTimeout", http.StatusOK},
+	Unsupported:      {"Unsupported", http.StatusOK},
+	RepeatOperation:  {"RepeatOperation", http.StatusOK},
+	DataNotFound:     {"DataNotFound", http.StatusOK},
+	UserNotFound:     {"UserNotFound", http.StatusOK},
+	NonPrivileged:    {"NonPrivileged", http.StatusOK},
+	Unauthenticated:  {"Unauthenticated", http.StatusOK},
+	Failure:          {"Failure", http.StatusOK},
+	Success:          {"Success", http.StatusOK},
 }
 
 func (c Code) String() string {

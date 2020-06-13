@@ -38,13 +38,13 @@ func TestMapx(t *testing.T) {
 	assert.Equal(t, "[a  b c d]", fmt.Sprint(FormNames("a[][b][c][d]")))
 	assert.Equal(t, "[a ]", fmt.Sprint(FormNames("a[]")))
 	data := map[string][]string{
-		"a[d]":   []string{"first"},
-		"a[e]":   []string{"second"},
-		"a[f]":   []string{"third"},
-		"a[g]":   []string{"fourth"},
-		"b[]":    []string{"index_0", "index_1"},
-		"c[][a]": []string{"index 0.a"},
-		"c[][b]": []string{"index 1.b"},
+		"a[d]":   {"first"},
+		"a[e]":   {"second"},
+		"a[f]":   {"third"},
+		"a[g]":   {"fourth"},
+		"b[]":    {"index_0", "index_1"},
+		"c[][a]": {"index 0.a"},
+		"c[][b]": {"index 1.b"},
 	}
 	mx := NewMapx(data)
 	//Dump(mx)

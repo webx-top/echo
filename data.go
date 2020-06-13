@@ -134,15 +134,15 @@ func (d *RawData) SetError(err error, args ...int) Data {
 		return d.SetCode(1)
 	}
 	switch v := err.(type) {
-		case *Error:
-			d.SetInfo(v.Message, v.Code).SetByMap(v.Extra)
-		case *RawData:
-			if v != d {
-				d.copyFrom(v)
-			}
-		default:
-			d.SetCode(0)
-			d.Info = err.Error()
+	case *Error:
+		d.SetInfo(v.Message, v.Code).SetByMap(v.Extra)
+	case *RawData:
+		if v != d {
+			d.copyFrom(v)
+		}
+	default:
+		d.SetCode(0)
+		d.Info = err.Error()
 	}
 	if len(args) > 0 {
 		d.SetCode(args[0])
@@ -421,7 +421,7 @@ func (a *KVData) AddItem(item *KV) *KVData {
 //Set 设置首个键值
 func (a *KVData) Set(k, v string) *KVData {
 	a.index[k] = []int{0}
-	a.slice = []*KV{&KV{K: k, V: v}}
+	a.slice = []*KV{{K: k, V: v}}
 	return a
 }
 

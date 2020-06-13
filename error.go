@@ -50,7 +50,7 @@ func NewError(msg string, code ...int) *Error {
 type Error struct {
 	Code    int
 	Message string
-	Extra 	H
+	Extra   H
 }
 
 // Error returns message.
@@ -67,7 +67,6 @@ func (e *Error) Delete(keys ...string) *Error {
 	e.Extra.Delete(keys...)
 	return e
 }
-
 
 // ==========================================
 // HTTPError

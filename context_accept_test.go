@@ -11,7 +11,7 @@ func TestAccept(t *testing.T) {
 	expected := &Accepts{
 		Raw: "application/vnd.example.v2+json, application/xhtml+xml, text/javascript, */*; q=0.01",
 		Type: []*Accept{
-			&Accept{
+			{
 				Raw:  "application/vnd.example.v2+json",
 				Type: "application",
 				Subtype: []string{
@@ -23,7 +23,7 @@ func TestAccept(t *testing.T) {
 					"v2",
 				},
 			},
-			&Accept{
+			{
 				Raw:  "application/xhtml+xml",
 				Type: "application",
 				Subtype: []string{
@@ -32,7 +32,7 @@ func TestAccept(t *testing.T) {
 				},
 				Mime: "application/xml",
 			},
-			&Accept{
+			{
 				Raw:  "text/javascript",
 				Type: "text",
 				Subtype: []string{
@@ -40,7 +40,7 @@ func TestAccept(t *testing.T) {
 				},
 				Mime: "text/javascript",
 			},
-			&Accept{
+			{
 				Raw:  "*/*",
 				Type: "*",
 				Subtype: []string{
@@ -55,7 +55,7 @@ func TestAccept(t *testing.T) {
 	expected = &Accepts{
 		Raw: "application/vnd.example.v2+json",
 		Type: []*Accept{
-			&Accept{
+			{
 				Raw:  "application/vnd.example.v2+json",
 				Type: "application",
 				Subtype: []string{

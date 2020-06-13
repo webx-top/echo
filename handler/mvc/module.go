@@ -22,8 +22,8 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
-	"time"
 	"sync"
+	"time"
 
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/handler/mvc/static/resource"
