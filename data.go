@@ -122,6 +122,21 @@ func (d *RawData) Reset() Data {
 	return d
 }
 
+func (d *RawData) copyFrom(v *RawData) Data {
+	d.SetCode(v.Code.Int())
+	d.Info = v.Info
+	if len(v.URL) > 0 {
+		d.URL = v.URL
+	}
+	if v.Zone != nil {
+		d.Zone = v.Zone
+	}
+	if v.Data != nil {
+		d.Data = v.Data
+	}
+	return d
+}
+
 func (d *RawData) String() string {
 	return fmt.Sprintf(`%v`, d.Info)
 }
@@ -154,15 +169,22 @@ func (d *RawData) GetData() interface{} {
 
 //SetError 设置错误
 func (d *RawData) SetError(err error, args ...int) Data {
-	if err != nil {
-		if len(args) > 0 {
-			d.SetCode(args[0])
-		} else {
+	if err == nil {
+		return d.SetCode(1)
+	}
+	switch v := err.(type) {
+		case *Error:
+			d.SetInfo(v.Message, v.Code).SetByMap(v.Extra)
+		case *RawData:
+			if v != d {
+				d.copyFrom(v)
+			}
+		default:
 			d.SetCode(0)
-		}
-		d.Info = err.Error()
-	} else {
-		d.SetCode(1)
+			d.Info = err.Error()
+	}
+	if len(args) > 0 {
+		d.SetCode(args[0])
 	}
 	return d
 }
@@ -194,6 +216,9 @@ func (d *RawData) SetInfo(info interface{}, args ...int) Data {
 
 //SetByMap 批量设置属性
 func (d *RawData) SetByMap(s Store) Data {
+	if len(s) == 0 {
+		return d
+	}
 	if v, y := s["Data"]; y {
 		d.Data = v
 	}
