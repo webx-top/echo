@@ -21,8 +21,9 @@ package echo
 import (
 	"encoding/gob"
 	"fmt"
-	"net/http"
 	"strconv"
+
+	pkgCode "github.com/webx-top/echo/code"
 )
 
 func init() {
@@ -30,74 +31,8 @@ func init() {
 	gob.Register(H{})
 }
 
-//Status 状态值
-type Status struct {
-	Text string
-	Code int
-}
-
-type StateMap map[State]*Status
-
-func (s StateMap) Get(code int) *Status {
-	v, y := s[State(code)]
-	if y {
-		return v
-	}
-	return nil
-}
-
-func (s StateMap) AsError(code int) *Error {
-	var msg string
-	status := s.Get(code)
-	if status != nil {
-		msg = status.Text
-	}
-	return NewError(msg, code)
-}
-
-var (
-	//States 状态码对应的文本
-	States = StateMap {
-		-9: {`RequestTimeout`, http.StatusOK},  //提交超时
-		-8: {`AbnormalResponse`, http.StatusOK},//响应异常
-		-7: {`OperationTimeout`, http.StatusOK},//操作超时
-		-6: {`Unsupported`, http.StatusOK},     //不支持的操作
-		-5: {`RepeatOperation`, http.StatusOK}, //重复操作
-		-4: {`DataNotFound`, http.StatusOK}, 	//数据未找到
-		-3: {`UserNotFound`, http.StatusOK}, 	//用户未找到
-		-2: {`Non-Privileged`, http.StatusOK},  //无权限
-		-1: {`Unauthenticated`, http.StatusOK}, //未登录
-		0:  {`Failure`, http.StatusOK},         //操作失败
-		1:  {`Success`, http.StatusOK},         //操作成功
-	}
-	//GetStatus 获取状态值
-	GetStatus = func(key State) (*Status, bool) {
-		v, y := States[key]
-		return v, y
-	}
-)
-
-//State 状态码类型
-type State int
-
-func (s State) String() string {
-	if v, y := GetStatus(s); y {
-		return v.Text
-	}
-	return `Undefined`
-}
-
-//Int 返回int类型的自定义状态码
-func (s State) Int() int {
-	return int(s)
-}
-
-//HTTPCode 返回HTTP状态码
-func (s State) HTTPCode() int {
-	if v, y := GetStatus(s); y {
-		return v.Code
-	}
-	return http.StatusOK
+func AsError(code int) *Error {
+	return NewError(pkgCode.CodeDict.Get(code).Text, code)
 }
 
 //Data 响应数据
@@ -116,8 +51,8 @@ type Data interface {
 	SetInfo(info interface{}, args ...int) Data
 	SetZone(zone interface{}) Data
 	SetData(data interface{}, args ...int) Data
-	Gets() (code State, info interface{}, zone interface{}, data interface{})
-	GetCode() State
+	Gets() (code pkgCode.Code, info interface{}, zone interface{}, data interface{})
+	GetCode() pkgCode.Code
 	GetInfo() interface{}
 	GetZone() interface{}
 	GetData() interface{}
@@ -126,7 +61,7 @@ type Data interface {
 
 type RawData struct {
 	context Context
-	Code    State
+	Code    pkgCode.Code
 	State   string `json:",omitempty" xml:",omitempty"`
 	Info    interface{}
 	URL     string      `json:",omitempty" xml:",omitempty"`
@@ -139,7 +74,7 @@ func (d *RawData) Error() string {
 }
 
 func (d *RawData) Reset() Data {
-	d.Code = State(0)
+	d.Code = pkgCode.Code(0)
 	d.State = ``
 	d.Info = nil
 	d.URL = ``
@@ -168,11 +103,11 @@ func (d *RawData) String() string {
 }
 
 //Gets 获取全部数据
-func (d *RawData) Gets() (State, interface{}, interface{}, interface{}) {
+func (d *RawData) Gets() (pkgCode.Code, interface{}, interface{}, interface{}) {
 	return d.Code, d.Info, d.Zone, d.Data
 }
 
-func (d *RawData) GetCode() State {
+func (d *RawData) GetCode() pkgCode.Code {
 	return d.Code
 }
 
@@ -217,7 +152,7 @@ func (d *RawData) SetError(err error, args ...int) Data {
 
 //SetCode 设置状态码
 func (d *RawData) SetCode(code int) Data {
-	d.Code = State(code)
+	d.Code = pkgCode.Code(code)
 	d.State = d.Code.String()
 	return d
 }
@@ -257,20 +192,20 @@ func (d *RawData) SetByMap(s Store) Data {
 	if v, y := s["URL"]; y {
 		d.URL, _ = v.(string)
 	}
-	var code State
+	var code pkgCode.Code
 	if v, y := s["Code"]; y {
 		switch c := v.(type) {
-		case State:
+		case pkgCode.Code:
 			code = c
 		case int:
-			code = State(c)
+			code = pkgCode.Code(c)
 		case string:
 			i, _ := strconv.Atoi(c)
-			code = State(i)
+			code = pkgCode.Code(i)
 		default:
 			s := fmt.Sprint(c)
 			i, _ := strconv.Atoi(s)
-			code = State(i)
+			code = pkgCode.Code(i)
 		}
 	}
 	d.Code = code
@@ -333,7 +268,7 @@ func (d *RawData) SetTmplFuncs() {
 	} else {
 		flash = d
 	}
-	d.context.SetFunc(`Code`, func() State {
+	d.context.SetFunc(`Code`, func() pkgCode.Code {
 		return flash.Code
 	})
 	d.context.SetFunc(`Info`, func() interface{} {
@@ -378,7 +313,7 @@ func (d *RawData) Set(code int, args ...interface{}) Data {
 }
 
 func NewData(ctx Context) *RawData {
-	c := State(1)
+	c := pkgCode.Success
 	return &RawData{
 		context: ctx,
 		Code:    c,
