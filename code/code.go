@@ -16,6 +16,7 @@ type (
 const (
 	// - 操作状态
 
+	RequestFailure   Code = -205  //提交失败
 	RequestTimeout   Code = -204  //提交超时
 	AbnormalResponse Code = -203  //响应异常
 	OperationTimeout Code = -202  //操作超时
