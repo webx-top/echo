@@ -14,21 +14,23 @@ type (
 )
 
 const (
-	RequestTimeout   Code = -9 //提交超时
-	AbnormalResponse Code = -8 //响应异常
-	OperationTimeout Code = -7 //操作超时
-	Unsupported      Code = -6 //不支持的操作
-	RepeatOperation  Code = -5 //重复操作
-	DataNotFound     Code = -4 //数据未找到
-	UserNotFound     Code = -3 //用户未找到
-	NonPrivileged    Code = -2 //无权限
-	Unauthenticated  Code = -1 //未登录
-	Failure          Code = 0  //操作失败
-	Success          Code = 1  //操作成功
+	BalanceNoEnough  Code = -10 //余额不足
+	RequestTimeout   Code = -9  //提交超时
+	AbnormalResponse Code = -8  //响应异常
+	OperationTimeout Code = -7  //操作超时
+	Unsupported      Code = -6  //不支持的操作
+	RepeatOperation  Code = -5  //重复操作
+	DataNotFound     Code = -4  //数据未找到
+	UserNotFound     Code = -3  //用户未找到
+	NonPrivileged    Code = -2  //无权限
+	Unauthenticated  Code = -1  //未登录
+	Failure          Code = 0   //操作失败
+	Success          Code = 1   //操作成功
 )
 
 // CodeDict 状态码字典
 var CodeDict = CodeMap{
+	BalanceNoEnough:  {"BalanceNoEnough", http.StatusOK},
 	RequestTimeout:   {"RequestTimeout", http.StatusOK},
 	AbnormalResponse: {"AbnormalResponse", http.StatusOK},
 	OperationTimeout: {"OperationTimeout", http.StatusOK},
