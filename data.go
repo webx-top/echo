@@ -36,9 +36,35 @@ type Status struct {
 	Code int
 }
 
+type StateMap map[State]*Status
+
+func (s StateMap) Get(code int) *Status {
+	v, y := s[State(code)]
+	if y {
+		return v
+	}
+	return nil
+}
+
+func (s StateMap) AsError(code int) *Error {
+	var msg string
+	status := s.Get(code)
+	if status != nil {
+		msg = status.Text
+	}
+	return NewError(msg, code)
+}
+
 var (
 	//States 状态码对应的文本
-	States = map[State]*Status{
+	States = StateMap {
+		-9: {`RequestTimeout`, http.StatusOK},  //提交超时
+		-8: {`AbnormalResponse`, http.StatusOK},//响应异常
+		-7: {`OperationTimeout`, http.StatusOK},//操作超时
+		-6: {`Unsupported`, http.StatusOK},     //不支持的操作
+		-5: {`RepeatOperation`, http.StatusOK}, //重复操作
+		-4: {`DataNotFound`, http.StatusOK}, 	//数据未找到
+		-3: {`UserNotFound`, http.StatusOK}, 	//用户未找到
 		-2: {`Non-Privileged`, http.StatusOK},  //无权限
 		-1: {`Unauthenticated`, http.StatusOK}, //未登录
 		0:  {`Failure`, http.StatusOK},         //操作失败
