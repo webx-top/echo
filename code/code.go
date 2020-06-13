@@ -24,11 +24,11 @@ const (
 
 	// - 数据状态
 
-	BalanceNoEnough  Code = -101 //余额不足
 	DataNotFound     Code = -100  //数据未找到
 
 	// - 用户状态
 
+	BalanceNoEnough  Code = -5  //余额不足
 	UserDisabled     Code = -4  //用户被禁用
 	UserNotFound     Code = -3  //用户未找到
 	NonPrivileged    Code = -2  //无权限
