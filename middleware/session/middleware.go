@@ -26,6 +26,13 @@ import (
 
 const CookieMaxAgeKey = `CookieMaxAge`
 
+func RememberMaxAge(c echo.Context, maxAge int) {
+	if maxAge > 0 {
+		c.CookieOptions().MaxAge = maxAge
+		c.Session().Set(CookieMaxAgeKey, maxAge)
+	}
+}
+
 func Sessions(options *echo.SessionOptions, store sessions.Store) echo.MiddlewareFuncd {
 	var newSession func(ctx echo.Context) echo.Sessioner
 	if options == nil {
