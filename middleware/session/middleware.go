@@ -44,7 +44,11 @@ func Sessions(options *echo.SessionOptions, store sessions.Store) echo.Middlewar
 			s := newSession(c)
 			c.SetSessioner(s)
 			s.SetPreSaveHook(func(c echo.Context) error{
-				if maxAge, ok := s.Get(CookieMaxAgeKey).(int); ok {
+				maxAge, ok := s.Get(CookieMaxAgeKey).(int)
+				if !ok {
+					return nil
+				}
+				if maxAge > 3600 && c.CookieOptions().MaxAge != maxAge {
 					c.CookieOptions().MaxAge = maxAge
 				}
 				return nil
