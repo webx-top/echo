@@ -193,16 +193,16 @@ func (c *cookie) Set(key string, val string, args ...interface{}) Cookier {
 		cookie.Path(ppath)
 		fallthrough
 	case 1:
-		var liftTime int
 		switch v := args[0].(type) {
+		case *http.Cookie:
+			CopyCookieOptions(v, cookie)
 		case int:
-			liftTime = v
+			cookie.Expires(v)
 		case int64:
-			liftTime = int(v)
+			cookie.Expires(int(v))
 		case time.Duration:
-			liftTime = int(v.Seconds())
+			cookie.Expires(int(v.Seconds()))
 		}
-		cookie.Expires(liftTime)
 	}
 	if !found {
 		c.cookies = append(c.cookies, cookie)
