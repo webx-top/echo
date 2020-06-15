@@ -196,6 +196,16 @@ func (c *cookie) Set(key string, val string, args ...interface{}) Cookier {
 		switch v := args[0].(type) {
 		case *http.Cookie:
 			CopyCookieOptions(v, cookie)
+		case *CookieOptions:
+			cookie.Expires(v.MaxAge)
+			if len(v.Path) == 0 {
+				v.Path = `/`
+			}
+			cookie.Path(v.Path)
+			cookie.Domain(v.Domain)
+			cookie.Secure(v.Secure)
+			cookie.HttpOnly(v.HttpOnly)
+			cookie.SameSite(v.SameSite)
 		case int:
 			cookie.Expires(v)
 		case int64:
