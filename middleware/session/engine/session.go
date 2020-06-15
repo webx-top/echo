@@ -25,7 +25,7 @@ type Session struct {
 }
 
 func (s *Session) AddPreSaveHook(hook func(echo.Context) error) {
-	s.preSave = append(s.preSave, h)
+	s.preSave = append(s.preSave, hook)
 }
 
 func (s *Session) SetPreSaveHook(hooks ...func(echo.Context) error) {
