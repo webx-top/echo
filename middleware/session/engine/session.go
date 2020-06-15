@@ -55,8 +55,11 @@ func (s *Session) AddFlash(value interface{}, vars ...string) echo.Sessioner {
 }
 
 func (s *Session) Flashes(vars ...string) []interface{} {
-	s.setWritten()
-	return s.Session().Flashes(vars...)
+	flashes := s.Session().Flashes(vars...)
+	if len(flashes) > 0 {
+		s.setWritten()
+	}
+	return flashes
 }
 
 func (s *Session) SetID(id string) echo.Sessioner {
