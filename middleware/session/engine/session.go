@@ -21,6 +21,15 @@ type Session struct {
 	store   sessions.Store
 	session *sessions.Session
 	written bool
+	preSave []func(echo.Context) error
+}
+
+func (s *Session) AddPreSaveHook(hook func(echo.Context) error) {
+	s.preSave = append(s.preSave, h)
+}
+
+func (s *Session) SetPreSaveHook(hooks ...func(echo.Context) error) {
+	s.preSave = hooks
 }
 
 func (s *Session) Get(key string) interface{} {
@@ -75,6 +84,11 @@ func (s *Session) ID() string {
 func (s *Session) Save() error {
 	if !s.Written() {
 		return nil
+	}
+	for _, hook := range s.preSave {
+		if err := hook(s.context); err != nil {
+			return err
+		}
 	}
 	err := s.Session().Save(s.context)
 	if err == nil {
