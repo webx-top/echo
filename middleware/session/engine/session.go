@@ -70,16 +70,16 @@ func (s *Session) ID() string {
 }
 
 func (s *Session) Save() error {
-	if s.Written() {
-		e := s.Session().Save(s.context)
-		if e == nil {
-			s.written = false
-		} else {
-			log.Printf(errorFormat, e)
-		}
-		return e
+	if !s.Written() {
+		return nil
 	}
-	return nil
+	err := s.Session().Save(s.context)
+	if err == nil {
+		s.written = false
+	} else {
+		log.Printf(errorFormat, err)
+	}
+	return err
 }
 
 func (s *Session) Session() *sessions.Session {
