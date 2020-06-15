@@ -43,5 +43,5 @@ func CopyCookieOptions(from *http.Cookie, to *Cookie) {
 	to.Domain(from.Domain)
 	to.Secure(from.Secure)
 	to.HttpOnly(from.HttpOnly)
-	to.SameSite(string(from.SameSite))
+	to.cookie.SameSite = from.SameSite
 }
