@@ -29,13 +29,13 @@ func (s *Session) Get(key string) interface{} {
 
 func (s *Session) Set(key string, val interface{}) echo.Sessioner {
 	s.Session().Values[key] = val
-	s.written = true
+	s.setWritten()
 	return s
 }
 
 func (s *Session) Delete(key string) echo.Sessioner {
 	delete(s.Session().Values, key)
-	s.written = true
+	s.setWritten()
 	return s
 }
 
@@ -50,17 +50,18 @@ func (s *Session) Clear() echo.Sessioner {
 
 func (s *Session) AddFlash(value interface{}, vars ...string) echo.Sessioner {
 	s.Session().AddFlash(value, vars...)
-	s.written = true
+	s.setWritten()
 	return s
 }
 
 func (s *Session) Flashes(vars ...string) []interface{} {
-	s.written = true
+	s.setWritten()
 	return s.Session().Flashes(vars...)
 }
 
 func (s *Session) SetID(id string) echo.Sessioner {
 	s.Session().ID = id
+	s.setWritten()
 	return s
 }
 
@@ -94,4 +95,9 @@ func (s *Session) Session() *sessions.Session {
 
 func (s *Session) Written() bool {
 	return s.written
+}
+
+func (s *Session) setWritten() *Session {
+	s.written = true
+	return s
 }
