@@ -24,6 +24,8 @@ import (
 	"github.com/webx-top/echo"
 )
 
+const CookieMaxAgeKey = `CookieMaxAge`
+
 func Sessions(options *echo.SessionOptions, store sessions.Store) echo.MiddlewareFuncd {
 	var newSession func(ctx echo.Context) echo.Sessioner
 	if options == nil {
@@ -41,6 +43,12 @@ func Sessions(options *echo.SessionOptions, store sessions.Store) echo.Middlewar
 		return func(c echo.Context) error {
 			s := newSession(c)
 			c.SetSessioner(s)
+			s.SetPreSaveHook(func(c echo.Context) error{
+				if maxAge, ok := s.Get(CookieMaxAgeKey).(int); ok {
+					c.CookieOptions().MaxAge = maxAge
+				}
+				return nil
+			})
 			c.AddPreResponseHook(s.Save)
 			err := h.Handle(c)
 			if e := s.Save(); e != nil {
