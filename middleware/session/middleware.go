@@ -70,12 +70,10 @@ func Sessions(options *echo.SessionOptions, store sessions.Store) echo.Middlewar
 		return func(c echo.Context) error {
 			s := newSession(c)
 			c.SetSessioner(s)
-			s.SetPreSaveHook(func(c echo.Context) error{
+			s.SetPreSaveHook(func(c echo.Context) error {
 				switch v := s.Get(CookieMaxAgeKey).(type) {
 				case int:
 					c.CookieOptions().SetMaxAge(v)
-				case int64:
-					c.CookieOptions().SetMaxAge(int(v))
 				case time.Time:
 					c.CookieOptions().Expires = v
 				}
