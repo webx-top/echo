@@ -56,6 +56,12 @@ func (c *CookieOptions) Clone() *CookieOptions {
 	return &clone
 }
 
+func (c *CookieOptions) SetMaxAge(maxAge int) *CookieOptions {
+	c.MaxAge = maxAge
+	c.Expires = param.EmptyTime
+	return c
+}
+
 //Cookier interface
 type Cookier interface {
 	Get(key string) string
