@@ -19,17 +19,27 @@ package session
 
 import (
 	"errors"
+	"time"
 
 	"github.com/admpub/sessions"
 	"github.com/webx-top/echo"
 )
 
-const CookieMaxAgeKey = `CookieMaxAge`
+const (
+	CookieMaxAgeKey = `CookieMaxAge`
+)
 
 func RememberMaxAge(c echo.Context, maxAge int) {
 	if maxAge > 0 {
 		c.CookieOptions().MaxAge = maxAge
 		c.Session().Set(CookieMaxAgeKey, maxAge)
+	}
+}
+
+func RememberExpires(c echo.Context, expires time.Time) {
+	if !expires.IsZero() {
+		c.CookieOptions().Expires = expires
+		c.Session().Set(CookieMaxAgeKey, expires)
 	}
 }
 
@@ -51,12 +61,13 @@ func Sessions(options *echo.SessionOptions, store sessions.Store) echo.Middlewar
 			s := newSession(c)
 			c.SetSessioner(s)
 			s.SetPreSaveHook(func(c echo.Context) error{
-				maxAge, ok := s.Get(CookieMaxAgeKey).(int)
-				if !ok {
-					return nil
-				}
-				if maxAge > 3600 && c.CookieOptions().MaxAge != maxAge {
-					c.CookieOptions().MaxAge = maxAge
+				switch v := s.Get(CookieMaxAgeKey).(type) {
+				case int:
+					c.CookieOptions().MaxAge = v
+				case int64:
+					c.CookieOptions().MaxAge = int(v)
+				case time.Time:
+					c.CookieOptions().Expires = v
 				}
 				return nil
 			})
