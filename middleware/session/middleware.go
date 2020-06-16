@@ -31,10 +31,10 @@ func RememberMaxAge(c echo.Context, maxAge int) {
 		c.CookieOptions().MaxAge = maxAge
 		c.Session().Set(CookieMaxAgeKey, maxAge)
 	} else {
-                if c.Session().Get(CookieMaxAgeKey) != nil {
-                       c.Session().Delete(CookieMaxAgeKey)
-                }
-        }
+		if c.Session().Get(CookieMaxAgeKey) != nil {
+			c.Session().Delete(CookieMaxAgeKey)
+		}
+	}
 }
 
 func Sessions(options *echo.SessionOptions, store sessions.Store) echo.MiddlewareFuncd {
@@ -54,7 +54,7 @@ func Sessions(options *echo.SessionOptions, store sessions.Store) echo.Middlewar
 		return func(c echo.Context) error {
 			s := newSession(c)
 			c.SetSessioner(s)
-			s.SetPreSaveHook(func(c echo.Context) error{
+			s.SetPreSaveHook(func(c echo.Context) error {
 				maxAge, ok := s.Get(CookieMaxAgeKey).(int)
 				if !ok {
 					return nil
