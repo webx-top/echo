@@ -77,7 +77,7 @@ func StartDateToTimestamp(field string, layouts ...string) Options {
 					data.Value = []string{fmt.Sprint(t.Unix())}
 					return
 				}
-				log.Error(e)
+				log.Debug(`Form field: `, data.Key, `: `, e)
 			}
 
 			data.Value = []string{`0`}
@@ -102,7 +102,7 @@ func EndDateToTimestamp(field string, layouts ...string) Options {
 					data.Value = []string{fmt.Sprint(t.Unix())}
 					return
 				}
-				log.Error(e)
+				log.Debug(`Form field: `, data.Key, `: `, e)
 			}
 
 			data.Value = []string{`0`}
