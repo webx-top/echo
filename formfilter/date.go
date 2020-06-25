@@ -18,7 +18,7 @@ func DateToTimestamp(field string, layouts ...string) Options {
 	return func() (string, Filter) {
 		return field, func(data *Data) {
 			if len(data.Value) > 0 && len(data.Value[0]) > 0 {
-				t, e := time.Parse(layout, data.Value[0])
+				t, e := time.ParseInLocation(layout, data.Value[0], time.Local)
 				if e == nil {
 					data.Value = []string{fmt.Sprint(t.Unix())}
 					return
@@ -54,7 +54,7 @@ func TimestampToDate(field string, layouts ...string) Options {
 					data.Value = []string{``}
 					return
 				}
-				data.Value = []string{t.Format(layout)}
+				data.Value = []string{t.Local().Format(layout)}
 			}
 		}
 	}
@@ -72,7 +72,7 @@ func StartDateToTimestamp(field string, layouts ...string) Options {
 				if !strings.Contains(data.Value[0], `:`) {
 					data.Value[0] += ` 00:00:00`
 				}
-				t, e := time.Parse(layout, data.Value[0])
+				t, e := time.ParseInLocation(layout, data.Value[0], time.Local)
 				if e == nil {
 					data.Value = []string{fmt.Sprint(t.Unix())}
 					return
@@ -97,7 +97,7 @@ func EndDateToTimestamp(field string, layouts ...string) Options {
 				if !strings.Contains(data.Value[0], `:`) {
 					data.Value[0] += ` 23:59:59`
 				}
-				t, e := time.Parse(layout, data.Value[0])
+				t, e := time.ParseInLocation(layout, data.Value[0], time.Local)
 				if e == nil {
 					data.Value = []string{fmt.Sprint(t.Unix())}
 					return
