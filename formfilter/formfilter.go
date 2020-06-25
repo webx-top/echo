@@ -17,6 +17,8 @@ type (
 	}
 )
 
+const All = `*`
+
 func (d *Data) NormalizedKey() string {
 	return d.normalizedKey
 }
@@ -32,13 +34,13 @@ func Build(options ...Options) echo.FormDataFilter {
 		filterMap[key] = append(filterMap[key], filter)
 	}
 	return echo.FormDataFilter(func(k string, v []string) (string, []string) {
-		if k == `*` {
+		if k == All {
 			return ``, nil
 		}
 		key := strings.Title(k)
 		filters, ok := filterMap[key]
 		if !ok {
-			filters, ok = filterMap[`*`]
+			filters, ok = filterMap[All]
 			if !ok {
 				return k, v
 			}

@@ -17,7 +17,7 @@ func Include(fieldNames ...string) Options {
 		fieldNames[k] = strings.Title(v)
 	}
 	return func() (string, Filter) {
-		return `*`, func(data *Data) {
+		return All, func(data *Data) {
 			for _, fv := range fieldNames {
 				if fv == data.NormalizedKey() {
 					return
@@ -34,7 +34,7 @@ func Exclude(fieldNames ...string) Options {
 		fieldNames[k] = strings.Title(v)
 	}
 	return func() (string, Filter) {
-		return `*`, func(data *Data) {
+		return All, func(data *Data) {
 			for _, fv := range fieldNames {
 				if fv == data.NormalizedKey() {
 					data.Key = ``
