@@ -22,20 +22,26 @@ func (d *Data) NormalizedKey() string {
 }
 
 func Build(options ...Options) echo.FormDataFilter {
-	filters := Filters{}
+	filterMap := Filters{}
 	for _, opt := range options {
 		key, filter := opt()
 		key = strings.Title(key)
-		if _, ok := filters[key]; !ok {
-			filters[key] = []Filter{}
+		if _, ok := filterMap[key]; !ok {
+			filterMap[key] = []Filter{}
 		}
-		filters[key] = append(filters[key], filter)
+		filterMap[key] = append(filterMap[key], filter)
 	}
 	return echo.FormDataFilter(func(k string, v []string) (string, []string) {
+		if k == `*` {
+			return ``, nil
+		}
 		key := strings.Title(k)
-		filters, ok := filters[key]
+		filters, ok := filterMap[key]
 		if !ok {
-			return k, v
+			filters, ok = filterMap[`*`]
+			if !ok {
+				return k, v
+			}
 		}
 		data := &Data{Key: k, Value: v, normalizedKey: key}
 		for _, filter := range filters {
