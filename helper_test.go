@@ -1,6 +1,7 @@
 package echo_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -27,4 +28,8 @@ func TestHandlerPath(t *testing.T) {
 	assert.Equal(t, "github.com/webx-top/echo_test.testHandler", ppath)
 	ppath = echo.HandlerTmpl(`github.com/webx-top/echo_test.(*TestHandler).Index-fm`)
 	assert.Equal(t, "/echo_test/test_handler/index", ppath)
+}
+
+func TestLogIf(t *testing.T) {
+	echo.LogIf(errors.New(`test`), `debug`)
 }
