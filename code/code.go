@@ -35,6 +35,7 @@ const (
 	InvalidSecretKey Code = -151 //密钥不正确
 	InvalidAppID     Code = -150 //AppID不正确
 
+	DataAlreadyExists   Code = -109 //数据已经存在
 	DataFormatIncorrect Code = -108 //数据格式不正确
 	DataStatusIncorrect Code = -107 //数据状态不正确
 	DataProcessing      Code = -106 //数据未处理中状态
@@ -83,6 +84,7 @@ var CodeDict = CodeMap{
 	InvalidAppID:     {"InvalidAppID", http.StatusOK},
 	InvalidSecretKey: {"InvalidSecretKey", http.StatusOK},
 
+	DataAlreadyExists:   {"DataAlreadyExists", http.StatusOK},
 	DataFormatIncorrect: {"DataFormatIncorrect", http.StatusOK},
 	DataStatusIncorrect: {"DataStatusIncorrect", http.StatusOK},
 	DataHasExpired:      {"DataHasExpired", http.StatusOK},
