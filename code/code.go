@@ -48,6 +48,7 @@ const (
 
 	// - 用户状态
 
+	CaptchaError    Code = -9 //验证码错误
 	BalanceNoEnough Code = -5 //余额不足
 	UserDisabled    Code = -4 //用户被禁用
 	UserNotFound    Code = -3 //用户未找到
@@ -97,6 +98,7 @@ var CodeDict = CodeMap{
 
 	// - 用户状态
 
+	CaptchaError:    {"CaptchaError", http.StatusOK},
 	BalanceNoEnough: {"BalanceNoEnough", http.StatusOK},
 	UserDisabled:    {"UserDisabled", http.StatusOK},
 	UserNotFound:    {"UserNotFound", http.StatusOK},
