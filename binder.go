@@ -519,6 +519,7 @@ var (
 	}
 	TimestampStringer = param.TimestampStringer
 	DateTimeStringer  = param.DateTimeStringer
+	Ignored           = param.Ignored
 )
 
 //FormatFieldValue 格式化字段值
