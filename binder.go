@@ -523,6 +523,12 @@ var (
 	Ignored            = param.Ignored
 )
 
+func TranslateStringer(t Translator, args ...interface{}) param.Stringer {
+	return param.StringerFunc(func(v interface{}) string {
+		return t.T(param.AsString(v), args...)
+	})
+}
+
 //FormatFieldValue 格式化字段值
 func FormatFieldValue(formatters map[string]FormDataFilter) FormDataFilter {
 	newFormatters := map[string]FormDataFilter{}

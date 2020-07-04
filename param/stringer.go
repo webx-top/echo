@@ -11,6 +11,7 @@ type (
 	}
 	StringerFunc   func(interface{}) string
 	StringerMap    map[string]Stringer
+	StringerList   []Stringer
 	StringerIgnore struct{}
 )
 
@@ -32,6 +33,28 @@ func (s *StringerIgnore) String(_ interface{}) string {
 	return ``
 }
 
+func (s StringerList) Ignore() bool {
+	for _, f := range s {
+		if ig, ok := f.(Ignorer); ok {
+			if ig.Ignore() {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (s StringerList) String(v interface{}) string {
+	for _, f := range s {
+		v = f.String(v)
+	}
+	return AsString(v)
+}
+
+func (s StringerList) Size() int {
+	return len(s)
+}
+
 func (s StringerMap) Set(key string, value Stringer) StringerMap {
 	s[key] = value
 	return s
@@ -40,6 +63,34 @@ func (s StringerMap) Set(key string, value Stringer) StringerMap {
 func (s StringerMap) SetFunc(key string, value func(interface{}) string) StringerMap {
 	s[key] = StringerFunc(value)
 	return s
+}
+
+func (s StringerMap) Add(key string, value Stringer) StringerMap {
+	if st, ok := s[key]; ok {
+		switch v := st.(type) {
+		case StringerList:
+			if sl, ok := value.(StringerList); ok {
+				v = append(v, sl...)
+			} else {
+				v = append(v, value)
+			}
+			s[key] = v
+		default:
+			if sl, ok := value.(StringerList); ok {
+				v := append(StringerList{v}, sl...)
+				s[key] = v
+			} else {
+				s[key] = StringerList{v, value}
+			}
+		}
+		return s
+	}
+	s[key] = value
+	return s
+}
+
+func (s StringerMap) AddFunc(key string, value func(interface{}) string) StringerMap {
+	return s.Add(key, StringerFunc(value))
 }
 
 func (s StringerMap) Has(key string) bool {
@@ -60,13 +111,18 @@ func (s StringerMap) String(key string, value interface{}) (result string, found
 	if formatter == nil {
 		return
 	}
-	found = true
 	if ig, ok := formatter.(Ignorer); ok {
 		ignore = ig.Ignore()
 		if ignore {
 			return
 		}
 	}
+	if sl, ok := formatter.(StringerList); ok {
+		if sl.Size() == 0 {
+			return
+		}
+	}
+	found = true
 	result = formatter.String(value)
 	return
 }
