@@ -94,6 +94,12 @@ func TimestampStringer(layouts ...string) Stringer {
 	})
 }
 
+func WhitespaceStringer() Stringer {
+	return StringerFunc(func(_ interface{}) string {
+		return ``
+	})
+}
+
 func DateTimeStringer(layouts ...string) Stringer {
 	layout := DateTimeNormal
 	if len(layouts) > 0 {

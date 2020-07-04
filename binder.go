@@ -517,9 +517,10 @@ var (
 			return k, v
 		}
 	}
-	TimestampStringer = param.TimestampStringer
-	DateTimeStringer  = param.DateTimeStringer
-	Ignored           = param.Ignored
+	TimestampStringer  = param.TimestampStringer
+	DateTimeStringer   = param.DateTimeStringer
+	WhitespaceStringer = param.WhitespaceStringer
+	Ignored            = param.Ignored
 )
 
 //FormatFieldValue 格式化字段值
