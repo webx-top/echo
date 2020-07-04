@@ -574,8 +574,17 @@ func SetFormValue(f engine.URLValuer, fName string, index int, value interface{}
 	}
 }
 
+//FlatStructToForm 映射struct到form
+func FlatStructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter FieldNameFormatter, formatters ...param.StringerMap) {
+	StructToForm(ctx, m, ``, fieldNameFormatter, formatters...)
+}
+
 //StructToForm 映射struct到form
-func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter FieldNameFormatter, exludedFields ...string) {
+func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter FieldNameFormatter, formatters ...param.StringerMap) {
+	var formatter param.StringerMap
+	if len(formatters) > 0 {
+		formatter = formatters[0]
+	}
 	vc := reflect.ValueOf(m)
 	tc := reflect.TypeOf(m)
 
@@ -599,15 +608,15 @@ func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter
 		if !fVal.CanInterface() || len(fName) == 0 {
 			continue
 		}
-		var skip bool
-		for _, exludedField := range exludedFields {
-			if exludedField == fName {
-				skip = true
-				break
+		if formatter != nil {
+			result, found, skip := formatter.String(fName, fVal.Interface())
+			if skip {
+				continue
 			}
-		}
-		if skip {
-			continue
+			if found {
+				f.Set(fName, result)
+				continue
+			}
 		}
 		switch fTyp.Type.String() {
 		case `time.Time`:
@@ -677,7 +686,12 @@ func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter
 					// ignore
 				}
 			default:
-				f.Set(fName, fmt.Sprint(fVal.Interface()))
+				switch v := fVal.Interface().(type) {
+				case ToConversion:
+					f.Set(fName, v.ToString())
+				default:
+					f.Set(fName, fmt.Sprint(v))
+				}
 			}
 		}
 	}
