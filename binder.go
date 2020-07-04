@@ -575,7 +575,7 @@ func SetFormValue(f engine.URLValuer, fName string, index int, value interface{}
 }
 
 //StructToForm 映射struct到form
-func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter FieldNameFormatter) {
+func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter FieldNameFormatter, exludedFields ...string) {
 	vc := reflect.ValueOf(m)
 	tc := reflect.TypeOf(m)
 
@@ -597,6 +597,16 @@ func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter
 
 		fName := fieldNameFormatter(topName, fTyp.Name)
 		if !fVal.CanInterface() || len(fName) == 0 {
+			continue
+		}
+		var skip bool
+		for _, exludedField := range exludedFields {
+			if exludedField == fName {
+				skip = true
+				break
+			}
+		}
+		if skip {
 			continue
 		}
 		switch fTyp.Type.String() {
