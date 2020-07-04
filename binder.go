@@ -517,6 +517,8 @@ var (
 			return k, v
 		}
 	}
+	TimestampStringer = param.TimestampStringer
+	DateTimeStringer  = param.DateTimeStringer
 )
 
 //FormatFieldValue 格式化字段值
