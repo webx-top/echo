@@ -321,6 +321,10 @@ func NewData(ctx Context) *RawData {
 	}
 }
 
+func NewKV(k, v string) *KV {
+	return &KV{K: k, V: v}
+}
+
 //KV 键值对
 type KV struct {
 	K  string
@@ -328,6 +332,40 @@ type KV struct {
 	H  H           `json:",omitempty" xml:",omitempty"`
 	X  interface{} `json:",omitempty" xml:",omitempty"`
 	fn func() interface{}
+}
+
+func (a *KV) SetK(k string) *KV {
+	a.K = k
+	return a
+}
+
+func (a *KV) SetV(v string) *KV {
+	a.V = v
+	return a
+}
+
+func (a *KV) SetKV(k, v string) *KV {
+	a.K = k
+	a.V = v
+	return a
+}
+
+func (a *KV) SetH(h H) *KV {
+	a.H = h
+	return a
+}
+
+func (a *KV) SetHKV(k string, v interface{}) *KV {
+	if a.H == nil {
+		a.H = H{}
+	}
+	a.H.Set(k, v)
+	return a
+}
+
+func (a *KV) SetX(x interface{}) *KV {
+	a.X = x
+	return a
 }
 
 func (a *KV) SetFn(fn func() interface{}) *KV {
