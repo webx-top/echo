@@ -19,6 +19,7 @@
 package echo
 
 import (
+	"context"
 	"encoding/gob"
 	"fmt"
 	"strconv"
@@ -331,7 +332,7 @@ type KV struct {
 	V  string
 	H  H           `json:",omitempty" xml:",omitempty"`
 	X  interface{} `json:",omitempty" xml:",omitempty"`
-	fn func() interface{}
+	fn func(context.Context) interface{}
 }
 
 func (a *KV) SetK(k string) *KV {
@@ -368,12 +369,12 @@ func (a *KV) SetX(x interface{}) *KV {
 	return a
 }
 
-func (a *KV) SetFn(fn func() interface{}) *KV {
+func (a *KV) SetFn(fn func(context.Context) interface{}) *KV {
 	a.fn = fn
 	return a
 }
 
-func (a *KV) Fn() func() interface{} {
+func (a *KV) Fn() func(context.Context) interface{} {
 	return a.fn
 }
 
