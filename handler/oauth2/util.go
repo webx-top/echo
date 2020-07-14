@@ -134,11 +134,6 @@ It expects to be able to get the name of the provider from the named parameters
 as either "provider" or url query parameter ":provider".
 */
 var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
-	//error=invalid_request&error_description=The provided value for the input parameter 'redirect_uri' is not valid. The scope 'openid offline_access user.read' requires that the request must be sent over a secure connection using SSL.&state=state
-	errorDescription := ctx.Query(`error_description`)
-	if len(errorDescription) > 0 {
-		return EmptyUser, errors.New(errorDescription)
-	}
 	providerName, err := GetProviderName(ctx)
 	if err != nil {
 		return EmptyUser, err
@@ -147,6 +142,12 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 	provider, err := goth.GetProvider(providerName)
 	if err != nil {
 		return EmptyUser, err
+	}
+
+	//error=invalid_request&error_description=The provided value for the input parameter 'redirect_uri' is not valid. The scope 'openid offline_access user.read' requires that the request must be sent over a secure connection using SSL.&state=state
+	errorDescription := ctx.Query(`error_description`)
+	if len(errorDescription) > 0 {
+		return EmptyUser, errors.New(providerName + `: ` + errorDescription)
 	}
 
 	sv, ok := ctx.Session().Get(SessionName).(string)
