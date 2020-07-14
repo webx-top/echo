@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/admpub/log"
@@ -13,8 +15,10 @@ import (
 
 	"github.com/webx-top/echo"
 	. "github.com/webx-top/echo"
+	"github.com/webx-top/echo/code"
 	mw "github.com/webx-top/echo/middleware"
 	test "github.com/webx-top/echo/testing"
+	"github.com/webx-top/validation"
 )
 
 func init() {
@@ -251,9 +255,34 @@ func TestEchoRouter(t *testing.T) {
 	assert.Equal(t, "123", b)
 }
 
+type MetaRequest struct {
+	Name string `valid:"required"`
+}
+
+func NewMetaRequest() echo.MetaValidator {
+	return &MetaRequest{}
+}
+
+func (m *MetaRequest) Validate(c echo.Context) error {
+	v := validation.New()
+	pass, err := v.Valid(m)
+	if err != nil {
+		return err
+	}
+	if !pass {
+		verr := v.Error()
+		err = c.NewError(code.InvalidParameter, verr.WithField().Error()).SetZone(verr.Field)
+	}
+	return err
+}
+
+func (m *MetaRequest) Filters(c echo.Context) []FormDataFilter {
+	return nil
+}
+
 func TestEchoMeta(t *testing.T) {
 	e := New()
-
+	e.SetDebug(true)
 	g := e.Group("/root")
 
 	g.Get("/", e.MetaHandler(
@@ -261,6 +290,15 @@ func TestEchoMeta(t *testing.T) {
 		func(c Context) error {
 			return c.JSON(c.Route().Meta)
 		},
+	))
+
+	g.Post("/post", e.MetaHandler(
+		nil,
+		func(c Context) error {
+			data := c.Internal().Get(`validated`).(*MetaRequest)
+			return c.String(data.Name)
+		},
+		NewMetaRequest,
 	))
 
 	e.RebuildRouter()
@@ -282,8 +320,25 @@ func TestEchoMeta(t *testing.T) {
 
 	c, b := request(GET, "/root/", e)
 	assert.Equal(t, http.StatusOK, c)
-	expected2, _ := json.Marshal(expected)
+	expected2, _ := json.MarshalIndent(expected, "", "  ")
 	assert.Equal(t, string(expected2), b)
+
+	c, b = request(POST, "/root/post", e, func(r *http.Request) {
+		r.Form = url.Values{}
+		r.Form.Add(`Name`, `OK`)
+		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
+		r.Body = ioutil.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `OK`, b)
+
+	c, b = request(POST, "/root/post", e, func(r *http.Request) {
+		r.Form = url.Values{}
+		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
+		r.Body = ioutil.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
+	})
+	assert.Equal(t, http.StatusInternalServerError, c)
+	assert.Equal(t, `Name: Can not be empty`, b)
 }
 
 func TestEchoData(t *testing.T) {
