@@ -260,15 +260,15 @@ func AsInt8(val interface{}) int8 {
 	switch v := val.(type) {
 	case int8:
 		return v
+	case float32:
+		return int8(v)
+	case float64:
+		return int8(v)
 	case string:
 		i, _ := strconv.ParseInt(v, 10, 8)
 		return int8(i)
 	case nil:
 		return 0
-	case float32:
-		return int8(v)
-	case float64:
-		return int8(v)
 	default:
 		s := fmt.Sprint(val)
 		i, _ := strconv.ParseInt(s, 10, 8)
@@ -298,6 +298,12 @@ func AsInt16(val interface{}) int16 {
 
 func AsInt(val interface{}) int {
 	switch v := val.(type) {
+	case int8:
+		return int(v)
+	case int16:
+		return int(v)
+	case int32:
+		return int(v)
 	case int:
 		return v
 	case string:
@@ -318,17 +324,21 @@ func AsInt(val interface{}) int {
 
 func AsInt32(val interface{}) int32 {
 	switch v := val.(type) {
+	case int8:
+		return int32(v)
+	case int16:
+		return int32(v)
 	case int32:
 		return v
+	case float32:
+		return int32(v)
+	case float64:
+		return int32(v)
 	case string:
 		i, _ := strconv.ParseInt(v, 10, 32)
 		return int32(i)
 	case nil:
 		return 0
-	case float32:
-		return int32(v)
-	case float64:
-		return int32(v)
 	default:
 		s := fmt.Sprint(v)
 		i, _ := strconv.ParseInt(s, 10, 32)
@@ -380,11 +390,6 @@ func AsUint8(val interface{}) uint8 {
 	switch v := val.(type) {
 	case uint8:
 		return v
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 8)
-		return uint8(i)
-	case nil:
-		return 0
 	case float32:
 		if v > 0 {
 			return uint8(v)
@@ -394,6 +399,11 @@ func AsUint8(val interface{}) uint8 {
 		if v > 0 {
 			return uint8(v)
 		}
+		return 0
+	case string:
+		i, _ := strconv.ParseUint(v, 10, 8)
+		return uint8(i)
+	case nil:
 		return 0
 	default:
 		s := fmt.Sprint(v)
@@ -404,13 +414,10 @@ func AsUint8(val interface{}) uint8 {
 
 func AsUint16(val interface{}) uint16 {
 	switch v := val.(type) {
+	case uint8:
+		return uint16(v)
 	case uint16:
 		return v
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 16)
-		return uint16(i)
-	case nil:
-		return 0
 	case float32:
 		if v > 0 {
 			return uint16(v)
@@ -420,6 +427,11 @@ func AsUint16(val interface{}) uint16 {
 		if v > 0 {
 			return uint16(v)
 		}
+		return 0
+	case string:
+		i, _ := strconv.ParseUint(v, 10, 16)
+		return uint16(i)
+	case nil:
 		return 0
 	default:
 		s := fmt.Sprint(v)
@@ -430,13 +442,14 @@ func AsUint16(val interface{}) uint16 {
 
 func AsUint(val interface{}) uint {
 	switch v := val.(type) {
+	case uint8:
+		return uint(v)
+	case uint16:
+		return uint(v)
+	case uint32:
+		return uint(v)
 	case uint:
 		return v
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 32)
-		return uint(i)
-	case nil:
-		return 0
 	case float32:
 		if v > 0 {
 			return uint(v)
@@ -446,6 +459,11 @@ func AsUint(val interface{}) uint {
 		if v > 0 {
 			return uint(v)
 		}
+		return 0
+	case string:
+		i, _ := strconv.ParseUint(v, 10, 32)
+		return uint(i)
+	case nil:
 		return 0
 	default:
 		s := fmt.Sprint(v)
@@ -456,13 +474,14 @@ func AsUint(val interface{}) uint {
 
 func AsUint32(val interface{}) uint32 {
 	switch v := val.(type) {
+	case uint8:
+		return uint32(v)
+	case uint16:
+		return uint32(v)
 	case uint32:
 		return v
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 32)
-		return uint32(i)
-	case nil:
-		return 0
+	case uint:
+		return uint32(v)
 	case float32:
 		if v > 0 {
 			return uint32(v)
@@ -472,6 +491,11 @@ func AsUint32(val interface{}) uint32 {
 		if v > 0 {
 			return uint32(v)
 		}
+		return 0
+	case string:
+		i, _ := strconv.ParseUint(v, 10, 32)
+		return uint32(i)
+	case nil:
 		return 0
 	default:
 		s := fmt.Sprint(v)
@@ -482,13 +506,16 @@ func AsUint32(val interface{}) uint32 {
 
 func AsUint64(val interface{}) uint64 {
 	switch v := val.(type) {
+	case uint8:
+		return uint64(v)
+	case uint16:
+		return uint64(v)
+	case uint32:
+		return uint64(v)
+	case uint:
+		return uint64(v)
 	case uint64:
 		return v
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 64)
-		return i
-	case nil:
-		return 0
 	case float32:
 		if v > 0 {
 			return uint64(v)
@@ -498,6 +525,11 @@ func AsUint64(val interface{}) uint64 {
 		if v > 0 {
 			return uint64(v)
 		}
+		return 0
+	case string:
+		i, _ := strconv.ParseUint(v, 10, 64)
+		return i
+	case nil:
 		return 0
 	default:
 		s := fmt.Sprint(v)
