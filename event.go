@@ -26,6 +26,12 @@ func Off(name string) {
 	emitter.DefaultCondEmitter.Off(name)
 }
 
+const (
+	EventAsync = emitter.Async
+	EventSync  = emitter.Sync
+	EventCond  = emitter.Cond
+)
+
 func Fire(e interface{}, mode int, context ...H) error {
 	return emitter.DefaultCondEmitter.Fire(e, mode, context...)
 }
