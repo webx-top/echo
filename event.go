@@ -27,9 +27,9 @@ func Off(name string) {
 }
 
 const (
-	EventAsync = emitter.Async
-	EventSync  = emitter.Sync
-	EventCond  = emitter.Cond
+	EventAsyncMode = emitter.Async
+	EventSyncMode  = emitter.Sync
+	EventCondMode  = emitter.Cond
 )
 
 func Fire(e interface{}, mode int, context ...H) error {
