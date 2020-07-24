@@ -30,6 +30,7 @@ func main() {
 
 	tpl := render.New("standard", "./template/")
 	tpl.Init()
+	//tpl.SetDebug(true)
 	ctx := echo.NewContext(mock.NewRequest(), mock.NewResponse(), defaults.Default)
 	demo := map[string]interface{}{
 		"test": "one---",

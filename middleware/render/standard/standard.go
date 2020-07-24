@@ -310,7 +310,6 @@ func (self *Standard) parse(c echo.Context, tmplName string) (tmpl *htmlTpl.Temp
 		tmpl, _ = t.Parse(err.Error())
 		return
 	}
-
 	content := string(b)
 	subcs := make(map[string]string, 0) //子模板内容
 	extcs := make(map[string]string, 0) //母板内容
@@ -344,7 +343,6 @@ func (self *Standard) parse(c echo.Context, tmplName string) (tmpl *htmlTpl.Temp
 		}
 	}
 	content = self.ContainsSubTpl(c, content, subcs)
-	content = string(self.strip([]byte(content)))
 	tmpl, err = t.Parse(content)
 	if err != nil {
 		content = fmt.Sprintf("Parse %v err: %v", tmplName, err)
@@ -536,28 +534,35 @@ func (self *Standard) Tag(content string) string {
 	return self.DelimLeft + content + self.DelimRight
 }
 
-func (self *Standard) RawContent(tmpl string) (b []byte, e error) {
-	defer func() {
-		if b != nil && self.contentProcessors != nil {
-			for _, fn := range self.contentProcessors {
-				b = fn(b)
-			}
+func (self *Standard) preprocess(b []byte) []byte {
+	if b == nil {
+		return nil
+	}
+	if self.contentProcessors != nil {
+		for _, fn := range self.contentProcessors {
+			b = fn(b)
 		}
-		b = self.strip(b)
-	}()
+	}
+	return self.strip(b)
+}
+
+func (self *Standard) RawContent(tmpl string) (b []byte, e error) {
 	if self.TemplateMgr != nil {
 		b, e = self.TemplateMgr.GetTemplate(tmpl)
-		if e != nil {
-			self.logger.Error(e)
-		}
+	} else {
+		b, e = ioutil.ReadFile(filepath.Join(self.TemplateDir, tmpl))
+	}
+	if e != nil {
 		return
 	}
-	return ioutil.ReadFile(filepath.Join(self.TemplateDir, tmpl))
+	b = self.preprocess(b)
+	return
 }
 
 func (self *Standard) strip(src []byte) []byte {
 	if self.debug {
-		return self.stripTagRegex.ReplaceAll(src, driver.First)
+		src = bytes.ReplaceAll(src, []byte(self.DelimLeft+self.StripTag+self.DelimRight), []byte{})
+		return bytes.ReplaceAll(src, []byte(self.DelimLeft+`/`+self.StripTag+self.DelimRight), []byte{})
 	}
 	src = self.stripTagRegex.ReplaceAllFunc(src, func(b []byte) []byte {
 		b = bytes.TrimPrefix(b, []byte(self.DelimLeft+self.StripTag+self.DelimRight))
