@@ -182,6 +182,7 @@ func (self *Standard) deleteCachedRelation(name string) {
 }
 
 func (self *Standard) Init() {
+	self.InitRegexp()
 	callback := func(name, typ, event string) {
 		switch event {
 		case "create":
