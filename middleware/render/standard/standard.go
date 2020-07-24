@@ -233,7 +233,7 @@ func (self *Standard) InitRegexp() {
 	self.incTagRegex = regexp.MustCompile(self.quotedLeft + self.IncludeTag + `[\s]+"([^"]+)"(?:[\s]+([^` + self.quotedRfirst + `]+))?[\s]*\/?` + self.quotedRight)
 
 	//{{Extend "name"}}
-	self.extTagRegex = regexp.MustCompile(self.quotedLeft + self.ExtendTag + `[\s]+"([^"]+)"(?:[\s]+([^` + self.quotedRfirst + `]+))?[\s]*\/?` + self.quotedRight)
+	self.extTagRegex = regexp.MustCompile(`^[\s]*` + self.quotedLeft + self.ExtendTag + `[\s]+"([^"]+)"(?:[\s]+([^` + self.quotedRfirst + `]+))?[\s]*\/?` + self.quotedRight)
 
 	//{{Block "name"}}content{{/Block}}
 	self.blkTagRegex = regexp.MustCompile(`(?s)` + self.quotedLeft + self.BlockTag + `[\s]+"([^"]+)"[\s]*` + self.quotedRight + `(.*?)` + self.quotedLeft + `\/` + self.BlockTag + self.quotedRight)
@@ -320,6 +320,7 @@ func (self *Standard) parse(c echo.Context, tmplName string) (tmpl *htmlTpl.Temp
 		self.InitRegexp()
 	}
 	m := self.extTagRegex.FindAllStringSubmatch(content, 1)
+	content = self.rplTagRegex.ReplaceAllString(content, ``)
 	for i := 0; i < 10 && len(m) > 0; i++ {
 		self.ParseBlock(c, content, subcs, extcs)
 		extFile := m[0][1] + self.Ext

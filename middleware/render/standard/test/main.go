@@ -95,6 +95,9 @@ func main() {
 	defaults.Get(`/`, func(ctx echo.Context) error {
 		return ctx.Render(`test`, demo)
 	})
+	defaults.Get(`/e`, func(ctx echo.Context) error {
+		return ctx.Render(`test2`, demo)
+	})
 	defaults.Run(standard.New(`:4444`))
 
 }
