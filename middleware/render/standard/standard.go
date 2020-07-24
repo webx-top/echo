@@ -102,6 +102,7 @@ type Standard struct {
 	incTagRegex        *regexp.Regexp
 	extTagRegex        *regexp.Regexp
 	blkTagRegex        *regexp.Regexp
+	rplTagRegex        *regexp.Regexp
 	innerTagBlankRegex *regexp.Regexp
 	stripTagRegex      *regexp.Regexp
 	cachedRegexIdent   string
@@ -227,10 +228,23 @@ func (self *Standard) InitRegexp() {
 	self.quotedLeft = regexp.QuoteMeta(self.DelimLeft)
 	self.quotedRight = regexp.QuoteMeta(self.DelimRight)
 	self.quotedRfirst = regexp.QuoteMeta(self.DelimRight[0:1])
-	self.incTagRegex = regexp.MustCompile(self.quotedLeft + self.IncludeTag + `[\s]+"([^"]+)"(?:[\s]+([^` + self.quotedRfirst + `]+))?[\s]*` + self.quotedRight)
-	self.extTagRegex = regexp.MustCompile(self.quotedLeft + self.ExtendTag + `[\s]+"([^"]+)"(?:[\s]+([^` + self.quotedRfirst + `]+))?[\s]*` + self.quotedRight)
+
+	//{{Include "tmpl"}} or {{Include "tmpl" .}}
+	self.incTagRegex = regexp.MustCompile(self.quotedLeft + self.IncludeTag + `[\s]+"([^"]+)"(?:[\s]+([^` + self.quotedRfirst + `]+))?[\s]*\/?` + self.quotedRight)
+
+	//{{Extend "name"}}
+	self.extTagRegex = regexp.MustCompile(self.quotedLeft + self.ExtendTag + `[\s]+"([^"]+)"(?:[\s]+([^` + self.quotedRfirst + `]+))?[\s]*\/?` + self.quotedRight)
+
+	//{{Block "name"}}content{{/Block}}
 	self.blkTagRegex = regexp.MustCompile(`(?s)` + self.quotedLeft + self.BlockTag + `[\s]+"([^"]+)"[\s]*` + self.quotedRight + `(.*?)` + self.quotedLeft + `\/` + self.BlockTag + self.quotedRight)
+
+	//{{Block "name"/}}
+	self.rplTagRegex = regexp.MustCompile(self.quotedLeft + self.BlockTag + `[\s]+"([^"]+)"[\s]*\/` + self.quotedRight)
+
+	//}}...{{ or >...<
 	self.innerTagBlankRegex = regexp.MustCompile(`(?s)(` + self.quotedRight + `|>)[\s]{2,}(` + self.quotedLeft + `|<)`)
+
+	//{{Strip}}...{{/Strip}}
 	self.stripTagRegex = regexp.MustCompile(`(?s)` + self.quotedLeft + self.StripTag + self.quotedRight + `(.*?)` + self.quotedLeft + `\/` + self.StripTag + self.quotedRight)
 }
 
@@ -417,6 +431,14 @@ func (self *Standard) ParseExtend(c echo.Context, content string, extcs map[stri
 	if len(passObject) == 0 {
 		passObject = "."
 	}
+	content = self.rplTagRegex.ReplaceAllStringFunc(content, func(match string) string {
+		match = match[strings.Index(match, `"`)+1:]
+		match = match[0:strings.Index(match, `"`)]
+		if v, ok := extcs[match]; ok {
+			return v
+		}
+		return ``
+	})
 	matches := self.blkTagRegex.FindAllStringSubmatch(content, -1)
 	var superTag string
 	if len(self.SuperTag) > 0 {
