@@ -117,6 +117,9 @@ type Standard struct {
 	logger             logger.Logger
 	fileEvents         []func(string)
 	mutex              sync.RWMutex
+	quotedLeft         string
+	quotedRight        string
+	quotedRfirst       string
 }
 
 func (self *Standard) Debug() bool {
@@ -221,14 +224,14 @@ func (self *Standard) TemplatePath(c echo.Context, p string) string {
 }
 
 func (self *Standard) InitRegexp() {
-	left := regexp.QuoteMeta(self.DelimLeft)
-	right := regexp.QuoteMeta(self.DelimRight)
-	rfirst := regexp.QuoteMeta(self.DelimRight[0:1])
-	self.incTagRegex = regexp.MustCompile(left + self.IncludeTag + `[\s]+"([^"]+)"(?:[\s]+([^` + rfirst + `]+))?[\s]*` + right)
-	self.extTagRegex = regexp.MustCompile(left + self.ExtendTag + `[\s]+"([^"]+)"(?:[\s]+([^` + rfirst + `]+))?[\s]*` + right)
-	self.blkTagRegex = regexp.MustCompile(`(?s)` + left + self.BlockTag + `[\s]+"([^"]+)"[\s]*` + right + `(.*?)` + left + `\/` + self.BlockTag + right)
-	self.innerTagBlankRegex = regexp.MustCompile(`(?s)(` + right + `|>)[\s]{2,}(` + left + `|<)`)
-	self.stripTagRegex = regexp.MustCompile(`(?s)` + left + self.StripTag + right + `(.*?)` + left + `\/` + self.StripTag + right)
+	self.quotedLeft = regexp.QuoteMeta(self.DelimLeft)
+	self.quotedRight = regexp.QuoteMeta(self.DelimRight)
+	self.quotedRfirst = regexp.QuoteMeta(self.DelimRight[0:1])
+	self.incTagRegex = regexp.MustCompile(self.quotedLeft + self.IncludeTag + `[\s]+"([^"]+)"(?:[\s]+([^` + self.quotedRfirst + `]+))?[\s]*` + self.quotedRight)
+	self.extTagRegex = regexp.MustCompile(self.quotedLeft + self.ExtendTag + `[\s]+"([^"]+)"(?:[\s]+([^` + self.quotedRfirst + `]+))?[\s]*` + self.quotedRight)
+	self.blkTagRegex = regexp.MustCompile(`(?s)` + self.quotedLeft + self.BlockTag + `[\s]+"([^"]+)"[\s]*` + self.quotedRight + `(.*?)` + self.quotedLeft + `\/` + self.BlockTag + self.quotedRight)
+	self.innerTagBlankRegex = regexp.MustCompile(`(?s)(` + self.quotedRight + `|>)[\s]{2,}(` + self.quotedLeft + `|<)`)
+	self.stripTagRegex = regexp.MustCompile(`(?s)` + self.quotedLeft + self.StripTag + self.quotedRight + `(.*?)` + self.quotedLeft + `\/` + self.StripTag + self.quotedRight)
 }
 
 // Render HTML
