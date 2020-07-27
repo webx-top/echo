@@ -676,7 +676,7 @@ func (e *Echo) ServeHTTP(req engine.Request, res engine.Response) {
 	c.Reset(req, res)
 
 	var h Handler
-	if e.premiddleware != nil {
+	if len(e.premiddleware) > 0 {
 		h = e.applyMiddleware(HandlerFunc(func(c Context) error {
 			return e.buildHandler(c).Handle(c)
 		}), e.premiddleware...)
