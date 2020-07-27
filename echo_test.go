@@ -91,6 +91,31 @@ func TestEchoMiddlewareError(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, c)
 }
 
+func TestEchoRoutePath(t *testing.T) {
+	e := New()
+	e.Use(mw.Log())
+	e.Use(func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			assert.Equal(t, `/`, c.Path())
+			return next.Handle(c)
+		}
+	})
+	e.Get("/", func(ctx Context) error {
+		return ctx.String(ctx.Path())
+	}, func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			assert.Equal(t, `/`, c.Path())
+			return next.Handle(c)
+		}
+	})
+
+	e.RebuildRouter()
+
+	c, r := request(GET, "/", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `/`, r)
+}
+
 func TestGroupMiddleware(t *testing.T) {
 	e := New()
 	buf := new(bytes.Buffer)
