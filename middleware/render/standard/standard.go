@@ -274,6 +274,7 @@ func (self *Standard) Render(w io.Writer, tmplName string, values interface{}, c
 
 func (self *Standard) parse(c echo.Context, tmplName string) (tmpl *htmlTpl.Template, err error) {
 	funcs := c.Funcs()
+	tmplOriginalName := tmplName
 	tmplName = tmplName + self.Ext
 	tmplName = self.TemplatePath(c, tmplName)
 	cachedKey := tmplName
@@ -346,7 +347,7 @@ func (self *Standard) parse(c echo.Context, tmplName string) (tmpl *htmlTpl.Temp
 	}
 	content = self.ContainsSubTpl(c, content, subcs)
 	clips := map[string]string{}
-	content = self.ContainsFunctionResult(c, content, clips)
+	content = self.ContainsFunctionResult(c, tmplOriginalName, content, clips)
 	tmpl, err = t.Parse(content)
 	if err != nil {
 		content = fmt.Sprintf("Parse %v err: %v", tmplName, err)
@@ -364,7 +365,7 @@ func (self *Standard) parse(c echo.Context, tmplName string) (tmpl *htmlTpl.Temp
 		if name == tmpl.Name() {
 			t = tmpl
 		} else {
-			subc = self.ContainsFunctionResult(c, subc, clips)
+			subc = self.ContainsFunctionResult(c, tmplOriginalName, subc, clips)
 			t = tmpl.New(name)
 			subc = self.Tag(`define "`+driver.CleanTemplateName(name)+`"`) + subc + self.Tag(`end`)
 			_, err = t.Parse(subc)
@@ -391,7 +392,7 @@ func (self *Standard) parse(c echo.Context, tmplName string) (tmpl *htmlTpl.Temp
 			t = tmpl
 		} else {
 			t = tmpl.New(name)
-			extc = self.ContainsFunctionResult(c, extc, clips)
+			extc = self.ContainsFunctionResult(c, tmplOriginalName, extc, clips)
 			extc = self.Tag(`define "`+driver.CleanTemplateName(name)+`"`) + extc + self.Tag(`end`)
 			_, err = t.Parse(extc)
 			if err != nil {
@@ -536,7 +537,7 @@ func (self *Standard) ContainsSubTpl(c echo.Context, content string, subcs map[s
 	return content
 }
 
-func (self *Standard) ContainsFunctionResult(c echo.Context, content string, clips map[string]string) string {
+func (self *Standard) ContainsFunctionResult(c echo.Context, tmplOriginalName string, content string, clips map[string]string) string {
 	matches := self.funcTagRegex.FindAllStringSubmatch(content, -1)
 	for _, v := range matches {
 		matched := v[0]
@@ -544,8 +545,8 @@ func (self *Standard) ContainsFunctionResult(c echo.Context, content string, cli
 		passArg := v[2]
 		key := funcName + `:` + passArg
 		if _, ok := clips[key]; !ok {
-			if fn, ok := c.GetFunc(funcName).(func(echo.Context, string) string); ok {
-				clips[key] = fn(c, passArg)
+			if fn, ok := c.GetFunc(funcName).(func(string, string) string); ok {
+				clips[key] = fn(tmplOriginalName, passArg)
 			} else {
 				clips[key] = ``
 			}

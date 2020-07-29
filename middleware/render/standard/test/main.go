@@ -32,8 +32,8 @@ func main() {
 	tpl.Init()
 	//tpl.SetDebug(true)
 	ctx := echo.NewContext(mock.NewRequest(), mock.NewResponse(), defaults.Default)
-	clipFunc := func(ctx echo.Context, arg string) string {
-		return `{{"function result"}}`
+	clipFunc := func(tmpl string, arg string) string {
+		return `{{"function result for tmpl: ` + tmpl + `"}}`
 	}
 	ctx.SetFunc(`function`, clipFunc)
 	demo := map[string]interface{}{
