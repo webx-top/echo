@@ -32,6 +32,10 @@ func main() {
 	tpl.Init()
 	//tpl.SetDebug(true)
 	ctx := echo.NewContext(mock.NewRequest(), mock.NewResponse(), defaults.Default)
+	clipFunc := func(ctx echo.Context, arg string) string {
+		return `{{"function result"}}`
+	}
+	ctx.SetFunc(`function`, clipFunc)
 	demo := map[string]interface{}{
 		"test": "one---",
 		"r":    []string{"one", "two", "three"},
@@ -94,6 +98,7 @@ func main() {
 	_ = fmt.Printf
 	defaults.Use(mw.Log(), mw.Recover(), render.Middleware(tpl))
 	defaults.Get(`/`, func(ctx echo.Context) error {
+		ctx.SetFunc(`function`, clipFunc)
 		return ctx.Render(`test`, demo)
 	})
 	defaults.Get(`/e`, func(ctx echo.Context) error {
