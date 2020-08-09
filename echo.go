@@ -42,6 +42,7 @@ type (
 		RouteDebug        bool
 		MiddlewareDebug   bool
 		JSONPVarName      string
+		Validator         Validator
 		parseHeaderAccept bool
 	}
 
@@ -138,12 +139,18 @@ func (e *Echo) Reset() *Echo {
 	e.RouteDebug = false
 	e.MiddlewareDebug = false
 	e.JSONPVarName = `callback`
+	e.Validator = DefaultNopValidate
 	e.parseHeaderAccept = false
 	return e
 }
 
 func (e *Echo) ParseHeaderAccept(on bool) *Echo {
 	e.parseHeaderAccept = on
+	return e
+}
+
+func (e *Echo) SetValidator(validator Validator) *Echo {
+	e.Validator = validator
 	return e
 }
 

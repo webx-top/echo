@@ -20,6 +20,16 @@ type TestFile struct {
 	Users []int64
 }
 
+type TestRole struct {
+	Name  string
+	Users []*TestUser
+}
+
+type TestUser struct {
+	Name string
+	Age  uint
+}
+
 func TestMapToStruct(t *testing.T) {
 	e := New()
 	m := &TestForm{}
@@ -56,4 +66,37 @@ func TestMapToStruct2(t *testing.T) {
 		},
 		IDs: `1,2,3`,
 	}, m)
+}
+
+func TestMapToSliceStruct(t *testing.T) {
+	e := New()
+	m := &TestRole{}
+	NamedStructMap(e, m, map[string][]string{
+		`name`:           {`manager`},
+		`users[0][name]`: {`john`},
+		`users[0][age]`:  {`18`},
+		`users[1][name]`: {`smith`},
+		`users[1][age]`:  {`25`},
+		`users[3][name]`: {`hank`},
+		`users[3][age]`:  {`28`},
+	}, ``)
+	assert.Equal(t, &TestRole{
+		Name: `manager`,
+		Users: []*TestUser{
+			{ // 0
+				Name: `john`,
+				Age:  18,
+			},
+			{ // 1
+				Name: `smith`,
+				Age:  25,
+			},
+			nil, // 2
+			{ // 3
+				Name: `hank`,
+				Age:  28,
+			},
+		},
+	}, m)
+	//Dump(m)
 }

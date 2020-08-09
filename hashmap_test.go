@@ -36,6 +36,7 @@ func TestMapx(t *testing.T) {
 	assert.Equal(t, "[a b c d]", fmt.Sprint(FormNames("a[[b][c][d]")))
 	assert.Equal(t, "[a b c d]", fmt.Sprint(FormNames("a][[b][c][d]")))
 	assert.Equal(t, "[a  b c d]", fmt.Sprint(FormNames("a[][b][c][d]")))
+	assert.Equal(t, "[a 0 b]", fmt.Sprint(FormNames("a[0][b]")))
 	assert.Equal(t, "[a ]", fmt.Sprint(FormNames("a[]")))
 	data := map[string][]string{
 		"a[d]":   {"first"},
