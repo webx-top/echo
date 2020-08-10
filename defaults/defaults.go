@@ -18,6 +18,10 @@ func SetValidator(validator echo.Validator) *echo.Echo {
 	return Default.SetValidator(validator)
 }
 
+func SetFormSliceMaxIndex(max int) *echo.Echo {
+	return Default.SetFormSliceMaxIndex(max)
+}
+
 func SetAcceptFormats(acceptFormats map[string]string) *echo.Echo {
 	return Default.SetAcceptFormats(acceptFormats)
 }

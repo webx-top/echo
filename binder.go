@@ -173,6 +173,9 @@ func parseFormItem(e *Echo, m interface{}, typev reflect.Type, value reflect.Val
 				e.Logger().Warnf(`binder: can not convert index number %T#%v -> %v`, m, propPath, err.Error())
 				break
 			}
+			if e.FormSliceMaxIndex > 0 && index > e.FormSliceMaxIndex {
+				return fmt.Errorf(`%w, greater than %d`, ErrSliceIndexTooLarge, e.FormSliceMaxIndex)
+			}
 			if value.IsNil() {
 				value.Set(reflect.MakeSlice(value.Type(), 1, 1))
 			}
@@ -188,14 +191,44 @@ func parseFormItem(e *Echo, m interface{}, typev reflect.Type, value reflect.Val
 					value.Set(reflect.Append(value, tempv.Elem()))
 				}
 			}
-			newT := value.Index(index).Type()
 			newV := value.Index(index)
+			newT := newV.Type()
 			switch newT.Kind() {
 			case reflect.Struct:
 			case reflect.Ptr:
 				newT = newT.Elem()
 				if newV.IsNil() {
 					newV.Set(reflect.New(newT))
+				}
+				newV = newV.Elem()
+			default:
+				return errors.New(`binder: unsupported type ` + tc.Kind().String())
+			}
+			return parseFormItem(e, m, newT, newV, names[i+1:], propPath+`.`, key, values)
+		case reflect.Map:
+			if value.IsNil() {
+				value.Set(reflect.MakeMap(value.Type()))
+			}
+			itemT := value.Type()
+			if itemT.Kind() == reflect.Ptr {
+				itemT = itemT.Elem()
+				value = value.Elem()
+			}
+			itemT = itemT.Elem()
+			index := reflect.ValueOf(name)
+			newV := value.MapIndex(index)
+			if !newV.IsValid() {
+				newV = reflect.New(itemT).Elem()
+				value.SetMapIndex(index, newV)
+			}
+			newT := newV.Type()
+			switch newT.Kind() {
+			case reflect.Struct:
+			case reflect.Ptr:
+				newT = newT.Elem()
+				if newV.IsNil() {
+					newV = reflect.New(newT)
+					value.SetMapIndex(index, newV)
 				}
 				newV = newV.Elem()
 			default:
@@ -224,7 +257,7 @@ func parseFormItem(e *Echo, m interface{}, typev reflect.Type, value reflect.Val
 			}
 			switch value.Kind() {
 			case reflect.Struct:
-			case reflect.Slice:
+			case reflect.Slice, reflect.Map:
 				return parseFormItem(e, m, value.Type(), value, names[i+1:], propPath+`.`, key, values)
 			default:
 				e.Logger().Warnf(`binder: arg error, value %T#%v kind is %v`, m, propPath, value.Kind())
@@ -245,10 +278,11 @@ func parseFormItem(e *Echo, m interface{}, typev reflect.Type, value reflect.Val
 }
 
 var (
-	ErrBreak    = errors.New("[BREAK]")
-	ErrContinue = errors.New("[CONTINUE]")
-	ErrExit     = errors.New("[EXIT]")
-	ErrReturn   = errors.New("[RETURN]")
+	ErrBreak              = errors.New("[BREAK]")
+	ErrContinue           = errors.New("[CONTINUE]")
+	ErrExit               = errors.New("[EXIT]")
+	ErrReturn             = errors.New("[RETURN]")
+	ErrSliceIndexTooLarge = errors.New("The slice index value of the form field is too large")
 )
 
 func setField(e *Echo, k string, name string, value reflect.Value, tc reflect.Type, typev reflect.Type, values []string) error {

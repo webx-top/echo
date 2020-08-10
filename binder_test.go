@@ -25,6 +25,11 @@ type TestRole struct {
 	Users []*TestUser
 }
 
+type TestRoleM struct {
+	Name  string
+	Users map[string]*TestUser
+}
+
 type TestUser struct {
 	Name string
 	Age  uint
@@ -93,6 +98,38 @@ func TestMapToSliceStruct(t *testing.T) {
 			},
 			nil, // 2
 			{ // 3
+				Name: `hank`,
+				Age:  28,
+			},
+		},
+	}, m)
+	//Dump(m)
+}
+
+func TestMapToMapStruct(t *testing.T) {
+	e := New()
+	m := &TestRoleM{}
+	NamedStructMap(e, m, map[string][]string{
+		`name`:           {`manager`},
+		`users[0][name]`: {`john`},
+		`users[0][age]`:  {`18`},
+		`users[1][name]`: {`smith`},
+		`users[1][age]`:  {`25`},
+		`users[3][name]`: {`hank`},
+		`users[3][age]`:  {`28`},
+	}, ``)
+	assert.Equal(t, &TestRoleM{
+		Name: `manager`,
+		Users: map[string]*TestUser{
+			`0`: { // 0
+				Name: `john`,
+				Age:  18,
+			},
+			`1`: { // 1
+				Name: `smith`,
+				Age:  25,
+			},
+			`3`: { // 3
 				Name: `hank`,
 				Age:  28,
 			},
