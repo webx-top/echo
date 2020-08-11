@@ -1,8 +1,10 @@
 package echo
 
 import (
+	"reflect"
 	"testing"
 
+	"github.com/admpub/copier"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,6 +35,32 @@ type TestRoleM struct {
 type TestUser struct {
 	Name string
 	Age  uint
+}
+
+type TestAnonymous struct {
+	*TestUser
+	Title string
+}
+
+func TestMapToAnonymous(t *testing.T) {
+	e := New()
+	m := &TestAnonymous{}
+	v := reflect.ValueOf(m)
+	copier.InitNilFields(v.Type(), v, ``, map[string]struct{}{
+		`TestUser`: struct{}{},
+	})
+	NamedStructMap(e, m, map[string][]string{
+		`name`:  {`lily`},
+		`age`:   {`1`},
+		`title`: {`test`},
+	}, ``)
+	assert.Equal(t, &TestAnonymous{
+		TestUser: &TestUser{
+			Name: `lily`,
+			Age:  1,
+		},
+		Title: `test`,
+	}, m)
 }
 
 func TestMapToStruct(t *testing.T) {
