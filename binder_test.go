@@ -1,10 +1,10 @@
 package echo
 
 import (
-	"reflect"
+	"database/sql"
 	"testing"
+	"time"
 
-	"github.com/admpub/copier"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,27 +39,54 @@ type TestUser struct {
 
 type TestAnonymous struct {
 	*TestUser
-	Title string
+	Title      string
+	ListStruct []*TestAnonymous
+	ListString []string
+	IsOk       *sql.NullBool
+	Alias      *string
+	Time       time.Time
 }
 
 func TestMapToAnonymous(t *testing.T) {
 	e := New()
 	m := &TestAnonymous{}
-	v := reflect.ValueOf(m)
-	copier.InitNilFields(v.Type(), v, ``, map[string]struct{}{
-		`TestUser`: struct{}{},
-	})
 	NamedStructMap(e, m, map[string][]string{
-		`name`:  {`lily`},
-		`age`:   {`1`},
-		`title`: {`test`},
+		`name`:                 {`lily`},
+		`age`:                  {`1`},
+		`title`:                {`test`},
+		`listStruct[0][name]`:  {`a`},
+		`listStruct[0][age]`:   {`2`},
+		`listStruct[0][title]`: {`test2`},
+		`listString[]`:         {`A`, `B`},
+		`isOk`:                 {`1`},
+		`alias`:                {`hah`},
+		`time`:                 {`2020-08-10 12:00:00`},
 	}, ``)
+	//Dump(m)
+	s := `hah`
+	tm, _ := time.ParseInLocation(`2006-01-02 15:04:05`, `2020-08-10 12:00:00`, time.Local)
 	assert.Equal(t, &TestAnonymous{
 		TestUser: &TestUser{
 			Name: `lily`,
 			Age:  1,
 		},
 		Title: `test`,
+		ListStruct: []*TestAnonymous{
+			{
+				TestUser: &TestUser{
+					Name: `a`,
+					Age:  2,
+				},
+				Title: `test2`,
+			},
+		},
+		ListString: []string{`A`, `B`},
+		IsOk: &sql.NullBool{
+			Bool:  true,
+			Valid: true,
+		},
+		Alias: &s,
+		Time:  tm,
 	}, m)
 }
 
