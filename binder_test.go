@@ -33,8 +33,13 @@ type TestRoleM struct {
 }
 
 type TestUser struct {
+	*TestProfile
 	Name string
 	Age  uint
+}
+
+type TestProfile struct {
+	Address string
 }
 
 type TestAnonymous struct {
@@ -51,33 +56,52 @@ func TestMapToAnonymous(t *testing.T) {
 	e := New()
 	m := &TestAnonymous{}
 	NamedStructMap(e, m, map[string][]string{
-		`name`:                 {`lily`},
-		`age`:                  {`1`},
-		`title`:                {`test`},
-		`listStruct[0][name]`:  {`a`},
-		`listStruct[0][age]`:   {`2`},
-		`listStruct[0][title]`: {`test2`},
-		`listString[]`:         {`A`, `B`},
-		`isOk`:                 {`1`},
-		`alias`:                {`hah`},
-		`time`:                 {`2020-08-10 12:00:00`},
+		`name`:                   {`lily`},
+		`age`:                    {`1`},
+		`title`:                  {`test`},
+		`listStruct[0][address]`: {`secret`},
+		`listStruct[0][name]`:    {`a`},
+		`listStruct[0][age]`:     {`2`},
+		`listStruct[0][title]`:   {`test2`},
+		`listStruct[1][address]`: {`secret3`},
+		`listStruct[1][name]`:    {`b`},
+		`listStruct[1][age]`:     {`3`},
+		`listStruct[1][title]`:   {`test3`},
+		`listString[]`:           {`A`, `B`},
+		`isOk`:                   {`1`},
+		`alias`:                  {`hah`},
+		`time`:                   {`2020-08-10 12:00:00`},
 	}, ``)
 	//Dump(m)
 	s := `hah`
 	tm, _ := time.ParseInLocation(`2006-01-02 15:04:05`, `2020-08-10 12:00:00`, time.Local)
 	assert.Equal(t, &TestAnonymous{
 		TestUser: &TestUser{
-			Name: `lily`,
-			Age:  1,
+			TestProfile: &TestProfile{Address: ``},
+			Name:        `lily`,
+			Age:         1,
 		},
 		Title: `test`,
 		ListStruct: []*TestAnonymous{
 			{
 				TestUser: &TestUser{
+					TestProfile: &TestProfile{
+						Address: `secret`,
+					},
 					Name: `a`,
 					Age:  2,
 				},
 				Title: `test2`,
+			},
+			{
+				TestUser: &TestUser{
+					TestProfile: &TestProfile{
+						Address: `secret3`,
+					},
+					Name: `b`,
+					Age:  3,
+				},
+				Title: `test3`,
 			},
 		},
 		ListString: []string{`A`, `B`},
