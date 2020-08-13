@@ -33,3 +33,15 @@ func TestHandlerPath(t *testing.T) {
 func TestLogIf(t *testing.T) {
 	echo.LogIf(errors.New(`test`), `debug`)
 }
+
+func TestURLEncode(t *testing.T) {
+	raw := `1 2?a=b`
+	encoded := echo.URLEncode(raw)
+	assert.Equal(t, "1+2%3Fa%3Db", encoded)
+	content, _ := echo.URLDecode(encoded)
+	assert.Equal(t, raw, content)
+	encoded = echo.URLEncode(raw, true)
+	assert.Equal(t, "1%202%3Fa%3Db", encoded)
+	content, _ = echo.URLDecode(encoded, true)
+	assert.Equal(t, raw, content)
+}
