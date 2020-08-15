@@ -55,7 +55,7 @@ type TestAnonymous struct {
 func TestMapToAnonymous(t *testing.T) {
 	e := New()
 	m := &TestAnonymous{}
-	NamedStructMap(e, m, map[string][]string{
+	formData := map[string][]string{
 		`name`:                   {`lily`},
 		`age`:                    {`1`},
 		`title`:                  {`test`},
@@ -71,11 +71,11 @@ func TestMapToAnonymous(t *testing.T) {
 		`isOk`:                   {`1`},
 		`alias`:                  {`hah`},
 		`time`:                   {`2020-08-10 12:00:00`},
-	}, ``)
-	//Dump(m)
+	}
+	NamedStructMap(e, m, formData, ``)
 	s := `hah`
 	tm, _ := time.ParseInLocation(`2006-01-02 15:04:05`, `2020-08-10 12:00:00`, time.Local)
-	assert.Equal(t, &TestAnonymous{
+	expected := &TestAnonymous{
 		TestUser: &TestUser{
 			TestProfile: &TestProfile{Address: ``},
 			Name:        `lily`,
@@ -111,7 +111,17 @@ func TestMapToAnonymous(t *testing.T) {
 		},
 		Alias: &s,
 		Time:  tm,
-	}, m)
+	}
+	assert.Equal(t, expected, m)
+
+	for _, v := range expected.ListStruct {
+		v.TestUser.Name = ``
+	}
+	for _, v := range m.ListStruct {
+		v.TestUser.Name = ``
+	}
+	NamedStructMap(e, m, formData, ``, ExcludeFieldName(`*.*.Name`))
+	assert.Equal(t, expected, m)
 }
 
 func TestMapToStruct(t *testing.T) {
