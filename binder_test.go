@@ -9,9 +9,10 @@ import (
 )
 
 type TestForm struct {
-	Files []string
-	Data  *TestData
-	IDs   string `form_delimiter:","`
+	Files  []string
+	Data   *TestData
+	IDs    string `form_delimiter:","`
+	secret string
 }
 
 type TestData struct {
@@ -131,6 +132,7 @@ func TestMapToStruct(t *testing.T) {
 		`files[]`:             {`a.txt`, `b.txt`, `c.txt`},
 		`data[file][users][]`: {`1`, `2`, `3`},
 		`IDs[]`:               {`1`, `2`, `3`},
+		`secret`:              {`nothing`},
 	}, ``)
 	assert.Equal(t, &TestForm{
 		Files: []string{`a.txt`, `b.txt`, `c.txt`},
@@ -139,7 +141,8 @@ func TestMapToStruct(t *testing.T) {
 				Users: []int64{1, 2, 3},
 			},
 		},
-		IDs: `1,2,3`,
+		IDs:    `1,2,3`,
+		secret: ``,
 	}, m)
 }
 
