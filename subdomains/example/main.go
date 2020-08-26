@@ -14,6 +14,7 @@ func main() {
 	//-----
 
 	api := echo.New()
+	api.SetDebug(true)
 	api.Use(mw.Log())
 	api.Use(mw.Recover())
 
@@ -22,12 +23,16 @@ func main() {
 	api.Get("/", func(c echo.Context) error {
 		return c.String("API")
 	})
+	api.Get("/geturl/:name", func(c echo.Context) error {
+		return c.String("GET-URL:" + s.URLByName(`#api#geturl`, c.Param("name")))
+	}).SetName(`geturl`)
 
 	//------
 	// Blog
 	//------
 
 	blog := echo.New()
+	blog.SetDebug(true)
 	blog.Use(mw.Log())
 	blog.Use(mw.Recover())
 
@@ -42,6 +47,7 @@ func main() {
 	//---------
 
 	site := echo.New()
+	site.SetDebug(true)
 	site.Use(mw.Log())
 	site.Use(mw.Recover())
 
