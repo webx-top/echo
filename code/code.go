@@ -84,7 +84,6 @@ var CodeDict = CodeMap{
 	// - 数据状态
 
 	InvalidAppID: {"InvalidAppID", http.StatusOK},
-	InvalidSign:  {"InvalidSign", http.StatusOK},
 	InvalidToken: {"InvalidToken", http.StatusOK},
 
 	DataSizeTooBig:      {"DataSizeTooBig", http.StatusOK},
