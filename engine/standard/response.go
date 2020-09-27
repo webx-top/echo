@@ -174,6 +174,13 @@ type responseWriter struct {
 	response *Response
 }
 
+func (r *responseWriter) StatusCode() int {
+	if r.response.Status() == 0 {
+		return http.StatusOK
+	}
+	return r.response.Status()
+}
+
 func (r *responseWriter) Header() http.Header {
 	return r.response.header.(*Header).Header
 }
