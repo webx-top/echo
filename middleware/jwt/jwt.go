@@ -84,7 +84,7 @@ var (
 	DefaultJWTConfig = JWTConfig{
 		Skipper:       echo.DefaultSkipper,
 		SigningMethod: AlgorithmHS256,
-		ContextKey:    "user",
+		ContextKey:    "jwtUser",
 		TokenLookup:   "header:" + echo.HeaderAuthorization,
 		Claims:        jwt.MapClaims{},
 	}
@@ -166,7 +166,7 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 			}
 			if err == nil && token.Valid {
 				// Store user information from token into context.
-				c.Set(config.ContextKey, token)
+				c.Internal().Set(config.ContextKey, token)
 				return next.Handle(c)
 			}
 			return echo.ErrUnauthorized
