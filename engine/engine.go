@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"mime/multipart"
-	"net"
 	"net/http"
 	"net/url"
 
@@ -126,7 +125,6 @@ type (
 		Writer() io.Writer
 		Object() interface{}
 
-		Hijack(func(net.Conn))
 		Body() []byte
 		Redirect(string, int)
 		NotFound()
