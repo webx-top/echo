@@ -59,6 +59,8 @@ type (
 		// - "cookie:<name>"
 		TokenLookup string `json:"token_lookup"`
 
+		OnErrorAbort bool `json:"on_error_abort"`
+
 		keyFunc jwt.Keyfunc
 	}
 
@@ -87,6 +89,7 @@ var (
 		ContextKey:    "jwtUser",
 		TokenLookup:   "header:" + echo.HeaderAuthorization,
 		Claims:        jwt.MapClaims{},
+		OnErrorAbort:  true,
 	}
 )
 
@@ -154,7 +157,10 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 
 			auth, err := extractor(c)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+				if config.OnErrorAbort {
+					return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+				}
+				return next.Handle(c)
 			}
 			token := new(jwt.Token)
 			// Issue #647, #656
@@ -169,7 +175,10 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 				c.Internal().Set(config.ContextKey, token)
 				return next.Handle(c)
 			}
-			return echo.ErrUnauthorized
+			if config.OnErrorAbort {
+				return echo.ErrUnauthorized
+			}
+			return next.Handle(c)
 		}
 	}
 }
