@@ -61,9 +61,9 @@ type (
 
 		OnErrorAbort bool `json:"on_error_abort"`
 
-		errorHandler func(c echo.Context, err error)
-
-		keyFunc jwt.Keyfunc
+		errorHandler      func(c echo.Context, err error)
+		fallbackExtractor func(c echo.Context) (string, error)
+		keyFunc           jwt.Keyfunc
 	}
 
 	jwtExtractor func(echo.Context) (string, error)
@@ -76,6 +76,15 @@ func (j *JWTConfig) SetErrorHandler(errorHandler func(c echo.Context, err error)
 
 func (j *JWTConfig) ErrorHandler() func(c echo.Context, err error) {
 	return j.errorHandler
+}
+
+func (j *JWTConfig) SetFallbackExtractor(extractor func(c echo.Context) (string, error)) *JWTConfig {
+	j.fallbackExtractor = extractor
+	return j
+}
+
+func (j *JWTConfig) FallbackExtractor() func(c echo.Context) (string, error) {
+	return j.fallbackExtractor
 }
 
 const (
@@ -167,6 +176,11 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 			}
 
 			auth, err := extractor(c)
+			if err != ErrJWTMissing {
+				if config.fallbackExtractor != nil {
+					auth, err = config.fallbackExtractor(c)
+				}
+			}
 			if err != nil {
 				if config.errorHandler != nil {
 					config.errorHandler(c, err)
@@ -202,6 +216,17 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 
 // jwtFromHeader returns a `jwtExtractor` that extracts token from request header.
 func jwtFromHeader(header string) jwtExtractor {
+	return func(c echo.Context) (string, error) {
+		auth := c.Request().Header().Get(header)
+		l := len(bearer)
+		if len(auth) > l+1 && auth[:l] == bearer {
+			return auth[l+1:], nil
+		}
+		return "", ErrJWTMissing
+	}
+}
+
+func jwtFromMulti(header string) jwtExtractor {
 	return func(c echo.Context) (string, error) {
 		auth := c.Request().Header().Get(header)
 		l := len(bearer)
