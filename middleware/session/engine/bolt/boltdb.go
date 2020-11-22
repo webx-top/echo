@@ -92,6 +92,10 @@ func (s *Storex) New(ctx echo.Context, name string) (*sessions.Session, error) {
 	return s.Store.New(ctx, name)
 }
 
+func (s *Storex) Reload(ctx echo.Context, session *sessions.Session) error {
+	return s.Store.Reload(ctx, session)
+}
+
 func (s *Storex) Save(ctx echo.Context, session *sessions.Session) error {
 	if s.initialized == false {
 		err := s.b.Init()

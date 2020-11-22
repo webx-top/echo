@@ -188,6 +188,16 @@ func (m *MySQLStore) New(ctx echo.Context, name string) (*sessions.Session, erro
 	return session, err
 }
 
+func (m *MySQLStore) Reload(ctx echo.Context, session *sessions.Session) error {
+	err := m.load(ctx, session)
+	if err == nil {
+		session.IsNew = false
+	} else {
+		err = nil
+	}
+	return err
+}
+
 func (m *MySQLStore) Save(ctx echo.Context, session *sessions.Session) error {
 	var err error
 	// Delete if max-age is < 0
