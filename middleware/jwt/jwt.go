@@ -176,7 +176,7 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 			}
 
 			auth, err := extractor(c)
-			if err != ErrJWTMissing {
+			if err == ErrJWTMissing {
 				if config.fallbackExtractor != nil {
 					auth, err = config.fallbackExtractor(c)
 				}
