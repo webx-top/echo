@@ -226,17 +226,6 @@ func jwtFromHeader(header string) jwtExtractor {
 	}
 }
 
-func jwtFromMulti(header string) jwtExtractor {
-	return func(c echo.Context) (string, error) {
-		auth := c.Request().Header().Get(header)
-		l := len(bearer)
-		if len(auth) > l+1 && auth[:l] == bearer {
-			return auth[l+1:], nil
-		}
-		return "", ErrJWTMissing
-	}
-}
-
 // jwtFromQuery returns a `jwtExtractor` that extracts token from query string.
 func jwtFromQuery(param string) jwtExtractor {
 	return func(c echo.Context) (string, error) {
