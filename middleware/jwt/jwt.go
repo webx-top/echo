@@ -219,3 +219,19 @@ func jwtFromCookie(name string) jwtExtractor {
 		return token, nil
 	}
 }
+
+//BuildSignedString example: github.com/dgrijalva/jwt-go/example_test.go
+func BuildSignedString(claims jwt.Claims, mySigningKey interface{}) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(mySigningKey)
+}
+
+//BuildStandardSignedString example: github.com/dgrijalva/jwt-go/example_test.go
+func BuildStandardSignedString(claims *jwt.StandardClaims, mySigningKey interface{}) (string, error) {
+	return BuildSignedString(claims, mySigningKey)
+}
+
+//BuildMapSignedString example: github.com/dgrijalva/jwt-go/example_test.go
+func BuildMapSignedString(claims jwt.MapClaims, mySigningKey interface{}) (string, error) {
+	return BuildSignedString(claims, mySigningKey)
+}
