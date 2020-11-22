@@ -61,13 +61,22 @@ type (
 
 		OnErrorAbort bool `json:"on_error_abort"`
 
-		ErrorHandler func(c echo.Context, err error) `json:"-" xml:"-"`
+		errorHandler func(c echo.Context, err error)
 
 		keyFunc jwt.Keyfunc
 	}
 
 	jwtExtractor func(echo.Context) (string, error)
 )
+
+func (j *JWTConfig) SetErrorHandler(errorHandler func(c echo.Context, err error)) *JWTConfig {
+	j.errorHandler = errorHandler
+	return j
+}
+
+func (j *JWTConfig) ErrorHandler() func(c echo.Context, err error) {
+	return j.errorHandler
+}
 
 const (
 	bearer = "Bearer"
@@ -159,8 +168,8 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 
 			auth, err := extractor(c)
 			if err != nil {
-				if config.ErrorHandler != nil {
-					config.ErrorHandler(c, err)
+				if config.errorHandler != nil {
+					config.errorHandler(c, err)
 				}
 				if config.OnErrorAbort {
 					return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -180,8 +189,8 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 				c.Internal().Set(config.ContextKey, token)
 				return next.Handle(c)
 			}
-			if config.ErrorHandler != nil {
-				config.ErrorHandler(c, err)
+			if config.errorHandler != nil {
+				config.errorHandler(c, err)
 			}
 			if config.OnErrorAbort {
 				return echo.ErrUnauthorized
