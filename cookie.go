@@ -87,7 +87,7 @@ type cookie struct {
 
 func (c *cookie) Send() {
 	for _, cookie := range c.cookies {
-		c.record(cookie)
+		c.context.Response().SetCookie(cookie)
 	}
 }
 
@@ -109,7 +109,9 @@ func (c *cookie) Get(key string) string {
 }
 
 func (c *cookie) Add(cookies ...*http.Cookie) Cookier {
-	c.cookies = append(c.cookies, cookies...)
+	for _, cookie := range c.cookies {
+		c.record(cookie)
+	}
 	return c
 }
 
