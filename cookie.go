@@ -125,11 +125,7 @@ func (c *cookie) Add(cookies ...*http.Cookie) Cookier {
 // @param bool args[4]:httpOnly
 // @param string args[5]:sameSite (lax/strict/default)
 func (c *cookie) Set(key string, val string, args ...interface{}) Cookier {
-	opt := c.context.CookieOptions()
-	cookie := &http.Cookie{
-		Name: opt.Prefix + key,
-		Path: `/`,
-	}
+	cookie := NewCookie(key, val, c.context.CookieOptions())
 	switch len(args) {
 	case 6:
 		sameSite, _ := args[5].(string)
