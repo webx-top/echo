@@ -87,13 +87,17 @@ type cookie struct {
 
 func (c *cookie) Send() {
 	for _, cookie := range c.cookies {
-		if idx, ok := c.indexes[cookie.Name]; ok {
-			c.cookies[idx] = cookie
-			continue
-		}
-		c.indexes[cookie.Name] = len(c.cookies)
-		c.cookies = append(c.cookies, cookie)
+		c.record(cookie)
 	}
+}
+
+func (c *cookie) record(stdCookie *http.Cookie) {
+	if idx, ok := c.indexes[stdCookie.Name]; ok {
+		c.cookies[idx] = stdCookie
+		return
+	}
+	c.indexes[stdCookie.Name] = len(c.cookies)
+	c.cookies = append(c.cookies, stdCookie)
 }
 
 func (c *cookie) Get(key string) string {
@@ -173,12 +177,7 @@ func (c *cookie) Set(key string, val string, args ...interface{}) Cookier {
 			CookieExpires(cookie, v)
 		}
 	}
-	if idx, ok := c.indexes[cookie.Name]; ok {
-		c.cookies[idx] = cookie
-		return c
-	}
-	c.indexes[cookie.Name] = len(c.cookies)
-	c.cookies = append(c.cookies, cookie)
+	c.record(cookie)
 	return c
 }
 
