@@ -194,16 +194,6 @@ func (c *Context) SubDomain() string {
 	return ``
 }
 
-func (c *Context) Assign(key string, val interface{}) *Context {
-	c.Data().Assign(key, val)
-	return c
-}
-
-func (c *Context) Assignx(values *map[string]interface{}) *Context {
-	c.Data().Assignx(values)
-	return c
-}
-
 func (c *Context) Exit(args ...bool) *Context {
 	exit := true
 	if len(args) > 0 {
@@ -272,7 +262,7 @@ func (c *Context) Display(args ...interface{}) error {
 	if c.Code() <= 0 {
 		c.SetCode(c.Data().GetCode().HTTPCode())
 	}
-	if ignore, _ := c.Get(`webx:ignoreRender`).(bool); ignore {
+	if ignore, _ := c.Internal().Bool(`webx:ignoreRender`); ignore {
 		return nil
 	}
 	return c.SetAuto(true).Render(c.Tmpl, nil)
@@ -506,8 +496,8 @@ func (c *Context) Go(url string, args ...interface{}) error {
 	}
 	c.Exit()
 	if c.Format() != `html` || c.echoRedirect() {
-		c.Set(`webx:ignoreRender`, false)
-		c.Assign(`Location`, url)
+		c.Internal().Set(`webx:ignoreRender`, false)
+		c.Set(`Location`, url)
 		return c.Display()
 	}
 	return c.Context.Redirect(url, code)
