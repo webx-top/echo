@@ -262,7 +262,7 @@ func (c *Context) Display(args ...interface{}) error {
 	if c.Code() <= 0 {
 		c.SetCode(c.Data().GetCode().HTTPCode())
 	}
-	if ignore, _ := c.Internal().Bool(`webx:ignoreRender`); ignore {
+	if c.Internal().Bool(`webx:ignoreRender`) {
 		return nil
 	}
 	return c.SetAuto(true).Render(c.Tmpl, nil)
