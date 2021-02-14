@@ -24,8 +24,8 @@ func New() *Subdomains {
 	return s
 }
 
-func SetBaseURL(url string) {
-	echo.Set(`subdomains.url`, url)
+func SetBaseURL(name string, url string) {
+	echo.Set(`subdomains.`+name+`.url`, url)
 }
 
 type Info struct {
@@ -42,7 +42,7 @@ func (info *Info) URL(s *Subdomains, uri string) string {
 	} else {
 		generatedURL = info.Prefix() + `/` + info.Name + uri
 	}
-	if domain := echo.String(`subdomains.url`); len(domain) > 0 {
+	if domain := echo.String(`subdomains.` + info.Name + `.url`); len(domain) > 0 {
 		return domain + generatedURL
 	}
 	if len(info.Host) == 0 {
