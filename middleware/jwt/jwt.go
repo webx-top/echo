@@ -186,7 +186,7 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 					config.errorHandler(c, err)
 				}
 				if config.OnErrorAbort {
-					return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+					return echo.NewHTTPError(http.StatusBadRequest, err.Error()).SetRaw(err)
 				}
 				return next.Handle(c)
 			}

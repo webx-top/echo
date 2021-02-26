@@ -124,7 +124,7 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 				if config.SkipRateLimiterInternalError {
 					return h.Handle(c)
 				}
-				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+				return echo.NewHTTPError(http.StatusBadRequest, err.Error()).SetRaw(err)
 			}
 
 			response.Header().Set("X-Ratelimit-Limit", strconv.FormatInt(int64(result.Total), 10))
