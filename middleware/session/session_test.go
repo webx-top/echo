@@ -44,7 +44,7 @@ func TestSession(t *testing.T) {
 		code, resp, header := request(`GET`, `/`, e, rew(headers))
 		assert.Equal(t, 200, code)
 		assert.Equal(t, `ok`, resp)
-		assert.Equal(t, `user=test-`+strconv.Itoa(i)+`; Path=/`, header["Set-Cookie"][0])
+		assert.Equal(t, `user=test-`+strconv.Itoa(i)+`; Path=/; HttpOnly`, header["Set-Cookie"][0])
 		assert.Equal(t, `SID=`, header["Set-Cookie"][1][0:4])
 		headers = header
 		code, resp, _ = request(`GET`, `/result`, e, rew(headers))

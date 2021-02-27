@@ -121,6 +121,7 @@ func TestTraceWithDefaultConfig(t *testing.T) {
 	e.Get(`/`, func(c echo.Context) error {
 		return c.String(`ok`)
 	})
+	e.Commit()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	e.ServeHTTP(te.WrapRequest(req), te.WrapResponse(req, rec))
