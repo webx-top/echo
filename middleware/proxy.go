@@ -131,16 +131,17 @@ func ProxyHTTPCustomHandler(t *ProxyTarget, c echo.Context) http.Handler {
 }
 
 func newSingleHostReverseProxy(target *url.URL, c echo.Context) *httputil.ReverseProxy {
-	director := DefaultProxyHTTPDirector(target.RawQuery)
+	director := DefaultProxyHTTPDirector(target, c)
 	return &httputil.ReverseProxy{Director: director}
 }
 
-func DefaultProxyHTTPDirector = func(targetQuery string) func(req *http.Request) {
+// DefaultProxyHTTPDirector default director
+var DefaultProxyHTTPDirector = func(target *url.URL, c echo.Context) func(req *http.Request) {
+	targetQuery := target.RawQuery
 	return func(req *http.Request) {
-		if req.Body != nil {
-			defer req.Body.Close()
+		if req.Body == nil {
+			req.Body = c.Request().Body()
 		}
-		req.Body = c.Request().Body()
 		req.URL.Scheme = target.Scheme
 		req.URL.Host = target.Host
 		req.URL.Path, req.URL.RawPath = joinURLPath(target, req.URL)
