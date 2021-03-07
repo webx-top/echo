@@ -1,4 +1,4 @@
-// +build !jsoniter,!gojay,!go-json
+// +build !jsoniter,!gojay,!gojson
 
 package json
 

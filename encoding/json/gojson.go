@@ -1,4 +1,4 @@
-// +build go-json
+// +build gojson
 
 package json
 
