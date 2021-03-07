@@ -1,8 +1,10 @@
-// +build !jsoniter,!gojay,!go-json
+// +build go-json
 
 package json
 
-import "encoding/json"
+import (
+	"github.com/goccy/go-json"
+)
 
 var (
 	MarshalIndent = json.MarshalIndent
