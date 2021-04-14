@@ -167,13 +167,13 @@ func (r *Route) Get(name string, defaults ...interface{}) interface{} {
 	return r.Meta.Get(name, defaults...)
 }
 
-func (r *Route) Store(names ...string) H {
+func (r *Route) GetStore(names ...string) H {
 	if r.Meta == nil {
 		return emptyMeta
 	}
 	res := r.Meta
 	for _, name := range names {
-		res = res.Store(name)
+		res = res.GetStore(name)
 	}
 	return res
 }
