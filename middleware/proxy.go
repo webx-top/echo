@@ -49,7 +49,7 @@ type (
 		GetURL(echo.Context) *url.URL
 		GetFlushInterval() time.Duration
 		SetFlushInterval(time.Duration)
-		GetMeta() echo.Store
+		GetMeta(echo.Context) echo.Store
 	}
 
 	// ProxyBalancer defines an interface to implement a load balancing technique.
@@ -96,7 +96,7 @@ func (t *ProxyTarget) SetFlushInterval(interval time.Duration) {
 	t.FlushInterval = interval
 }
 
-func (t *ProxyTarget) GetMeta() echo.Store {
+func (t *ProxyTarget) GetMeta(_ echo.Context) echo.Store {
 	return t.Meta
 }
 
