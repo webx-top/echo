@@ -84,7 +84,7 @@ func (t *ProxyTarget) GetName() string {
 	return t.Name
 }
 
-func (t *ProxyTarget) GetURL(echo.Context) *url.URL {
+func (t *ProxyTarget) GetURL(_ echo.Context) *url.URL {
 	return t.URL
 }
 
