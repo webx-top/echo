@@ -33,7 +33,7 @@ type Config struct {
 }
 
 func (c *Config) Init() {
-	c.filter = ipfilter.NewLazy(c.Options)
+	c.filter = ipfilter.New(c.Options)
 }
 
 func (c *Config) Filter() *ipfilter.IPFilter {
@@ -63,7 +63,12 @@ func IPFilter(config Config) echo.MiddlewareFuncd {
 			if config.Skipper(c) {
 				return next.Handle(c)
 			}
-			ip, _, _ := net.SplitHostPort(c.RealIP())
+			var ip string
+			if config.Options.TrustProxy {
+				ip = c.RealIP()
+			} else {
+				ip, _, _ = net.SplitHostPort(c.Request().RemoteAddress())
+			}
 			//show simple forbidden text
 			if !config.Filter().Allowed(ip) {
 				return echo.ErrForbidden
