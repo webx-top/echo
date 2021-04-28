@@ -20,7 +20,7 @@ type Config struct {
 	ParseStrings         map[string]string
 	ParseStringFuncs     map[string]func() string
 	ErrorPages           map[int]string
-	ErrorProcessors      []func(error) (bool, error)
+	ErrorProcessors      []ErrorProcessor
 	DefaultHTTPErrorCode int
 	StaticOptions        *middleware.StaticOptions
 	Debug                bool

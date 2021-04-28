@@ -40,10 +40,12 @@ var (
 	}
 )
 
+type ErrorProcessor func(ctx echo.Context, err error) (processed bool, newErr error)
+
 type Options struct {
 	Skipper              echo.Skipper
 	ErrorPages           map[int]string
-	ErrorProcessors      []func(err error) (processed bool, newErr error)
+	ErrorProcessors      []ErrorProcessor
 	DefaultHTTPErrorCode int
 	SetFuncMap           []echo.HandlerFunc
 }
@@ -64,12 +66,12 @@ func (opt *Options) SetFuncSetter(set ...echo.HandlerFunc) *Options {
 	return opt
 }
 
-func (opt *Options) AddErrorProcessor(h ...func(error) (bool, error)) *Options {
+func (opt *Options) AddErrorProcessor(h ...ErrorProcessor) *Options {
 	opt.ErrorProcessors = append(opt.ErrorProcessors, h...)
 	return opt
 }
 
-func (opt *Options) SetErrorProcessor(h ...func(error) (bool, error)) *Options {
+func (opt *Options) SetErrorProcessor(h ...ErrorProcessor) *Options {
 	opt.ErrorProcessors = h
 	return opt
 }
@@ -135,7 +137,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			if processor == nil {
 				continue
 			}
-			processed, err = processor(err)
+			processed, err = processor(c, err)
 			if processed {
 				break
 			}
