@@ -154,21 +154,28 @@ func (a *Language) Middleware() echo.MiddlewareFunc {
 
 func (a *Language) Handler(e echo.RouteRegister, i18nJSVarName string) {
 	e.Get(`/i18n.json`, func(c echo.Context) error {
-		messages := a.I18n.Get(c.Lang()).Messages()
-		return c.JSON(messages)
+		t := a.I18n.Get(c.Lang())
+		if t != nil {
+			messages := t.Messages()
+			return c.JSON(messages)
+		}
+		return c.JSONBlob([]byte(`{}`))
 	})
 	e.Get(`/i18n.js`, func(c echo.Context) error {
-		messages := a.I18n.Get(c.Lang()).Messages()
+		t := a.I18n.Get(c.Lang())
 		buf := bytes.NewBuffer(nil)
-		if messages != nil {
-			if len(i18nJSVarName) > 0 {
-				buf.WriteString(i18nJSVarName + `=`)
-			}
-			b, _ := com.JSONEncode(messages)
-			if len(b) > 0 {
-				buf.Write(b)
-			} else {
-				buf.WriteString(`{}`)
+		if t != nil {
+			messages := t.Messages()
+			if messages != nil {
+				if len(i18nJSVarName) > 0 {
+					buf.WriteString(i18nJSVarName + `=`)
+				}
+				b, _ := com.JSONEncode(messages)
+				if len(b) > 0 {
+					buf.Write(b)
+				} else {
+					buf.WriteString(`{}`)
+				}
 			}
 		}
 		c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJavaScriptCharsetUTF8)
