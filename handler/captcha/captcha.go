@@ -35,7 +35,7 @@ var DefaultOptions = &Options{
 	AudioLangs:     []string{`zh`, `ru`, `en`},
 	Prefix:         `/captcha`,
 	CookieName:     `captchaId`,
-	HeaderName:     `X-Captcha-ID`,
+	HeaderName:     `X-Captcha-Id`,
 	IDGenerator: func(_ echo.Context, _ *Options) (string, error) {
 		return captcha.New(), nil
 	},
