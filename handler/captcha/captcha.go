@@ -102,6 +102,8 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 		if err != nil {
 			return err
 		}
+		w := ctx.Response()
+		header := w.Header()
 		ids := []string{id}
 		var hasCookieValue, hasHeaderValue bool
 		if len(o.CookieName) > 0 {
@@ -109,10 +111,12 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 			if len(idByCookie) > 0 {
 				idByCookie, err = o.IDDecoder(ctx, idByCookie, `cookie`)
 				if err != nil {
-					return err
+					header.Add(`X-Captcha-ID-Error`, `cookie: `+err.Error())
+					ctx.SetCookie(o.CookieName, ``, -1)
+				} else {
+					ids = append(ids, idByCookie)
 				}
 				hasCookieValue = true
-				ids = append(ids, idByCookie)
 			}
 		}
 		if len(o.HeaderName) > 0 {
@@ -120,14 +124,13 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 			if len(idByHeader) > 0 {
 				idByHeader, err = o.IDDecoder(ctx, idByHeader, `header`)
 				if err != nil {
-					return err
+					header.Add(`X-Captcha-ID-Error`, `header: `+err.Error())
+				} else {
+					ids = append(ids, idByHeader)
 				}
 				hasHeaderValue = true
-				ids = append(ids, idByHeader)
 			}
 		}
-		w := ctx.Response()
-		header := w.Header()
 		if len(ctx.Query("reload")) > 0 {
 			var ok bool
 			for _, id := range ids {
