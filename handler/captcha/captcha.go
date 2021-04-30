@@ -28,6 +28,7 @@ import (
 
 type IDEncoder func(_ echo.Context, id string, from string) (string, error)
 type IDDecoder func(_ echo.Context, id string, from string) (string, error)
+type IDGenerator func(_ echo.Context) (string, error)
 
 var DefaultOptions = &Options{
 	EnableImage:    true,
@@ -43,6 +44,9 @@ var DefaultOptions = &Options{
 	IDDecoder: func(_ echo.Context, id string, _ string) (string, error) {
 		return id, nil
 	},
+	IDGenerator: func(_ echo.Context) (string, error) {
+		return captcha.New(), nil
+	},
 }
 
 type Options struct {
@@ -55,6 +59,7 @@ type Options struct {
 	HeaderName     string
 	IDEncoder      IDEncoder
 	IDDecoder      IDDecoder
+	IDGenerator    IDGenerator
 }
 
 func (o Options) Wrapper(e echo.RouteRegister) {
@@ -87,6 +92,9 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 	}
 	if o.IDEncoder == nil {
 		o.IDEncoder = DefaultOptions.IDEncoder
+	}
+	if o.IDGenerator == nil {
+		o.IDGenerator = DefaultOptions.IDGenerator
 	}
 	return func(ctx echo.Context) (err error) {
 		var id, ext string
@@ -144,7 +152,11 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 				}
 			}
 			if !ok && (hasCookieValue || hasHeaderValue) { // 旧的已经全部失效了，自动申请新ID
-				id = captcha.New()
+				id, err = o.IDGenerator(ctx)
+				if err != nil {
+					header.Add(`X-Captcha-ID-Error`, `generator: `+err.Error())
+					return err
+				}
 				ids = []string{id}
 				if hasCookieValue {
 					ctx.SetCookie(o.CookieName, id)
