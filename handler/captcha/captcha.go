@@ -143,7 +143,7 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 					break
 				}
 			}
-			if !ok && (hasCookieValue || hasHeaderValue) {
+			if !ok && (hasCookieValue || hasHeaderValue) { // 旧的已经全部失效了，自动申请新ID
 				id = captcha.New()
 				ids = []string{id}
 				if hasCookieValue {
