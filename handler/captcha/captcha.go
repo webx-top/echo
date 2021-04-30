@@ -26,13 +26,23 @@ import (
 	"github.com/webx-top/echo"
 )
 
+type IDEncoder func(_ echo.Context, id string, from string) (string, error)
+type IDDecoder func(_ echo.Context, id string, from string) (string, error)
+
 var DefaultOptions = &Options{
 	EnableImage:    true,
 	EnableAudio:    true,
 	EnableDownload: true,
 	AudioLangs:     []string{`zh`, `ru`, `en`},
+	Prefix:         `/captcha`,
 	CookieName:     `captchaId`,
 	HeaderName:     `X-Captcha-ID`,
+	IDEncoder: func(_ echo.Context, id string, _ string) (string, error) {
+		return id, nil
+	},
+	IDDecoder: func(_ echo.Context, id string, _ string) (string, error) {
+		return id, nil
+	},
 }
 
 type Options struct {
@@ -43,17 +53,18 @@ type Options struct {
 	Prefix         string
 	CookieName     string
 	HeaderName     string
+	IDEncoder      IDEncoder
+	IDDecoder      IDDecoder
 }
 
 func (o Options) Wrapper(e echo.RouteRegister) {
 	if o.AudioLangs == nil || len(o.AudioLangs) == 0 {
-		o.AudioLangs = []string{`zh`, `ru`, `en`}
+		o.AudioLangs = DefaultOptions.AudioLangs
 	}
 	if len(o.Prefix) == 0 {
-		o.Prefix = `/captcha`
-	} else {
-		o.Prefix = strings.TrimRight(o.Prefix, "/")
+		o.Prefix = DefaultOptions.Prefix
 	}
+	o.Prefix = strings.TrimRight(o.Prefix, "/")
 	e.Get(o.Prefix+"/*", Captcha(&o))
 }
 
@@ -71,6 +82,12 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 	if len(o.HeaderName) == 0 {
 		o.HeaderName = DefaultOptions.HeaderName
 	}
+	if o.IDDecoder == nil {
+		o.IDDecoder = DefaultOptions.IDDecoder
+	}
+	if o.IDEncoder == nil {
+		o.IDEncoder = DefaultOptions.IDEncoder
+	}
 	return func(ctx echo.Context) (err error) {
 		var id, ext string
 		param := ctx.P(0)
@@ -81,38 +98,61 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 		if len(ext) == 0 || len(id) == 0 {
 			return echo.ErrNotFound
 		}
+		id, err = o.IDDecoder(ctx, id, `path`)
+		if err != nil {
+			return err
+		}
 		ids := []string{id}
+		var hasCookieValue, hasHeaderValue bool
 		if len(o.CookieName) > 0 {
-			ids = append(ids, ctx.GetCookie(o.CookieName))
+			idByCookie := ctx.GetCookie(o.CookieName)
+			if len(idByCookie) > 0 {
+				idByCookie, err = o.IDDecoder(ctx, idByCookie, `cookie`)
+				if err != nil {
+					return err
+				}
+				hasCookieValue = true
+				ids = append(ids, idByCookie)
+			}
 		}
 		if len(o.HeaderName) > 0 {
-			ids = append(ids, ctx.Header(o.HeaderName))
+			idByHeader := ctx.Header(o.HeaderName)
+			if len(idByHeader) > 0 {
+				idByHeader, err = o.IDDecoder(ctx, idByHeader, `header`)
+				if err != nil {
+					return err
+				}
+				hasHeaderValue = true
+				ids = append(ids, idByHeader)
+			}
 		}
 		w := ctx.Response()
 		header := w.Header()
 		if len(ctx.Query("reload")) > 0 {
 			var ok bool
 			for _, id := range ids {
+				if len(id) == 0 {
+					continue
+				}
 				if captcha.Reload(id) {
 					ok = true
 					ids = []string{id}
 					break
 				}
 			}
-			if !ok {
-				if len(o.CookieName) > 0 {
-					id = captcha.New()
-					ids = []string{id}
+			if !ok && (hasCookieValue || hasHeaderValue) {
+				id = captcha.New()
+				ids = []string{id}
+				if hasCookieValue {
 					ctx.SetCookie(o.CookieName, id)
-				} else if len(o.HeaderName) > 0 {
-					id = captcha.New()
-					ids = []string{id}
+				}
+				if hasHeaderValue {
 					header.Set(o.HeaderName, id)
 				}
 			}
 		}
-		download := o.EnableDownload && len(ctx.Query("download")) > 0
-		b := bytes.NewBufferString(``)
+		download := o.EnableDownload && ctx.Queryx("download").Bool()
+		b := bytes.NewBuffer(nil)
 		switch ext {
 		case ".png":
 			if !o.EnableImage {
