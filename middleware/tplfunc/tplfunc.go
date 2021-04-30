@@ -374,12 +374,6 @@ func NlToBr(text string) template.HTML {
 	return template.HTML(Nl2br(text))
 }
 
-var (
-	CaptchaIDEncoder = func(id string) (string, error) {
-		return id, nil
-	}
-)
-
 //CaptchaForm 验证码表单域
 func CaptchaForm(args ...interface{}) template.HTML {
 	return CaptchaFormWithURLPrefix(``, args...)
@@ -447,11 +441,6 @@ func CaptchaFormWithURLPrefix(urlPrefix string, args ...interface{}) template.HT
 	}
 	if len(cid) == 0 {
 		cid = captcha.New()
-		var err error
-		cid, err = CaptchaIDEncoder(cid)
-		if err != nil {
-			return template.HTML(com.HTMLEncode(err.Error()))
-		}
 	}
 	if !customOnErr {
 		onErr = fmt.Sprintf(onErr, msg)
