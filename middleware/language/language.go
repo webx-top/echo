@@ -154,11 +154,11 @@ func (a *Language) Middleware() echo.MiddlewareFunc {
 
 func (a *Language) Handler(e echo.RouteRegister, i18nJSVarName string) {
 	e.Get(`/i18n.json`, func(c echo.Context) error {
-		messages := a.I18n.GetMessages(c.Lang())
+		messages := a.I18n.Get(c.Lang()).Messages()
 		return c.JSON(messages)
 	})
 	e.Get(`/i18n.js`, func(c echo.Context) error {
-		messages := a.I18n.GetMessages(c.Lang())
+		messages := a.I18n.Get(c.Lang()).Messages()
 		buf := bytes.NewBuffer(nil)
 		if messages != nil {
 			if len(i18nJSVarName) > 0 {
