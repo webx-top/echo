@@ -18,9 +18,11 @@
 package language
 
 import (
+	"bytes"
 	"regexp"
 	"strings"
 
+	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine"
 )
@@ -147,5 +149,29 @@ func (a *Language) Middleware() echo.MiddlewareFunc {
 			c.SetTranslator(NewTranslate(lang, a.I18n))
 			return h.Handle(c)
 		})
+	})
+}
+
+func (a *Language) Handler(e echo.RouteRegister, i18nJSVarName string) {
+	e.Get(`/i18n.json`, func(c echo.Context) error {
+		messages := a.I18n.GetMessages(c.Lang())
+		return c.JSON(messages)
+	})
+	e.Get(`/i18n.js`, func(c echo.Context) error {
+		messages := a.I18n.GetMessages(c.Lang())
+		buf := bytes.NewBuffer(nil)
+		if messages != nil {
+			if len(i18nJSVarName) > 0 {
+				buf.WriteString(i18nJSVarName + `=`)
+			}
+			b, _ := com.JSONEncode(messages)
+			if len(b) > 0 {
+				buf.Write(b)
+			} else {
+				buf.WriteString(`{}`)
+			}
+		}
+		c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJavaScriptCharsetUTF8)
+		return c.Blob(buf.Bytes())
 	})
 }
