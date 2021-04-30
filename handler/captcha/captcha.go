@@ -131,7 +131,7 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 				hasHeaderValue = true
 			}
 		}
-		if len(ctx.Query("reload")) > 0 {
+		if ctx.Queryx("reload").Bool() {
 			var ok bool
 			for _, id := range ids {
 				if len(id) == 0 {
