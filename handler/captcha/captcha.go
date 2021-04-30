@@ -26,8 +26,6 @@ import (
 	"github.com/webx-top/echo"
 )
 
-type IDEncoder func(_ echo.Context, id string, from string) (string, error)
-type IDDecoder func(_ echo.Context, id string, from string) (string, error)
 type IDGenerator func(_ echo.Context) (string, error)
 
 var DefaultOptions = &Options{
@@ -38,12 +36,6 @@ var DefaultOptions = &Options{
 	Prefix:         `/captcha`,
 	CookieName:     `captchaId`,
 	HeaderName:     `X-Captcha-ID`,
-	IDEncoder: func(_ echo.Context, id string, _ string) (string, error) {
-		return id, nil
-	},
-	IDDecoder: func(_ echo.Context, id string, _ string) (string, error) {
-		return id, nil
-	},
 	IDGenerator: func(_ echo.Context) (string, error) {
 		return captcha.New(), nil
 	},
@@ -57,8 +49,6 @@ type Options struct {
 	Prefix         string
 	CookieName     string
 	HeaderName     string
-	IDEncoder      IDEncoder
-	IDDecoder      IDDecoder
 	IDGenerator    IDGenerator
 }
 
@@ -87,12 +77,6 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 	if len(o.HeaderName) == 0 {
 		o.HeaderName = DefaultOptions.HeaderName
 	}
-	if o.IDDecoder == nil {
-		o.IDDecoder = DefaultOptions.IDDecoder
-	}
-	if o.IDEncoder == nil {
-		o.IDEncoder = DefaultOptions.IDEncoder
-	}
 	if o.IDGenerator == nil {
 		o.IDGenerator = DefaultOptions.IDGenerator
 	}
@@ -106,10 +90,6 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 		if len(ext) == 0 || len(id) == 0 {
 			return echo.ErrNotFound
 		}
-		id, err = o.IDDecoder(ctx, id, `path`)
-		if err != nil {
-			return err
-		}
 		w := ctx.Response()
 		header := w.Header()
 		ids := []string{id}
@@ -117,25 +97,14 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 		if len(o.CookieName) > 0 {
 			idByCookie := ctx.GetCookie(o.CookieName)
 			if len(idByCookie) > 0 {
-				idByCookie, err = o.IDDecoder(ctx, idByCookie, `cookie`)
-				if err != nil {
-					header.Add(`X-Captcha-ID-Error`, `cookie: `+err.Error())
-					ctx.SetCookie(o.CookieName, ``, -1)
-				} else {
-					ids = append(ids, idByCookie)
-				}
+				ids = append(ids, idByCookie)
 				hasCookieValue = true
 			}
 		}
 		if len(o.HeaderName) > 0 {
 			idByHeader := ctx.Header(o.HeaderName)
 			if len(idByHeader) > 0 {
-				idByHeader, err = o.IDDecoder(ctx, idByHeader, `header`)
-				if err != nil {
-					header.Add(`X-Captcha-ID-Error`, `header: `+err.Error())
-				} else {
-					ids = append(ids, idByHeader)
-				}
+				ids = append(ids, idByHeader)
 				hasHeaderValue = true
 			}
 		}
