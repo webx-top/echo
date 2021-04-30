@@ -26,7 +26,7 @@ import (
 	"github.com/webx-top/echo"
 )
 
-type IDGenerator func(_ echo.Context) (string, error)
+type IDGenerator func(echo.Context, *Options) (string, error)
 
 var DefaultOptions = &Options{
 	EnableImage:    true,
@@ -36,7 +36,7 @@ var DefaultOptions = &Options{
 	Prefix:         `/captcha`,
 	CookieName:     `captchaId`,
 	HeaderName:     `X-Captcha-ID`,
-	IDGenerator: func(_ echo.Context) (string, error) {
+	IDGenerator: func(_ echo.Context, _ *Options) (string, error) {
 		return captcha.New(), nil
 	},
 }
@@ -121,7 +121,7 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 				}
 			}
 			if !ok && (hasCookieValue || hasHeaderValue) { // 旧的已经全部失效了，自动申请新ID
-				id, err = o.IDGenerator(ctx)
+				id, err = o.IDGenerator(ctx, o)
 				if err != nil {
 					header.Add(`X-Captcha-ID-Error`, `generator: `+err.Error())
 					return err
