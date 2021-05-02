@@ -63,6 +63,7 @@ type (
 
 		errorHandler      func(c echo.Context, err error)
 		fallbackExtractor func(c echo.Context) (string, error)
+		tokenPreprocessor func(c echo.Context, token string) (string, error)
 		keyFunc           jwt.Keyfunc
 	}
 
@@ -71,6 +72,11 @@ type (
 
 func (j *JWTConfig) SetErrorHandler(errorHandler func(c echo.Context, err error)) *JWTConfig {
 	j.errorHandler = errorHandler
+	return j
+}
+
+func (j *JWTConfig) SetTokenPreprocessor(tokenPreprocessor func(c echo.Context, token string) (string, error)) *JWTConfig {
+	j.tokenPreprocessor = tokenPreprocessor
 	return j
 }
 
@@ -110,6 +116,9 @@ var (
 		TokenLookup:   "header:" + echo.HeaderAuthorization,
 		Claims:        jwt.MapClaims{},
 		OnErrorAbort:  true,
+		tokenPreprocessor: func(_ echo.Context, token string) (string, error) {
+			return token, nil
+		},
 	}
 )
 
@@ -149,6 +158,9 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 	if config.TokenLookup == "" {
 		config.TokenLookup = DefaultJWTConfig.TokenLookup
 	}
+	if config.tokenPreprocessor == nil {
+		config.tokenPreprocessor = DefaultJWTConfig.tokenPreprocessor
+	}
 	config.keyFunc = func(t *jwt.Token) (interface{}, error) {
 		// Check the signing method
 		if t.Method.Alg() != config.SigningMethod {
@@ -181,6 +193,9 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 					auth, err = config.fallbackExtractor(c)
 				}
 			}
+			if err == nil {
+				auth, err = config.tokenPreprocessor(c, auth)
+			}
 			if err != nil {
 				if config.errorHandler != nil {
 					config.errorHandler(c, err)
@@ -190,7 +205,7 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 				}
 				return next.Handle(c)
 			}
-			token := new(jwt.Token)
+			var token *jwt.Token
 			// Issue #647, #656
 			if _, ok := config.Claims.(jwt.MapClaims); ok {
 				token, err = jwt.Parse(auth, config.keyFunc)
