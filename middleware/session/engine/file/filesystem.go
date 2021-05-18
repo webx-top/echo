@@ -68,17 +68,14 @@ func (m *filesystemStore) Get(ctx echo.Context, name string) (*sessions.Session,
 }
 
 func (m *filesystemStore) New(ctx echo.Context, name string) (*sessions.Session, error) {
-	m.Init()
 	return m.FilesystemStore.New(ctx, name)
 }
 
 func (m *filesystemStore) Reload(ctx echo.Context, session *sessions.Session) error {
-	m.Init()
 	return m.FilesystemStore.Reload(ctx, session)
 }
 
 func (m *filesystemStore) Save(ctx echo.Context, session *sessions.Session) error {
-	m.Init()
 	return m.FilesystemStore.Save(ctx, session)
 }
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/admpub/errors"
@@ -58,6 +59,9 @@ type MySQLStore struct {
 
 	Codecs []securecookie.Codec
 	table  string
+	quiteC chan<- struct{}
+	doneC  <-chan struct{}
+	once   sync.Once
 }
 
 const DDL = "CREATE TABLE IF NOT EXISTS %s (" +
@@ -155,15 +159,18 @@ func NewMySQLStoreFromConnection(db *sql.DB, tableName string, keyPairs ...[]byt
 	}, nil
 }
 
-func (m *MySQLStore) Close() {
+func (m *MySQLStore) Close() (err error) {
 	m.stmtSelect.Close()
 	m.stmtUpdate.Close()
 	m.stmtDelete.Close()
 	m.stmtInsert.Close()
-	m.db.Close()
+	err = m.db.Close()
+	m.closeCleanup()
+	return
 }
 
 func (m *MySQLStore) Get(ctx echo.Context, name string) (*sessions.Session, error) {
+	m.Init()
 	return sessions.GetRegistry(ctx).Get(m, name)
 }
 
@@ -278,7 +285,7 @@ func (n *MySQLStore) maxAge(ctx echo.Context) int {
 }
 
 func (m *MySQLStore) save(ctx echo.Context, session *sessions.Session) error {
-	if session.IsNew == true {
+	if session.IsNew {
 		return m.insert(ctx, session)
 	}
 	var createdAt int64
@@ -337,4 +344,20 @@ func (m *MySQLStore) load(ctx echo.Context, session *sessions.Session) error {
 	session.Values[DefaultKeyPrefix+"expires"] = sess.expires.Int64
 	return nil
 
+}
+
+func (m *MySQLStore) closeCleanup() {
+	// Invoke a reaper which checks and removes expired sessions periodically.
+	if m.quiteC != nil && m.doneC != nil {
+		m.StopCleanup(m.quiteC, m.doneC)
+	}
+}
+
+func (m *MySQLStore) Init() {
+	m.once.Do(m.init)
+}
+
+func (m *MySQLStore) init() {
+	m.closeCleanup()
+	m.quiteC, m.doneC = m.Cleanup(0)
 }

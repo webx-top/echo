@@ -81,26 +81,14 @@ func (s *Storex) Get(ctx echo.Context, name string) (*sessions.Session, error) {
 }
 
 func (s *Storex) New(ctx echo.Context, name string) (*sessions.Session, error) {
-	err := s.b.Init()
-	if err != nil {
-		return nil, err
-	}
 	return s.Store.New(ctx, name)
 }
 
 func (s *Storex) Reload(ctx echo.Context, session *sessions.Session) error {
-	err := s.b.Init()
-	if err != nil {
-		return err
-	}
 	return s.Store.Reload(ctx, session)
 }
 
 func (s *Storex) Save(ctx echo.Context, session *sessions.Session) error {
-	err := s.b.Init()
-	if err != nil {
-		return err
-	}
 	return s.Store.Save(ctx, session)
 }
 
