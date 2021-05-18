@@ -73,6 +73,10 @@ type Storex struct {
 }
 
 func (s *Storex) Get(ctx echo.Context, name string) (*sessions.Session, error) {
+	err := s.b.Init()
+	if err != nil {
+		return nil, err
+	}
 	return s.Store.Get(ctx, name)
 }
 

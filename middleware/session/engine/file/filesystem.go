@@ -63,6 +63,7 @@ type filesystemStore struct {
 }
 
 func (m *filesystemStore) Get(ctx echo.Context, name string) (*sessions.Session, error) {
+	m.Init()
 	return m.FilesystemStore.Get(ctx, name)
 }
 
