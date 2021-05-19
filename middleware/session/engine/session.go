@@ -60,6 +60,9 @@ func (s *Session) Clear() echo.Sessioner {
 			s.Delete(k)
 		}
 	}
+	if err := s.store.Remove(s.ID()); err != nil {
+		s.context.Logger().Debug(`Session.Clear(%s): `, s.ID(), err.Error())
+	}
 	return s
 }
 
@@ -77,7 +80,7 @@ func (s *Session) Flashes(vars ...string) []interface{} {
 	return flashes
 }
 
-func (s *Session) SetID(id string) error {
+func (s *Session) SetID(id string, notReload ...bool) error {
 	if s.Session().ID == id {
 		return nil
 	}
@@ -85,10 +88,12 @@ func (s *Session) SetID(id string) error {
 		return ErrInvalidSessionID
 	}
 	s.Session().ID = id
-	if err := s.Session().Reload(s.context); err != nil {
-		return err
+	if len(notReload) == 0 || !notReload[0] {
+		if err := s.Session().Reload(s.context); err != nil {
+			return err
+		}
+		s.setWritten()
 	}
-	s.setWritten()
 	return nil
 }
 

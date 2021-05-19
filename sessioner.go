@@ -64,7 +64,7 @@ type Sessioner interface {
 	Get(key string) interface{}
 	// Set sets the session value associated to the given key.
 	Set(key string, val interface{}) Sessioner
-	SetID(id string) error
+	SetID(id string, notReload ...bool) error
 	ID() string
 	MustID() string
 	// Delete removes the session value associated to the given key.
@@ -96,7 +96,7 @@ func (n *NopSession) Set(name string, value interface{}) Sessioner {
 	return n
 }
 
-func (n *NopSession) SetID(id string) error {
+func (n *NopSession) SetID(id string, notReload ...bool) error {
 	return nil
 }
 
@@ -151,8 +151,8 @@ func (n *DebugSession) Set(name string, value interface{}) Sessioner {
 	return n
 }
 
-func (n *DebugSession) SetID(id string) error {
-	log.Println(`DebugSession.SetID`, id)
+func (n *DebugSession) SetID(id string, notReload ...bool) error {
+	log.Println(`DebugSession.SetID`, id, `notReload:`, notReload)
 	return nil
 }
 

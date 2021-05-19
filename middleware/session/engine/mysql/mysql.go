@@ -230,6 +230,17 @@ func (m *MySQLStore) Save(ctx echo.Context, session *sessions.Session) error {
 	return nil
 }
 
+func (m *MySQLStore) Remove(sessionID string) error {
+	if len(sessionID) == 0 {
+		return nil
+	}
+	_, delErr := m.stmtDelete.Exec(sessionID)
+	if delErr != nil {
+		return delErr
+	}
+	return nil
+}
+
 func (m *MySQLStore) insert(ctx echo.Context, session *sessions.Session) error {
 	var modifiedAt int64
 	var createdAt int64
@@ -266,14 +277,7 @@ func (m *MySQLStore) Delete(ctx echo.Context, session *sessions.Session) error {
 	for k := range session.Values {
 		delete(session.Values, k)
 	}
-	if len(session.ID) == 0 {
-		return nil
-	}
-	_, delErr := m.stmtDelete.Exec(session.ID)
-	if delErr != nil {
-		return delErr
-	}
-	return nil
+	return m.Remove(session.ID)
 }
 
 func (n *MySQLStore) maxAge(ctx echo.Context) int {
