@@ -60,9 +60,6 @@ func (s *Session) Clear() echo.Sessioner {
 			s.Delete(k)
 		}
 	}
-	if err := s.store.Remove(s.ID()); err != nil {
-		s.context.Logger().Debug(`Session.Clear(%s): `, s.ID(), err.Error())
-	}
 	return s
 }
 
@@ -116,6 +113,13 @@ func (s *Session) MustID() string {
 	}
 	s.Session().ID = GenerateSessionID()
 	return s.Session().ID
+}
+
+func (s *Session) RemoveID(sessionID string) error {
+	if !com.StrIsAlphaNumeric(sessionID) {
+		return ErrInvalidSessionID
+	}
+	return s.store.Remove(sessionID)
 }
 
 func (s *Session) Save() error {
