@@ -60,6 +60,7 @@ func (s *Session) Clear() echo.Sessioner {
 			s.Delete(k)
 		}
 	}
+	s.setWritten()
 	return s
 }
 
@@ -156,6 +157,8 @@ func (s *Session) Written() bool {
 }
 
 func (s *Session) setWritten() *Session {
-	s.written = true
+	if !s.written {
+		s.written = true
+	}
 	return s
 }
