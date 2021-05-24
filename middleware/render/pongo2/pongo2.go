@@ -100,31 +100,39 @@ func (a *templateLoader) Get(tmpl string) (io.Reader, error) {
 	return buf, e
 }
 
-func (self *Pongo2) Debug() bool {
-	return self.debug
+func (a *Pongo2) Debug() bool {
+	return a.debug
 }
 
-func (self *Pongo2) SetDebug(on bool) {
-	self.debug = on
+func (a *Pongo2) SetDebug(on bool) {
+	a.debug = on
 }
 
-func (self *Pongo2) SetLogger(l logger.Logger) {
-	self.logger = l
-	self.loader.logger = l
-	if self.Mgr != nil {
-		self.Mgr.SetLogger(self.logger)
+func (a *Pongo2) SetLogger(l logger.Logger) {
+	a.logger = l
+	a.loader.logger = l
+	if a.Mgr != nil {
+		a.Mgr.SetLogger(a.logger)
 	}
 }
-func (self *Pongo2) Logger() logger.Logger {
-	return self.logger
+func (a *Pongo2) Logger() logger.Logger {
+	return a.logger
 }
 
-func (self *Pongo2) TmplDir() string {
-	return self.templateDir
+func (a *Pongo2) TmplDir() string {
+	return a.templateDir
 }
 
-func (self *Pongo2) SetTmplPathFixer(fn func(echo.Context, string) string) {
-	self.tmplPathFixer = fn
+func (a *Pongo2) SetTmplPathFixer(fn func(echo.Context, string) string) {
+	a.tmplPathFixer = fn
+}
+
+func (a *Pongo2) TmplPath(c echo.Context, tmpl string) string {
+	tmpl = strings.TrimPrefix(tmpl, a.templateDir)
+	if a.tmplPathFixer != nil {
+		tmpl = a.tmplPathFixer(c, tmpl)
+	}
+	return tmpl
 }
 
 func (a *Pongo2) MonitorEvent(fn func(string)) {
@@ -210,10 +218,7 @@ func (a *Pongo2) parse(c echo.Context, tmpl string, data interface{}) (*Template
 	t, ok := a.templates[k]
 	if !ok {
 		var err error
-		tmpl = strings.TrimPrefix(tmpl, a.templateDir)
-		if a.tmplPathFixer != nil {
-			tmpl = a.tmplPathFixer(c, tmpl)
-		}
+		tmpl = a.TmplPath(c, tmpl)
 		t, err = a.set.FromFile(tmpl)
 		if err != nil {
 			a.logger.Error(err)

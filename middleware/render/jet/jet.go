@@ -69,42 +69,47 @@ type Jet struct {
 	tmplPathFixer func(echo.Context, string) string
 }
 
-func (self *Jet) Debug() bool {
-	return self.debug
+func (a *Jet) Debug() bool {
+	return a.debug
 }
 
-func (self *Jet) SetDebug(on bool) {
-	self.debug = on
-	self.set.SetDevelopmentMode(on)
+func (a *Jet) SetDebug(on bool) {
+	a.debug = on
+	a.set.SetDevelopmentMode(on)
 }
 
-func (self *Jet) SetLogger(l logger.Logger) {
-	self.logger = l
+func (a *Jet) SetLogger(l logger.Logger) {
+	a.logger = l
 }
 
-func (self *Jet) Logger() logger.Logger {
-	return self.logger
+func (a *Jet) Logger() logger.Logger {
+	return a.logger
 }
 
-func (self *Jet) TmplDir() string {
-	return self.templateDir
+func (a *Jet) TmplDir() string {
+	return a.templateDir
 }
 
-func (self *Jet) SetTmplPathFixer(fn func(echo.Context, string) string) {
-	self.tmplPathFixer = fn
+func (a *Jet) SetTmplPathFixer(fn func(echo.Context, string) string) {
+	a.tmplPathFixer = fn
 }
 
-func (self *Jet) SetFuncMap(fn func() map[string]interface{}) {
+func (a *Jet) TmplPath(c echo.Context, tmpl string) string {
+	if a.tmplPathFixer != nil {
+		tmpl = a.tmplPathFixer(c, tmpl)
+	}
+	return tmpl
+}
+
+func (a *Jet) SetFuncMap(fn func() map[string]interface{}) {
 	for name, fn := range fn() {
-		self.set.AddGlobal(name, fn)
+		a.set.AddGlobal(name, fn)
 	}
 }
 
-func (self *Jet) Render(w io.Writer, tmpl string, data interface{}, c echo.Context) error {
-	if self.tmplPathFixer != nil {
-		tmpl = self.tmplPathFixer(c, tmpl)
-	}
-	t, err := self.set.GetTemplate(tmpl)
+func (a *Jet) Render(w io.Writer, tmpl string, data interface{}, c echo.Context) error {
+	tmpl = a.TmplPath(c, tmpl)
+	t, err := a.set.GetTemplate(tmpl)
 	if err != nil {
 		return err
 	}
@@ -115,12 +120,10 @@ func (self *Jet) Render(w io.Writer, tmpl string, data interface{}, c echo.Conte
 	return t.Execute(w, vars, data)
 }
 
-func (self *Jet) Fetch(tmpl string, data interface{}, c echo.Context) string {
-	if self.tmplPathFixer != nil {
-		tmpl = self.tmplPathFixer(c, tmpl)
-	}
+func (a *Jet) Fetch(tmpl string, data interface{}, c echo.Context) string {
+	tmpl = a.TmplPath(c, tmpl)
 	w := new(bytes.Buffer)
-	t, err := self.set.GetTemplate(tmpl)
+	t, err := a.set.GetTemplate(tmpl)
 	if err != nil {
 		return fmt.Sprintf("Parse %v err: %v", tmpl, err)
 	}
@@ -135,6 +138,6 @@ func (self *Jet) Fetch(tmpl string, data interface{}, c echo.Context) string {
 	return w.String()
 }
 
-func (self *Jet) RawContent(tmpl string) (b []byte, e error) {
+func (a *Jet) RawContent(tmpl string) (b []byte, e error) {
 	return nil, errors.New(`unsupported`)
 }
