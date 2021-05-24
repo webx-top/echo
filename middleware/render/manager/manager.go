@@ -347,6 +347,9 @@ func (m *Manager) GetTemplate(tmpl string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if !m.allowCached(tmplPath) {
+		return ioutil.ReadFile(tmplPath)
+	}
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	if content, ok := m.caches[tmplPath]; ok {
@@ -373,8 +376,10 @@ func (m *Manager) SetTemplate(tmpl string, content []byte) error {
 	if err != nil {
 		return err
 	}
-	m.Logger.Debugf("load template %v from the file", tmplPath)
-	m.caches[tmplPath] = content
+	if m.allowCached(tmplPath) {
+		m.Logger.Debugf("load template %v from the file", tmplPath)
+		m.caches[tmplPath] = content
+	}
 	return err
 }
 
