@@ -72,7 +72,7 @@ func FuncMap(funcMap map[string]interface{}, skipper ...echo.Skipper) echo.Middl
 				return tplfunc.DurationFormat(c.Lang(), t, args...)
 			})
 			c.SetFunc(`TsHumanize`, func(startTime interface{}, endTime ...interface{}) string {
-				humanizer, err := humanize.New(c.Lang())
+				humanizer, err := humanize.New(c.Lang().String())
 				if err != nil {
 					return err.Error()
 				}
