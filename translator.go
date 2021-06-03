@@ -45,9 +45,13 @@ type Translator interface {
 	Lang() LangCode
 }
 
-func NewLangCode(language string) LangCode {
+func NewLangCode(language string, separator ...string) LangCode {
 	l := LangCode{}
-	lg := strings.SplitN(language, `-`, 2)
+	sep := `-`
+	if len(separator) > 0 && len(separator[0]) > 0 {
+		sep = separator[0]
+	}
+	lg := strings.SplitN(language, sep, 2)
 	switch len(lg) {
 	case 2:
 		l.CountryLower = strings.ToLower(lg[1])
