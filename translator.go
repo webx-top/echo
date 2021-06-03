@@ -58,7 +58,7 @@ func NewLangCode(language string, separator ...string) LangCode {
 		l.CountryUpper = strings.ToUpper(lg[1])
 		fallthrough
 	case 1:
-		l.Language = lg[0]
+		l.Language = strings.ToLower(lg[0])
 	}
 	return l
 }
