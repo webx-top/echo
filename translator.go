@@ -54,8 +54,8 @@ func NewLangCode(language string, separator ...string) LangCode {
 	lg := strings.SplitN(language, sep, 2)
 	switch len(lg) {
 	case 2:
-		l.CountryLower = strings.ToLower(lg[1])
-		l.CountryUpper = strings.ToUpper(lg[1])
+		l.RegionLowercase = strings.ToLower(lg[1])
+		l.Region = strings.ToUpper(lg[1])
 		fallthrough
 	case 1:
 		l.Language = strings.ToLower(lg[0])
@@ -64,30 +64,37 @@ func NewLangCode(language string, separator ...string) LangCode {
 }
 
 type LangCode struct {
-	Language     string
-	CountryLower string
-	CountryUpper string
+	Language        string
+	Region          string
+	RegionLowercase string
 }
 
 func (l LangCode) String() string {
-	if len(l.CountryLower) > 0 {
-		return l.Language + `-` + l.CountryLower
+	if len(l.RegionLowercase) > 0 {
+		return l.Language + `-` + l.RegionLowercase
 	}
 	return l.Language
 }
 
-func (l LangCode) Format(upperCountry bool, separator ...string) string {
-	var country string
-	if upperCountry {
-		country = l.CountryUpper
-	} else {
-		country = l.CountryLower
+func (l LangCode) Normalize() string {
+	if len(l.Region) > 0 {
+		return l.Language + `-` + l.Region
 	}
-	if len(country) > 0 {
+	return l.Language
+}
+
+func (l LangCode) Format(regionUppercase bool, separator ...string) string {
+	var region string
+	if regionUppercase {
+		region = l.Region
+	} else {
+		region = l.RegionLowercase
+	}
+	if len(region) > 0 {
 		if len(separator) > 0 {
-			return l.Language + separator[0] + country
+			return l.Language + separator[0] + region
 		}
-		return l.Language + `-` + country
+		return l.Language + `-` + region
 	}
 	return l.Language
 }
