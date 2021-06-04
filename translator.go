@@ -45,8 +45,16 @@ type Translator interface {
 	Lang() LangCode
 }
 
+type LangCode interface {
+	String() string    // all uppercase characters
+	Normalize() string // lowercase(language)-uppercase(region)
+	Format(regionUppercase bool, separator ...string) string
+	Language() string
+	Region(regionUppercase bool) string
+}
+
 func NewLangCode(language string, separator ...string) LangCode {
-	l := LangCode{}
+	l := langCode{}
 	sep := `-`
 	if len(separator) > 0 && len(separator[0]) > 0 {
 		sep = separator[0]
@@ -54,54 +62,65 @@ func NewLangCode(language string, separator ...string) LangCode {
 	lg := strings.SplitN(language, sep, 2)
 	switch len(lg) {
 	case 2:
-		l.RegionLowercase = strings.ToLower(lg[1])
-		l.Region = strings.ToUpper(lg[1])
+		l.regionLowercase = strings.ToLower(lg[1])
+		l.region = strings.ToUpper(lg[1])
 		fallthrough
 	case 1:
-		l.Language = strings.ToLower(lg[0])
+		l.language = strings.ToLower(lg[0])
 	}
 	return l
 }
 
-type LangCode struct {
-	Language        string
-	Region          string
-	RegionLowercase string
+type langCode struct {
+	language        string
+	region          string
+	regionLowercase string
 }
 
-func (l LangCode) String() string {
-	if len(l.RegionLowercase) > 0 {
-		return l.Language + `-` + l.RegionLowercase
+func (l langCode) String() string {
+	if len(l.regionLowercase) > 0 {
+		return l.language + `-` + l.regionLowercase
 	}
-	return l.Language
+	return l.language
 }
 
-func (l LangCode) Normalize() string {
-	if len(l.Region) > 0 {
-		return l.Language + `-` + l.Region
+func (l langCode) Normalize() string {
+	if len(l.region) > 0 {
+		return l.language + `-` + l.region
 	}
-	return l.Language
+	return l.language
 }
 
-func (l LangCode) Format(regionUppercase bool, separator ...string) string {
+func (l langCode) Language() string {
+	return l.language
+}
+
+func (l langCode) Region(regionUppercase bool) string {
+	if regionUppercase {
+		return l.region
+	}
+	return l.regionLowercase
+}
+
+func (l langCode) Format(regionUppercase bool, separator ...string) string {
 	var region string
 	if regionUppercase {
-		region = l.Region
+		region = l.region
 	} else {
-		region = l.RegionLowercase
+		region = l.regionLowercase
 	}
 	if len(region) > 0 {
 		if len(separator) > 0 {
-			return l.Language + separator[0] + region
+			return l.language + separator[0] + region
 		}
-		return l.Language + `-` + region
+		return l.language + `-` + region
 	}
-	return l.Language
+	return l.language
 }
 
 var DefaultNopTranslate Translator = &NopTranslate{
-	code: LangCode{
-		Language: `en`,
+	code: langCode{
+		language: `en`,
 	},
 }
 
