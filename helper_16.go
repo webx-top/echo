@@ -3,11 +3,14 @@
 package echo
 
 import (
-	"embed"
 	"errors"
 	"io/fs"
 	"path/filepath"
 )
+
+func NewFileSystems() FileSystems {
+	return FileSystems{}
+}
 
 type FileSystems []fs.FS
 
@@ -33,8 +36,9 @@ func (f *FileSystems) Register(fileSystem fs.FS) {
 	*f = append(*f, fileSystem)
 }
 
-// EmbedFile e.Get(`/*`, EmbedFile(customFS))
-func EmbedFile(fs embed.FS) func(c Context) error {
+// EmbedFile
+// e.Get(`/*`, EmbedFile(customFS))
+func EmbedFile(fs FileSystems) func(c Context) error {
 	return func(c Context) error {
 		file := c.Param(`*`)
 		if len(file) == 0 {
