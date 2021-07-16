@@ -38,12 +38,16 @@ func (f *FileSystems) Register(fileSystem fs.FS) {
 }
 
 type EmbedConfig struct {
-	Index  string
-	Prefix string
+	Index    string
+	Prefix   string
+	FilePath func(Context) (string, error)
 }
 
 var DefaultEmbedConfig = EmbedConfig{
 	Index: "index.html",
+	FilePath: func(c Context) (string, error) {
+		return c.Param(`*`), nil
+	},
 }
 
 // EmbedFile
@@ -52,20 +56,26 @@ func EmbedFile(fs FileSystems, configs ...EmbedConfig) func(c Context) error {
 	config := DefaultEmbedConfig
 	if len(configs) > 0 {
 		config = configs[0]
-	}
-	if len(config.Index) == 0 {
-		config.Index = DefaultEmbedConfig.Index
-	}
-	if len(config.Prefix) > 0 {
-		config.Prefix = strings.TrimPrefix(config.Prefix, `/`)
-	}
-	if len(config.Prefix) > 0 {
-		if !strings.HasSuffix(config.Prefix, `/`) {
-			config.Prefix += `/`
+		if len(config.Index) == 0 {
+			config.Index = DefaultEmbedConfig.Index
+		}
+		if len(config.Prefix) > 0 {
+			config.Prefix = strings.TrimPrefix(config.Prefix, `/`)
+		}
+		if len(config.Prefix) > 0 {
+			if !strings.HasSuffix(config.Prefix, `/`) {
+				config.Prefix += `/`
+			}
+		}
+		if config.FilePath == nil {
+			config.FilePath = DefaultEmbedConfig.FilePath
 		}
 	}
 	return func(c Context) error {
-		file := c.Param(`*`)
+		file, err := config.FilePath(c)
+		if err != nil {
+			return err
+		}
 		if len(file) == 0 {
 			file = config.Index
 		}
