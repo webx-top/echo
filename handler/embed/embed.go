@@ -1,12 +1,14 @@
 // +build go1.16
 
-package echo
+package embed
 
 import (
 	"errors"
 	"io/fs"
 	"path/filepath"
 	"strings"
+
+	"github.com/webx-top/echo"
 )
 
 func NewFileSystems() FileSystems {
@@ -37,22 +39,9 @@ func (f *FileSystems) Register(fileSystem fs.FS) {
 	*f = append(*f, fileSystem)
 }
 
-type EmbedConfig struct {
-	Index    string
-	Prefix   string
-	FilePath func(Context) (string, error)
-}
-
-var DefaultEmbedConfig = EmbedConfig{
-	Index: "index.html",
-	FilePath: func(c Context) (string, error) {
-		return c.Param(`*`), nil
-	},
-}
-
 // EmbedFile
 // e.Get(`/*`, EmbedFile(customFS))
-func EmbedFile(fs FileSystems, configs ...EmbedConfig) func(c Context) error {
+func EmbedFile(fs FileSystems, configs ...EmbedConfig) func(c echo.Context) error {
 	config := DefaultEmbedConfig
 	if len(configs) > 0 {
 		config = configs[0]
@@ -71,7 +60,7 @@ func EmbedFile(fs FileSystems, configs ...EmbedConfig) func(c Context) error {
 			config.FilePath = DefaultEmbedConfig.FilePath
 		}
 	}
-	return func(c Context) error {
+	return func(c echo.Context) error {
 		file, err := config.FilePath(c)
 		if err != nil {
 			return err
@@ -84,7 +73,7 @@ func EmbedFile(fs FileSystems, configs ...EmbedConfig) func(c Context) error {
 		}
 		f, err := fs.Open(file)
 		if err != nil {
-			return ErrNotFound
+			return echo.ErrNotFound
 		}
 		defer func() {
 			if f != nil {
@@ -100,7 +89,7 @@ func EmbedFile(fs FileSystems, configs ...EmbedConfig) func(c Context) error {
 
 			file = filepath.Join(file, DefaultEmbedConfig.Index)
 			if f, err = fs.Open(file); err != nil {
-				return ErrNotFound
+				return echo.ErrNotFound
 			}
 
 			if fi, err = f.Stat(); err != nil {
