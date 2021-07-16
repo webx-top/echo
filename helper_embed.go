@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io/fs"
 	"path/filepath"
+	"strings"
 )
 
 func NewFileSystems() FileSystems {
@@ -36,13 +37,40 @@ func (f *FileSystems) Register(fileSystem fs.FS) {
 	*f = append(*f, fileSystem)
 }
 
+type EmbedConfig struct {
+	Index  string
+	Prefix string
+}
+
+var DefaultEmbedConfig = EmbedConfig{
+	Index: "index.html",
+}
+
 // EmbedFile
 // e.Get(`/*`, EmbedFile(customFS))
-func EmbedFile(fs FileSystems) func(c Context) error {
+func EmbedFile(fs FileSystems, configs ...EmbedConfig) func(c Context) error {
+	config := DefaultEmbedConfig
+	if len(configs) > 0 {
+		config = configs[0]
+	}
+	if len(config.Index) == 0 {
+		config.Index = DefaultEmbedConfig.Index
+	}
+	if len(config.Prefix) > 0 {
+		config.Prefix = strings.TrimPrefix(config.Prefix, `/`)
+	}
+	if len(config.Prefix) > 0 {
+		if !strings.HasSuffix(config.Prefix, `/`) {
+			config.Prefix += `/`
+		}
+	}
 	return func(c Context) error {
 		file := c.Param(`*`)
 		if len(file) == 0 {
-			file = `index.html`
+			file = config.Index
+		}
+		if len(config.Prefix) > 0 {
+			file = config.Prefix + file
 		}
 		f, err := fs.Open(file)
 		if err != nil {
@@ -60,7 +88,7 @@ func EmbedFile(fs FileSystems) func(c Context) error {
 		if fi.IsDir() {
 			f.Close()
 
-			file = filepath.Join(file, "index.html")
+			file = filepath.Join(file, DefaultEmbedConfig.Index)
 			if f, err = fs.Open(file); err != nil {
 				return ErrNotFound
 			}
