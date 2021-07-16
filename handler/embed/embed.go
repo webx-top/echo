@@ -39,14 +39,14 @@ func (f *FileSystems) Register(fileSystem fs.FS) {
 	*f = append(*f, fileSystem)
 }
 
-// EmbedFile
-// e.Get(`/*`, EmbedFile(customFS))
-func EmbedFile(fs FileSystems, configs ...EmbedConfig) func(c echo.Context) error {
-	config := DefaultEmbedConfig
+// File
+// e.Get(`/*`, File(customFS))
+func File(fs FileSystems, configs ...Config) func(c echo.Context) error {
+	config := DefaultConfig
 	if len(configs) > 0 {
 		config = configs[0]
 		if len(config.Index) == 0 {
-			config.Index = DefaultEmbedConfig.Index
+			config.Index = DefaultConfig.Index
 		}
 		if len(config.Prefix) > 0 {
 			config.Prefix = strings.TrimPrefix(config.Prefix, `/`)
@@ -57,7 +57,7 @@ func EmbedFile(fs FileSystems, configs ...EmbedConfig) func(c echo.Context) erro
 			}
 		}
 		if config.FilePath == nil {
-			config.FilePath = DefaultEmbedConfig.FilePath
+			config.FilePath = DefaultConfig.FilePath
 		}
 	}
 	return func(c echo.Context) error {
@@ -87,7 +87,7 @@ func EmbedFile(fs FileSystems, configs ...EmbedConfig) func(c echo.Context) erro
 		if fi.IsDir() {
 			f.Close()
 
-			file = filepath.Join(file, DefaultEmbedConfig.Index)
+			file = filepath.Join(file, config.Index)
 			if f, err = fs.Open(file); err != nil {
 				return echo.ErrNotFound
 			}
