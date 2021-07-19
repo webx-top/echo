@@ -20,15 +20,25 @@ package echo
 
 type RequestValidator func() MetaValidator
 
-type BaseRequestValidator struct {
+func NewBaseRequestValidator(data interface{}) *BaseRequestValidator {
+	return &BaseRequestValidator{data: data}
 }
 
-func (m *BaseRequestValidator) Validate(c Context) error {
-	result := c.Validate(m)
+type BaseRequestValidator struct {
+	data interface{}
+}
+
+func (b *BaseRequestValidator) SetStruct(data interface{}) *BaseRequestValidator {
+	b.data = data
+	return b
+}
+
+func (b *BaseRequestValidator) Validate(c Context) error {
+	result := c.Validate(b.data)
 	return result.Error()
 }
 
-func (m *BaseRequestValidator) Filters(c Context) []FormDataFilter {
+func (b *BaseRequestValidator) Filters(c Context) []FormDataFilter {
 	return nil
 }
 
