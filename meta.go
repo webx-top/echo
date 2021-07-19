@@ -65,13 +65,19 @@ func (m *MetaHandler) Handle(c Context) error {
 		return m.Handler.Handle(c)
 	}
 	recv := m.request()
-	if err := c.MustBind(recv, recv.Filters(c)...); err != nil {
+	var data interface{}
+	if bs, ok := recv.(*BaseRequestValidator); ok {
+		data = bs.data
+	} else {
+		data = recv
+	}
+	if err := c.MustBind(data, recv.Filters(c)...); err != nil {
 		return err
 	}
 	if err := recv.Validate(c); err != nil {
 		return err
 	}
-	c.Internal().Set(`validated`, recv)
+	c.Internal().Set(`validated`, data)
 	return m.Handler.Handle(c)
 }
 
