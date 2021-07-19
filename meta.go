@@ -20,6 +20,18 @@ package echo
 
 type RequestValidator func() MetaValidator
 
+type BaseRequestValidator struct {
+}
+
+func (m *BaseRequestValidator) Validate(c Context) error {
+	result := c.Validate(m)
+	return result.Error()
+}
+
+func (m *BaseRequestValidator) Filters(c Context) []FormDataFilter {
+	return nil
+}
+
 type MetaHandler struct {
 	meta    H
 	request RequestValidator
