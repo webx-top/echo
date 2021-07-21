@@ -57,3 +57,40 @@ func TestTransferFrom(t *testing.T) {
 	}
 	assert.Equal(t, expected, res)
 }
+
+func TestTransferMutilLevel(t *testing.T) {
+	raw := Store{
+		`Name`: `Tester`,
+		`Info`: Store{
+			`Age`:    20,
+			`Gender`: `male`,
+			`Email`:  `test@webx.top`,
+			`Other`:  `data`,
+		},
+	}
+
+	// define transfers
+	transefers := NewTransfers()
+	transefers.AddFunc(`Name`, func(value interface{}, row Store) interface{} {
+		return strings.ToUpper(value.(string))
+	}, `name`)
+	transefers.AddFunc(`Info.Age`, nil, `age`)
+	transefers.Add(`Info.Gender`, nil)
+	transefers.AddFunc(`Info.Email`, func(value interface{}, row Store) interface{} {
+		return strings.ToUpper(value.(string))
+	}, `info.email`)
+
+	// transform
+	res := transefers.Transform(raw)
+	expected := Store{
+		`name`: `TESTER`,
+		`age`:  20,
+		`Info`: Store{
+			`Gender`: `male`,
+		},
+		`info`: Store{
+			`email`: `TEST@WEBX.TOP`,
+		},
+	}
+	assert.Equal(t, expected, res)
+}
