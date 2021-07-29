@@ -23,7 +23,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/webx-top/echo"
 )
 
@@ -275,18 +275,18 @@ func jwtFromCookie(name string) jwtExtractor {
 	}
 }
 
-//BuildSignedString example: github.com/dgrijalva/jwt-go/example_test.go
+//BuildSignedString example: github.com/golang-jwt/jwt/example_test.go
 func BuildSignedString(claims jwt.Claims, mySigningKey interface{}) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(mySigningKey)
 }
 
-//BuildStandardSignedString example: github.com/dgrijalva/jwt-go/example_test.go
+//BuildStandardSignedString example: github.com/golang-jwt/jwt/example_test.go
 func BuildStandardSignedString(claims *jwt.StandardClaims, mySigningKey interface{}) (string, error) {
 	return BuildSignedString(claims, mySigningKey)
 }
 
-//BuildMapSignedString example: github.com/dgrijalva/jwt-go/example_test.go
+//BuildMapSignedString example: github.com/golang-jwt/jwt/example_test.go
 func BuildMapSignedString(claims jwt.MapClaims, mySigningKey interface{}) (string, error) {
 	return BuildSignedString(claims, mySigningKey)
 }
