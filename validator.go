@@ -29,12 +29,12 @@ type Validator interface {
 	Validate(i interface{}, args ...string) ValidateResult
 }
 
-type ValidateBefore interface {
-	ValidateBefore() error
+type BeforeValidate interface {
+	BeforeValidate() error
 }
 
-type ValidateAfter interface {
-	ValidateAfter() error
+type AfterValidate interface {
+	AfterValidate() error
 }
 
 type ValidateResult interface {
