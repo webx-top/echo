@@ -75,7 +75,7 @@ func (m *MetaHandler) Handle(c Context) error {
 		return err
 	}
 	if before, ok := data.(BeforeValidate); ok {
-		if err := before.BeforeValidate(); err != nil {
+		if err := before.BeforeValidate(c); err != nil {
 			return err
 		}
 	}
@@ -83,7 +83,7 @@ func (m *MetaHandler) Handle(c Context) error {
 		return err
 	}
 	if after, ok := data.(AfterValidate); ok {
-		if err := after.AfterValidate(); err != nil {
+		if err := after.AfterValidate(c); err != nil {
 			return err
 		}
 	}

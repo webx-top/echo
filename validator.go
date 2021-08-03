@@ -30,11 +30,11 @@ type Validator interface {
 }
 
 type BeforeValidate interface {
-	BeforeValidate() error
+	BeforeValidate(Context) error
 }
 
 type AfterValidate interface {
-	AfterValidate() error
+	AfterValidate(Context) error
 }
 
 type ValidateResult interface {
