@@ -138,20 +138,7 @@ func (v *Validation) Validate(i interface{}, args ...interface{}) ValidateResult
 		}
 		_, err = v.validator.ValidSimple(field, value, rule)
 	default:
-		var fields []string
-		for _, v := range args {
-			switch vRaw := v.(type) {
-			case []string:
-				if len(args) == 1 {
-					fields = vRaw
-				} else {
-					fields = append(fields, vRaw...)
-				}
-			case string:
-				fields = append(fields, vRaw)
-			}
-		}
-		_, err = v.validator.Valid(i, fields...)
+		_, err = v.validator.Valid(i, InterfacesToStrings(args)...)
 	}
 	if err != nil {
 		return e.SetError(err)
@@ -164,4 +151,21 @@ func (v *Validation) Validate(i interface{}, args ...interface{}) ValidateResult
 		v.validator.Errors = nil
 	}
 	return e
+}
+
+func InterfacesToStrings(args []interface{}) []string {
+	var fields []string
+	for _, v := range args {
+		switch vRaw := v.(type) {
+		case []string:
+			if len(args) == 1 {
+				fields = vRaw
+			} else {
+				fields = append(fields, vRaw...)
+			}
+		case string:
+			fields = append(fields, vRaw)
+		}
+	}
+	return fields
 }
