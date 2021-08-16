@@ -22,7 +22,9 @@ type (
 	// Binder is the interface that wraps the Bind method.
 	Binder interface {
 		Bind(interface{}, Context, ...FormDataFilter) error
+		BindAndValidate(interface{}, Context, ...FormDataFilter) error
 		MustBind(interface{}, Context, ...FormDataFilter) error
+		MustBindAndValidate(interface{}, Context, ...FormDataFilter) error
 	}
 	binder struct {
 		*Echo
@@ -49,11 +51,32 @@ func (b *binder) MustBind(i interface{}, c Context, filter ...FormDataFilter) er
 	return ErrUnsupportedMediaType
 }
 
+func (b *binder) MustBindAndValidate(i interface{}, c Context, filter ...FormDataFilter) (err error) {
+	err = b.MustBind(i, c, filter...)
+	if err != nil {
+		return
+	}
+	err = b.Validator.Validate(i).Error()
+	return
+}
+
 func (b *binder) Bind(i interface{}, c Context, filter ...FormDataFilter) (err error) {
 	err = b.MustBind(i, c, filter...)
 	if err == ErrUnsupportedMediaType {
 		err = nil
 	}
+	return
+}
+
+func (b *binder) BindAndValidate(i interface{}, c Context, filter ...FormDataFilter) (err error) {
+	err = b.MustBind(i, c, filter...)
+	if err != nil {
+		if err == ErrUnsupportedMediaType {
+			return nil
+		}
+		return
+	}
+	err = b.Validator.Validate(i).Error()
 	return
 }
 
