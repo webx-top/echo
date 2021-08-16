@@ -138,13 +138,18 @@ func (v *Validation) Validate(i interface{}, args ...interface{}) ValidateResult
 		}
 		_, err = v.validator.ValidSimple(field, value, rule)
 	default:
-		fields := make([]string, 0, len(args))
+		var fields []string
 		for _, v := range args {
-			s, y := v.(string)
-			if !y || len(s) == 0 {
-				continue
+			switch vRaw := v.(type) {
+			case []string:
+				if len(args) == 1 {
+					fields = vRaw
+				} else {
+					fields = append(fields, vRaw...)
+				}
+			case string:
+				fields = append(fields, vRaw)
 			}
-			fields = append(fields, s)
 		}
 		_, err = v.validator.Valid(i, fields...)
 	}
