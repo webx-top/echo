@@ -462,8 +462,11 @@ func setField(e *Echo, parentT reflect.Type, parentV reflect.Value, k string, na
 		return ErrBreak
 	}
 
+	if len(e.ValidatorTag) == 0 || e.Validator == nil {
+		return nil
+	}
 	//validation
-	valid := tagfast.Value(parentT, f, `valid`)
+	valid := tagfast.Value(parentT, f, e.ValidatorTag)
 	if len(valid) == 0 {
 		return nil
 	}
