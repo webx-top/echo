@@ -42,7 +42,6 @@ type (
 		MiddlewareDebug   bool
 		JSONPVarName      string
 		Validator         Validator
-		ValidatorTag      string
 		FormSliceMaxIndex int
 		parseHeaderAccept bool
 	}
@@ -141,7 +140,6 @@ func (e *Echo) Reset() *Echo {
 	e.MiddlewareDebug = false
 	e.JSONPVarName = `callback`
 	e.Validator = DefaultNopValidate
-	e.ValidatorTag = `valid`
 	e.FormSliceMaxIndex = 100
 	e.parseHeaderAccept = false
 	return e
@@ -152,11 +150,8 @@ func (e *Echo) ParseHeaderAccept(on bool) *Echo {
 	return e
 }
 
-func (e *Echo) SetValidator(validator Validator, validatorTag ...string) *Echo {
+func (e *Echo) SetValidator(validator Validator) *Echo {
 	e.Validator = validator
-	if len(validatorTag) > 0 {
-		e.ValidatorTag = validatorTag[0]
-	}
 	return e
 }
 

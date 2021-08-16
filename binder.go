@@ -484,17 +484,7 @@ func setField(e *Echo, parentT reflect.Type, parentV reflect.Value, k string, na
 	default:
 		return ErrBreak
 	}
-
-	if len(e.ValidatorTag) == 0 || e.Validator == nil {
-		return nil
-	}
-	//validation
-	valid := tagfast.Value(parentT, f, e.ValidatorTag)
-	if len(valid) == 0 {
-		return nil
-	}
-	result := e.Validator.Validate(name, fmt.Sprintf(`%v`, l), valid)
-	return result.Error()
+	return nil
 }
 
 func setSlice(e *Echo, fieldName string, tv reflect.Value, t []string) {

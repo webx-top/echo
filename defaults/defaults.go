@@ -14,8 +14,8 @@ func ParseHeaderAccept(on bool) *echo.Echo {
 	return Default.ParseHeaderAccept(on)
 }
 
-func SetValidator(validator echo.Validator, validatorTag ...string) *echo.Echo {
-	return Default.SetValidator(validator, validatorTag...)
+func SetValidator(validator echo.Validator) *echo.Echo {
+	return Default.SetValidator(validator)
 }
 
 func SetFormSliceMaxIndex(max int) *echo.Echo {
