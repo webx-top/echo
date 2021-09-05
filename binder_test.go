@@ -16,7 +16,9 @@ type TestForm struct {
 }
 
 type TestData struct {
-	File *TestFile
+	File  *TestFile
+	Extra H
+	List  []interface{}
 }
 
 type TestFile struct {
@@ -152,6 +154,9 @@ func TestMapToStruct2(t *testing.T) {
 	NamedStructMap(e, m, map[string][]string{
 		`files`:             {`a.txt`, `b.txt`, `c.txt`},
 		`data[file][users]`: {`1`, `2`, `3`},
+		`data[extra][key]`:  {`v1`},
+		`data[extra][key2]`: {`v1`, `v2`},
+		`data[list]`:        {`v1`, `v2`},
 		`IDs`:               {`1`, `2`, `3`},
 	}, ``)
 	assert.Equal(t, &TestForm{
@@ -160,6 +165,11 @@ func TestMapToStruct2(t *testing.T) {
 			File: &TestFile{
 				Users: []int64{1, 2, 3},
 			},
+			Extra: H{
+				`key`:  `v1`,
+				`key2`: []string{`v1`, `v2`},
+			},
+			List: []interface{}{`v1`, `v2`},
 		},
 		IDs: `1,2,3`,
 	}, m)

@@ -192,8 +192,11 @@ func parseFormItem(keyNormalizer func(string) string, e *Echo, m interface{}, ty
 	length := len(names)
 	vc := value
 	tc := typev
+	isMap := value.Kind() == reflect.Map
 	for i, name := range names {
-		name = keyNormalizer(name)
+		if !isMap {
+			name = keyNormalizer(name)
+		}
 		if i > 0 {
 			propPath += `.`
 			checkPath += `.`
@@ -350,7 +353,7 @@ func SafeGetFieldByName(parentT reflect.Type, parentV reflect.Value, name string
 				copier.InitNilFields(parentT, parentV, ``, copier.AllNilFields)
 				v = value.FieldByName(name)
 			default:
-				panic(r)
+				panic(fmt.Sprintf(`%v: %s (%v)`, r, name, value.Kind()))
 			}
 		}
 	}()
@@ -359,6 +362,20 @@ func SafeGetFieldByName(parentT reflect.Type, parentV reflect.Value, name string
 }
 
 func setField(logger logger.Logger, parentT reflect.Type, parentV reflect.Value, k string, name string, value reflect.Value, typev reflect.Type, values []string) error {
+	switch value.Kind() {
+	case reflect.Map:
+		if value.IsNil() {
+			value.Set(reflect.MakeMap(value.Type()))
+		}
+		value = reflect.Indirect(value)
+		index := reflect.ValueOf(name)
+		if len(values) > 1 {
+			value.SetMapIndex(index, reflect.ValueOf(values))
+		} else {
+			value.SetMapIndex(index, reflect.ValueOf(values[0]))
+		}
+		return nil
+	}
 	tv := SafeGetFieldByName(parentT, parentV, name, value)
 	if !tv.IsValid() {
 		return ErrBreak
@@ -558,6 +575,8 @@ func setSlice(logger logger.Logger, fieldName string, tv reflect.Value, t []stri
 			}
 		case reflect.String:
 			tv.Index(i).SetString(s)
+		case reflect.Interface:
+			tv.Index(i).Set(reflect.ValueOf(s))
 		case reflect.Complex64, reflect.Complex128:
 			// TODO:
 			err = fmt.Errorf(`binder: unsupported slice element type %v`, tk.String())
