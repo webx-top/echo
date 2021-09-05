@@ -9,10 +9,11 @@ import (
 )
 
 type TestForm struct {
-	Files  []string
-	Data   *TestData
-	IDs    string `form_delimiter:","`
-	secret string
+	Files    []string
+	Data     *TestData
+	IDs      string `form_delimiter:","`
+	Interval time.Duration
+	secret   string
 }
 
 type TestData struct {
@@ -158,6 +159,7 @@ func TestMapToStruct2(t *testing.T) {
 		`data[extra][key2]`: {`v1`, `v2`},
 		`data[list]`:        {`v1`, `v2`},
 		`IDs`:               {`1`, `2`, `3`},
+		`interval`:          {`5m`},
 	}, ``)
 	assert.Equal(t, &TestForm{
 		Files: []string{`a.txt`, `b.txt`, `c.txt`},
@@ -171,7 +173,8 @@ func TestMapToStruct2(t *testing.T) {
 			},
 			List: []interface{}{`v1`, `v2`},
 		},
-		IDs: `1,2,3`,
+		IDs:      `1,2,3`,
+		Interval: 5 * time.Minute,
 	}, m)
 }
 
