@@ -647,33 +647,21 @@ func (e *Echo) applyMiddleware(h Handler, middleware ...interface{}) Handler {
 	return h
 }
 
-type hostFound struct {
-	host func(Context) Handler
-	root func(Context) Handler
-}
-
-func (h *hostFound) Handle(c Context) error {
-	found, err := c.FireHostFound()
-	if err != nil {
-		return err
-	}
-	if found {
-		return h.host(c).Handle(c)
-	}
-	return h.root(c).Handle(c)
-}
-
 func (e *Echo) buildHandler(c Context) Handler {
 	if r, names, values, exist := e.findRouter(c.Host()); exist {
 		if len(names) > 0 {
 			c.SetHostParamValues(names, values)
 		}
-		hostFound := &hostFound{
-			host: r.Handle,
-			root: e.router.Handle,
+		found, err := c.FireHostFound()
+		if err != nil {
+			return e.applyMiddleware(HandlerFunc(func(Context) error {
+				return err
+			}), e.middleware...)
 		}
-		return e.applyMiddleware(hostFound, e.middleware...)
-		//return e.applyMiddleware(r.Handle(c), e.middleware...)
+		if !found {
+			return e.applyMiddleware(e.router.Handle(c), e.middleware...)
+		}
+		return e.applyMiddleware(r.Handle(c), e.middleware...)
 	}
 	return e.applyMiddleware(e.router.Handle(c), e.middleware...)
 }

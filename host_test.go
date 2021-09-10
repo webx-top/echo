@@ -43,7 +43,7 @@ func TestHostGroupHandler(t *testing.T) {
 	e := New()
 	//e.OnHostFound(mwOnHostFound)
 
-	e.Use(func(h Handler) HandlerFunc {
+	e.Pre(func(h Handler) HandlerFunc {
 		return func(c Context) error {
 			c.OnHostFound(mwOnHostFound)
 			return h.Handle(c)
