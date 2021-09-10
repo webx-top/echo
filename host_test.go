@@ -24,21 +24,34 @@ func TestHostParse(t *testing.T) {
 	}, r)
 }
 
+func mwOnHostFound(c Context) (bool, error) {
+	if c.HostParam(`name`) != `coscms` {
+		return true, nil
+	}
+	fmt.Println(`host param (uid):`, c.HostParam(`uid`))
+	switch c.HostParam(`uid`) {
+	case `123`:
+		return true, nil
+	case `0`:
+		return false, errors.New(`err`)
+	default:
+		return false, nil
+	}
+}
+
 func TestHostGroupHandler(t *testing.T) {
 	e := New()
-	e.OnHostFound(func(c Context) (bool, error) {
-		if c.HostParam(`name`) != `coscms` {
-			return true, nil
+	//e.OnHostFound(mwOnHostFound)
+
+	e.Use(func(h Handler) HandlerFunc {
+		return func(c Context) error {
+			c.OnHostFound(mwOnHostFound)
+			return h.Handle(c)
 		}
-		fmt.Println(`host param (uid):`, c.HostParam(`uid`))
-		switch c.HostParam(`uid`) {
-		case `123`:
-			return true, nil
-		case `0`:
-			return false, errors.New(`err`)
-		default:
-			return false, nil
-		}
+	})
+
+	e.Get(`/`, func(c Context) error {
+		return c.String(`pong`)
 	})
 
 	// suffix
@@ -87,6 +100,12 @@ func TestHostGroupHandler(t *testing.T) {
 	assert.Equal(t, "10000.admpub.com/host2", e.TypeHost(`user`, 10000, `admpub`).URI(`host2`))
 	assert.Equal(t, "10001.admpub.com/host2", e.TypeHost(`user`, H{`uid`: 10001, `name`: `admpub`}).URI(`host2`))
 
+	c, b = request(GET, "/", e, func(req *http.Request) {
+		req.Host = "999.coscms.com"
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `pong`, b)
+
 	c, b = request(GET, "/host2", e, func(req *http.Request) {
 		req.Host = "0.coscms.com"
 	})
@@ -98,4 +117,10 @@ func TestHostGroupHandler(t *testing.T) {
 	})
 	assert.Equal(t, http.StatusNotFound, c)
 	assert.Equal(t, http.StatusText(http.StatusNotFound), b)
+
+	c, b = request(GET, "/", e, func(req *http.Request) {
+		req.Host = "999.coscms.com"
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `pong`, b)
 }
