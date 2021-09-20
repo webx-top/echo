@@ -1,4 +1,4 @@
-package echo
+package echo_test
 
 import (
 	"database/sql"
@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	. "github.com/webx-top/echo"
+	"github.com/webx-top/echo/engine/mock"
 )
 
 type TestForm struct {
@@ -34,6 +36,7 @@ type TestRole struct {
 type TestRoleM struct {
 	Name  string
 	Users map[string]*TestUser
+	Data  H
 }
 
 type TestUser struct {
@@ -241,4 +244,54 @@ func TestMapToMapStruct(t *testing.T) {
 		},
 	}, m)
 	//Dump(m)
+}
+
+func TestStructToForm(t *testing.T) {
+	e := New()
+	m := &TestRoleM{
+		Name: `test`,
+		Users: map[string]*TestUser{
+			`user`: &TestUser{
+				Name: `user`,
+				Age:  10,
+			},
+		},
+	}
+	ctx := e.NewContext(mock.NewRequest(), mock.NewResponse())
+	StructToForm(ctx, m, ``, DefaultFieldNameFormatter)
+	forms := ctx.Forms()
+
+	expected := map[string][]string{
+		`Name`:            []string{`test`},
+		`Users.user.Age`:  []string{`10`},
+		`Users.user.Name`: []string{`user`},
+	}
+	assert.Equal(t, expected, forms)
+
+	m.Users[`hasProfile`] = &TestUser{
+		Name: `userWithProfile`,
+		Age:  20,
+		TestProfile: &TestProfile{
+			Address: `China`,
+		},
+	}
+	m.Data = H{
+		`data`:   nil,
+		`number`: 1,
+	}
+	StructToForm(ctx, m, ``, DefaultFieldNameFormatter)
+	forms = ctx.Forms()
+	expected[`Users.hasProfile.Age`] = []string{`20`}
+	expected[`Users.hasProfile.Name`] = []string{`userWithProfile`}
+	expected[`Users.hasProfile.TestProfile.Address`] = []string{`China`}
+	expected[`Data.number`] = []string{`1`}
+	assert.Equal(t, expected, forms)
+	//Dump(forms)
+
+	m2 := &TestRoleM{
+		Data: H{`data`: nil, `number`: 0},
+	}
+	NamedStructMap(e, m2, expected, ``)
+	assert.Equal(t, m, m2)
+	//Dump(m2)
 }
