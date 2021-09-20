@@ -377,7 +377,7 @@ func setStructField(logger logger.Logger, parentT reflect.Type, parentV reflect.
 			if !isPtr {
 				oldVal = reflect.New(oldVal.Type())
 			}
-			err := setField(logger, parentT, oldVal, reflect.StructField{Name: name}, name, values)
+			err := setField(logger, parentT, oldVal.Elem(), reflect.StructField{Name: name}, name, values)
 			if err == nil {
 				if !isPtr {
 					oldVal = reflect.Indirect(oldVal)
