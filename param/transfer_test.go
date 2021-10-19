@@ -67,6 +67,10 @@ func TestTransferMutilLevel(t *testing.T) {
 			`Email`:  `test@webx.top`,
 			`Other`:  `data`,
 		},
+		`List`: []Store{
+			{`Item1`: `value1`},
+			{`Item2`: `value2`},
+		},
 	}
 
 	// define transfers
@@ -79,6 +83,12 @@ func TestTransferMutilLevel(t *testing.T) {
 	transefers.AddFunc(`Info.Email`, func(value interface{}, row Store) interface{} {
 		return strings.ToUpper(value.(string))
 	}, `info.email`)
+	transefers.AddFunc(`List.Item1`, func(value interface{}, row Store) interface{} {
+		if value == nil {
+			return ``
+		}
+		return strings.ToUpper(value.(string))
+	}, `list.item1`)
 
 	// transform
 	res := transefers.Transform(raw)
@@ -90,6 +100,10 @@ func TestTransferMutilLevel(t *testing.T) {
 		},
 		`info`: Store{
 			`email`: `TEST@WEBX.TOP`,
+		},
+		`list`: []Store{
+			{`item1`: `VALUE1`},
+			{`item1`: ``},
 		},
 	}
 	assert.Equal(t, expected, res)
