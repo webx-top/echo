@@ -63,7 +63,7 @@ e.Post("/users", saveUser)
 e.Get("/users/:id", getUser)
 e.Put("/users/:id", updateUser)
 e.Delete("/users/:id", deleteUser)
-e.Get("/regexp/<id:[\\d]+>", getUser)
+e.Get("/user/<id:[\\d]+>", getUser)
 ```
 
 ### Path Parameters
