@@ -72,6 +72,7 @@ e.Get("/users/<id:[\\d]+>", getUser)
 func getUser(c echo.Context) error {
 	// User ID from path `users/:id`
 	id := c.Param("id")
+    // or id := c.Paramx("id").Uint64()
 }
 ```
 
@@ -84,6 +85,7 @@ func show(c echo.Context) error {
 	// Get team and member from the query string
 	team := c.Query("team")
 	member := c.Query("member")
+    age := c.Queryx("age").Uint()
 }
 ```
 
@@ -102,6 +104,7 @@ func save(c echo.Context) error {
 	// Get name and email
 	name := c.Form("name")
 	email := c.Form("email")
+    age := c.Formx("age").Uint()
 }
 ```
 
