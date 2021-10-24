@@ -2,6 +2,7 @@ package echo
 
 import (
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,10 +22,17 @@ func TestRouterRegexpKind(t *testing.T) {
 		Method:  `GET`,
 		Path:    `/1_<id:[\d]+>_2/123`,
 		Handler: h,
+		Name:    `regtest`,
 	}
 	r.Add(rt, 0)
 	assert.Equal(t, `/1_%v_2/123`, rt.Format)
 	assert.Equal(t, []string{`id`}, rt.Params)
+	assert.Equal(t, `/1_100_2/123`, rt.MakeURI(``, url.Values{
+		`id`: []string{`100`},
+	}))
+	assert.Equal(t, `/1_100_2/123`, rt.MakeURI(``, map[string]string{
+		`id`: `100`,
+	}))
 	//fmt.Println(r.tree.String())
 	ctx := e.NewContext(nil, nil)
 	found := r.Find(`GET`, `/1_2000_2/123`, ctx)
@@ -42,6 +50,15 @@ func TestRouterRegexpKind2(t *testing.T) {
 	}
 	r.Add(rt, 0)
 	assert.Equal(t, `/1_%v_2/123/%v`, rt.Format)
+	assert.Equal(t, []string{`id`, `id2`}, rt.Params)
+	assert.Equal(t, `/1_100_2/123/200`, rt.MakeURI(``, url.Values{
+		`id`:  []string{`100`},
+		`id2`: []string{`200`},
+	}))
+	assert.Equal(t, `/1_100_2/123/200`, rt.MakeURI(``, map[string]string{
+		`id`:  `100`,
+		`id2`: `200`,
+	}))
 	//fmt.Println(r.tree.String())
 	ctx := e.NewContext(nil, nil)
 	found := r.Find(`GET`, `/1_2000_2/123/100`, ctx)
