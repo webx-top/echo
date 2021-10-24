@@ -1019,6 +1019,7 @@ func (r *Router) Find(method, path string, context Context) (found bool) {
 	if matchedEndpoint != nil {
 		ctx.handler = matchedEndpoint.handler
 		ctx.rid = matchedEndpoint.rid
+		found = true
 	} else if previousBestMatchNode != nil {
 		// use previous match as basis. although we have no matching handler we have path match.
 		// so we can send http.StatusMethodNotAllowed (405) instead of http.StatusNotFound (404)
@@ -1030,8 +1031,6 @@ func (r *Router) Find(method, path string, context Context) (found bool) {
 	//currentNode.applyHandler(method, ctx)
 	if ctx.handler == nil {
 		ctx.handler = currentNode.checkMethodNotAllowed()
-	} else {
-		found = true
 	}
 	return
 }
