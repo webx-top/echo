@@ -21,7 +21,8 @@ type (
 
 		// Count duration for no policy, default is 1 Minute.
 		Duration time.Duration
-		//key prefix, default is "LIMIT:".
+
+		// Prefix key prefix, default is "LIMIT:".
 		Prefix string
 
 		// Use a redis client for limiter, if omit, it will use a memory limiter.
@@ -72,7 +73,6 @@ var (
 			return c.RealIP() + `@` + c.Method(), nil
 		},
 	}
-	limiterImp *limiter
 )
 
 // RateLimiter returns a rate limit middleware.
@@ -88,7 +88,7 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 		config.Skipper = DefaultRateLimiterConfig.Skipper
 	}
 
-	if config.Prefix == "" {
+	if len(config.Prefix) == 0 {
 		config.Prefix = "LIMIT:"
 	}
 	if config.Max <= 0 {
@@ -101,6 +101,7 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 		config.LimiterKeyGenerator = DefaultRateLimiterConfig.LimiterKeyGenerator
 	}
 
+	var limiterImp *limiter
 	//If config.Client omit, the limiter is a memory limiter
 	if config.Client == nil {
 		limiterImp = newMemoryLimiter(&config)
@@ -114,7 +115,6 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 			if config.Skipper(c) {
 				return h.Handle(c)
 			}
-			response := c.Response()
 
 			//policy := []int{10,1000}
 			/*custom policy will configurable like
@@ -133,14 +133,18 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error()).SetRaw(err)
 			}
 
+			response := c.Response()
 			response.Header().Set("X-Ratelimit-Limit", strconv.FormatInt(int64(result.Total), 10))
 			response.Header().Set("X-Ratelimit-Remaining", strconv.FormatInt(int64(result.Remaining), 10))
 			response.Header().Set("X-Ratelimit-Reset", strconv.FormatInt(result.Reset.Unix(), 10))
 
 			if result.Remaining <= 0 {
-				after := int64(time.Until(result.Reset)) / 1e9
+				until := time.Until(result.Reset)
+				after := int64(until) / 1e9
 				response.Header().Set("Retry-After", strconv.FormatInt(after, 10))
-				return echo.NewHTTPError(http.StatusTooManyRequests, fmt.Sprintf("Rate limit exceeded, retry in %d seconds", after))
+				retryAfter := until.String()
+				response.Header().Set("X-Retry-After", retryAfter)
+				return echo.NewHTTPError(http.StatusTooManyRequests, fmt.Sprintf("Rate limit exceeded, retry in %s", retryAfter))
 			}
 			return h.Handle(c)
 		})
