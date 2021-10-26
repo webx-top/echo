@@ -29,6 +29,8 @@ type (
 
 		//If request gets a  internal limiter error, just skip the limiter and let it go to next middleware
 		SkipRateLimiterInternalError bool
+
+		LimiterKeyGenerator func(c echo.Context) (limiterKey string, policy []int)
 	}
 
 	limiter struct {
@@ -66,6 +68,9 @@ var (
 		Prefix:                       "LIMIT",
 		Client:                       nil,
 		SkipRateLimiterInternalError: false,
+		LimiterKeyGenerator: func(c echo.Context) (string, []int) {
+			return c.RealIP() + `@` + c.Method(), nil
+		},
 	}
 	limiterImp *limiter
 )
@@ -92,6 +97,9 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 	if config.Duration <= 0 {
 		config.Duration = time.Minute * 1
 	}
+	if config.LimiterKeyGenerator == nil {
+		config.LimiterKeyGenerator = DefaultRateLimiterConfig.LimiterKeyGenerator
+	}
 
 	//If config.Client omit, the limiter is a memory limiter
 	if config.Client == nil {
@@ -107,7 +115,6 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 				return h.Handle(c)
 			}
 			response := c.Response()
-			request := c.Request()
 
 			//policy := []int{10,1000}
 			/*custom policy will configurable like
@@ -116,11 +123,10 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 				{"RealIP+Method+RequestURI","Max Value","Duration"}
 			]
 			*/
-			policy := []int{}
-			result, err := limiterImp.Get(request.URI(), policy...)
+			id, policy := config.LimiterKeyGenerator(c)
+			result, err := limiterImp.Get(id, policy...)
 
 			if err != nil {
-
 				if config.SkipRateLimiterInternalError {
 					return h.Handle(c)
 				}
@@ -132,8 +138,7 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 			response.Header().Set("X-Ratelimit-Reset", strconv.FormatInt(result.Reset.Unix(), 10))
 
 			if result.Remaining <= 0 {
-
-				after := int64(result.Reset.Sub(time.Now())) / 1e9
+				after := int64(time.Until(result.Reset)) / 1e9
 				response.Header().Set("Retry-After", strconv.FormatInt(after, 10))
 				return echo.NewHTTPError(http.StatusTooManyRequests, fmt.Sprintf("Rate limit exceeded, retry in %d seconds", after))
 			}

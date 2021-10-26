@@ -2,6 +2,7 @@
 package config
 
 import (
+	"net/http"
 	"sync"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 func NewLimiter(max int64, ttl time.Duration) *Limiter {
 	limiter := &Limiter{Max: max, TTL: ttl}
 	limiter.Message = "You have reached maximum request limit."
-	limiter.StatusCode = 429
+	limiter.StatusCode = http.StatusTooManyRequests
 	limiter.IPLookups = []string{"RemoteAddr", "X-Forwarded-For", "X-Real-IP"}
 
 	limiter.tokenBucketsNoTTL = make(map[string]*rate.Limiter)
