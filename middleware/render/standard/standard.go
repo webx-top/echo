@@ -241,14 +241,14 @@ func (a *Standard) InitRegexp() {
 
 // Render HTML
 func (a *Standard) Render(w io.Writer, tmplName string, values interface{}, c echo.Context) error {
-	if c.Get(`webx:render.locked`) == nil {
-		c.Set(`webx:render.locked`, true)
-		a.mutex.Lock()
-		defer func() {
-			a.mutex.Unlock()
-			c.Delete(`webx:render.locked`)
-		}()
-	}
+	// if c.Get(`webx:render.locked`) == nil {
+	// 	c.Set(`webx:render.locked`, true)
+	// 	a.mutex.Lock()
+	// 	defer func() {
+	// 		a.mutex.Unlock()
+	// 		c.Delete(`webx:render.locked`)
+	// 	}()
+	// }
 	tmpl, err := a.parse(c, tmplName)
 	if err != nil {
 		return err
