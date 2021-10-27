@@ -45,6 +45,7 @@ type (
 		Remaining int           // It will always >= -1
 		Duration  time.Duration // It Equals Options.Duration, or policy duration
 		Reset     time.Time     // The limit record reset time
+		Until     time.Duration
 	}
 
 	abstractLimiter interface {
@@ -139,7 +140,7 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 			response.Header().Set("X-Ratelimit-Reset", strconv.FormatInt(result.Reset.Unix(), 10))
 
 			if result.Remaining <= 0 {
-				until := time.Until(result.Reset)
+				until := result.Until
 				after := int64(until) / 1e9
 				response.Header().Set("Retry-After", strconv.FormatInt(after, 10))
 				retryAfter := until.String()
@@ -181,6 +182,9 @@ func (l *limiter) Get(id string, policy ...int) (Result, error) {
 		timestamp := res[3].(int64)
 		sec := timestamp / 1000
 		result.Reset = time.Unix(sec, (timestamp-(sec*1000))*1e6)
+	}
+	if result.Remaining <= 0 {
+		result.Until = time.Until(result.Reset)
 	}
 	return result, nil
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine/standard"
+	"github.com/webx-top/echo/handler/pprof"
 	"github.com/webx-top/echo/middleware/ratelimiter"
 	"github.com/webx-top/echo/testing"
 	"gopkg.in/redis.v5"
@@ -53,6 +54,8 @@ func main() {
 		}))
 
 	}
+
+	pprof.Wrap(e)
 
 	go e.Run(standard.New(":4444"))
 
