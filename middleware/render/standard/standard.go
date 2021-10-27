@@ -281,7 +281,7 @@ func (a *Standard) parse(c echo.Context, tmplName string) (tmpl *htmlTpl.Templat
 		start := time.Now()
 		a.logger.Debug(` ◐ compile template: `, tmplName)
 		defer func() {
-			a.logger.Debug(` ◑ finished compile: `+tmplName, ` (elapsed: `+time.Now().Sub(start).String()+`)`)
+			a.logger.Debug(` ◑ finished compile: `+tmplName, ` (elapsed: `+time.Since(start).String()+`)`)
 		}()
 	}
 	t := htmlTpl.New(driver.CleanTemplateName(tmplName))
