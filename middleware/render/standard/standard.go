@@ -301,8 +301,8 @@ func (a *Standard) parse(c echo.Context, tmplName string) (tmpl *htmlTpl.Templat
 		return
 	}
 	content := string(b)
-	subcs := make(map[string]string, 0) //子模板内容
-	extcs := make(map[string]string, 0) //母板内容
+	subcs := map[string]string{} //子模板内容
+	extcs := map[string]string{} //母板内容
 	m := a.extTagRegex.FindAllStringSubmatch(content, 1)
 	content = a.rplTagRegex.ReplaceAllString(content, ``)
 	for i := 0; i < 10 && len(m) > 0; i++ {
