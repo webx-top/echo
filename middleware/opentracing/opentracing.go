@@ -1,6 +1,7 @@
 package opentracing
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/opentracing/opentracing-go"
@@ -31,6 +32,7 @@ var (
 		Skipper:       echo.DefaultSkipper,
 		componentName: defaultComponentName,
 	}
+	ErrSpanContextInject = errors.New("SpanContext Inject Error!")
 )
 
 // Trace returns a Trace middleware.
@@ -66,8 +68,8 @@ func TraceWithConfig(config TraceConfig) echo.MiddlewareFunc {
 			opname := "HTTP " + req.Method()
 			var sp opentracing.Span
 			tr := config.tracer
-			if ctx, err := tr.Extract(opentracing.HTTPHeaders,
-				opentracing.HTTPHeadersCarrier(req.Header().Std())); err != nil {
+			carrier := opentracing.HTTPHeadersCarrier(req.Header().Std())
+			if ctx, err := tr.Extract(opentracing.HTTPHeaders, carrier); err != nil {
 				sp = tr.StartSpan(opname)
 			} else {
 				sp = tr.StartSpan(opname, ext.RPCServerOption(ctx))
@@ -77,7 +79,12 @@ func TraceWithConfig(config TraceConfig) echo.MiddlewareFunc {
 			ext.HTTPUrl.Set(sp, req.URL().String())
 			ext.Component.Set(sp, config.componentName)
 
-			c.SetStdContext(opentracing.ContextWithSpan(c.StdContext(), sp))
+			*req.StdRequest() = *c.WithContext(opentracing.ContextWithSpan(c.StdContext(), sp))
+
+			err := tr.Inject(sp.Context(), opentracing.HTTPHeaders, carrier)
+			if err != nil {
+				return ErrSpanContextInject
+			}
 
 			defer func() {
 				status := c.Response().Status()
