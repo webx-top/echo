@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"runtime"
 	"time"
 
+	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/defaults"
 	"github.com/webx-top/echo/engine/mock"
 	"github.com/webx-top/echo/engine/standard"
+	"github.com/webx-top/echo/handler/pprof"
 	mw "github.com/webx-top/echo/middleware"
 	"github.com/webx-top/echo/middleware/render"
 )
@@ -23,6 +26,9 @@ type Nested struct {
 }
 
 func main() {
+	memStat := new(runtime.MemStats)
+	runtime.ReadMemStats(memStat)
+	heapAllocStart := memStat.HeapAlloc
 	t := template.New(`C:\a\b\c\c.html`)
 	t = template.Must(t.Parse(`{{define "C:\\a\\b\\c\\d.html"}}123333{{end}}{{template "C:\\a\\b\\c\\d.html"}}`)) //注意：define和template标签后面的参数如果含“\”，则会执行转义。所以“C:\d”需要改为“C:\\d”,否则会出错
 	t.Execute(os.Stdout, nil)
@@ -87,7 +93,7 @@ func main() {
 		},
 	}
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 5000; i++ {
 		ts := time.Now()
 		fmt.Printf("==========%v: %v========\\\n", i, ts)
 		str := tpl.Fetch("test", demo, ctx)
@@ -95,6 +101,10 @@ func main() {
 		fmt.Printf("==========cost: %v========/\n", time.Now().Sub(ts).Seconds())
 	}
 
+	runtime.ReadMemStats(memStat)
+	heapAllocEnd := memStat.HeapAlloc
+	heapAllocIncr := heapAllocEnd - heapAllocStart
+	fmt.Println(`~~~~~~~~~~~~~~~~~~>heapAllocIncr: `, com.FormatBytes(heapAllocIncr))
 	_ = fmt.Printf
 	defaults.Use(mw.Log(), mw.Recover(), render.Middleware(tpl))
 	defaults.Get(`/`, func(ctx echo.Context) error {
@@ -104,6 +114,8 @@ func main() {
 	defaults.Get(`/e`, func(ctx echo.Context) error {
 		return ctx.Render(`test2`, demo)
 	})
+
+	pprof.Wrapper(defaults.Default)
 	defaults.Run(standard.New(`:4444`))
 
 }
