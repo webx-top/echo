@@ -136,7 +136,6 @@ func (a *Jet) Fetch(tmpl string, data interface{}, c echo.Context) string {
 		return fmt.Sprintf("Parse %v err: %v", tmpl, err)
 	}
 	return com.Bytes2str(w.Bytes())
-	//return w.String()
 }
 
 func (a *Jet) RawContent(tmpl string) (b []byte, e error) {
