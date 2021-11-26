@@ -18,20 +18,20 @@
 package jet
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
-	"sync"
 
-	. "github.com/admpub/jet"
+	"github.com/admpub/jet/v6"
 	"github.com/admpub/log"
 
+	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/logger"
 	"github.com/webx-top/echo/middleware/render"
 	"github.com/webx-top/echo/middleware/render/driver"
+	"github.com/webx-top/poolx/bufferpool"
 )
 
 func init() {
@@ -49,7 +49,7 @@ func New(templateDir string, args ...logger.Logger) driver.Driver {
 	a := &Jet{
 		NopRenderer: &driver.NopRenderer{},
 		templateDir: templateDir,
-		set:         NewHTMLSet(templateDir),
+		set:         jet.NewSet(jet.NewOSFileSystemLoader(templateDir)),
 	}
 	if len(args) > 0 {
 		a.logger = args[0]
@@ -61,8 +61,7 @@ func New(templateDir string, args ...logger.Logger) driver.Driver {
 
 type Jet struct {
 	*driver.NopRenderer
-	mutex         sync.RWMutex
-	set           *Set
+	set           *jet.Set
 	templateDir   string
 	logger        logger.Logger
 	debug         bool
@@ -113,7 +112,7 @@ func (a *Jet) Render(w io.Writer, tmpl string, data interface{}, c echo.Context)
 	if err != nil {
 		return err
 	}
-	vars := make(VarMap)
+	vars := make(jet.VarMap)
 	for name, fn := range c.Funcs() {
 		vars.Set(name, fn)
 	}
@@ -122,12 +121,13 @@ func (a *Jet) Render(w io.Writer, tmpl string, data interface{}, c echo.Context)
 
 func (a *Jet) Fetch(tmpl string, data interface{}, c echo.Context) string {
 	tmpl = a.TmplPath(c, tmpl)
-	w := new(bytes.Buffer)
+	w := bufferpool.Get()
+	defer bufferpool.Release(w)
 	t, err := a.set.GetTemplate(tmpl)
 	if err != nil {
 		return fmt.Sprintf("Parse %v err: %v", tmpl, err)
 	}
-	vars := make(VarMap)
+	vars := make(jet.VarMap)
 	for name, fn := range c.Funcs() {
 		vars.Set(name, fn)
 	}
@@ -135,7 +135,8 @@ func (a *Jet) Fetch(tmpl string, data interface{}, c echo.Context) string {
 	if err != nil {
 		return fmt.Sprintf("Parse %v err: %v", tmpl, err)
 	}
-	return w.String()
+	return com.Bytes2str(w.Bytes())
+	//return w.String()
 }
 
 func (a *Jet) RawContent(tmpl string) (b []byte, e error) {

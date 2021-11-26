@@ -1,4 +1,4 @@
-{{extends "layout.html"}}
+{{extends "layout"}}
 
 {{block title()}}
 {{yield content}} - powered by webx.top
@@ -8,12 +8,12 @@
  <div>
     Hello World.
  </div>
-  {{include "included.html" .}}
+  {{include "included" .}}
 
 {{end}}
 {{block foot()}}
 <br />-----------------foot---------------<br />
-{{include "included2.html" .}}
+{{include "included2" .}}
 {{end}}
 
 {{block no()}}
