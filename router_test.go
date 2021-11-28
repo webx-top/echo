@@ -80,6 +80,12 @@ func TestRouterRegexpKind3(t *testing.T) {
 		Handler: h2,
 	}
 	r.Add(rt, 0)
+	rt2 := &Route{
+		Method:  `GET`,
+		Path:    `/i/<id:[\d]{1}(.*)3>`,
+		Handler: h2,
+	}
+	r.Add(rt2, 1)
 	assert.Equal(t, `/g/%v`, rt.Format)
 	//fmt.Println(r.tree.String())
 
@@ -94,6 +100,14 @@ func TestRouterRegexpKind3(t *testing.T) {
 
 	ctx = e.NewContext(nil, nil)
 	found = r.Find(`GET`, `/g/100a`, ctx)
+	assert.False(t, found)
+
+	ctx = e.NewContext(nil, nil)
+	found = r.Find(`GET`, `/i/1--3`, ctx)
+	assert.True(t, found)
+
+	ctx = e.NewContext(nil, nil)
+	found = r.Find(`GET`, `/i/1--32`, ctx)
 	assert.False(t, found)
 }
 
