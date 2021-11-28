@@ -38,6 +38,10 @@ func TestRouterRegexpKind(t *testing.T) {
 	found := r.Find(`GET`, `/1_2000_2/123`, ctx)
 	assert.True(t, found)
 	assert.Equal(t, fmt.Sprintf(`%p`, h), fmt.Sprintf(`%p`, ctx.(*xContext).handler))
+
+	ctx = e.NewContext(nil, nil)
+	found = r.Find(`GET`, `/1_2000_3/123`, ctx)
+	assert.False(t, found)
 }
 
 func TestRouterRegexpKind2(t *testing.T) {
@@ -86,6 +90,10 @@ func TestRouterRegexpKind3(t *testing.T) {
 
 	ctx = e.NewContext(nil, nil)
 	found = r.Find(`GET`, `/g/a`, ctx)
+	assert.False(t, found)
+
+	ctx = e.NewContext(nil, nil)
+	found = r.Find(`GET`, `/g/100a`, ctx)
 	assert.False(t, found)
 }
 
