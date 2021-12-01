@@ -22,10 +22,14 @@ import (
 
 func New(cfg *Options) sessions.Store {
 	cfg.Config.Engine = `mysql`
-	eng, err := NewMySQLStore(cfg.Config.String(), cfg.Table, cfg.KeyPairs...)
+	eng, err := NewMySQLStore(cfg)
 	if err != nil {
 		log.Println("sessions: Operation MySQL failed:", err)
-		return file.NewFilesystemStore(``, cfg.KeyPairs...)
+		return file.NewFilesystemStore(&file.FileOptions{
+			SavePath:      ``,
+			KeyPairs:      cfg.KeyPairs,
+			CheckInterval: cfg.CheckInterval,
+		})
 	}
 	return eng
 }
@@ -45,9 +49,10 @@ func RegWithOptions(opts *Options, args ...string) sessions.Store {
 }
 
 type Options struct {
-	Config   dbconfig.Config
-	Table    string
-	KeyPairs [][]byte
+	Config        dbconfig.Config `json:"-"`
+	Table         string          `json:"table"`
+	KeyPairs      [][]byte        `json:"-"`
+	CheckInterval time.Duration   `json:"checkInterval"`
 }
 
 type MySQLStore struct {
@@ -57,11 +62,12 @@ type MySQLStore struct {
 	stmtUpdate *sql.Stmt
 	stmtSelect *sql.Stmt
 
-	Codecs []securecookie.Codec
-	table  string
-	quiteC chan<- struct{}
-	doneC  <-chan struct{}
-	once   sync.Once
+	Codecs        []securecookie.Codec
+	table         string
+	checkInterval time.Duration
+	quiteC        chan<- struct{}
+	doneC         <-chan struct{}
+	once          sync.Once
 }
 
 const DDL = "CREATE TABLE IF NOT EXISTS %s (" +
@@ -92,26 +98,26 @@ type sessionRow struct {
 // path - path for Set-Cookie header
 // maxAge
 // codecs
-func NewMySQLStore(endpoint string, tableName string, keyPairs ...[]byte) (*MySQLStore, error) {
-	db, err := sql.Open("mysql", endpoint)
+func NewMySQLStore(cfg *Options) (*MySQLStore, error) {
+	db, err := sql.Open("mysql", cfg.Config.String())
 	if err != nil {
 		return nil, err
 	}
 
-	return NewMySQLStoreFromConnection(db, tableName, keyPairs...)
+	return NewMySQLStoreFromConnection(db, cfg)
 }
 
 // NewMySQLStoreFromConnection .
-func NewMySQLStoreFromConnection(db *sql.DB, tableName string, keyPairs ...[]byte) (*MySQLStore, error) {
+func NewMySQLStoreFromConnection(db *sql.DB, cfg *Options) (*MySQLStore, error) {
 	// Make sure table name is enclosed.
-	tableName = "`" + strings.Trim(tableName, "`") + "`"
+	tableName := "`" + strings.Trim(cfg.Table, "`") + "`"
 
 	cTableQ := fmt.Sprintf(DDL, tableName)
 	if _, err := db.Exec(cTableQ); err != nil {
-		switch err.(type) {
+		switch verr := err.(type) {
 		case *mysql.MySQLError:
 			// Error 1142 means permission denied for create command
-			if err.(*mysql.MySQLError).Number == 1142 {
+			if verr.Number == 1142 {
 				break
 			} else {
 				return nil, errors.Wrap(err, cTableQ)
@@ -149,13 +155,14 @@ func NewMySQLStoreFromConnection(db *sql.DB, tableName string, keyPairs ...[]byt
 	}
 
 	return &MySQLStore{
-		db:         db,
-		stmtInsert: stmtInsert,
-		stmtDelete: stmtDelete,
-		stmtUpdate: stmtUpdate,
-		stmtSelect: stmtSelect,
-		Codecs:     securecookie.CodecsFromPairs(keyPairs...),
-		table:      tableName,
+		db:            db,
+		stmtInsert:    stmtInsert,
+		stmtDelete:    stmtDelete,
+		stmtUpdate:    stmtUpdate,
+		stmtSelect:    stmtSelect,
+		Codecs:        securecookie.CodecsFromPairs(cfg.KeyPairs...),
+		table:         tableName,
+		checkInterval: cfg.CheckInterval,
 	}, nil
 }
 
@@ -363,5 +370,5 @@ func (m *MySQLStore) Init() {
 
 func (m *MySQLStore) init() {
 	m.closeCleanup()
-	m.quiteC, m.doneC = m.Cleanup(0)
+	m.quiteC, m.doneC = m.Cleanup(m.checkInterval)
 }

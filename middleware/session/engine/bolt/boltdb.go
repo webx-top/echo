@@ -41,7 +41,7 @@ func RegWithOptions(opts *BoltOptions, args ...string) sessions.Store {
 
 type BoltOptions struct {
 	File          string        `json:"file"`
-	KeyPairs      [][]byte      `json:"keyPairs"`
+	KeyPairs      [][]byte      `json:"-"`
 	BucketName    string        `json:"bucketName"`
 	CheckInterval time.Duration `json:"checkInterval"`
 }
