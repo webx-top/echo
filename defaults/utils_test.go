@@ -33,7 +33,8 @@ func TestMustGetContext(t *testing.T) {
 
 func TestFastHTTPContext(t *testing.T) {
 	rCtx := &fasthttp.RequestCtx{}
-	eCtx := echo.NewContext(fasthttpng.NewRequest(rCtx), fasthttpng.NewResponse(rCtx), Default)
+	req := fasthttpng.NewRequest(rCtx)
+	eCtx := echo.NewContext(req, fasthttpng.NewResponse(req), Default)
 	eCtx.SetValue(`testKey`, `testVal`)
 	assert.Equal(t, `testVal`, eCtx.Value(`testKey`))
 
