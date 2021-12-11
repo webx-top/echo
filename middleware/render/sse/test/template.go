@@ -3,8 +3,8 @@ package main
 import "html/template"
 
 var html = template.Must(template.New("chat_room").Parse(`
-<html> 
-<head> 
+<html>
+<head>
     <title>{{.roomid}}</title>
 <style type="text/css">
 html, body, div, span, applet, object, iframe,
@@ -16,8 +16,8 @@ b, u, i, center,
 dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend,
 table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed, 
-figure, figcaption, footer, header, hgroup, 
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
 menu, nav, output, ruby, section, summary,
 time, mark, audio, video {
 	margin: 0;
@@ -28,7 +28,7 @@ time, mark, audio, video {
 	vertical-align: baseline;
 }
 /* HTML5 display-role reset for older browsers */
-article, aside, details, figcaption, figure, 
+article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
 	display: block;
 }
@@ -52,10 +52,10 @@ table {
 }
 </style>
     <script src="//cdn.bootcss.com/jquery/1.7/jquery.min.js"></script>
-    <script> 
-        $('#message_form').focus();
-        $(document).ready(function() { 
-            // bind 'myForm' and provide a simple callback function 
+    <script>
+        $(document).ready(function() {
+			$('#message_form').focus();
+            // bind 'myForm' and provide a simple callback function
             $('#myForm').on('submit',function(e) {
                 e.preventDefault();
                 $.post($(this).attr('action'),$(this).serializeArray(),function(){
@@ -75,15 +75,15 @@ table {
                 alert("NOT SUPPORTED");
             }
         });
-    </script> 
+    </script>
     </head>
     <body>
     <h1>Welcome to {{.roomid}} room</h1>
     <div id="messages"></div>
-    <form id="myForm" action="/room/{{.roomid}}" method="post"> 
-    User: <input id="user_form" name="user" value="{{.userid}}"></input> 
-    Message: <input id="message_form" name="message"></input> 
-    <input type="submit" value="Submit" /> 
+    <form id="myForm" action="/room/{{.roomid}}" method="post">
+    User: <input id="user_form" name="user" value="{{.userid}}"></input>
+    Message: <input id="message_form" name="message"></input>
+    <input type="submit" value="Submit" />
     </form>
 </body>
 </html>
