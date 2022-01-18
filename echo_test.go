@@ -26,11 +26,13 @@ func request(method, path string, e *Echo, reqRewrite ...func(*http.Request)) (i
 
 func TestEchoMiddleware(t *testing.T) {
 	e := New()
+	e.SetMaxRequestBodySize(2 << 20) // 2M
 	buf := new(bytes.Buffer)
 
 	e.Pre(func(next HandlerFunc) HandlerFunc {
 		return func(c Context) error {
 			assert.Empty(t, c.Path())
+			assert.Equal(t, int64(2<<20), c.Request().MaxSize())
 			buf.WriteString("-1")
 			return next.Handle(c)
 		}
@@ -39,6 +41,7 @@ func TestEchoMiddleware(t *testing.T) {
 	e.Use(func(next HandlerFunc) HandlerFunc {
 		return func(c Context) error {
 			buf.WriteString("1")
+			c.Request().SetMaxSize(3 << 20)
 			return next.Handle(c)
 		}
 	})
@@ -46,6 +49,7 @@ func TestEchoMiddleware(t *testing.T) {
 	e.Use(func(next HandlerFunc) HandlerFunc {
 		return func(c Context) error {
 			buf.WriteString("2")
+			assert.Equal(t, int64(3<<20), c.Request().MaxSize())
 			return next.Handle(c)
 		}
 	})
@@ -59,6 +63,7 @@ func TestEchoMiddleware(t *testing.T) {
 
 	// Route
 	e.Get("/", func(c Context) error {
+		assert.Equal(t, int64(3<<20), c.Request().MaxSize())
 		return c.String("OK")
 	})
 
