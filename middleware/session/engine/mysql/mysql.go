@@ -16,6 +16,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/encoding/dbconfig"
+	"github.com/webx-top/echo/middleware/session/engine"
 	ss "github.com/webx-top/echo/middleware/session/engine"
 	"github.com/webx-top/echo/middleware/session/engine/file"
 )
@@ -52,6 +53,7 @@ type Options struct {
 	Config        dbconfig.Config `json:"-"`
 	Table         string          `json:"table"`
 	KeyPairs      [][]byte        `json:"-"`
+	MaxAge        int             `json:"maxAge"`
 	CheckInterval time.Duration   `json:"checkInterval"`
 }
 
@@ -64,6 +66,7 @@ type MySQLStore struct {
 
 	Codecs        []securecookie.Codec
 	table         string
+	maxAge        int
 	checkInterval time.Duration
 	quiteC        chan<- struct{}
 	doneC         <-chan struct{}
@@ -80,7 +83,6 @@ const DDL = "CREATE TABLE IF NOT EXISTS %s (" +
 	"  ) ENGINE=InnoDB;"
 
 var (
-	DefaultMaxAge    = 86400
 	DefaultKeyPrefix = `_`
 )
 
@@ -162,6 +164,7 @@ func NewMySQLStoreFromConnection(db *sql.DB, cfg *Options) (*MySQLStore, error) 
 		stmtSelect:    stmtSelect,
 		Codecs:        securecookie.CodecsFromPairs(cfg.KeyPairs...),
 		table:         tableName,
+		maxAge:        cfg.MaxAge,
 		checkInterval: cfg.CheckInterval,
 	}, nil
 }
@@ -262,7 +265,7 @@ func (m *MySQLStore) insert(ctx echo.Context, session *sessions.Session) error {
 	modifiedAt = createdAt
 	expires := session.Values[DefaultKeyPrefix+"expires"]
 	if expires == nil {
-		expiredAt = nowTs + int64(m.maxAge(ctx))
+		expiredAt = nowTs + int64(m.MaxAge(ctx))
 	} else {
 		expiredAt = expires.(int64)
 	}
@@ -287,10 +290,14 @@ func (m *MySQLStore) Delete(ctx echo.Context, session *sessions.Session) error {
 	return m.Remove(session.ID)
 }
 
-func (n *MySQLStore) maxAge(ctx echo.Context) int {
+func (n *MySQLStore) MaxAge(ctx echo.Context) int {
 	maxAge := ctx.CookieOptions().MaxAge
 	if maxAge == 0 {
-		maxAge = DefaultMaxAge
+		if n.maxAge > 0 {
+			maxAge = n.maxAge
+		} else {
+			maxAge = engine.DefaultMaxAge
+		}
 	}
 	return maxAge
 }
@@ -310,7 +317,7 @@ func (m *MySQLStore) save(ctx echo.Context, session *sessions.Session) error {
 	}
 
 	expires := session.Values[DefaultKeyPrefix+"expires"]
-	maxAge := int64(m.maxAge(ctx))
+	maxAge := int64(m.MaxAge(ctx))
 	if expires == nil {
 		expiredAt = nowTs + maxAge
 	} else {

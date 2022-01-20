@@ -5,6 +5,7 @@ import (
 
 	"github.com/admpub/redistore"
 	"github.com/admpub/sessions"
+	"github.com/webx-top/echo/middleware/session/engine"
 	ss "github.com/webx-top/echo/middleware/session/engine"
 )
 
@@ -30,10 +31,6 @@ func RegWithOptions(opts *RedisOptions, args ...string) sessions.Store {
 	return store
 }
 
-var (
-	DefaultMaxAge = 86400
-)
-
 type RedisOptions struct {
 	Size     int      `json:"size"`
 	Network  string   `json:"network"`
@@ -41,6 +38,7 @@ type RedisOptions struct {
 	Password string   `json:"password"`
 	DB       uint     `json:"db"`
 	KeyPairs [][]byte `json:"keyPairs"`
+	MaxAge   int      `json:"maxAge"`
 }
 
 // size: maximum number of idle connections.
@@ -61,7 +59,11 @@ func NewRedisStore(opts *RedisOptions) (sessions.Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	store.DefaultMaxAge = DefaultMaxAge
+	if opts.MaxAge > 0 {
+		store.DefaultMaxAge = opts.MaxAge
+	} else {
+		store.DefaultMaxAge = engine.DefaultMaxAge
+	}
 	return &redisStore{store}, nil
 }
 
