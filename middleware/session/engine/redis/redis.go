@@ -30,6 +30,10 @@ func RegWithOptions(opts *RedisOptions, args ...string) sessions.Store {
 	return store
 }
 
+var (
+	DefaultMaxAge = 86400
+)
+
 type RedisOptions struct {
 	Size     int      `json:"size"`
 	Network  string   `json:"network"`
@@ -57,6 +61,7 @@ func NewRedisStore(opts *RedisOptions) (sessions.Store, error) {
 	if err != nil {
 		return nil, err
 	}
+	store.DefaultMaxAge = DefaultMaxAge
 	return &redisStore{store}, nil
 }
 
