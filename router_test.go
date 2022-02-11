@@ -27,10 +27,10 @@ func TestRouterRegexpKind(t *testing.T) {
 	r.Add(rt, 0)
 	assert.Equal(t, `/1_%v_2/123`, rt.Format)
 	assert.Equal(t, []string{`id`}, rt.Params)
-	assert.Equal(t, `/1_100_2/123`, rt.MakeURI(``, url.Values{
+	assert.Equal(t, `/1_100_2/123`, rt.MakeURI(e, url.Values{
 		`id`: []string{`100`},
 	}))
-	assert.Equal(t, `/1_100_2/123`, rt.MakeURI(``, map[string]string{
+	assert.Equal(t, `/1_100_2/123`, rt.MakeURI(e, map[string]string{
 		`id`: `100`,
 	}))
 	//fmt.Println(r.tree.String())
@@ -55,11 +55,11 @@ func TestRouterRegexpKind2(t *testing.T) {
 	r.Add(rt, 0)
 	assert.Equal(t, `/1_%v_2/123/%v`, rt.Format)
 	assert.Equal(t, []string{`id`, `id2`}, rt.Params)
-	assert.Equal(t, `/1_100_2/123/200`, rt.MakeURI(``, url.Values{
+	assert.Equal(t, `/1_100_2/123/200`, rt.MakeURI(e, url.Values{
 		`id`:  []string{`100`},
 		`id2`: []string{`200`},
 	}))
-	assert.Equal(t, `/1_100_2/123/200`, rt.MakeURI(``, map[string]string{
+	assert.Equal(t, `/1_100_2/123/200`, rt.MakeURI(e, map[string]string{
 		`id`:  `100`,
 		`id2`: `200`,
 	}))

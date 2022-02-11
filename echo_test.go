@@ -32,7 +32,7 @@ func TestEchoMiddleware(t *testing.T) {
 	e.Pre(func(next HandlerFunc) HandlerFunc {
 		return func(c Context) error {
 			assert.Empty(t, c.Path())
-			assert.Equal(t, int64(2<<20), c.Request().MaxSize())
+			assert.Equal(t, 2<<20, c.Request().MaxSize())
 			buf.WriteString("-1")
 			return next.Handle(c)
 		}
@@ -49,7 +49,7 @@ func TestEchoMiddleware(t *testing.T) {
 	e.Use(func(next HandlerFunc) HandlerFunc {
 		return func(c Context) error {
 			buf.WriteString("2")
-			assert.Equal(t, int64(3<<20), c.Request().MaxSize())
+			assert.Equal(t, 3<<20, c.Request().MaxSize())
 			return next.Handle(c)
 		}
 	})
@@ -63,7 +63,7 @@ func TestEchoMiddleware(t *testing.T) {
 
 	// Route
 	e.Get("/", func(c Context) error {
-		assert.Equal(t, int64(3<<20), c.Request().MaxSize())
+		assert.Equal(t, 3<<20, c.Request().MaxSize())
 		return c.String("OK")
 	})
 

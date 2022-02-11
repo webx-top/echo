@@ -216,7 +216,7 @@ func TestRedisRatelimiter(t *testing.T) {
 			res, err := redisLimiter.Get(id)
 			assert.Nil(t, err)
 			assert.Equal(t, res.Total, 100)
-			assert.Equal(t, res.Remaining, 99)
+			assert.Equal(t, res.Remaining, 97)
 
 		})
 
