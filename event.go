@@ -41,3 +41,5 @@ func HasEvent(name string) bool {
 func NewEvent(data interface{}, options ...events.EventOption) events.Event {
 	return events.New(data, options...)
 }
+
+type Event = events.Event
