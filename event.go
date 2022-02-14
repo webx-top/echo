@@ -34,6 +34,14 @@ func Fire(e interface{}) error {
 	return events.Default.Fire(e)
 }
 
+func FireByName(name string, options ...events.EventOption) error {
+	return events.Default.Fire(NewEvent(name, options...))
+}
+
+func FireByNameWithMap(name string, data events.Map) error {
+	return events.Default.Fire(NewEvent(name, events.WithContext(data)))
+}
+
 func HasEvent(name string) bool {
 	return events.Default.HasEvent(name)
 }
