@@ -35,15 +35,19 @@ func Fire(e interface{}) error {
 }
 
 func FireByName(name string, options ...events.EventOption) error {
-	return events.Default.Fire(NewEvent(name, options...))
+	return events.Default.FireByName(name, options...)
 }
 
 func FireByNameWithMap(name string, data events.Map) error {
-	return events.Default.Fire(NewEvent(name, events.WithContext(data)))
+	return events.Default.FireByNameWithMap(name, data)
 }
 
 func HasEvent(name string) bool {
 	return events.Default.HasEvent(name)
+}
+
+func EventNames() []string {
+	return events.Default.EventNames()
 }
 
 func NewEvent(data interface{}, options ...events.EventOption) events.Event {
