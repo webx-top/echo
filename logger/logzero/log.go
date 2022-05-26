@@ -13,20 +13,18 @@ import (
 
 var (
 	// CallerSkipFrameCount caller skip frame count
-	CallerSkipFrameCount = 4
-	WriterDefaultLevel   = zerolog.InfoLevel
-	global               *Logger
+	CallerSkipFrameCount               = 4
+	WriterDefaultLevel                 = zerolog.InfoLevel
+	global               *Logger       = New()
 	_                    logger.Logger = &Logger{}
-	once                 sync.Once
 )
 
-func initGlobal() {
-	global = New()
+func SetGlobal(l *Logger) {
+	global = l
 }
 
 // Default default global logger
 func Default() *Logger {
-	once.Do(initGlobal)
 	return global
 }
 
@@ -52,49 +50,52 @@ func NewConsoleOutput() zerolog.ConsoleWriter {
 }
 
 func New(writers ...io.Writer) *Logger {
+	return NewLogger(CallerSkipFrameCount, writers...)
+}
+
+func NewLogger(callerSkipFrameCount int, writers ...io.Writer) *Logger {
 	if len(writers) == 0 {
 		writers = append(writers, NewConsoleOutput())
 	}
 	o := zerolog.MultiLevelWriter(writers...)
+	var withCaller bool
 	var l zerolog.Logger
-	if CallerSkipFrameCount < 0 {
+	if callerSkipFrameCount < 0 {
 		l = zerolog.New(o).With().Timestamp().Logger()
 	} else {
-		l = zerolog.New(o).With().CallerWithSkipFrameCount(CallerSkipFrameCount).Timestamp().Logger()
+		withCaller = true
+		l = zerolog.New(o).With().CallerWithSkipFrameCount(callerSkipFrameCount).Timestamp().Logger()
 	}
 	return &Logger{
-		Logger:      &l,
-		Base:        &logger.Base{},
-		mutex:       &sync.RWMutex{},
-		WriterLevel: WriterDefaultLevel,
-		writers:     writers,
-		subs:        make(map[string]*Logger),
+		Logger:                 &l,
+		Base:                   &logger.Base{},
+		mutex:                  &sync.RWMutex{},
+		WriterLevel:            WriterDefaultLevel,
+		writers:                writers,
+		writerCallerSkipFrames: 1,
+		withCaller:             withCaller,
+		subs:                   make(map[string]*Logger),
 	}
 }
 
-func NewSub(root *Logger, category string, writers ...io.Writer) *Logger {
-	subLogger := root.Logger.With().Str("category", category).CallerWithSkipFrameCount(CallerSkipFrameCount - 1).Logger()
-	if len(writers) > 0 {
-		o := zerolog.MultiLevelWriter(writers...)
-		subLogger = subLogger.Output(o)
-	}
-	return &Logger{
-		Logger:      &subLogger,
-		Base:        root.Base,
-		mutex:       root.mutex,
-		WriterLevel: WriterDefaultLevel,
-		writers:     writers,
-		subs:        make(map[string]*Logger),
-	}
+func newSub(root *Logger, category string, writers ...io.Writer) *Logger {
+	subLogger := NewLogger(CallerSkipFrameCount-1, writers...)
+	l := subLogger.With().Str("category", category).Logger()
+	subLogger.Logger = &l
+	subLogger.writerCallerSkipFrames = 2
+	subLogger.withCaller = root.withCaller
+	return subLogger
 }
 
 type Logger struct {
 	*zerolog.Logger
 	*logger.Base
-	WriterLevel zerolog.Level
-	writers     []io.Writer
-	subs        map[string]*Logger
-	mutex       *sync.RWMutex
+	WriterLevel            zerolog.Level
+	writers                []io.Writer
+	writerCallerSkipFrames int
+	withCaller             bool
+	subs                   map[string]*Logger
+	mutex                  *sync.RWMutex
 }
 
 func (a *Logger) Debug(s ...interface{}) {
@@ -142,7 +143,7 @@ func (a *Logger) GetLogger(category string, writers ...io.Writer) *Logger {
 	subLogger, ok := a.subs[category]
 	a.mutex.RUnlock()
 	if !ok {
-		subLogger = NewSub(a, category, writers...)
+		subLogger = newSub(a, category, writers...)
 		a.mutex.Lock()
 		a.subs[category] = subLogger
 		a.mutex.Unlock()
@@ -156,7 +157,11 @@ func (a *Logger) Write(p []byte) (int, error) {
 		// Trim CR added by stdlog.
 		p = p[0 : n-1]
 	}
-	a.Logger.WithLevel(a.WriterLevel).CallerSkipFrame(-1).Msg(string(p))
+	if a.withCaller {
+		a.Logger.WithLevel(a.WriterLevel).CallerSkipFrame(a.writerCallerSkipFrames).Msg(string(p))
+	} else {
+		a.Logger.WithLevel(a.WriterLevel).Msg(string(p))
+	}
 	return n, nil
 }
 
