@@ -34,9 +34,12 @@ type TestRole struct {
 }
 
 type TestRoleM struct {
-	Name  string
-	Users map[string]*TestUser
-	Data  H
+	Name     string
+	Users    map[string]*TestUser
+	Profiled map[string]map[string]*TestProfile
+	Profiles []map[string]*TestProfile
+	Profilea []map[string]string
+	Data     H
 }
 
 type TestUser struct {
@@ -218,13 +221,16 @@ func TestMapToMapStruct(t *testing.T) {
 	e := New()
 	m := &TestRoleM{}
 	NamedStructMap(e, m, map[string][]string{
-		`name`:           {`manager`},
-		`users[0][name]`: {`john`},
-		`users[0][age]`:  {`18`},
-		`users[1][name]`: {`smith`},
-		`users[1][age]`:  {`25`},
-		`users[3][name]`: {`hank`},
-		`users[3][age]`:  {`28`},
+		`name`:                       {`manager`},
+		`users[0][name]`:             {`john`},
+		`users[0][age]`:              {`18`},
+		`users[1][name]`:             {`smith`},
+		`users[1][age]`:              {`25`},
+		`users[3][name]`:             {`hank`},
+		`users[3][age]`:              {`28`},
+		`profiled[3][1000][address]`: {`address`},
+		`profiles[0][2000][address]`: {`address2`},
+		`profilea[0][address]`:       {`address2`},
 	}, ``)
 	assert.Equal(t, &TestRoleM{
 		Name: `manager`,
@@ -242,8 +248,21 @@ func TestMapToMapStruct(t *testing.T) {
 				Age:  28,
 			},
 		},
+		Profiled: map[string]map[string]*TestProfile{
+			`3`: {
+				`1000`: {Address: `address`},
+			},
+		},
+		Profiles: []map[string]*TestProfile{
+			{
+				`2000`: {Address: `address2`},
+			},
+		},
+		Profilea: []map[string]string{
+			{`address`: `address2`},
+		},
 	}, m)
-	//Dump(m)
+	Dump(m)
 }
 
 func TestStructToForm(t *testing.T) {
