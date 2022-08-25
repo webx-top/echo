@@ -39,6 +39,7 @@ type TestRoleM struct {
 	Profiled map[string]map[string]*TestProfile
 	Profiles []map[string]*TestProfile
 	Profilea []map[string]string
+	Slices   map[string][]string
 	Data     H
 }
 
@@ -220,7 +221,7 @@ func TestMapToSliceStruct(t *testing.T) {
 func TestMapToMapStruct(t *testing.T) {
 	e := New()
 	m := &TestRoleM{}
-	NamedStructMap(e, m, map[string][]string{
+	err := NamedStructMap(e, m, map[string][]string{
 		`name`:                       {`manager`},
 		`users[0][name]`:             {`john`},
 		`users[0][age]`:              {`18`},
@@ -231,7 +232,10 @@ func TestMapToMapStruct(t *testing.T) {
 		`profiled[3][1000][address]`: {`address`},
 		`profiles[0][2000][address]`: {`address2`},
 		`profilea[0][address]`:       {`address2`},
+		`slices[3000][]`: {`3000v`},
+		`slices[3001][]`: {`3001v`},
 	}, ``)
+	assert.NoError(t, err)
 	assert.Equal(t, &TestRoleM{
 		Name: `manager`,
 		Users: map[string]*TestUser{
@@ -260,6 +264,10 @@ func TestMapToMapStruct(t *testing.T) {
 		},
 		Profilea: []map[string]string{
 			{`address`: `address2`},
+		},
+		Slices: map[string][]string{
+			`3000`: {`3000v`},
+			`3001`: {`3001v`},
 		},
 	}, m)
 	Dump(m)
