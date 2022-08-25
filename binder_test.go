@@ -232,8 +232,8 @@ func TestMapToMapStruct(t *testing.T) {
 		`profiled[3][1000][address]`: {`address`},
 		`profiles[0][2000][address]`: {`address2`},
 		`profilea[0][address]`:       {`address2`},
-		`slices[3000][]`: {`3000v`},
-		`slices[3001][]`: {`3001v`},
+		`slices[3000][]`:             {`3000v`},
+		`slices[3001][]`:             {`3001v`},
 	}, ``)
 	assert.NoError(t, err)
 	assert.Equal(t, &TestRoleM{
