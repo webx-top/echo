@@ -28,6 +28,66 @@ func (f FileSystems) Open(name string) (file fs.File, err error) {
 	return
 }
 
+func (f FileSystems) ReadFile(name string) (content []byte, err error) {
+	for _, fileSystem := range f {
+		content, err = fs.ReadFile(fileSystem, name)
+		if err == nil || !errors.Is(err, fs.ErrNotExist) {
+			return
+		}
+	}
+	return
+}
+
+func (f FileSystems) ReadDir(name string) (dirs []fs.DirEntry, err error) {
+	for _, fileSystem := range f {
+		dirs, err = fs.ReadDir(fileSystem, name)
+		if err == nil || !errors.Is(err, fs.ErrNotExist) {
+			return
+		}
+	}
+	return
+}
+
+func (f FileSystems) Sub(name string) (sub fs.FS, err error) {
+	for _, fileSystem := range f {
+		sub, err = fs.Sub(fileSystem, name)
+		if err == nil || !errors.Is(err, fs.ErrNotExist) {
+			return
+		}
+	}
+	return
+}
+
+func (f FileSystems) WalkDir(name string, fn fs.WalkDirFunc) (err error) {
+	for _, fileSystem := range f {
+		err = fs.WalkDir(fileSystem, name, fn)
+		if err == nil || !errors.Is(err, fs.ErrNotExist) {
+			return
+		}
+	}
+	return
+}
+
+func (f FileSystems) Stat(name string) (fi fs.FileInfo, err error) {
+	for _, fileSystem := range f {
+		fi, err = fs.Stat(fileSystem, name)
+		if err == nil || !errors.Is(err, fs.ErrNotExist) {
+			return
+		}
+	}
+	return
+}
+
+func (f FileSystems) Glob(pattern string) (matches []string, err error) {
+	for _, fileSystem := range f {
+		matches, err = fs.Glob(fileSystem, pattern)
+		if err == nil || !errors.Is(err, fs.ErrNotExist) {
+			return
+		}
+	}
+	return
+}
+
 func (f FileSystems) Size() int {
 	return len(f)
 }
