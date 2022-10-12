@@ -39,10 +39,20 @@ func (f FileSystems) ReadFile(name string) (content []byte, err error) {
 }
 
 func (f FileSystems) ReadDir(name string) (dirs []fs.DirEntry, err error) {
+	unique := map[string]struct{}{}
 	for _, fileSystem := range f {
-		dirs, err = fs.ReadDir(fileSystem, name)
-		if err == nil || !errors.Is(err, fs.ErrNotExist) {
+		var _dirs []fs.DirEntry
+		_dirs, err = fs.ReadDir(fileSystem, name)
+		if err != nil && !errors.Is(err, fs.ErrNotExist) {
 			return
+		}
+		err = nil
+		for _, dir := range _dirs {
+			if _, ok := unique[dir.Name()]; ok {
+				continue
+			}
+			unique[dir.Name()] = struct{}{}
+			dirs = append(dirs, dir)
 		}
 	}
 	return
@@ -61,9 +71,10 @@ func (f FileSystems) Sub(name string) (sub fs.FS, err error) {
 func (f FileSystems) WalkDir(name string, fn fs.WalkDirFunc) (err error) {
 	for _, fileSystem := range f {
 		err = fs.WalkDir(fileSystem, name, fn)
-		if err == nil || !errors.Is(err, fs.ErrNotExist) {
+		if err != nil && !errors.Is(err, fs.ErrNotExist) {
 			return
 		}
+		err = nil
 	}
 	return
 }
@@ -79,10 +90,20 @@ func (f FileSystems) Stat(name string) (fi fs.FileInfo, err error) {
 }
 
 func (f FileSystems) Glob(pattern string) (matches []string, err error) {
+	unique := map[string]struct{}{}
 	for _, fileSystem := range f {
-		matches, err = fs.Glob(fileSystem, pattern)
-		if err == nil || !errors.Is(err, fs.ErrNotExist) {
+		var mch []string
+		mch, err = fs.Glob(fileSystem, pattern)
+		if err != nil && !errors.Is(err, fs.ErrNotExist) {
 			return
+		}
+		err = nil
+		for _, match := range mch {
+			if _, ok := unique[match]; ok {
+				continue
+			}
+			unique[match] = struct{}{}
+			matches = append(matches, match)
 		}
 	}
 	return
