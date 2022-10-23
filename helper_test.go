@@ -45,3 +45,7 @@ func TestURLEncode(t *testing.T) {
 	content, _ = echo.URLDecode(encoded, true)
 	assert.Equal(t, raw, content)
 }
+
+func TestInSliceFold(t *testing.T) {
+	assert.True(t, echo.InSliceFold(`post`, []string{`POST`}))
+}
