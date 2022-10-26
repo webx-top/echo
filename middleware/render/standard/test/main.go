@@ -15,6 +15,7 @@ import (
 	"github.com/webx-top/echo/handler/pprof"
 	mw "github.com/webx-top/echo/middleware"
 	"github.com/webx-top/echo/middleware/render"
+	"github.com/webx-top/echo/middleware/tplfunc"
 )
 
 type Nested struct {
@@ -36,6 +37,10 @@ func main() {
 
 	tpl := render.New("standard", "./template/")
 	tpl.Init()
+	tpl.SetFuncMap(func() map[string]interface{} {
+		funcs := tplfunc.New()
+		return funcs
+	})
 	//tpl.SetDebug(true)
 	ctx := echo.NewContext(mock.NewRequest(), mock.NewResponse(), defaults.Default)
 	clipFunc := func(tmpl string, arg string) string {
@@ -98,7 +103,7 @@ func main() {
 		fmt.Printf("==========%v: %v========\\\n", i, ts)
 		str := tpl.Fetch("test", demo, ctx)
 		fmt.Printf("%v\n", str)
-		fmt.Printf("==========cost: %v========/\n", time.Now().Sub(ts).Seconds())
+		fmt.Printf("==========cost: %vms========/\n", time.Now().Sub(ts).Milliseconds())
 	}
 
 	runtime.ReadMemStats(memStat)
