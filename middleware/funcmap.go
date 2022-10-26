@@ -24,10 +24,6 @@ func FuncMap(funcMap map[string]interface{}, skipper ...echo.Skipper) echo.Middl
 			if skip(c) {
 				return h.Handle(c)
 			}
-
-			for name, function := range c.Echo().FuncMap {
-				c.SetFunc(name, function)
-			}
 			for name, function := range funcMap {
 				c.SetFunc(name, function)
 			}
@@ -62,14 +58,6 @@ func SetDefaultFuncMap(c echo.Context) {
 	req := c.Request()
 	c.SetFunc(`T`, c.T)
 	c.SetFunc(`Lang`, c.Lang)
-	var stored param.MapReadonly
-	c.SetFunc(`Stored`, func() param.MapReadonly {
-		if stored != nil {
-			return stored
-		}
-		stored = param.MapReadonly(c.Stored())
-		return stored
-	})
 	c.SetFunc(`Get`, c.Get)
 	c.SetFunc(`Set`, func(key string, value interface{}) string {
 		c.Set(key, value)

@@ -41,6 +41,7 @@ import (
 	"github.com/webx-top/echo/logger"
 	"github.com/webx-top/echo/middleware/render/driver"
 	"github.com/webx-top/echo/middleware/render/manager"
+	"github.com/webx-top/echo/param"
 	"github.com/webx-top/poolx/bufferpool"
 )
 
@@ -247,7 +248,7 @@ func (a *Standard) Render(w io.Writer, tmplName string, values interface{}, c ec
 	}
 	return tmpl.ExecuteTemplate(w, tmpl.Name(), RenderData{
 		Func:   c.Funcs(),
-		Stored: c.Stored(),
+		Stored: param.MapReadonly(c.Stored()),
 		Data:   values,
 	})
 }

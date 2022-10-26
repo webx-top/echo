@@ -9,5 +9,5 @@ import (
 type RenderData struct {
 	Func   template.FuncMap
 	Data   interface{}
-	Stored param.Store
+	Stored param.MapReadonly
 }
