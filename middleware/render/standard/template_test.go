@@ -35,3 +35,19 @@ func TestTemplate(t *testing.T) {
 	}
 	time.Sleep(time.Second * 5)
 }
+
+func TestParseError(t *testing.T) {
+	content := `template: /Users/hank/go/src/github.com/admpub/nging/template/backend/manager/role_edit_perm_page.html:7:831: executing "/Users/hank/go/src/github.com/admpub/nging/template/backend/manager/role_edit_perm_page.html" at <call>: wrong number of args for call: want at least 1 got 0`
+	matches := regErrorFile.FindAllStringSubmatch(content, -1)
+	assert.Equal(t, `template: /Users/hank/go/src/github.com/admpub/nging/template/backend/manager/role_edit_perm_page.html:7:831: `, matches[0][0])
+	assert.Equal(t, `/Users/hank/go/src/github.com/admpub/nging/template/backend/manager/role_edit_perm_page.html`, matches[0][1])
+	assert.Equal(t, `7`, matches[0][2])
+	assert.Equal(t, `831`, matches[0][3])
+	//panic(echo.Dump(matches, false))
+
+	content = `template: /Users/hank/go/src/github.com/webx-top/echo/middleware/render/standard/test/template/test.html:6: function "Now2" not defined`
+	matches = regErrorFile.FindAllStringSubmatch(content, -1)
+	assert.Equal(t, `template: /Users/hank/go/src/github.com/webx-top/echo/middleware/render/standard/test/template/test.html:6: `, matches[0][0])
+	assert.Equal(t, `/Users/hank/go/src/github.com/webx-top/echo/middleware/render/standard/test/template/test.html`, matches[0][1])
+	assert.Equal(t, `6`, matches[0][2])
+}
