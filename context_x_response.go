@@ -36,8 +36,8 @@ func (c *xContext) Render(name string, data interface{}, codes ...int) (err erro
 			default:
 				c.dataEngine.SetData(data, c.dataEngine.GetCode().Int())
 			}
-			if c.echo.renderDataWrapper != nil {
-				data = c.echo.renderDataWrapper(c, data)
+			if c.renderDataWrapper != nil {
+				data = c.renderDataWrapper(c, data)
 			}
 			return render(c, data)
 		}
@@ -46,8 +46,8 @@ func (c *xContext) Render(name string, data interface{}, codes ...int) (err erro
 	if data == nil {
 		data = c.dataEngine.GetData()
 	}
-	if c.echo.renderDataWrapper != nil {
-		data = c.echo.renderDataWrapper(c, data)
+	if c.renderDataWrapper != nil {
+		data = c.renderDataWrapper(c, data)
 	}
 	b, err := c.Fetch(name, data)
 	if err != nil {
