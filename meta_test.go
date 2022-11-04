@@ -10,10 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/webx-top/echo"
 	. "github.com/webx-top/echo"
-	"github.com/webx-top/echo/code"
 	"github.com/webx-top/echo/encoding/json"
 	"github.com/webx-top/echo/middleware"
-	"github.com/webx-top/validation"
 )
 
 type MetaRequest struct {
@@ -24,17 +22,8 @@ func NewMetaRequest() echo.MetaValidator {
 	return &MetaRequest{}
 }
 
-func (m *MetaRequest) Validate(c echo.Context) error {
-	v := validation.New()
-	pass, err := v.Valid(m)
-	if err != nil {
-		return err
-	}
-	if !pass {
-		verr := v.Error()
-		err = c.NewError(code.InvalidParameter, verr.WithField().Error()).SetZone(verr.Field)
-	}
-	return err
+func (m *MetaRequest) Methods() []string {
+	return nil
 }
 
 func (m *MetaRequest) Filters(c echo.Context) []FormDataFilter {
@@ -80,6 +69,7 @@ func TestEchoMeta(t *testing.T) {
 func TestEchoMetaRequestValidator(t *testing.T) {
 	e := New()
 	e.SetDebug(true)
+	e.SetValidator(NewValidation())
 	g := e.Group("/root")
 
 	g.Post("/post", e.MetaHandler(

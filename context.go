@@ -36,8 +36,9 @@ type Context interface {
 	WithContext(ctx context.Context) *http.Request
 	SetValue(key string, value interface{})
 
-	Validator
 	SetValidator(Validator)
+	Validator() Validator
+	Validate(item interface{}, args ...interface{}) *Error
 	Translator
 	SetTranslator(Translator)
 	Request() engine.Request

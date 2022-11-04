@@ -21,7 +21,9 @@ package echo
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
+	"github.com/webx-top/echo/code"
 	"github.com/webx-top/validation"
 )
 
@@ -168,4 +170,40 @@ func InterfacesToStrings(args []interface{}) []string {
 		}
 	}
 	return fields
+}
+
+func Validate(c Context, item interface{}, args ...interface{}) *Error {
+	isStruct := reflect.Indirect(reflect.ValueOf(item)).Kind() == reflect.Struct
+	if isStruct {
+		return ValidateStruct(c, item, args...)
+	}
+	result := c.Validator().Validate(item, args...)
+	if err := result.Error(); err != nil {
+		return c.NewError(code.InvalidParameter, err.Error()).SetError(err).SetZone(result.Field())
+	}
+	return nil
+}
+
+func ValidateStruct(c Context, item interface{}, args ...interface{}) *Error {
+	if before, ok := item.(BeforeValidate); ok {
+		if err := before.BeforeValidate(c); err != nil {
+			if rv, ok := err.(*Error); ok {
+				return rv
+			}
+			return c.NewError(code.InvalidParameter, err.Error()).SetError(err)
+		}
+	}
+	result := c.Validator().Validate(item, args...)
+	if err := result.Error(); err != nil {
+		return c.NewError(code.InvalidParameter, err.Error()).SetError(err).SetZone(result.Field())
+	}
+	if after, ok := item.(AfterValidate); ok {
+		if err := after.AfterValidate(c); err != nil {
+			if rv, ok := err.(*Error); ok {
+				return rv
+			}
+			return c.NewError(code.InvalidParameter, err.Error()).SetError(err)
+		}
+	}
+	return nil
 }
