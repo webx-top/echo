@@ -284,7 +284,7 @@ func (c *xContext) Fetch(name string, data interface{}) (b []byte, err error) {
 	return
 }
 
-func (c *xContext) Validate(item interface{}, args ...interface{}) *Error {
+func (c *xContext) Validate(item interface{}, args ...interface{}) error {
 	return Validate(c, item, args...)
 }
 

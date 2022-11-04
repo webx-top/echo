@@ -38,7 +38,7 @@ type Context interface {
 
 	SetValidator(Validator)
 	Validator() Validator
-	Validate(item interface{}, args ...interface{}) *Error
+	Validate(item interface{}, args ...interface{}) error
 	Translator
 	SetTranslator(Translator)
 	Request() engine.Request

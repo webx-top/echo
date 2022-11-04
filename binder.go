@@ -55,10 +55,7 @@ func (b *binder) MustBindAndValidate(i interface{}, c Context, filter ...FormDat
 	if err := b.MustBind(i, c, filter...); err != nil {
 		return err
 	}
-	if err := ValidateStruct(c, i); err != nil {
-		return err
-	}
-	return nil
+	return ValidateStruct(c, i)
 }
 
 func (b *binder) Bind(i interface{}, c Context, filter ...FormDataFilter) (err error) {
@@ -75,10 +72,7 @@ func (b *binder) BindAndValidate(i interface{}, c Context, filter ...FormDataFil
 			return err
 		}
 	}
-	if err := ValidateStruct(c, i); err != nil {
-		return err
-	}
-	return nil
+	return ValidateStruct(c, i)
 }
 
 func (b *binder) SetDecoders(decoders map[string]func(interface{}, Context, ...FormDataFilter) error) {
