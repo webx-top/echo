@@ -88,7 +88,7 @@ func TestMapToAnonymous(t *testing.T) {
 	tm, _ := time.ParseInLocation(`2006-01-02 15:04:05`, `2020-08-10 12:00:00`, time.Local)
 	expected := &TestAnonymous{
 		TestUser: &TestUser{
-			TestProfile: &TestProfile{Address: ``},
+			TestProfile: nil,
 			Name:        `lily`,
 			Age:         1,
 		},
@@ -124,6 +124,9 @@ func TestMapToAnonymous(t *testing.T) {
 		Time:  tm,
 	}
 	assert.Equal(t, expected, m)
+
+	formData[`address`] = []string{``}
+	expected.TestUser.TestProfile = &TestProfile{Address: ``}
 
 	for _, v := range expected.ListStruct {
 		v.TestUser.Name = ``
