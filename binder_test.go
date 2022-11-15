@@ -337,4 +337,9 @@ func TestStructMapIntKey(t *testing.T) {
 		`map[1]`: {`manager`},
 	}, ``)
 	assert.NoError(t, err)
+	assert.Equal(t, &TestMapIntKey{
+		Map: map[int][]string{
+			1: {`manager`},
+		},
+	}, m)
 }
