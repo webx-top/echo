@@ -63,6 +63,10 @@ type TestAnonymous struct {
 	Time       time.Time
 }
 
+type TestMapIntKey struct {
+	Map map[int][]string
+}
+
 func TestMapToAnonymous(t *testing.T) {
 	e := New()
 	m := &TestAnonymous{}
@@ -324,4 +328,13 @@ func TestStructToForm(t *testing.T) {
 	NamedStructMap(e, m2, expected, ``)
 	assert.Equal(t, m, m2)
 	//Dump(m2)
+}
+
+func TestStructMapIntKey(t *testing.T) {
+	e := New()
+	m := &TestMapIntKey{}
+	err := NamedStructMap(e, m, map[string][]string{
+		`map[1]`: {`manager`},
+	}, ``)
+	assert.NoError(t, err)
 }
