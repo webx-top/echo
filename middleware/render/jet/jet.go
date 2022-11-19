@@ -1,19 +1,17 @@
 /*
+Copyright 2017 Wenhui Shen <www.webx.top>
 
-   Copyright 2017 Wenhui Shen <www.webx.top>
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+	http://www.apache.org/licenses/LICENSE-2.0
 
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 package jet
 
@@ -117,6 +115,23 @@ func (a *Jet) Render(w io.Writer, tmpl string, data interface{}, c echo.Context)
 		vars.Set(name, fn)
 	}
 	return t.Execute(w, vars, data)
+}
+
+// RenderBy render by content
+func (a *Jet) RenderBy(w io.Writer, tmplName string, tmplContent func(string) ([]byte, error), values interface{}, c echo.Context) error {
+	b, err := tmplContent(tmplName)
+	if err != nil {
+		return err
+	}
+	tmpl, err := a.set.Parse(tmplName, string(b))
+	if err != nil {
+		return err
+	}
+	vars := make(jet.VarMap)
+	for name, fn := range c.Funcs() {
+		vars.Set(name, fn)
+	}
+	return tmpl.Execute(w, vars, values)
 }
 
 func (a *Jet) Fetch(tmpl string, data interface{}, c echo.Context) string {

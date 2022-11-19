@@ -34,3 +34,13 @@ func (s *ServerSentEvents) Render(w io.Writer, name string, data interface{}, c 
 		Data:  data,
 	})
 }
+
+func (s *ServerSentEvents) RenderBy(w io.Writer, name string, _ func(string) ([]byte, error), data interface{}, c echo.Context) error {
+	if v, y := data.(sse.Event); y {
+		return sse.Encode(w, v)
+	}
+	return sse.Encode(w, sse.Event{
+		Event: name,
+		Data:  data,
+	})
+}
