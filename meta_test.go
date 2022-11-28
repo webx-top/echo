@@ -33,16 +33,22 @@ func (m *MetaRequest) Filters(c echo.Context) []FormDataFilter {
 func TestEchoMeta(t *testing.T) {
 	e := New()
 	e.SetDebug(true)
+	e.RouteDebug = true
 	g := e.Group("/root")
-
-	g.Get("/", e.MetaHandler(
-		H{"version": 1.0, "data": H{"by": "handler"}},
+	routeName := `test.echo.meta`
+	metaData := H{"version": 1.0, "data": H{"by": "handler"}}
+	r := g.Get("/", e.MetaHandler(
+		metaData,
 		func(c Context) error {
 			return c.JSON(c.Route().Meta)
 		},
 	))
+	r.SetName(routeName)
 
 	e.RebuildRouter()
+
+	assert.Equal(t, routeName, r.GetName())
+	assert.Equal(t, metaData, r.GetMeta())
 
 	var meta H
 
@@ -63,7 +69,7 @@ func TestEchoMeta(t *testing.T) {
 	assert.Equal(t, http.StatusOK, c)
 	expected2, _ := json.MarshalIndent(expected, "", "  ")
 	assert.Equal(t, string(expected2), b)
-
+	assert.Equal(t, `/root/`, e.URI(`test.echo.meta`))
 }
 
 func TestEchoMetaRequestValidator(t *testing.T) {
