@@ -63,8 +63,13 @@ type TestAnonymous struct {
 	Time       time.Time
 }
 
+type TestTypeInt int
+type TestTypeString string
+
 type TestMapIntKey struct {
-	Map map[int][]string
+	Map  map[int][]string
+	Map1 map[TestTypeInt][]TestTypeString
+	Map2 map[TestTypeString]TestTypeInt
 }
 
 func TestMapToAnonymous(t *testing.T) {
@@ -334,12 +339,20 @@ func TestStructMapIntKey(t *testing.T) {
 	e := New()
 	m := &TestMapIntKey{}
 	err := NamedStructMap(e, m, map[string][]string{
-		`map[1]`: {`manager`},
+		`map[1]`:    {`manager`},
+		`map1[1][]`: {`manager1`},
+		`map2[a]`:   {`2`},
 	}, ``)
 	assert.NoError(t, err)
 	assert.Equal(t, &TestMapIntKey{
 		Map: map[int][]string{
 			1: {`manager`},
+		},
+		Map1: map[TestTypeInt][]TestTypeString{
+			1: {`manager1`},
+		},
+		Map2: map[TestTypeString]TestTypeInt{
+			`a`: 2,
 		},
 	}, m)
 }
