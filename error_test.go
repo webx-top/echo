@@ -8,7 +8,7 @@ import (
 	"github.com/webx-top/echo/code"
 )
 
-func TestInErrorCode(t *testing.T) {
+func TestIsErrorCode(t *testing.T) {
 	err := NewError(`test`, code.Unauthenticated)
 	assert.True(t, IsErrorCode(err, code.Unauthenticated))
 
