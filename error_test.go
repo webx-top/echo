@@ -14,4 +14,5 @@ func TestInErrorCode(t *testing.T) {
 
 	err2 := fmt.Errorf(`err2: %w`, err)
 	assert.True(t, IsErrorCode(err2, code.Unauthenticated))
+	assert.False(t, IsErrorCode(err2, code.Unsupported))
 }
