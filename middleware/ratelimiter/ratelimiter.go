@@ -144,7 +144,7 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 				after := int64(until) / 1e9
 				response.Header().Set("Retry-After", strconv.FormatInt(after, 10))
 				retryAfter := until.String()
-				response.Header().Set("Retry-After-Duration", retryAfter)
+				response.Header().Set("X-Retry-After", retryAfter)
 				return echo.NewHTTPError(http.StatusTooManyRequests, fmt.Sprintf("Rate limit exceeded, retry in %s", retryAfter))
 			}
 			return h.Handle(c)
