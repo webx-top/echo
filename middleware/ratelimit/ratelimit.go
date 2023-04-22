@@ -1,19 +1,17 @@
 /*
+Copyright 2016 Wenhui Shen <www.webx.top>
 
-   Copyright 2016 Wenhui Shen <www.webx.top>
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+	http://www.apache.org/licenses/LICENSE-2.0
 
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 package ratelimit
 
@@ -96,10 +94,13 @@ func LimitByKeysWithCustomTokenBucketTTL(limiter *config.Limiter, keys []string,
 	return nil
 }
 
+const HTTPTimeLayout = "Mon, 02 Jan 2006 15:04:05 GMT"
+
 // SetResponseHeaders configures X-Rate-Limit-Limit and X-Rate-Limit-Duration
 func SetResponseHeaders(limiter *config.Limiter, w engine.Response) {
 	w.Header().Add("X-Rate-Limit-Limit", strconv.FormatInt(limiter.Max, 10))
 	w.Header().Add("X-Rate-Limit-Duration", limiter.TTL.String())
+	w.Header().Add("Retry-After", time.Now().Add(limiter.TTL).Format(HTTPTimeLayout))
 }
 
 // LimitByRequest builds keys based on http.Request struct,
