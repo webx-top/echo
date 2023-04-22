@@ -100,7 +100,7 @@ const HTTPTimeLayout = "Mon, 02 Jan 2006 15:04:05 GMT"
 func SetResponseHeaders(limiter *config.Limiter, w engine.Response) {
 	w.Header().Add("X-Rate-Limit", strconv.FormatInt(limiter.Max, 10))
 	w.Header().Add("X-Retry-After", limiter.TTL.String())
-	w.Header().Add("Retry-After", time.Now().Add(limiter.TTL).Format(HTTPTimeLayout))
+	w.Header().Add("Retry-After", time.Now().UTC().Add(limiter.TTL).Format(HTTPTimeLayout))
 }
 
 // LimitByRequest builds keys based on http.Request struct,
