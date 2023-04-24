@@ -124,7 +124,7 @@ func (r *Request) SetBody(reader io.Reader) {
 }
 
 func (r *Request) FormValue(name string) string {
-	return r.value.postArgs.Get(name)
+	return r.value.Get(name)
 }
 
 func (r *Request) Form() engine.URLValuer {

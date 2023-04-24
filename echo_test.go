@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/admpub/log"
@@ -209,6 +210,9 @@ func TestEchoHandler(t *testing.T) {
 	e.Get("/file/*", func(c Context) error {
 		return c.String(c.P(0))
 	})
+	e.Route(`GET,POST`, "/input", func(c Context) error {
+		return c.String(c.Form(`test`))
+	})
 	e.RebuildRouter()
 
 	assert.Equal(t, `/view/8`, e.URI(`view`, 8))
@@ -225,6 +229,16 @@ func TestEchoHandler(t *testing.T) {
 	c, b = request(GET, "/file/path/to/file.js", e)
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "path/to/file.js", b)
+	c, b = request(GET, "/input?test=1", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "1", b)
+	c, b = request(POST, "/input", e, func(r *http.Request) {
+		r.PostForm = url.Values{
+			`test`: []string{`2`},
+		}
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "2", b)
 }
 
 func TestEchoRouter(t *testing.T) {
