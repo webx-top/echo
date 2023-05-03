@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine/mock"
+	"github.com/webx-top/echo/param"
 )
 
 type TestForm struct {
@@ -19,9 +20,12 @@ type TestForm struct {
 }
 
 type TestData struct {
-	File  *TestFile
-	Extra H
-	List  []interface{}
+	File     *TestFile
+	Extra    H
+	List     []interface{}
+	Strings  param.StringSlice
+	SStrings []param.String
+	String   param.String
 }
 
 type TestFile struct {
@@ -154,6 +158,9 @@ func TestMapToStruct(t *testing.T) {
 		`files[]`:             {`a.txt`, `b.txt`, `c.txt`},
 		`data[file][users][]`: {`1`, `2`, `3`},
 		`IDs[]`:               {`1`, `2`, `3`},
+		`data[strings][]`:     {`a`, `b`, `c`},
+		`data[sStrings][]`:    {`a`, `b`, `c`},
+		`data[string]`:        {`a`},
 		`secret`:              {`nothing`},
 	}, ``)
 	assert.Equal(t, &TestForm{
@@ -162,6 +169,9 @@ func TestMapToStruct(t *testing.T) {
 			File: &TestFile{
 				Users: []int64{1, 2, 3},
 			},
+			Strings:  param.StringSlice{`a`, `b`, `c`},
+			SStrings: []param.String{`a`, `b`, `c`},
+			String:   `a`,
 		},
 		IDs:    `1,2,3`,
 		secret: ``,
