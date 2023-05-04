@@ -54,7 +54,7 @@ type Options struct {
 	IDGenerator    IDGenerator
 }
 
-func (o *Options) SetPrefix(enable bool) *Options {
+func (o *Options) SetEnableImage(enable bool) *Options {
 	o.EnableImage = enable
 	return o
 }
@@ -71,6 +71,11 @@ func (o *Options) SetEnableDownload(enable bool) *Options {
 
 func (o *Options) SetAudioLangs(audioLangs ...string) *Options {
 	o.AudioLangs = audioLangs
+	return o
+}
+
+func (o *Options) SetPrefix(prefix string) *Options {
+	o.Prefix = prefix
 	return o
 }
 
