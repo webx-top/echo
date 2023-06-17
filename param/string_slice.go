@@ -191,7 +191,7 @@ func (p StringSlice) Uint(filters ...func(int, uint) bool) []uint {
 	}
 	var ids []uint
 	for idx, id := range p {
-		i, _ := strconv.ParseUint(strings.TrimSpace(id), 10, 64)
+		i, _ := strconv.ParseUint(strings.TrimSpace(id), 10, 0)
 		iv := uint(i)
 		if filter == nil || filter(idx, iv) {
 			ids = append(ids, iv)
