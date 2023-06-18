@@ -27,7 +27,14 @@ var mapString = `{
     {
       "b": "index 1.b"
     }
-  ]
+  ],
+  "film": {
+    "indexPage": {
+      "value": {
+        "bannerFilmId": "1326,1206,1205,1204,1203"
+      }
+    }
+  }
 }`
 
 func TestMapx(t *testing.T) {
@@ -48,6 +55,8 @@ func TestMapx(t *testing.T) {
 		"b[]":    {"index_0", "index_1"},
 		"c[][a]": {"index 0.a"},
 		"c[][b]": {"index 1.b"},
+		"film[indexPage][value][bannerFilmId]_text": {""},
+		"film[indexPage][value][bannerFilmId]":      {"1326,1206,1205,1204,1203"},
 	}
 	mx := NewMapx(data)
 	//Dump(mx)
