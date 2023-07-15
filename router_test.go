@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/webx-top/echo/param"
 )
 
 var h = HandlerFunc(func(c Context) error {
@@ -146,4 +147,22 @@ func TestRouterParamKind(t *testing.T) {
 	assert.Equal(t, paramKind, r.tree.paramChild.kind)
 	assert.Equal(t, `/:id`, r.tree.paramChild.ppath)
 	assert.Equal(t, `:`, r.tree.paramChild.prefix)
+}
+
+func TestRouterMakeURI(t *testing.T) {
+	r := &Route{
+		Method:  `GET`,
+		Path:    `/:id`,
+		Handler: h,
+		Format:  `/%v`,
+		Params:  []string{`id`},
+	}
+	uri := r.MakeURI(New(), H{`id`: `2000`})
+	assert.Equal(t, `/2000`, uri)
+
+	uri = r.MakeURI(New(), param.Store{`id`: `2001`})
+	assert.Equal(t, `/2001`, uri)
+
+	uri = r.MakeURI(New(), map[string]interface{}{`id`: 2002})
+	assert.Equal(t, `/2002`, uri)
 }

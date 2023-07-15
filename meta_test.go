@@ -34,7 +34,7 @@ func TestEchoMeta(t *testing.T) {
 	e := New()
 	e.SetDebug(true)
 	e.RouteDebug = true
-	g := e.Group("/root")
+	g := e.Group("/root").SetMetaKV(`parent`, `root`)
 	routeName := `test.echo.meta`
 	metaData := H{"version": 1.0, "data": H{"by": "handler"}}
 	r := g.Get("/", e.MetaHandler(
@@ -45,10 +45,20 @@ func TestEchoMeta(t *testing.T) {
 	))
 	r.SetName(routeName)
 
+	g2 := g.Group("/sub").SetMetaKV(`child`, `sub`)
+	g2.Get("/", func(c Context) error {
+		return c.JSON(c.Route().Meta)
+	})
+
 	e.RebuildRouter()
 
 	assert.Equal(t, routeName, r.GetName())
-	assert.Equal(t, metaData, r.GetMeta())
+
+	expectedMeta := H{
+		`parent`: `root`, // group meta
+	}
+	expectedMeta.DeepMerge(metaData)
+	assert.Equal(t, expectedMeta, r.GetMeta())
 
 	var meta H
 
@@ -59,6 +69,7 @@ func TestEchoMeta(t *testing.T) {
 	}
 	expected := H{
 		"version": 1.0,
+		"parent":  "root", // group meta
 		"data": H{
 			"by": "handler",
 		},
@@ -70,6 +81,15 @@ func TestEchoMeta(t *testing.T) {
 	expected2, _ := json.MarshalIndent(expected, "", "  ")
 	assert.Equal(t, string(expected2), b)
 	assert.Equal(t, `/root/`, e.URI(`test.echo.meta`))
+
+	c, b = request(GET, "/root/sub/", e)
+	assert.Equal(t, http.StatusOK, c)
+	expected = H{
+		"child":  "sub",  // group meta
+		"parent": "root", // group meta
+	}
+	expected2, _ = json.MarshalIndent(expected, "", "  ")
+	assert.Equal(t, string(expected2), b)
 }
 
 func TestEchoMetaRequestValidator(t *testing.T) {
