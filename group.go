@@ -177,7 +177,10 @@ func (g *Group) Add(method, path string, h interface{}, middleware ...interface{
 		host = g.host.name
 	}
 	r := g.echo.add(host, method, g.prefix, g.prefix+path, h, m...)
-	r.SetMeta(g.meta)
+	if len(g.meta) > 0 {
+		r.Meta = H{}
+		r.Meta.DeepMerge(g.meta)
+	}
 	return r
 }
 
