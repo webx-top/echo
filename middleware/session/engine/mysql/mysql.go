@@ -21,9 +21,28 @@ import (
 	"github.com/webx-top/echo/middleware/session/engine/file"
 )
 
+var DefaultMaxReconnect = 5
+
 func New(cfg *Options) sessions.Store {
 	cfg.Config.Engine = `mysql`
 	eng, err := NewMySQLStore(cfg)
+	if err != nil {
+		retries := cfg.MaxReconnect
+		if retries <= 0 {
+			retries = DefaultMaxReconnect
+		}
+		for i := 1; i < retries; i++ {
+			log.Println(`[sessions]`, err.Error())
+			wait := time.Second
+			log.Printf(`[sessions] (%d/%d) reconnect mysql after %v`, i, retries, wait)
+			time.Sleep(wait)
+			eng, err = NewMySQLStore(cfg)
+			if err == nil {
+				log.Println(`[sessions] reconnect mysql successfully`)
+				return eng
+			}
+		}
+	}
 	if err != nil {
 		log.Println("sessions: Operation MySQL failed:", err)
 		return file.NewFilesystemStore(&file.FileOptions{
@@ -55,6 +74,7 @@ type Options struct {
 	KeyPairs      [][]byte        `json:"-"`
 	MaxAge        int             `json:"maxAge"`
 	CheckInterval time.Duration   `json:"checkInterval"`
+	MaxReconnect  int             `json:"maxReconnect"`
 }
 
 type MySQLStore struct {
