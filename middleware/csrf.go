@@ -85,13 +85,15 @@ func CSRFWithConfig(config CSRFConfig) echo.MiddlewareFuncd {
 		config.SessionName = DefaultCSRFConfig.SessionName
 	}
 	// Initialize
-	parts := strings.Split(config.TokenLookup, ":")
+	parts := strings.SplitN(config.TokenLookup, ":", 2)
 	extractor := csrfTokenFromHeader(parts[1])
 	switch parts[0] {
 	case "form":
 		extractor = csrfTokenFromForm(parts[1])
 	case "query":
 		extractor = csrfTokenFromQuery(parts[1])
+	case "any":
+		extractor = csrfTokenFromAny(parts[1])
 	}
 
 	return func(next echo.Handler) echo.HandlerFunc {
@@ -161,6 +163,21 @@ func csrfTokenFromQuery(param string) csrfTokenExtractor {
 		if token == "" {
 			return "", ErrCSRFTokenIsEmptyInQuery
 		}
+		return token, nil
+	}
+}
+
+func csrfTokenFromAny(key string) csrfTokenExtractor {
+	return func(c echo.Context) (string, error) {
+		token := c.Request().Header().Get(key)
+		if len(token) > 0 {
+			return token, nil
+		}
+		token = c.Form(key)
+		if len(token) > 0 {
+			return token, nil
+		}
+		token = c.Query(key)
 		return token, nil
 	}
 }

@@ -168,7 +168,7 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 	}
 
 	// Initialize
-	parts := strings.Split(config.TokenLookup, ":")
+	parts := strings.SplitN(config.TokenLookup, ":", 2)
 	extractor := jwtFromHeader(parts[1])
 	switch parts[0] {
 	case "query":
@@ -177,6 +177,8 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 		extractor = jwtFromParam(parts[1])
 	case "cookie":
 		extractor = jwtFromCookie(parts[1])
+	case "any":
+		extractor = jwtFromFromAny(parts[1])
 	}
 
 	return func(next echo.Handler) echo.HandlerFunc {
@@ -257,6 +259,24 @@ func jwtFromParam(param string) jwtExtractor {
 		token := c.Param(param)
 		if token == "" {
 			return "", ErrJWTMissing
+		}
+		return token, nil
+	}
+}
+
+func jwtFromFromAny(key string) jwtExtractor {
+	return func(c echo.Context) (string, error) {
+		token := c.Request().Header().Get(key)
+		if len(token) > 0 {
+			return token, nil
+		}
+		token = c.Param(key)
+		if len(token) > 0 {
+			return token, nil
+		}
+		token = c.Query(key)
+		if len(token) == 0 {
+			return token, ErrJWTMissing
 		}
 		return token, nil
 	}
