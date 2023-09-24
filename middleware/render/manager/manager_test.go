@@ -2,7 +2,6 @@ package manager
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -49,7 +48,7 @@ func TestManager(t *testing.T) {
 	Default.Start()
 	defer Default.Close()
 
-	err = ioutil.WriteFile(`./group_a/a/test.log`, []byte(time.Now().String()), os.ModePerm)
+	err = os.WriteFile(`./group_a/a/test.log`, []byte(time.Now().String()), os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
@@ -70,17 +69,17 @@ func TestManager(t *testing.T) {
 	}
 	time.Sleep(2 * time.Second)
 
-	err = ioutil.WriteFile(`./group_b/b/test.log`, []byte(time.Now().String()), os.ModePerm)
+	err = os.WriteFile(`./group_b/b/test.log`, []byte(time.Now().String()), os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
 	time.Sleep(2 * time.Second)
-	err = ioutil.WriteFile(`./group_a/a/test.log`, []byte(time.Now().String()), os.ModePerm)
+	err = os.WriteFile(`./group_a/a/test.log`, []byte(time.Now().String()), os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
 	time.Sleep(2 * time.Second)
-	err = ioutil.WriteFile(`./group_a/test.log`, []byte(time.Now().String()), os.ModePerm)
+	err = os.WriteFile(`./group_a/test.log`, []byte(time.Now().String()), os.ModePerm)
 	if err != nil {
 		panic(err)
 	}

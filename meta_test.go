@@ -2,7 +2,7 @@ package echo_test
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -112,7 +112,7 @@ func TestEchoMetaRequestValidator(t *testing.T) {
 		r.Form = url.Values{}
 		r.Form.Add(`Name`, `OK`)
 		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
-		r.Body = ioutil.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
+		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
 	})
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, `OK`, b)
@@ -120,7 +120,7 @@ func TestEchoMetaRequestValidator(t *testing.T) {
 	c, b = request(POST, "/root/post", e, func(r *http.Request) {
 		r.Form = url.Values{}
 		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
-		r.Body = ioutil.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
+		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
 	})
 	assert.Equal(t, http.StatusInternalServerError, c)
 	assert.Equal(t, `Name: Can not be empty`, b)
@@ -153,7 +153,7 @@ func TestEchoMetaRequestValidator2(t *testing.T) {
 		r.Form = url.Values{}
 		r.Form.Add(`Name`, `OK`)
 		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
-		r.Body = ioutil.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
+		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
 	})
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, `OK`, b)
@@ -161,7 +161,7 @@ func TestEchoMetaRequestValidator2(t *testing.T) {
 	c, b = request(POST, "/root/post2", e, func(r *http.Request) {
 		r.Form = url.Values{}
 		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
-		r.Body = ioutil.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
+		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
 	})
 	assert.Equal(t, http.StatusInternalServerError, c)
 	assert.Equal(t, `Name: Can not be empty`, b)
@@ -189,7 +189,7 @@ func TestEchoMetaRequestValidator3(t *testing.T) {
 		r.Form = url.Values{}
 		r.Form.Add(`Name`, `OK`)
 		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
-		r.Body = ioutil.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
+		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
 	})
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, `OK`, b)
@@ -197,7 +197,7 @@ func TestEchoMetaRequestValidator3(t *testing.T) {
 	c, b = request(POST, "/root/post3", e, func(r *http.Request) {
 		r.Form = url.Values{}
 		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
-		r.Body = ioutil.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
+		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
 	})
 	assert.Equal(t, http.StatusInternalServerError, c)
 	assert.Equal(t, `Name: Can not be empty`, b)
