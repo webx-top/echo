@@ -157,7 +157,7 @@ func CSRFWithConfig(config CSRFConfig) echo.MiddlewareFuncd {
 			cookie.HttpOnly = config.CookieHTTPOnly
 
 			// Store token in the context
-			c.Set(config.ContextKey, token)
+			c.Internal().Set(config.ContextKey, token)
 
 			// Protect clients from caching the response
 			c.Response().Header().Add(echo.HeaderVary, echo.HeaderCookie)
