@@ -43,6 +43,7 @@ type BoltOptions struct {
 	File          string        `json:"file"`
 	KeyPairs      [][]byte      `json:"-"`
 	BucketName    string        `json:"bucketName"`
+	MaxLength     int           `json:"maxLength"`
 	CheckInterval time.Duration `json:"checkInterval"`
 }
 
@@ -52,6 +53,7 @@ func NewBoltStore(opts *BoltOptions) (sessions.Store, error) {
 		DBOptions: store.Options{
 			BucketName: []byte(opts.BucketName),
 		},
+		MaxLength: opts.MaxLength,
 	}
 	b := &boltStore{
 		config:   &config,

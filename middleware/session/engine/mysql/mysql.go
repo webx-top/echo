@@ -16,7 +16,6 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/encoding/dbconfig"
-	"github.com/webx-top/echo/middleware/session/engine"
 	ss "github.com/webx-top/echo/middleware/session/engine"
 	"github.com/webx-top/echo/middleware/session/engine/file"
 )
@@ -73,6 +72,7 @@ type Options struct {
 	Table         string          `json:"table"`
 	KeyPairs      [][]byte        `json:"-"`
 	MaxAge        int             `json:"maxAge"`
+	MaxLength     int             `json:"maxLength"`
 	CheckInterval time.Duration   `json:"checkInterval"`
 	MaxReconnect  int             `json:"maxReconnect"`
 }
@@ -175,8 +175,7 @@ func NewMySQLStoreFromConnection(db *sql.DB, cfg *Options) (*MySQLStore, error) 
 	if stmtErr != nil {
 		return nil, errors.Wrap(stmtErr, selQ)
 	}
-
-	return &MySQLStore{
+	s := &MySQLStore{
 		db:            db,
 		stmtInsert:    stmtInsert,
 		stmtDelete:    stmtDelete,
@@ -186,7 +185,11 @@ func NewMySQLStoreFromConnection(db *sql.DB, cfg *Options) (*MySQLStore, error) 
 		table:         tableName,
 		maxAge:        cfg.MaxAge,
 		checkInterval: cfg.CheckInterval,
-	}, nil
+	}
+	if cfg.MaxLength > 0 {
+		s.MaxLength(cfg.MaxLength)
+	}
+	return s, nil
 }
 
 func (m *MySQLStore) Close() (err error) {
@@ -316,10 +319,17 @@ func (n *MySQLStore) MaxAge(ctx echo.Context) int {
 		if n.maxAge > 0 {
 			maxAge = n.maxAge
 		} else {
-			maxAge = engine.DefaultMaxAge
+			maxAge = ss.DefaultMaxAge
 		}
 	}
 	return maxAge
+}
+
+// MaxLength restricts the maximum length of new sessions to l.
+// If l is 0 there is no limit to the size of a session, use with caution.
+// The default for a new FilesystemStore is 4096.
+func (s *MySQLStore) MaxLength(l int) {
+	securecookie.SetMaxLength(s.Codecs, l)
 }
 
 func (m *MySQLStore) save(ctx echo.Context, session *sessions.Session) error {
