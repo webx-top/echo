@@ -1,6 +1,7 @@
 package echo
 
 import (
+	"database/sql"
 	"html/template"
 	"strings"
 	"time"
@@ -31,11 +32,12 @@ func NewRenderData(ctx Context, data interface{}) *RenderData {
 }
 
 type RenderData struct {
-	ctx    Context
-	now    *com.Time
-	Func   template.FuncMap
-	Data   interface{}
-	Stored param.MapReadonly
+	ctx        Context
+	now        *com.Time
+	themeColor sql.NullString
+	Func       template.FuncMap
+	Data       interface{}
+	Stored     param.MapReadonly
 }
 
 func (r *RenderData) Now() *com.Time {
@@ -52,6 +54,14 @@ func (r *RenderData) T(format string, args ...interface{}) string {
 
 func (r *RenderData) Lang() LangCode {
 	return r.ctx.Lang()
+}
+
+func (r *RenderData) ThemeColor() string {
+	if !r.themeColor.Valid {
+		r.themeColor.Valid = true
+		r.themeColor.String = r.ctx.Cookie().Get(`ThemeColor`)
+	}
+	return r.themeColor.String
 }
 
 func (r *RenderData) Get(key string, defaults ...interface{}) interface{} {
