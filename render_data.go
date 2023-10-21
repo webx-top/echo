@@ -60,6 +60,9 @@ func (r *RenderData) ThemeColor() string {
 	if !r.themeColor.Valid {
 		r.themeColor.Valid = true
 		r.themeColor.String = r.ctx.Cookie().Get(`ThemeColor`)
+		if len(r.themeColor.String) > 0 && !com.IsAlphaNumericUnderscoreHyphen(r.themeColor.String) {
+			r.themeColor.String = ``
+		}
 	}
 	return r.themeColor.String
 }
