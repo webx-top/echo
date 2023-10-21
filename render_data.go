@@ -59,7 +59,11 @@ func (r *RenderData) Lang() LangCode {
 func (r *RenderData) ThemeColor() string {
 	if !r.themeColor.Valid {
 		r.themeColor.Valid = true
-		r.themeColor.String = r.ctx.Cookie().Get(`ThemeColor`)
+		if v, ok := r.ctx.Internal().Get(`ThemeColor`).(string); ok {
+			r.themeColor.String = v
+		} else {
+			r.themeColor.String = r.ctx.Cookie().Get(`ThemeColor`)
+		}
 		if len(r.themeColor.String) > 0 && !com.IsAlphaNumericUnderscoreHyphen(r.themeColor.String) {
 			r.themeColor.String = ``
 		}
