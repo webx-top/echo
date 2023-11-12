@@ -138,7 +138,7 @@ func binderValueDecoderSplit(field string, values []string, seperator string) (i
 }
 
 func binderValueEncoderJoin(field string, value interface{}, seperator string) []string {
-	return []string{strings.Join(value.([]string), seperator)}
+	return []string{strings.Join(param.AsStdStringSlice(value), seperator)}
 }
 
 func binderValueEncoderUnix2time(field string, value interface{}, seperator string) []string {
@@ -150,5 +150,5 @@ func binderValueEncoderUnix2time(field string, value interface{}, seperator stri
 }
 
 func binderValueDecoderTime2unix(field string, values []string, layout string) (interface{}, error) {
-	return param.AsDateTime(values[0], layout).Unix(),nil
+	return param.AsDateTime(values[0], layout).Unix(), nil
 }
