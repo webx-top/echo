@@ -559,7 +559,7 @@ func AsDateTime(val interface{}, layouts ...string) time.Time {
 	p := AsString(val)
 	if len(p) > 0 {
 		layout := DateTimeNormal
-		if len(layouts) > 0 {
+		if len(layouts) > 0 && len(layouts[0]) > 0 {
 			layout = layouts[0]
 		}
 		t, _ := time.ParseInLocation(layout, p, time.Local)

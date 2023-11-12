@@ -23,8 +23,12 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
+	"github.com/webx-top/com"
 	"github.com/webx-top/echo/encoding/json"
+	"github.com/webx-top/echo/param"
 )
 
 var (
@@ -114,4 +118,37 @@ var (
 	DefaultHTMLFilter = func(v string) (r string) {
 		return v
 	}
+	DefaultBinderValueEncoders = map[string]BinderValueEncoder{
+		`join`:      binderValueEncoderJoin,
+		`unix2time`: binderValueEncoderUnix2time,
+	}
+	DefaultBinderValueDecoders = map[string]BinderValueDecoder{
+		`splitKVRows`: binderValueDecoderSplitKVRows,
+		`split`:       binderValueDecoderSplit,
+		`time2unix`:   binderValueDecoderSplit,
+	}
 )
+
+func binderValueDecoderSplitKVRows(field string, values []string, seperator string) (interface{}, error) {
+	return com.SplitKVRows(values[0], seperator), nil
+}
+
+func binderValueDecoderSplit(field string, values []string, seperator string) (interface{}, error) {
+	return strings.Split(values[0], seperator), nil
+}
+
+func binderValueEncoderJoin(field string, value interface{}, seperator string) []string {
+	return []string{strings.Join(value.([]string), seperator)}
+}
+
+func binderValueEncoderUnix2time(field string, value interface{}, seperator string) []string {
+	ts := param.AsInt64(value)
+	if ts <= 0 {
+		return []string{}
+	}
+	return []string{param.AsString(time.Unix(ts, 0))}
+}
+
+func binderValueDecoderTime2unix(field string, values []string, layout string) (interface{}, error) {
+	return param.AsDateTime(values[0], layout).Unix(),nil
+}
