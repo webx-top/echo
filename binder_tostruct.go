@@ -174,7 +174,7 @@ func (e *Echo) parseFormItem(keyNormalizer func(string) string, m interface{}, t
 			case reflect.Struct:
 				err = e.setStructField(e.Logger(), tc, vc, name, value, typev, propPath, values, valueDecoders)
 			default:
-				e.Logger().Debugf(`binder: unsupported type for last field %v%v (%v): %v`, checkPath, name, propPath, value.Kind())
+				e.Logger().Debugf(`binder: The last layer field "%v" does not support type: %v`, propPath, value.Kind())
 			}
 			if err == nil {
 				continue
