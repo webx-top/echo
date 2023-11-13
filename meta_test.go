@@ -30,6 +30,10 @@ func (m *MetaRequest) Filters(c echo.Context) []FormDataFilter {
 	return nil
 }
 
+func (m *MetaRequest) ValueDecoders(c Context) BinderValueCustomDecoders {
+	return nil
+}
+
 func TestEchoMeta(t *testing.T) {
 	e := New()
 	e.SetDebug(true)

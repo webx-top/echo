@@ -2,10 +2,12 @@ package echo_test
 
 import (
 	"database/sql"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/webx-top/com"
 	. "github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine/mock"
 	"github.com/webx-top/echo/param"
@@ -372,6 +374,11 @@ type TestBinderWithConvertor struct {
 	Env     []string          `form_decoder:"split:\n" form_encoder:"join:\n"`
 }
 
+type TestBinderWithConvertorParent struct {
+	Item   *TestBinderWithConvertor
+	Result string
+}
+
 func TestBinderConvertor(t *testing.T) {
 	e := New()
 	m := &TestBinderWithConvertor{}
@@ -391,11 +398,44 @@ func TestBinderConvertor(t *testing.T) {
 		},
 	}
 	assert.Equal(t, expected, m)
+
 	ctx := e.NewContext(mock.NewRequest(), mock.NewResponse())
 	StructToForm(ctx, expected, ``, LowerCaseFirstLetter)
 	assert.Equal(t, map[string][]string{
 		`options`: {"a=1\nb=2"},
 		`env`:     {"A=ONE\nB=TWO"},
 	}, ctx.Forms())
+
+	parent := &TestBinderWithConvertorParent{
+		Item: m,
+	}
+
+	err = NamedStructMapWithDecoder(e, parent, map[string][]string{
+		`item[options]`: {"a:1\nb:2"},
+		`item[env]`:     {"A:ONE\nB:TWO"},
+		`result`:        {"A", "B"},
+	}, ``, BinderValueCustomDecoders{
+		`Item.Options`: func(values []string) (interface{}, error) {
+			return com.SplitKVRows(values[0], `:`), nil
+		},
+		`Result`: func(values []string) (interface{}, error) {
+			return strings.Join(values, `/`), nil
+		},
+	})
+	assert.NoError(t, err)
+	expected = &TestBinderWithConvertor{
+		Options: map[string]string{
+			`a`: `1`,
+			`b`: `2`,
+		},
+		Env: []string{
+			`A:ONE`,
+			`B:TWO`,
+		},
+	}
+	assert.Equal(t, &TestBinderWithConvertorParent{
+		Item:   expected,
+		Result: `A/B`,
+	}, parent)
 
 }

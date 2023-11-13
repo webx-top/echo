@@ -574,6 +574,14 @@ func (e *Echo) MetaHandlerWithRequest(m H, handler interface{}, request interfac
 			h.request = func() MetaValidator {
 				return NewBaseRequestValidator(r())
 			}
+		case MetaValidator:
+			t := reflect.Indirect(reflect.ValueOf(r)).Type()
+			if t.Kind() != reflect.Struct {
+				panic(fmt.Sprintf(`unsupported validate data: %T`, r))
+			}
+			h.request = func() MetaValidator {
+				return reflect.New(t).Interface().(MetaValidator)
+			}
 		default:
 			t := reflect.Indirect(reflect.ValueOf(r)).Type()
 			if t.Kind() != reflect.Struct {
