@@ -42,7 +42,7 @@ func (e *Echo) binderValueEncode(name string, typev reflect.Type, tv reflect.Val
 
 // StructToForm 映射struct到form
 func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter FieldNameFormatter, formatters ...param.StringerMap) {
-	var formatter param.StringerMap // 这里的 key 为结构体字段或map的key层级路径
+	var formatter param.StringerMap // 这里的 key 为表单字段 name 属性值
 	if len(formatters) > 0 {
 		formatter = formatters[0]
 	}
@@ -69,9 +69,9 @@ func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter
 			key := fieldNameFormatter(topName, srcKey.String())
 			switch srcVal.Kind() {
 			case reflect.Ptr:
-				StructToForm(ctx, srcVal.Interface(), key, fieldNameFormatter, formatters...)
+				StructToForm(ctx, srcVal.Interface(), key, fieldNameFormatter, formatter)
 			case reflect.Struct:
-				StructToForm(ctx, srcVal.Interface(), key, fieldNameFormatter, formatters...)
+				StructToForm(ctx, srcVal.Interface(), key, fieldNameFormatter, formatter)
 			default:
 				fieldToForm(ctx, tc, reflect.StructField{Name: srcKey.String()}, srcVal, topName, fieldNameFormatter, formatter)
 			}
@@ -102,11 +102,7 @@ func fieldToForm(ctx Context, parentTyp reflect.Type, fStruct reflect.StructFiel
 		return nil
 	}
 	if formatter != nil {
-		fNamePath := fName
-		if len(topName) > 0 {
-			fNamePath = topName + `.` + fNamePath
-		}
-		result, found, skip := formatter.String(fNamePath, fVal.Interface())
+		result, found, skip := formatter.String(fName, fVal.Interface())
 		if skip {
 			return nil
 		}
@@ -206,7 +202,7 @@ func fieldToForm(ctx Context, parentTyp reflect.Type, fStruct reflect.StructFiel
 		case reflect.Map:
 			StructToForm(ctx, fVal.Interface(), fName, fieldNameFormatter, formatter)
 		case reflect.Ptr:
-			StructToForm(ctx, fVal.Interface(), fName, fieldNameFormatter)
+			StructToForm(ctx, fVal.Interface(), fName, fieldNameFormatter, formatter)
 		default:
 			switch v := fVal.Interface().(type) {
 			case ToConversion:

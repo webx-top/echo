@@ -2,6 +2,7 @@ package echo_test
 
 import (
 	"database/sql"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -98,7 +99,7 @@ func TestMapToAnonymous(t *testing.T) {
 		`alias`:                  {`hah`},
 		`time`:                   {`2020-08-10 12:00:00`},
 	}
-	NamedStructMap(e, m, formData, ``)
+	FormToStruct(e, m, formData, ``)
 	s := `hah`
 	tm, _ := time.ParseInLocation(`2006-01-02 15:04:05`, `2020-08-10 12:00:00`, time.Local)
 	expected := &TestAnonymous{
@@ -149,14 +150,14 @@ func TestMapToAnonymous(t *testing.T) {
 	for _, v := range m.ListStruct {
 		v.TestUser.Name = ``
 	}
-	NamedStructMap(e, m, formData, ``, ExcludeFieldName(`*.*.Name`))
+	FormToStruct(e, m, formData, ``, ExcludeFieldName(`*.*.Name`))
 	assert.Equal(t, expected, m)
 }
 
 func TestMapToStruct(t *testing.T) {
 	e := New()
 	m := &TestForm{}
-	NamedStructMap(e, m, map[string][]string{
+	FormToStruct(e, m, map[string][]string{
 		`files[]`:             {`a.txt`, `b.txt`, `c.txt`},
 		`data[file][users][]`: {`1`, `2`, `3`},
 		`IDs[]`:               {`1`, `2`, `3`},
@@ -183,7 +184,7 @@ func TestMapToStruct(t *testing.T) {
 func TestMapToStruct2(t *testing.T) {
 	e := New()
 	m := &TestForm{}
-	NamedStructMap(e, m, map[string][]string{
+	FormToStruct(e, m, map[string][]string{
 		`files`:             {`a.txt`, `b.txt`, `c.txt`},
 		`data[file][users]`: {`1`, `2`, `3`},
 		`data[extra][key]`:  {`v1`},
@@ -212,7 +213,7 @@ func TestMapToStruct2(t *testing.T) {
 func TestMapToSliceStruct(t *testing.T) {
 	e := New()
 	m := &TestRole{}
-	NamedStructMap(e, m, map[string][]string{
+	FormToStruct(e, m, map[string][]string{
 		`name`:           {`manager`},
 		`users[0][name]`: {`john`},
 		`users[0][age]`:  {`18`},
@@ -245,7 +246,7 @@ func TestMapToSliceStruct(t *testing.T) {
 func TestMapToMapStruct(t *testing.T) {
 	e := New()
 	m := &TestRoleM{}
-	err := NamedStructMap(e, m, map[string][]string{
+	err := FormToStruct(e, m, map[string][]string{
 		`name`:                       {`manager`},
 		`users[0][name]`:             {`john`},
 		`users[0][age]`:              {`18`},
@@ -342,7 +343,7 @@ func TestStructToForm(t *testing.T) {
 	m2 := &TestRoleM{
 		Data: H{`data`: nil, `number`: 0},
 	}
-	NamedStructMap(e, m2, expected, ``)
+	FormToStruct(e, m2, expected, ``)
 	assert.Equal(t, m, m2)
 	//Dump(m2)
 }
@@ -350,7 +351,7 @@ func TestStructToForm(t *testing.T) {
 func TestStructMapIntKey(t *testing.T) {
 	e := New()
 	m := &TestMapIntKey{}
-	err := NamedStructMap(e, m, map[string][]string{
+	err := FormToStruct(e, m, map[string][]string{
 		`map[1]`:    {`manager`},
 		`map1[1][]`: {`manager1`},
 		`map2[a]`:   {`2`},
@@ -382,7 +383,7 @@ type TestBinderWithConvertorParent struct {
 func TestBinderConvertor(t *testing.T) {
 	e := New()
 	m := &TestBinderWithConvertor{}
-	err := NamedStructMap(e, m, map[string][]string{
+	err := FormToStruct(e, m, map[string][]string{
 		`options`: {"a=1\nb=2"},
 		`env`:     {"A=ONE\nB=TWO"},
 	}, ``)
@@ -410,7 +411,7 @@ func TestBinderConvertor(t *testing.T) {
 		Item: m,
 	}
 
-	err = NamedStructMapWithDecoder(e, parent, map[string][]string{
+	err = FormToStructWithDecoder(e, parent, map[string][]string{
 		`item[options]`: {"a:1\nb:2"},
 		`item[env]`:     {"A:ONE\nB:TWO"},
 		`result`:        {"A", "B"},
@@ -433,9 +434,31 @@ func TestBinderConvertor(t *testing.T) {
 			`B:TWO`,
 		},
 	}
-	assert.Equal(t, &TestBinderWithConvertorParent{
+	expected2 := &TestBinderWithConvertorParent{
 		Item:   expected,
 		Result: `A/B`,
-	}, parent)
+	}
+	assert.Equal(t, expected2, parent)
 
+	ctx2 := e.NewContext(mock.NewRequest(), mock.NewResponse())
+	StructToForm(ctx2, expected2, ``, MakeArrayFieldNameFormatter(com.LowerCaseFirst), param.StringerMap{
+		`item[options]`: param.StringerFunc(func(value interface{}) string {
+			m, y := value.(map[string]string)
+			if !y {
+				return ``
+			}
+			r := make([]string, 0, len(m))
+			for k, v := range m {
+				r = append(r, k+`:`+v)
+			}
+			sort.Strings(r)
+			return strings.Join(r, "\n")
+		}),
+		`result`: WhitespaceStringer(),
+	})
+	assert.Equal(t, map[string][]string{
+		`item[options]`: {"a:1\nb:2"},
+		`item[env]`:     {"A:ONE\nB:TWO"},
+		`result`:        {""},
+	}, ctx2.Forms())
 }

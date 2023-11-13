@@ -44,3 +44,12 @@ var (
 		return fName
 	}
 )
+
+func MakeArrayFieldNameFormatter(keyFormatter func(string) string) FieldNameFormatter {
+	return func(topName, fieldName string) string {
+		if keyFormatter != nil {
+			fieldName = keyFormatter(fieldName)
+		}
+		return ArrayFieldNameFormatter(topName, fieldName)
+	}
+}

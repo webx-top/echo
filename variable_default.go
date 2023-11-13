@@ -105,13 +105,13 @@ var (
 			return err
 		},
 		MIMEApplicationForm: func(i interface{}, ctx Context, filter ...FormDataFilter) error {
-			return NamedStructMap(ctx.Echo(), i, ctx.Request().PostForm().All(), ``, filter...)
+			return FormToStruct(ctx.Echo(), i, ctx.Request().PostForm().All(), ``, filter...)
 		},
 		MIMEMultipartForm: func(i interface{}, ctx Context, filter ...FormDataFilter) error {
-			return NamedStructMap(ctx.Echo(), i, ctx.Request().Form().All(), ``, filter...)
+			return FormToStruct(ctx.Echo(), i, ctx.Request().Form().All(), ``, filter...)
 		},
 		`*`: func(i interface{}, ctx Context, filter ...FormDataFilter) error {
-			return NamedStructMap(ctx.Echo(), i, ctx.Request().Form().All(), ``, filter...)
+			return FormToStruct(ctx.Echo(), i, ctx.Request().Form().All(), ``, filter...)
 		},
 	}
 	// DefaultHTMLFilter html filter (`form_filter:"html"`)

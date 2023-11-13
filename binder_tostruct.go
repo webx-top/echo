@@ -56,6 +56,22 @@ func NamedStructMapWithDecoder(e *Echo, m interface{}, data map[string][]string,
 	return namedStructMap(e, m, data, topName, valueDecoders, filters)
 }
 
+func FormToStruct(e *Echo, m interface{}, data map[string][]string, topName string, filters ...FormDataFilter) error {
+	return namedStructMap(e, m, data, topName, nil, filters)
+}
+
+func FormToStructWithDecoder(e *Echo, m interface{}, data map[string][]string, topName string, valueDecoders BinderValueCustomDecoders, filters ...FormDataFilter) error {
+	return namedStructMap(e, m, data, topName, valueDecoders, filters)
+}
+
+func FormToMap(e *Echo, m interface{}, data map[string][]string, topName string, filters ...FormDataFilter) error {
+	return namedStructMap(e, m, data, topName, nil, filters)
+}
+
+func FormToMapWithDecoder(e *Echo, m interface{}, data map[string][]string, topName string, valueDecoders BinderValueCustomDecoders, filters ...FormDataFilter) error {
+	return namedStructMap(e, m, data, topName, valueDecoders, filters)
+}
+
 func namedStructMap(e *Echo, m interface{}, data map[string][]string, topName string, valueDecoders BinderValueCustomDecoders, filters []FormDataFilter) error {
 	vc := reflect.ValueOf(m)
 	tc := reflect.TypeOf(m)
