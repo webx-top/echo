@@ -228,6 +228,14 @@ func (e *Echo) parseFormItem(keyNormalizer func(string) string, m interface{}, t
 			default:
 				return errors.New(`binder: [parseFormItem#slice] unsupported type ` + tc.Kind().String() + `: ` + propPath)
 			}
+			pos := strings.LastIndex(propPath, `.`)
+			if pos > -1 {
+				propPath = propPath[0:pos]
+			}
+			pos = strings.LastIndex(checkPath, `.`)
+			if pos > -1 {
+				checkPath = checkPath[0:pos]
+			}
 			return e.parseFormItem(keyNormalizer, m, newT, newV, names[i+1:], propPath+`.`, checkPath+`.`, values, valueDecoders, filters)
 		case reflect.Map:
 			if value.IsNil() {
