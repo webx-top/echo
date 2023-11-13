@@ -230,11 +230,7 @@ func (e *Echo) parseFormItem(keyNormalizer func(string) string, m interface{}, t
 			}
 			pos := strings.LastIndex(propPath, `.`)
 			if pos > -1 {
-				propPath = propPath[0:pos]
-			}
-			pos = strings.LastIndex(checkPath, `.`)
-			if pos > -1 {
-				checkPath = checkPath[0:pos]
+				propPath = propPath[0:pos] // 忽略切片数字下标
 			}
 			return e.parseFormItem(keyNormalizer, m, newT, newV, names[i+1:], propPath+`.`, checkPath+`.`, values, valueDecoders, filters)
 		case reflect.Map:
