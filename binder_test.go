@@ -368,7 +368,7 @@ func TestStructMapIntKey(t *testing.T) {
 }
 
 type TestBinderWithConvertor struct {
-	Options map[string]string `form_decoder:"splitKVRows:="`
+	Options map[string]string `form_decoder:"splitKVRows:=" form_encoder:"joinKVRows"`
 	Env     []string          `form_decoder:"split:\n" form_encoder:"join:\n"`
 }
 
@@ -394,9 +394,8 @@ func TestBinderConvertor(t *testing.T) {
 	ctx := e.NewContext(mock.NewRequest(), mock.NewResponse())
 	StructToForm(ctx, expected, ``, LowerCaseFirstLetter)
 	assert.Equal(t, map[string][]string{
-		`options.a`: {"1"},
-		`options.b`: {"2"},
-		`env`:       {"A=ONE\nB=TWO"},
+		`options`: {"a=1\nb=2"},
+		`env`:     {"A=ONE\nB=TWO"},
 	}, ctx.Forms())
 
 }

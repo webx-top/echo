@@ -119,13 +119,14 @@ var (
 		return v
 	}
 	DefaultBinderValueEncoders = map[string]BinderValueEncoder{
-		`join`:      binderValueEncoderJoin,
-		`unix2time`: binderValueEncoderUnix2time,
+		`joinKVRows`: binderValueEncoderJoinKVRows,
+		`join`:       binderValueEncoderJoin,
+		`unix2time`:  binderValueEncoderUnix2time,
 	}
 	DefaultBinderValueDecoders = map[string]BinderValueDecoder{
 		`splitKVRows`: binderValueDecoderSplitKVRows,
 		`split`:       binderValueDecoderSplit,
-		`time2unix`:   binderValueDecoderSplit,
+		`time2unix`:   binderValueDecoderTime2unix,
 	}
 )
 
@@ -139,6 +140,21 @@ func binderValueDecoderSplit(field string, values []string, seperator string) (i
 
 func binderValueEncoderJoin(field string, value interface{}, seperator string) []string {
 	return []string{strings.Join(param.AsStdStringSlice(value), seperator)}
+}
+
+func binderValueEncoderJoinKVRows(field string, value interface{}, seperator string) []string {
+	m, y := value.(map[string]string)
+	if !y {
+		return []string{}
+	}
+	if len(seperator) == 0 {
+		seperator = `=`
+	}
+	r := make([]string, 0, len(m))
+	for k, v := range m {
+		r = append(r, k+seperator+v)
+	}
+	return []string{strings.Join(r, "\n")}
 }
 
 func binderValueEncoderUnix2time(field string, value interface{}, seperator string) []string {
