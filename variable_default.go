@@ -23,6 +23,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -154,6 +155,7 @@ func binderValueEncoderJoinKVRows(field string, value interface{}, seperator str
 	for k, v := range m {
 		r = append(r, k+seperator+v)
 	}
+	sort.Strings(r)
 	return []string{strings.Join(r, "\n")}
 }
 
