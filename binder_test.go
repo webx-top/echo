@@ -335,10 +335,10 @@ func TestStructToForm(t *testing.T) {
 	forms = ctx.Forms()
 	expected[`Users.hasProfile.Age`] = []string{`20`}
 	expected[`Users.hasProfile.Name`] = []string{`userWithProfile`}
-	expected[`Users.hasProfile.TestProfile.Address`] = []string{`China`}
+	expected[`Users.hasProfile.Address`] = []string{`China`}
 	expected[`Data.number`] = []string{`1`}
-	assert.Equal(t, expected, forms)
 	//Dump(forms)
+	assert.Equal(t, expected, forms)
 
 	m2 := &TestRoleM{
 		Data: H{`data`: nil, `number`: 0},
