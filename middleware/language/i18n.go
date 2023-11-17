@@ -17,6 +17,7 @@ package language
 
 import (
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -24,6 +25,7 @@ import (
 	"github.com/admpub/i18n"
 	"github.com/admpub/log"
 	"github.com/webx-top/com"
+	"github.com/webx-top/echo"
 )
 
 var defaultInstance *I18n
@@ -35,7 +37,37 @@ type I18n struct {
 	config      *Config
 }
 
+func fixedPath(ppath string, open func(string) http.FileSystem) string {
+	if len(ppath) == 0 || filepath.IsAbs(ppath) {
+		return ppath
+	}
+	if open == nil {
+		open = func(p string) http.FileSystem {
+			return http.Dir(p)
+		}
+	}
+	fs := open(ppath)
+	var exists bool
+	file, err := fs.Open(`.`)
+	if err == nil {
+		_, err = file.Stat()
+		exists = err == nil
+		file.Close()
+	}
+	if exists {
+		return ppath
+	}
+	return filepath.Join(echo.Wd(), ppath)
+}
+
 func NewI18n(c *Config) *I18n {
+	c.Fallback = fixedPath(c.Fallback, c.FSFunc())
+	for index, value := range c.RulesPath {
+		c.RulesPath[index] = fixedPath(value, c.FSFunc())
+	}
+	for index, value := range c.MessagesPath {
+		c.MessagesPath[index] = fixedPath(value, c.FSFunc())
+	}
 	f, errs := i18n.NewTranslatorFactoryWith(c.Project, c.RulesPath, c.MessagesPath, c.Fallback, c.FSFunc())
 	if len(errs) > 0 {
 		var errMsg string
