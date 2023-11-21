@@ -110,7 +110,7 @@ func (a *I18n) Monitor() *I18n {
 			continue
 		}
 		if err := callback.AddDir(mp); err != nil {
-			log.Debug(err)
+			log.Debugf(`failed to I18n.Monitor.AddDir(%q): %v`, mp, err)
 		}
 	}
 	return a
