@@ -63,7 +63,7 @@ func WrapHandler(h interface{}) Handler {
 		return HandlerFunc(v())
 
 	default:
-		panic(fmt.Sprintf(`unknown handler: %T`, h))
+		panic(fmt.Sprintf(`unknown handler type: %T (value: %v)`, h, h))
 	}
 }
 
@@ -116,7 +116,7 @@ func WrapMiddleware(m interface{}) Middleware {
 		return WrapMiddlewareFromHandler(HandlerFunc(h()))
 
 	default:
-		panic(fmt.Sprintf(`unknown middleware: %T`, m))
+		panic(fmt.Sprintf(`unknown middleware type: %T (value: %v)`, m, m))
 	}
 }
 
