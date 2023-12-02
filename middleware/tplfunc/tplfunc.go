@@ -177,6 +177,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	// map & slice
 	// ======================
 	"MakeMap":        MakeMap,
+	"MakeSlice":      MakeSlice,
 	"InSet":          com.InSet,
 	"InSlice":        com.InSlice,
 	"InSlicex":       com.InSliceIface,
@@ -953,6 +954,10 @@ func MakeMap(values ...interface{}) param.Store {
 		h.Set(k, nil)
 	}
 	return h
+}
+
+func MakeSlice(values ...interface{}) []interface{} {
+	return values
 }
 
 func DelimLeft() string {
