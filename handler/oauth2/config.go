@@ -136,7 +136,6 @@ func (c *Config) LoginURL(providerName string) string {
 //
 // receives one parameter which is the host from the server,ex: http://localhost:3000, will be used as prefix for the oauth callback
 func (c *Config) GenerateProviders() *Config {
-	goth.ClearProviders()
 	var providers []goth.Provider
 	//we could use a map but that's easier for the users because of code completion of their IDEs/editors
 	for _, account := range c.Accounts {
@@ -148,6 +147,11 @@ func (c *Config) GenerateProviders() *Config {
 		}
 	}
 	goth.UseProviders(providers...)
+	return c
+}
+
+func (c *Config) ClearProviders() *Config {
+	goth.ClearProviders()
 	return c
 }
 
