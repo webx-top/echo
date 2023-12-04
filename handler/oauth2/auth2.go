@@ -18,7 +18,7 @@ package oauth2
 import (
 	"net/http"
 
-	"github.com/markbates/goth"
+	"github.com/admpub/goth"
 	"github.com/webx-top/echo"
 )
 
@@ -77,8 +77,35 @@ func (p *OAuth) SetCompleteAuthHandler(handler func(ctx echo.Context) (goth.User
 // if user is not validated  or not found it returns nil
 // same as 'ctx.Get(config's ContextKey field).(goth.User)'
 func (p *OAuth) User(ctx echo.Context) (u goth.User) {
-	u, _ = ctx.Get(p.Config.ContextKey).(goth.User)
+	u, _ = ctx.Internal().Get(p.Config.ContextKey).(goth.User)
 	return u
+}
+
+func MiddlewareVerifyProvider(config *Config) echo.MiddlewareFuncd {
+	return func(h echo.Handler) echo.HandlerFunc {
+		return func(ctx echo.Context) error {
+			providerName, err := GetProviderName(ctx)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusBadRequest, err.Error()).SetRaw(err)
+			}
+			account := config.GetAccount(providerName)
+			if account == nil {
+				return echo.ErrNotFound
+			}
+			return h.Handle(ctx)
+		}
+	}
+}
+
+func (p *OAuth) MiddlewareAuth(h echo.Handler) echo.Handler {
+	return echo.HandlerFunc(func(ctx echo.Context) error {
+		user, err := p.completeAuthHandler(ctx)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnauthorized, err.Error()).SetRaw(err)
+		}
+		ctx.Internal().Set(p.Config.ContextKey, user)
+		return h.Handle(ctx)
+	})
 }
 
 // Wrapper register the oauth route
@@ -88,27 +115,16 @@ func (p *OAuth) Wrapper(e *echo.Echo, middlewares ...interface{}) {
 	g := e.Group(p.Config.Path, middlewares...)
 
 	// set the mux path to handle the registered providers
-	g.Get("/login/:provider", p.beginAuthHandler)
+	g.Get("/login/:provider", p.beginAuthHandler, MiddlewareVerifyProvider(p.Config))
 
-	authMiddleware := func(h echo.Handler) echo.Handler {
-		return echo.HandlerFunc(func(ctx echo.Context) error {
-			user, err := p.completeAuthHandler(ctx)
-			if err != nil {
-				return echo.NewHTTPError(http.StatusUnauthorized, err.Error()).SetRaw(err)
-			}
-			ctx.Set(p.Config.ContextKey, user)
-			return h.Handle(ctx)
-		})
-	}
-
-	p.successHandlers = append([]interface{}{authMiddleware}, p.successHandlers...)
-	lastIndex := len(p.successHandlers) - 1
+	successHandlers := append([]interface{}{p.MiddlewareAuth}, p.successHandlers...)
+	lastIndex := len(successHandlers) - 1
 	if lastIndex == 0 {
 		g.Get("/callback/:provider", func(ctx echo.Context) error {
 			return ctx.String(`Success Handler is not set`)
-		}, p.successHandlers...)
+		}, successHandlers...)
 	} else {
-		g.Get("/callback/:provider", p.successHandlers[lastIndex], p.successHandlers[0:lastIndex]...)
+		g.Get("/callback/:provider", successHandlers[lastIndex], successHandlers[0:lastIndex]...)
 	}
 	// register the error handler
 	if p.failHandler != nil {

@@ -50,7 +50,7 @@ func main() {
 	e.Get("/", func(c echo.Context) error {
 		return c.HTML(`Login: <a href="/oauth/login/github" target="_blank">github</a>`)
 	})
-	config := &oauth2.Config{}
+	config := oauth2.NewConfig()
 	config.AddAccount(&oauth2.Account{
 		On:     true,
 		Name:   `github`,

@@ -16,34 +16,21 @@ limitations under the License.
 package oauth2
 
 import (
-	"github.com/markbates/goth"
-	"github.com/markbates/goth/providers/amazon"
-	"github.com/markbates/goth/providers/bitbucket"
-	"github.com/markbates/goth/providers/box"
-	"github.com/markbates/goth/providers/digitalocean"
-	"github.com/markbates/goth/providers/dropbox"
-	"github.com/markbates/goth/providers/facebook"
-	"github.com/markbates/goth/providers/github"
-	"github.com/markbates/goth/providers/gitlab"
-	"github.com/markbates/goth/providers/gplus"
-	"github.com/markbates/goth/providers/heroku"
-	"github.com/markbates/goth/providers/instagram"
-	"github.com/markbates/goth/providers/lastfm"
-	"github.com/markbates/goth/providers/linkedin"
-	"github.com/markbates/goth/providers/onedrive"
-	"github.com/markbates/goth/providers/paypal"
-	"github.com/markbates/goth/providers/salesforce"
-	"github.com/markbates/goth/providers/slack"
-	"github.com/markbates/goth/providers/soundcloud"
-	"github.com/markbates/goth/providers/spotify"
-	"github.com/markbates/goth/providers/steam"
-	"github.com/markbates/goth/providers/stripe"
-	"github.com/markbates/goth/providers/twitch"
-	"github.com/markbates/goth/providers/twitter"
-	"github.com/markbates/goth/providers/uber"
-	"github.com/markbates/goth/providers/wepay"
-	"github.com/markbates/goth/providers/yahoo"
-	"github.com/markbates/goth/providers/yammer"
+	"net/http"
+	"sync"
+
+	"github.com/admpub/goth"
+	"github.com/admpub/goth/providers/amazon"
+	"github.com/admpub/goth/providers/apple"
+	"github.com/admpub/goth/providers/bitbucket"
+	"github.com/admpub/goth/providers/gitea"
+	"github.com/admpub/goth/providers/github"
+	"github.com/admpub/goth/providers/paypal"
+	"github.com/admpub/goth/providers/salesforce"
+	"github.com/admpub/goth/providers/stripe"
+	"github.com/admpub/goth/providers/uber"
+	"github.com/admpub/goth/providers/wechat"
+	"github.com/admpub/goth/providers/yahoo"
 	"github.com/webx-top/echo"
 )
 
@@ -55,43 +42,37 @@ const (
 	DefaultContextKey = "oauth_user"
 )
 
-type Account struct {
-	On          bool // on / off
-	Name        string
-	Key         string
-	Secret      string `json:"-" xml:"-"`
-	Extra       echo.H
-	LoginURL    string
-	CallbackURL string
-	Constructor func(*Account) goth.Provider `json:"-" xml:"-"`
-}
-
-func (a *Account) SetConstructor(constructor func(*Account) goth.Provider) *Account {
-	a.Constructor = constructor
-	return a
-}
-
-func (a *Account) Instance() goth.Provider {
-	return a.Constructor(a)
-}
-
 // Config the configs for the gothic oauth/oauth2 authentication for third-party websites
 // All Key and Secret values are empty by default strings. Non-empty will be registered as Goth Provider automatically, by Iris
 // the users can still register their own providers using goth.UseProviders
 // contains the providers' keys  (& secrets) and the relative auth callback url path(ex: "/auth" will be registered as /auth/:provider/callback)
 type Config struct {
 	Host, Path string
-	Accounts   []*Account
+	accounts   []*Account
+	accountM   map[string]int
+	mu         *sync.RWMutex
 
 	// defaults to 'oauth_user' used by plugin to give you the goth.User, but you can take this manually also by `context.Get(ContextKey).(goth.User)`
 	ContextKey string
+}
+
+func NewConfig() *Config {
+	return &Config{
+		Path:       DefaultPath,
+		accounts:   []*Account{},
+		accountM:   map[string]int{},
+		mu:         &sync.RWMutex{},
+		ContextKey: DefaultContextKey,
+	}
 }
 
 // DefaultConfig returns OAuth config, the fields of the iteral are zero-values ( empty strings)
 func DefaultConfig() *Config {
 	return &Config{
 		Path:       DefaultPath,
-		Accounts:   []*Account{},
+		accounts:   []*Account{},
+		accountM:   map[string]int{},
+		mu:         &sync.RWMutex{},
 		ContextKey: DefaultContextKey,
 	}
 }
@@ -105,17 +86,22 @@ func (c *Config) MergeSingle(cfg *Config) (config Config) {
 	if len(config.Path) == 0 {
 		config.Path = c.Path
 	}
-	if len(config.Accounts) == 0 {
-		config.Accounts = make([]*Account, len(c.Accounts))
-		for k, v := range c.Accounts {
+	if config.mu == nil {
+		config.mu = c.mu
+	}
+	if len(config.accounts) == 0 {
+		c.mu.RLock()
+		config.accounts = make([]*Account, len(c.accounts))
+		for k, v := range c.accounts {
 			copyV := *v
 			if len(v.Extra) > 0 {
 				copyV.Extra = v.Extra.Clone()
 			} else {
 				copyV.Extra = echo.H{}
 			}
-			config.Accounts[k] = &copyV
+			config.accounts[k] = &copyV
 		}
+		c.mu.RUnlock()
 	}
 	if len(config.ContextKey) == 0 {
 		config.ContextKey = c.ContextKey
@@ -138,16 +124,29 @@ func (c *Config) LoginURL(providerName string) string {
 func (c *Config) GenerateProviders() *Config {
 	var providers []goth.Provider
 	//we could use a map but that's easier for the users because of code completion of their IDEs/editors
-	for _, account := range c.Accounts {
+	c.RangeAccounts(func(account *Account) bool {
 		if !account.On {
-			continue
+			return true
 		}
 		if provider := c.NewProvider(account); provider != nil {
 			providers = append(providers, provider)
 		}
-	}
+		return true
+	})
 	goth.UseProviders(providers...)
 	return c
+}
+
+func (c *Config) RangeAccounts(cb func(*Account) bool) (ok bool) {
+	c.mu.RLock()
+	for _, account := range c.accounts {
+		ok = cb(account)
+		if !ok {
+			break
+		}
+	}
+	c.mu.RUnlock()
+	return
 }
 
 func (c *Config) ClearProviders() *Config {
@@ -166,72 +165,76 @@ func (c *Config) NewProvider(account *Account) goth.Provider {
 		return account.Instance()
 	}
 	switch account.Name {
-	case "twitter":
-		return twitter.New(account.Key, account.Secret, account.CallbackURL)
-	case "facebook":
-		return facebook.New(account.Key, account.Secret, account.CallbackURL)
-	case "gplus":
-		return gplus.New(account.Key, account.Secret, account.CallbackURL)
+	case "gitea":
+		return gitea.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
 	case "github":
-		return github.New(account.Key, account.Secret, account.CallbackURL)
-	case "spotify":
-		return spotify.New(account.Key, account.Secret, account.CallbackURL)
-	case "linkedin":
-		return linkedin.New(account.Key, account.Secret, account.CallbackURL)
-	case "lastfm":
-		return lastfm.New(account.Key, account.Secret, account.CallbackURL)
-	case "twitch":
-		return twitch.New(account.Key, account.Secret, account.CallbackURL)
-	case "dropbox":
-		return dropbox.New(account.Key, account.Secret, account.CallbackURL)
-	case "digitalocean":
-		return digitalocean.New(account.Key, account.Secret, account.CallbackURL)
+		return github.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
 	case "bitbucket":
-		return bitbucket.New(account.Key, account.Secret, account.CallbackURL)
-	case "instagram":
-		return instagram.New(account.Key, account.Secret, account.CallbackURL)
-	case "box":
-		return box.New(account.Key, account.Secret, account.CallbackURL)
+		return bitbucket.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
 	case "salesforce":
-		return salesforce.New(account.Key, account.Secret, account.CallbackURL)
+		return salesforce.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
 	case "amazon":
-		return amazon.New(account.Key, account.Secret, account.CallbackURL)
-	case "yammer":
-		return yammer.New(account.Key, account.Secret, account.CallbackURL)
-	case "onedrive":
-		return onedrive.New(account.Key, account.Secret, account.CallbackURL)
+		return amazon.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
 	case "yahoo":
-		return yahoo.New(account.Key, account.Secret, account.CallbackURL)
-	case "slack":
-		return slack.New(account.Key, account.Secret, account.CallbackURL)
+		return yahoo.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
 	case "stripe":
-		return stripe.New(account.Key, account.Secret, account.CallbackURL)
-	case "wepay":
-		return wepay.New(account.Key, account.Secret, account.CallbackURL)
+		return stripe.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
 	case "paypal":
-		return paypal.New(account.Key, account.Secret, account.CallbackURL)
-	case "steam":
-		return steam.New(account.Key, account.CallbackURL)
-	case "heroku":
-		return heroku.New(account.Key, account.Secret, account.CallbackURL)
+		return paypal.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
+	case "apple":
+		return apple.New(account.Key, account.Secret, account.CallbackURL, http.DefaultClient, account.Scopes...)
+	case "wechat":
+		return wechat.New(account.Key, account.Secret, account.CallbackURL, wechat.WECHAT_LANG_CN)
 	case "uber":
-		return uber.New(account.Key, account.Secret, account.CallbackURL)
-	case "soundcloud":
-		return soundcloud.New(account.Key, account.Secret, account.CallbackURL)
-	case "gitlab":
-		return gitlab.New(account.Key, account.Secret, account.CallbackURL)
+		return uber.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
 	}
 	return nil
 }
 
 func (c *Config) AddAccount(accounts ...*Account) *Config {
-	c.Accounts = append(c.Accounts, accounts...)
+	c.mu.Lock()
+	for _, account := range accounts {
+		c.accountM[account.Name] = len(c.accounts)
+		c.accounts = append(c.accounts, account)
+	}
+	c.mu.Unlock()
 	return c
 }
 
+func (c *Config) GetAccount(name string) (account *Account) {
+	c.mu.RLock()
+	idx, ok := c.accountM[name]
+	if ok {
+		account = c.accounts[idx]
+	}
+	c.mu.RUnlock()
+	return
+}
+
+func (c *Config) DeleteAccount(name string) {
+	c.mu.Lock()
+	idx, ok := c.accountM[name]
+	if ok {
+		accounts := make([]*Account, 0, len(c.accounts))
+		if idx > 0 {
+			accounts = append(accounts, c.accounts[0:idx]...)
+		}
+		if len(c.accounts) > idx+1 {
+			for _, account := range c.accounts[idx+1:] {
+				c.accountM[account.Name] = len(c.accounts)
+				accounts = append(accounts, account)
+			}
+		}
+		c.accounts = accounts
+		delete(c.accountM, name)
+	}
+	c.mu.Unlock()
+}
+
 func (c *Config) SetAccount(newAccount *Account) *Config {
+	c.mu.Lock()
 	var exists bool
-	for index, account := range c.Accounts {
+	for index, account := range c.accounts {
 		if account.Name != newAccount.Name {
 			continue
 		}
@@ -243,7 +246,9 @@ func (c *Config) SetAccount(newAccount *Account) *Config {
 		account.Constructor = newAccount.Constructor
 		account.LoginURL = newAccount.LoginURL
 		account.CallbackURL = newAccount.CallbackURL
-		c.Accounts[index] = account
+		account.Scopes = make([]string, len(newAccount.Scopes))
+		copy(account.Scopes, newAccount.Scopes)
+		c.accounts[index] = account
 		if isOff {
 			c.GenerateProviders()
 		} else if account.On {
@@ -255,12 +260,14 @@ func (c *Config) SetAccount(newAccount *Account) *Config {
 		break
 	}
 	if !exists {
-		c.Accounts = append(c.Accounts, newAccount)
+		c.accountM[newAccount.Name] = len(c.accounts)
+		c.accounts = append(c.accounts, newAccount)
 		if newAccount.On {
 			if provider := c.NewProvider(newAccount); provider != nil {
 				goth.UseProviders(provider)
 			}
 		}
 	}
+	c.mu.Unlock()
 	return c
 }
