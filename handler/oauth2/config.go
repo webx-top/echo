@@ -137,6 +137,13 @@ func (c *Config) GenerateProviders() *Config {
 	return c
 }
 
+func (c *Config) ClearAccounts() {
+	c.mu.Lock()
+	c.accounts = []*Account{}
+	c.accountM = map[string]int{}
+	c.mu.Unlock()
+}
+
 func (c *Config) RangeAccounts(cb func(*Account) bool) (ok bool) {
 	c.mu.RLock()
 	for _, account := range c.accounts {
