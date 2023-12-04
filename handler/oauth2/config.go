@@ -161,6 +161,11 @@ func (c *Config) ClearProviders() *Config {
 	return c
 }
 
+func (c *Config) DeleteProvider(names ...string) *Config {
+	goth.DeleteProvider(names...)
+	return c
+}
+
 func (c *Config) NewProvider(account *Account) goth.Provider {
 	if len(account.LoginURL) == 0 {
 		account.LoginURL = c.LoginURL(account.Name)
@@ -201,6 +206,10 @@ func (c *Config) NewProvider(account *Account) goth.Provider {
 func (c *Config) AddAccount(accounts ...*Account) *Config {
 	c.mu.Lock()
 	for _, account := range accounts {
+		if idx, ok := c.accountM[account.Name]; ok {
+			c.accounts[idx] = account
+			continue
+		}
 		c.accountM[account.Name] = len(c.accounts)
 		c.accounts = append(c.accounts, account)
 	}
@@ -240,11 +249,9 @@ func (c *Config) DeleteAccount(name string) {
 
 func (c *Config) SetAccount(newAccount *Account) *Config {
 	c.mu.Lock()
-	var exists bool
-	for index, account := range c.accounts {
-		if account.Name != newAccount.Name {
-			continue
-		}
+	idx, ok := c.accountM[newAccount.Name]
+	if ok {
+		account := c.accounts[idx]
 		isOff := account.On && !newAccount.On
 		account.On = newAccount.On
 		account.Key = newAccount.Key
@@ -255,18 +262,15 @@ func (c *Config) SetAccount(newAccount *Account) *Config {
 		account.CallbackURL = newAccount.CallbackURL
 		account.Scopes = make([]string, len(newAccount.Scopes))
 		copy(account.Scopes, newAccount.Scopes)
-		c.accounts[index] = account
+		c.accounts[idx] = account
 		if isOff {
-			c.GenerateProviders()
+			c.DeleteProvider(account.Name)
 		} else if account.On {
 			if provider := c.NewProvider(account); provider != nil {
 				goth.UseProviders(provider)
 			}
 		}
-		exists = true
-		break
-	}
-	if !exists {
+	} else {
 		c.accountM[newAccount.Name] = len(c.accounts)
 		c.accounts = append(c.accounts, newAccount)
 		if newAccount.On {
