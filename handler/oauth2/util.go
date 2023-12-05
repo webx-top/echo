@@ -16,7 +16,10 @@ limitations under the License.
 package oauth2
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
+	"io"
 	"net/url"
 	"strings"
 
@@ -56,22 +59,38 @@ func BeginAuthHandler(ctx echo.Context) error {
 // If no state string is associated with the request, one will be generated.
 // This state is sent to the provider and can be retrieved during the
 // callback.
-var SetState = func(ctx echo.Context) string {
+var SetState = func(ctx echo.Context) (string, error) {
 	state := ctx.Query("state")
 	if len(state) > 0 {
-		return state
+		return state, nil
 	}
 
-	return "state"
-
+	// If a state query param is not passed in, generate a random
+	// base64-encoded nonce so that the state on the auth URL
+	// is unguessable, preventing CSRF attacks, as described in
+	//
+	// https://auth0.com/docs/protocols/oauth2/oauth-state#keep-reading
+	nonceBytes := make([]byte, 64)
+	_, err := io.ReadFull(rand.Reader, nonceBytes)
+	if err != nil {
+		err = errors.New("gothic: source of randomness unavailable: " + err.Error())
+		return state, err
+	}
+	return base64.URLEncoding.EncodeToString(nonceBytes), nil
 }
 
 // GetState gets the state returned by the provider during the callback.
 // This is used to prevent CSRF attacks, see
 // http://tools.ietf.org/html/rfc6749#section-10.12
 var GetState = func(ctx echo.Context) string {
-	return ctx.Query("state")
+	state := ctx.Query("state")
+	if len(state) == 0 && ctx.IsPost() {
+		state = ctx.Request().FormValue("state")
+	}
+	return state
 }
+
+var ErrStateTokenMismatch = errors.New("state token mismatch")
 
 /*
 GetAuthURL starts the authentication process with the requested provided.
@@ -91,7 +110,11 @@ func GetAuthURL(ctx echo.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	sess, err := provider.BeginAuth(SetState(ctx))
+	state, err := SetState(ctx)
+	if err != nil {
+		return "", err
+	}
+	sess, err := provider.BeginAuth(state)
 	if err != nil {
 		return "", err
 	}
@@ -159,17 +182,60 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
+	err = validateState(ctx, sess)
+	if err != nil {
+		return EmptyUser, err
+	}
+
 	if cr, ok := sess.(echo.ContextRegister); ok {
 		cr.SetContext(ctx)
 	}
 
-	_, err = sess.Authorize(provider, url.Values(ctx.Queries()))
+	user, err := provider.FetchUser(sess)
+	if err == nil {
+		// user can be found with existing session data
+		return user, err
+	}
 
+	params := ctx.Queries()
+	if len(params) == 0 && ctx.IsPost() {
+		params = ctx.Request().PostForm().All()
+	}
+
+	// get new token and retry fetch
+	_, err = sess.Authorize(provider, url.Values(params))
+	if err != nil {
+		return EmptyUser, err
+	}
+
+	err = ctx.Session().Set(SessionName, sess.Marshal()).Save()
 	if err != nil {
 		return EmptyUser, err
 	}
 
 	return provider.FetchUser(sess)
+}
+
+// validateState ensures that the state token param from the original
+// AuthURL matches the one included in the current (callback) request.
+func validateState(ctx echo.Context, sess goth.Session) error {
+	rawAuthURL, err := sess.GetAuthURL()
+	if err != nil {
+		return err
+	}
+
+	authURL, err := url.Parse(rawAuthURL)
+	if err != nil {
+		return err
+	}
+
+	reqState := GetState(ctx)
+
+	originalState := authURL.Query().Get("state")
+	if len(originalState) > 0 && (originalState != reqState) {
+		err = ErrStateTokenMismatch
+	}
+	return err
 }
 
 // GetProviderName is a function used to get the name of a provider
