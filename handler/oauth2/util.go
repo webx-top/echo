@@ -182,6 +182,7 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
+	defer ctx.Session().Delete(SessionName).Save()
 	err = validateState(ctx, sess)
 	if err != nil {
 		return EmptyUser, err
@@ -208,7 +209,7 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	err = ctx.Session().Set(SessionName, sess.Marshal()).Save()
+	err = ctx.Session().Set(SessionName, sess.Marshal())
 	if err != nil {
 		return EmptyUser, err
 	}
