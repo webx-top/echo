@@ -177,12 +177,18 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, errors.New("could not find a matching session for this request")
 	}
 
-	sess, err := provider.UnmarshalSession(sv)
+	defer func() {
+		if err != nil {
+			ctx.Session().Delete(SessionName).Save()
+		}
+	}()
+
+	var sess goth.Session
+	sess, err = provider.UnmarshalSession(sv)
 	if err != nil {
 		return EmptyUser, err
 	}
 
-	defer ctx.Session().Delete(SessionName).Save()
 	err = validateState(ctx, sess)
 	if err != nil {
 		return EmptyUser, err
@@ -192,7 +198,8 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		cr.SetContext(ctx)
 	}
 
-	user, err := provider.FetchUser(sess)
+	var user goth.User
+	user, err = provider.FetchUser(sess)
 	if err == nil {
 		// user can be found with existing session data
 		return user, err
@@ -209,12 +216,13 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	err = ctx.Session().Set(SessionName, sess.Marshal())
+	err = ctx.Session().Set(SessionName, sess.Marshal()).Save()
 	if err != nil {
 		return EmptyUser, err
 	}
 
-	return provider.FetchUser(sess)
+	user, err = provider.FetchUser(sess)
+	return user, err
 }
 
 // validateState ensures that the state token param from the original

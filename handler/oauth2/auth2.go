@@ -112,20 +112,35 @@ func (p *OAuth) MiddlewareAuth(h echo.Handler) echo.Handler {
 func (p *OAuth) Wrapper(e *echo.Echo, middlewares ...interface{}) {
 	p.Config.GenerateProviders()
 
-	g := e.Group(p.Config.Path, middlewares...)
-
-	// set the mux path to handle the registered providers
-	g.Get("/login/:provider", p.beginAuthHandler, MiddlewareVerifyProvider(p.Config))
+	g := e.Group(p.Config.Path, append([]interface{}{MiddlewareVerifyProvider(p.Config)}, middlewares...)...)
 
 	successHandlers := append([]interface{}{p.MiddlewareAuth}, p.successHandlers...)
 	lastIndex := len(successHandlers) - 1
+	var callbackHandler echo.Handler
+	var callbackMiddlewares []interface{}
 	if lastIndex == 0 {
-		g.Get("/callback/:provider", func(ctx echo.Context) error {
+		callbackHandler = echo.HandlerFunc(func(ctx echo.Context) error {
 			return ctx.String(`Success Handler is not set`)
-		}, successHandlers...)
+		})
+		callbackMiddlewares = successHandlers
 	} else {
-		g.Get("/callback/:provider", successHandlers[lastIndex], successHandlers[0:lastIndex]...)
+		callbackHandler = echo.WrapHandler(successHandlers[lastIndex])
+		callbackMiddlewares = successHandlers[0:lastIndex]
 	}
+
+	// set the mux path to handle the registered providers
+	g.Get("/login/:provider", func(ctx echo.Context) error {
+		// try to get the user without re-authenticating
+		user, err := p.completeAuthHandler(ctx)
+		if err != nil {
+			return p.beginAuthHandler.Handle(ctx)
+		}
+		ctx.Internal().Set(p.Config.ContextKey, user)
+		return callbackHandler.Handle(ctx)
+	})
+
+	g.Get("/callback/:provider", callbackHandler, callbackMiddlewares...)
+
 	// register the error handler
 	if p.failHandler != nil {
 		e.SetHTTPErrorHandler(p.failHandler)
