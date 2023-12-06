@@ -30,6 +30,7 @@ import (
 // SessionName is the key used to access the session store.
 // we could use the echo's sessions default, but this session should be not confict with the cookie session name defined by the sessions manager
 const SessionName = "EchoGothSession"
+const StateSessionName = "EchoGothSessionState"
 
 var (
 	_         goth.Params = url.Values{}
@@ -145,7 +146,7 @@ func GetAuthURL(ctx echo.Context) (string, error) {
 		}
 	}
 	//panic(sess.Marshal())
-	err = ctx.Session().Set(SessionName, sess.Marshal()).Save()
+	err = ctx.Session().Set(SessionName, sess.Marshal()).Set(StateSessionName, state).Save()
 	return url, err
 }
 
@@ -228,23 +229,12 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 // validateState ensures that the state token param from the original
 // AuthURL matches the one included in the current (callback) request.
 func validateState(ctx echo.Context, sess goth.Session) error {
-	rawAuthURL, err := sess.GetAuthURL()
-	if err != nil {
-		return err
+	originalState, ok := ctx.Session().Get(StateSessionName).(string)
+	if !ok || len(originalState) == 0 || originalState != GetState(ctx) {
+		return ErrStateTokenMismatch
 	}
-
-	authURL, err := url.Parse(rawAuthURL)
-	if err != nil {
-		return err
-	}
-
-	reqState := GetState(ctx)
-
-	originalState := authURL.Query().Get("state")
-	if len(originalState) > 0 && (originalState != reqState) {
-		err = ErrStateTokenMismatch
-	}
-	return err
+	ctx.Session().Delete(StateSessionName)
+	return nil
 }
 
 // GetProviderName is a function used to get the name of a provider
