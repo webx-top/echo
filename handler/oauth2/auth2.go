@@ -131,8 +131,7 @@ func (p *OAuth) Wrapper(e *echo.Echo, middlewares ...interface{}) {
 	// set the mux path to handle the registered providers
 	g.Get("/login/:provider", func(ctx echo.Context) error {
 		// try to get the user without re-authenticating
-		ctx.Internal().Set(`echo.oauth2client.skipValidateState`, true)
-		user, err := p.completeAuthHandler(ctx)
+		user, err := fetchUser(ctx)
 		if err != nil {
 			return p.beginAuthHandler.Handle(ctx)
 		}

@@ -150,13 +150,7 @@ func GetAuthURL(ctx echo.Context) (string, error) {
 	return url, err
 }
 
-/*
-CompleteUserAuth does what it says on the tin. It completes the authentication
-process and fetches all of the basic information about the user from the provider.
-It expects to be able to get the name of the provider from the named parameters
-as either "provider" or url query parameter ":provider".
-*/
-var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
+func fetchUser(ctx echo.Context) (goth.User, error) {
 	providerName, err := GetProviderName(ctx)
 	if err != nil {
 		return EmptyUser, err
@@ -165,15 +159,6 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 	provider, err := goth.GetProvider(providerName)
 	if err != nil {
 		return EmptyUser, err
-	}
-
-	skipValidateState := ctx.Internal().Bool(`echo.oauth2client.skipValidateState`)
-	if !skipValidateState {
-		//error=invalid_request&error_description=The provided value for the input parameter 'redirect_uri' is not valid. The scope 'openid offline_access user.read' requires that the request must be sent over a secure connection using SSL.&state=state
-		errorDescription := ctx.Query(`error_description`)
-		if len(errorDescription) > 0 {
-			return EmptyUser, errors.New(providerName + `: ` + errorDescription)
-		}
 	}
 
 	sv, ok := ctx.Session().Get(SessionName).(string)
@@ -193,15 +178,66 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	if !skipValidateState {
-		err = validateState(ctx, sess)
+	if cr, ok := sess.(echo.ContextRegister); ok {
+		cr.SetContext(ctx)
+	}
+
+	var user goth.User
+	user, err = provider.FetchUser(sess)
+	if err != nil {
+		return EmptyUser, err
+	}
+	// user can be found with existing session data
+	return user, err
+}
+
+/*
+CompleteUserAuth does what it says on the tin. It completes the authentication
+process and fetches all of the basic information about the user from the provider.
+It expects to be able to get the name of the provider from the named parameters
+as either "provider" or url query parameter ":provider".
+*/
+var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
+	providerName, err := GetProviderName(ctx)
+	if err != nil {
+		return EmptyUser, err
+	}
+
+	provider, err := goth.GetProvider(providerName)
+	if err != nil {
+		return EmptyUser, err
+	}
+
+	//error=invalid_request&error_description=The provided value for the input parameter 'redirect_uri' is not valid. The scope 'openid offline_access user.read' requires that the request must be sent over a secure connection using SSL.&state=state
+	errorDescription := ctx.Query(`error_description`)
+	if len(errorDescription) > 0 {
+		return EmptyUser, errors.New(providerName + `: ` + errorDescription)
+	}
+
+	sv, ok := ctx.Session().Get(SessionName).(string)
+	if !ok || len(sv) == 0 {
+		return EmptyUser, errors.New("could not find a matching session for this request")
+	}
+
+	defer func() {
 		if err != nil {
-			return EmptyUser, err
+			ctx.Session().Delete(SessionName).Save()
 		}
+	}()
+
+	var sess goth.Session
+	sess, err = provider.UnmarshalSession(sv)
+	if err != nil {
+		return EmptyUser, err
 	}
 
 	if cr, ok := sess.(echo.ContextRegister); ok {
 		cr.SetContext(ctx)
+	}
+
+	err = validateState(ctx, sess)
+	if err != nil {
+		return EmptyUser, err
 	}
 
 	var user goth.User
