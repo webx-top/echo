@@ -50,7 +50,7 @@ func (m *MySQLStore) cleanup(interval time.Duration, quit <-chan struct{}, done 
 
 // deleteExpired deletes expired sessions from the database.
 func (m *MySQLStore) deleteExpired() error {
-	var deleteStmt = "DELETE FROM " + m.table + " WHERE expires_on < NOW()"
+	var deleteStmt = "DELETE FROM " + m.table + " WHERE expires < NOW()"
 	_, err := m.db.Exec(deleteStmt)
 	return err
 }

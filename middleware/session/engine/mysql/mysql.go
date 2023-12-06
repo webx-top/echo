@@ -108,7 +108,7 @@ var (
 
 type sessionRow struct {
 	id       null.String
-	data     null.String
+	data     null.Bytes
 	created  null.Int64
 	modified null.Int64
 	expires  null.Int64
@@ -222,7 +222,7 @@ func (m *MySQLStore) New(ctx echo.Context, name string) (*sessions.Session, erro
 	err = m.load(ctx, session)
 	if err == nil {
 		session.IsNew = false
-	} else {
+	} else if err == sql.ErrNoRows || err == errSessionExpired {
 		err = nil
 	}
 	return session, err
@@ -232,7 +232,7 @@ func (m *MySQLStore) Reload(ctx echo.Context, session *sessions.Session) error {
 	err := m.load(ctx, session)
 	if err == nil {
 		session.IsNew = false
-	} else {
+	} else if err == sql.ErrNoRows || err == errSessionExpired {
 		err = nil
 	}
 	return err
@@ -296,9 +296,9 @@ func (m *MySQLStore) insert(ctx echo.Context, session *sessions.Session) error {
 	delete(session.Values, DefaultKeyPrefix+"expires")
 	delete(session.Values, DefaultKeyPrefix+"modified")
 
-	encoded, encErr := securecookie.EncodeMulti(session.Name(), session.Values, m.Codecs...)
-	if encErr != nil {
-		return encErr
+	encoded, err := securecookie.Gob.Serialize(session.Values)
+	if err != nil {
+		return err
 	}
 	_, insErr := m.stmtInsert.Exec(session.ID, encoded, createdAt, modifiedAt, expiredAt)
 	return insErr
@@ -361,16 +361,19 @@ func (m *MySQLStore) save(ctx echo.Context, session *sessions.Session) error {
 	delete(session.Values, DefaultKeyPrefix+"created")
 	delete(session.Values, DefaultKeyPrefix+"expires")
 	delete(session.Values, DefaultKeyPrefix+"modified")
-	encoded, encErr := securecookie.EncodeMulti(session.Name(), session.Values, m.Codecs...)
-	if encErr != nil {
-		return encErr
+	encoded, err := securecookie.Gob.Serialize(session.Values)
+	if err != nil {
+		return err
 	}
+	//encoded := string(b)
 	_, updErr := m.stmtUpdate.Exec(encoded, createdAt, expiredAt, session.ID)
 	if updErr != nil {
 		return updErr
 	}
 	return nil
 }
+
+var errSessionExpired = errors.New("Session expired")
 
 func (m *MySQLStore) load(ctx echo.Context, session *sessions.Session) error {
 	row := m.stmtSelect.QueryRow(session.ID)
@@ -381,9 +384,9 @@ func (m *MySQLStore) load(ctx echo.Context, session *sessions.Session) error {
 	}
 	if sess.expires.Int64 < time.Now().Unix() {
 		log.Printf("Session expired on %s, but it is %s now.", time.Unix(sess.expires.Int64, 0), time.Now())
-		return errors.New("Session expired")
+		return errSessionExpired
 	}
-	err := securecookie.DecodeMulti(session.Name(), sess.data.String, &session.Values, m.Codecs...)
+	err := securecookie.Gob.Deserialize(sess.data.Bytes, &session.Values)
 	if err != nil {
 		return err
 	}
