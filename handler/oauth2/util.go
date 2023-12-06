@@ -167,10 +167,13 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	//error=invalid_request&error_description=The provided value for the input parameter 'redirect_uri' is not valid. The scope 'openid offline_access user.read' requires that the request must be sent over a secure connection using SSL.&state=state
-	errorDescription := ctx.Query(`error_description`)
-	if len(errorDescription) > 0 {
-		return EmptyUser, errors.New(providerName + `: ` + errorDescription)
+	skipValidateState := ctx.Internal().Bool(`echo.oauth2client.skipValidateState`)
+	if !skipValidateState {
+		//error=invalid_request&error_description=The provided value for the input parameter 'redirect_uri' is not valid. The scope 'openid offline_access user.read' requires that the request must be sent over a secure connection using SSL.&state=state
+		errorDescription := ctx.Query(`error_description`)
+		if len(errorDescription) > 0 {
+			return EmptyUser, errors.New(providerName + `: ` + errorDescription)
+		}
 	}
 
 	sv, ok := ctx.Session().Get(SessionName).(string)
@@ -190,9 +193,11 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	err = validateState(ctx, sess)
-	if err != nil {
-		return EmptyUser, err
+	if !skipValidateState {
+		err = validateState(ctx, sess)
+		if err != nil {
+			return EmptyUser, err
+		}
 	}
 
 	if cr, ok := sess.(echo.ContextRegister); ok {
