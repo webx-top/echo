@@ -29,8 +29,8 @@ import (
 
 // SessionName is the key used to access the session store.
 // we could use the echo's sessions default, but this session should be not confict with the cookie session name defined by the sessions manager
-const SessionName = "EchoGothSession"
-const StateSessionName = "EchoGothSessionState"
+const SessionName = "EchoGoth"
+const StateSessionName = "EchoGothState"
 
 var (
 	_         goth.Params = url.Values{}
