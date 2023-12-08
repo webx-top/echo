@@ -93,8 +93,25 @@ var GetState = func(ctx echo.Context) string {
 
 var ErrStateTokenMismatch = errors.New("state token mismatch")
 
-type ContextProvider interface {
-	ContextProvider(ctx echo.Context, provider goth.Provider)
+type (
+	Contexter interface {
+		Context() echo.Context
+	}
+	ContextURLValues struct {
+		url.Values
+		ctx echo.Context
+	}
+)
+
+func (c *ContextURLValues) Context() echo.Context {
+	return c.ctx
+}
+
+func NewContextURLValues(ctx echo.Context, values url.Values) *ContextURLValues {
+	return &ContextURLValues{
+		Values: values,
+		ctx:    ctx,
+	}
 }
 
 /*
@@ -188,10 +205,6 @@ func fetchUser(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	if cr, ok := sess.(ContextProvider); ok {
-		cr.ContextProvider(ctx, provider)
-	}
-
 	var user goth.User
 	user, err = provider.FetchUser(sess)
 	if err != nil {
@@ -241,10 +254,6 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	if cr, ok := sess.(ContextProvider); ok {
-		cr.ContextProvider(ctx, provider)
-	}
-
 	err = validateState(ctx, sess)
 	if err != nil {
 		return EmptyUser, err
@@ -263,7 +272,7 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 	}
 
 	// get new token and retry fetch
-	_, err = sess.Authorize(provider, url.Values(params))
+	_, err = sess.Authorize(provider, NewContextURLValues(ctx, url.Values(params)))
 	if err != nil {
 		return EmptyUser, err
 	}
