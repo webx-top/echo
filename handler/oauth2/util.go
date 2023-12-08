@@ -93,10 +93,6 @@ var GetState = func(ctx echo.Context) string {
 
 var ErrStateTokenMismatch = errors.New("state token mismatch")
 
-type ContextProvider interface {
-	ContextProvider(ctx echo.Context, provider goth.Provider)
-}
-
 /*
 GetAuthURL starts the authentication process with the requested provided.
 It will return a URL that should be used to send users to.
@@ -132,32 +128,26 @@ func GetAuthURL(ctx echo.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	url = fixedURL(ctx, url)
+	length := len(url)
+	if length > 0 {
+		switch url[0] {
+		case '/':
+			url = ctx.Site() + strings.TrimPrefix(url, `/`)
+		case '.':
+			url = ctx.Site() + url
+		default:
+			if length > 7 {
+				switch url[0:7] {
+				case `https:/`, `http://`:
+				default:
+					url = ctx.Site() + url
+				}
+			}
+		}
+	}
 	//panic(sess.Marshal())
 	err = ctx.Session().Set(SessionName, sess.Marshal()).Set(StateSessionName, state).Save()
 	return url, err
-}
-
-func fixedURL(ctx echo.Context, url string) string {
-	length := len(url)
-	if length == 0 {
-		return url
-	}
-	switch url[0] {
-	case '/':
-		url = ctx.Site() + strings.TrimPrefix(url, `/`)
-	case '.':
-		url = ctx.Site() + url
-	default:
-		if length > 7 {
-			switch url[0:7] {
-			case `https:/`, `http://`:
-				return url
-			}
-		}
-		url = ctx.Site() + url
-	}
-	return url
 }
 
 func fetchUser(ctx echo.Context) (goth.User, error) {
@@ -188,8 +178,8 @@ func fetchUser(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	if cr, ok := sess.(ContextProvider); ok {
-		cr.ContextProvider(ctx, provider)
+	if cr, ok := sess.(echo.ContextRegister); ok {
+		cr.SetContext(ctx)
 	}
 
 	var user goth.User
@@ -241,8 +231,8 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	if cr, ok := sess.(ContextProvider); ok {
-		cr.ContextProvider(ctx, provider)
+	if cr, ok := sess.(echo.ContextRegister); ok {
+		cr.SetContext(ctx)
 	}
 
 	err = validateState(ctx, sess)
