@@ -128,26 +128,32 @@ func GetAuthURL(ctx echo.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	length := len(url)
-	if length > 0 {
-		switch url[0] {
-		case '/':
-			url = ctx.Site() + strings.TrimPrefix(url, `/`)
-		case '.':
-			url = ctx.Site() + url
-		default:
-			if length > 7 {
-				switch url[0:7] {
-				case `https:/`, `http://`:
-				default:
-					url = ctx.Site() + url
-				}
-			}
-		}
-	}
+	url = fixedURL(ctx, url)
 	//panic(sess.Marshal())
 	err = ctx.Session().Set(SessionName, sess.Marshal()).Set(StateSessionName, state).Save()
 	return url, err
+}
+
+func fixedURL(ctx echo.Context, url string) string {
+	length := len(url)
+	if length == 0 {
+		return url
+	}
+	switch url[0] {
+	case '/':
+		url = ctx.Site() + strings.TrimPrefix(url, `/`)
+	case '.':
+		url = ctx.Site() + url
+	default:
+		if length > 7 {
+			switch url[0:7] {
+			case `https:/`, `http://`:
+				return url
+			}
+		}
+		url = ctx.Site() + url
+	}
+	return url
 }
 
 func fetchUser(ctx echo.Context) (goth.User, error) {
