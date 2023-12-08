@@ -31,11 +31,20 @@ import (
 // we could use the echo's sessions default, but this session should be not confict with the cookie session name defined by the sessions manager
 const SessionName = "EchoGoth"
 const StateSessionName = "EchoGothState"
+const redirectURIQueryString = `redirect_uri=%2F`
 
 var (
 	_         goth.Params = url.Values{}
 	EmptyUser             = goth.User{}
 )
+
+func fixedRedirectURIQueryString(ctx echo.Context, authURL string) string {
+	pos := strings.Index(authURL, redirectURIQueryString)
+	if pos > 0 {
+		authURL = authURL[0:pos] + `redirect_uri=` + url.QueryEscape(ctx.Site()) + authURL[pos+len(redirectURIQueryString):]
+	}
+	return authURL
+}
 
 /*
 BeginAuthHandler is a convienence handler for starting the authentication process.
@@ -45,7 +54,7 @@ BeginAuthHandler will redirect the user to the appropriate authentication end-po
 for the requested provider.
 */
 func BeginAuthHandler(ctx echo.Context) error {
-	url, err := GetAuthURL(ctx)
+	authURL, err := GetAuthURL(ctx)
 	if err != nil {
 		return echo.NewHTTPError(400, err.Error()).SetRaw(err)
 	}
@@ -53,7 +62,7 @@ func BeginAuthHandler(ctx echo.Context) error {
 	if len(next) > 0 {
 		ctx.Session().Set(`next`, next)
 	}
-	return ctx.Redirect(url)
+	return ctx.Redirect(authURL)
 }
 
 // SetState sets the state string associated with the given request.
@@ -124,14 +133,14 @@ func GetAuthURL(ctx echo.Context) (string, error) {
 		cr.SetContext(ctx)
 	}
 
-	url, err := sess.GetAuthURL()
+	authURL, err := sess.GetAuthURL()
 	if err != nil {
 		return "", err
 	}
-	url = fixedURL(ctx, url)
-	//panic(sess.Marshal())
+	authURL = fixedRedirectURIQueryString(ctx, authURL)
+	authURL = fixedURL(ctx, authURL)
 	err = ctx.Session().Set(SessionName, sess.Marshal()).Set(StateSessionName, state).Save()
-	return url, err
+	return authURL, err
 }
 
 func fixedURL(ctx echo.Context, url string) string {
