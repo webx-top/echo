@@ -33,26 +33,26 @@ func WrapHandler(h interface{}) Handler {
 	case func(Context) error:
 		return HandlerFunc(v)
 	case http.Handler:
-		return HandlerFunc(func(ctx Context) error {
+		return HandlerFunc(func(c Context) error {
 			v.ServeHTTP(
-				ctx.Response().StdResponseWriter(),
-				ctx.Request().StdRequest().WithContext(ctx),
+				c.Response().StdResponseWriter(),
+				c.Request().StdRequest().WithContext(AsStdContext(c)),
 			)
 			return nil
 		})
 	case func(http.ResponseWriter, *http.Request):
-		return HandlerFunc(func(ctx Context) error {
+		return HandlerFunc(func(c Context) error {
 			v(
-				ctx.Response().StdResponseWriter(),
-				ctx.Request().StdRequest().WithContext(ctx),
+				c.Response().StdResponseWriter(),
+				c.Request().StdRequest().WithContext(AsStdContext(c)),
 			)
 			return nil
 		})
 	case func(http.ResponseWriter, *http.Request) error:
-		return HandlerFunc(func(ctx Context) error {
+		return HandlerFunc(func(c Context) error {
 			return v(
-				ctx.Response().StdResponseWriter(),
-				ctx.Request().StdRequest().WithContext(ctx),
+				c.Response().StdResponseWriter(),
+				c.Request().StdRequest().WithContext(AsStdContext(c)),
 			)
 		})
 
@@ -138,7 +138,7 @@ func WrapMiddlewareFromStdHandler(h http.Handler) Middleware {
 		return HandlerFunc(func(c Context) error {
 			h.ServeHTTP(
 				c.Response().StdResponseWriter(),
-				c.Request().StdRequest().WithContext(c),
+				c.Request().StdRequest().WithContext(AsStdContext(c)),
 			)
 			if c.Response().Committed() {
 				return nil
@@ -154,7 +154,7 @@ func WrapMiddlewareFromStdHandleFunc(h func(http.ResponseWriter, *http.Request))
 		return HandlerFunc(func(c Context) error {
 			h(
 				c.Response().StdResponseWriter(),
-				c.Request().StdRequest().WithContext(c),
+				c.Request().StdRequest().WithContext(AsStdContext(c)),
 			)
 			if c.Response().Committed() {
 				return nil
@@ -170,7 +170,7 @@ func WrapMiddlewareFromStdHandleFuncd(h func(http.ResponseWriter, *http.Request)
 		return HandlerFunc(func(c Context) error {
 			if err := h(
 				c.Response().StdResponseWriter(),
-				c.Request().StdRequest().WithContext(c),
+				c.Request().StdRequest().WithContext(AsStdContext(c)),
 			); err != nil {
 				return err
 			}

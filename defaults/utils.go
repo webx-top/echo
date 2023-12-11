@@ -10,6 +10,9 @@ import (
 func MustGetContext(ctx context.Context, args ...*echo.Echo) echo.Context {
 	eCtx, ok := ctx.(echo.Context)
 	if !ok {
+		eCtx, ok = echo.FromStdContext(ctx)
+	}
+	if !ok {
 		eCtx = NewMockContext(args...)
 		if ctx != nil {
 			req := eCtx.Request().StdRequest()

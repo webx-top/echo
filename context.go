@@ -254,3 +254,20 @@ type Context interface {
 	OnHostFound(func(Context) (bool, error)) Context
 	FireHostFound() (bool, error)
 }
+
+type eCtxKey struct{}
+
+var contextKey eCtxKey
+
+func FromStdContext(c context.Context) (Context, bool) {
+	ctx, ok := c.Value(contextKey).(Context)
+	return ctx, ok
+}
+
+func ToStdContext(ctx context.Context, eCtx Context) context.Context {
+	return context.WithValue(ctx, contextKey, eCtx)
+}
+
+func AsStdContext(eCtx Context) context.Context {
+	return ToStdContext(eCtx, eCtx)
+}

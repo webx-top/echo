@@ -51,6 +51,8 @@ type xContext struct {
 	onHostFound         func(Context) (bool, error)
 }
 
+var _ context.Context = (*xContext)(nil)
+
 // NewContext creates a Context object.
 func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 	c := &xContext{
@@ -72,6 +74,7 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 	c.cookier = NewCookier(c)
 	c.dataEngine = NewData(c)
 	c.ResetFuncs(e.FuncMap)
+	//c.SetValue(ContextKey, c)
 	return c
 }
 
