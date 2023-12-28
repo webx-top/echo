@@ -160,6 +160,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			msg = setAndGetErrorMessage(c, e.Error(), title)
 		case *echo.Error:
 			code = e.Code.HTTPCode()
+			title = http.StatusText(code)
 			msg = e.Message
 			data.SetError(e)
 		default:
