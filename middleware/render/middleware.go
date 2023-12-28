@@ -1,19 +1,17 @@
 /*
+Copyright 2016 Wenhui Shen <www.webx.top>
 
-   Copyright 2016 Wenhui Shen <www.webx.top>
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+	http://www.apache.org/licenses/LICENSE-2.0
 
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 package render
 
@@ -53,9 +51,7 @@ type Options struct {
 func (opt *Options) AddFuncSetter(set ...echo.HandlerFunc) *Options {
 	if opt.SetFuncMap == nil {
 		opt.SetFuncMap = make([]echo.HandlerFunc, len(DefaultOptions.SetFuncMap))
-		for index, setter := range DefaultOptions.SetFuncMap {
-			opt.SetFuncMap[index] = setter
-		}
+		copy(opt.SetFuncMap, DefaultOptions.SetFuncMap)
 	}
 	opt.SetFuncMap = append(opt.SetFuncMap, set...)
 	return opt
@@ -118,6 +114,15 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 		opt.SetFuncMap = DefaultOptions.SetFuncMap
 	}
 	tmplNum := len(opt.ErrorPages)
+	defaultRender := func(c echo.Context, msg string, code int) {
+		if ok, err := c.Echo().AutoDetectRenderFormat(c, nil); ok {
+			if err == nil {
+				return
+			}
+			msg += "\n" + err.Error()
+		}
+		c.String(msg, code)
+	}
 	return func(err error, c echo.Context) {
 		if err != nil {
 			defer c.Logger().Debug(err, `: `, c.Request().URL().String())
@@ -166,7 +171,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			return
 		}
 		if tmplNum < 1 {
-			c.String(msg, code)
+			defaultRender(c, msg, code)
 			return
 		}
 		tmpl, ok := opt.ErrorPages[code]
@@ -177,7 +182,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 				code = DefaultOptions.DefaultHTTPErrorCode
 			}
 			if !ok {
-				c.String(msg, code)
+				defaultRender(c, msg, code)
 				return
 			}
 		}
@@ -187,13 +192,11 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 		}
 		c.SetCode(code)
 		c.SetFunc(`Lang`, c.Lang)
-		if len(opt.SetFuncMap) > 0 {
-			for _, setFunc := range opt.SetFuncMap {
-				err = setFunc(c)
-				if err != nil {
-					c.String(err.Error())
-					return
-				}
+		for _, setFunc := range opt.SetFuncMap {
+			err = setFunc(c)
+			if err != nil {
+				c.String(err.Error())
+				return
 			}
 		}
 		data.SetData(echo.H{

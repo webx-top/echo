@@ -243,6 +243,26 @@ func (e *Echo) RemoveFormatRenderer(formats ...string) *Echo {
 	return e
 }
 
+func (e *Echo) AutoDetectRenderFormat(c Context, data interface{}) (bool, error) {
+	format := c.Format()
+	render, ok := e.formatRenderers[format]
+	if !ok || render == nil {
+		return false, nil
+	}
+	switch v := data.(type) {
+	case Data: //Skip
+	case error:
+		c.Data().SetError(v)
+	case nil:
+		if c.Data().GetData() == nil {
+			c.Data().SetData(c.Stored(), c.Data().GetCode().Int())
+		}
+	default:
+		c.Data().SetData(data, c.Data().GetCode().Int())
+	}
+	return true, render(c, data)
+}
+
 func (e *Echo) SetDefaultExtension(ext string) {
 	e.defaultExtension = ext
 }

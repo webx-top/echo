@@ -24,20 +24,8 @@ func (c *xContext) Response() engine.Response {
 // code. Templates can be registered using `Echo.SetRenderer()`.
 func (c *xContext) Render(name string, data interface{}, codes ...int) (err error) {
 	if c.auto {
-		format := c.Format()
-		if render, ok := c.echo.formatRenderers[format]; ok && render != nil {
-			switch v := data.(type) {
-			case Data: //Skip
-			case error:
-				c.dataEngine.SetError(v)
-			case nil:
-				if c.dataEngine.GetData() == nil {
-					c.dataEngine.SetData(c.Stored(), c.dataEngine.GetCode().Int())
-				}
-			default:
-				c.dataEngine.SetData(data, c.dataEngine.GetCode().Int())
-			}
-			return render(c, data)
+		if ok, err := c.echo.AutoDetectRenderFormat(c, data); ok {
+			return err
 		}
 	}
 	c.dataEngine.SetTmplFuncs()

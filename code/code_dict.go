@@ -7,50 +7,50 @@ var CodeDict = CodeMap{
 
 	// - 系统状态
 
-	SystemUnauthorized: {"SystemUnauthorized", http.StatusOK},
-	SystemNotInstalled: {"SystemNotInstalled", http.StatusOK},
+	SystemUnauthorized: {"SystemUnauthorized", http.StatusServiceUnavailable},
+	SystemNotInstalled: {"SystemNotInstalled", http.StatusServiceUnavailable},
 
 	// - 操作状态
 
-	OperationProcessing: {"OperationProcessing", http.StatusOK},
-	FrequencyTooFast:    {"FrequencyTooFast", http.StatusOK},
-	RequestFailure:      {"RequestFailure", http.StatusOK},
-	RequestTimeout:      {"RequestTimeout", http.StatusOK},
-	AbnormalResponse:    {"AbnormalResponse", http.StatusOK},
-	OperationTimeout:    {"OperationTimeout", http.StatusOK},
-	Unsupported:         {"Unsupported", http.StatusOK},
-	RepeatOperation:     {"RepeatOperation", http.StatusOK},
+	OperationProcessing: {"OperationProcessing", http.StatusProcessing},
+	FrequencyTooFast:    {"FrequencyTooFast", http.StatusTooManyRequests},
+	RequestFailure:      {"RequestFailure", http.StatusBadRequest},
+	RequestTimeout:      {"RequestTimeout", http.StatusRequestTimeout},
+	AbnormalResponse:    {"AbnormalResponse", http.StatusInternalServerError},
+	OperationTimeout:    {"OperationTimeout", http.StatusRequestTimeout},
+	Unsupported:         {"Unsupported", http.StatusNotImplemented},
+	RepeatOperation:     {"RepeatOperation", http.StatusBadRequest},
 
 	// - 数据状态
 
-	InvalidAppID: {"InvalidAppID", http.StatusOK},
-	InvalidToken: {"InvalidToken", http.StatusOK},
+	InvalidAppID: {"InvalidAppID", http.StatusBadRequest},
+	InvalidToken: {"InvalidToken", http.StatusBadRequest},
 
-	DataSizeTooBig:      {"DataSizeTooBig", http.StatusOK},
-	DataAlreadyExists:   {"DataAlreadyExists", http.StatusOK},
-	DataFormatIncorrect: {"DataFormatIncorrect", http.StatusOK},
-	DataStatusIncorrect: {"DataStatusIncorrect", http.StatusOK},
-	DataHasExpired:      {"DataHasExpired", http.StatusOK},
-	DataProcessing:      {"DataProcessing", http.StatusOK},
-	DataUnavailable:     {"DataUnavailable", http.StatusOK},
-	InvalidType:         {"InvalidType", http.StatusOK},
-	InvalidSignature:    {"InvalidSignature", http.StatusOK},
-	InvalidParameter:    {"InvalidParameter", http.StatusOK},
-	DataNotFound:        {"DataNotFound", http.StatusOK},
+	DataSizeTooBig:      {"DataSizeTooBig", http.StatusRequestEntityTooLarge},
+	DataAlreadyExists:   {"DataAlreadyExists", http.StatusBadRequest},
+	DataFormatIncorrect: {"DataFormatIncorrect", http.StatusBadRequest},
+	DataStatusIncorrect: {"DataStatusIncorrect", http.StatusBadRequest},
+	DataHasExpired:      {"DataHasExpired", http.StatusBadRequest},
+	DataProcessing:      {"DataProcessing", http.StatusProcessing},
+	DataUnavailable:     {"DataUnavailable", http.StatusBadRequest},
+	InvalidType:         {"InvalidType", http.StatusBadRequest},
+	InvalidSignature:    {"InvalidSignature", http.StatusBadRequest},
+	InvalidParameter:    {"InvalidParameter", http.StatusBadRequest},
+	DataNotFound:        {"DataNotFound", http.StatusNotFound},
 
 	// - 用户状态
 
-	CaptchaCodeRequired: {"CaptchaCodeRequired", http.StatusOK},
-	CaptchaIdMissing:    {"CaptchaIdMissing", http.StatusOK},
-	CaptchaError:        {"CaptchaError", http.StatusOK},
-	BalanceNoEnough:     {"BalanceNoEnough", http.StatusOK},
-	UserDisabled:        {"UserDisabled", http.StatusOK},
-	UserNotFound:        {"UserNotFound", http.StatusOK},
-	NonPrivileged:       {"NonPrivileged", http.StatusOK},
-	Unauthenticated:     {"Unauthenticated", http.StatusOK},
+	CaptchaCodeRequired: {"CaptchaCodeRequired", http.StatusBadRequest},
+	CaptchaIdMissing:    {"CaptchaIdMissing", http.StatusBadRequest},
+	CaptchaError:        {"CaptchaError", http.StatusBadRequest},
+	BalanceNoEnough:     {"BalanceNoEnough", http.StatusPreconditionFailed},
+	UserDisabled:        {"UserDisabled", http.StatusBadRequest},
+	UserNotFound:        {"UserNotFound", http.StatusBadRequest},
+	NonPrivileged:       {"NonPrivileged", http.StatusForbidden},
+	Unauthenticated:     {"Unauthenticated", http.StatusUnauthorized},
 
 	// - 通用
 
-	Failure: {"Failure", http.StatusOK},
+	Failure: {"Failure", http.StatusInternalServerError},
 	Success: {"Success", http.StatusOK},
 }
