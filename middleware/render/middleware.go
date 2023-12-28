@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 )
 
@@ -151,20 +152,21 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 		case *echo.HTTPError:
 			if e.Code > 0 {
 				code = e.Code
-				title = http.StatusText(code)
 			}
 			msg = e.Message
+			title = com.TextLine(msg)
 			data.SetError(e)
 		case *echo.PanicError:
 			panicErr = e
 			msg = setAndGetErrorMessage(c, e.Error(), title)
 		case *echo.Error:
 			code = e.Code.HTTPCode()
-			title = http.StatusText(code)
 			msg = e.Message
+			title = com.TextLine(msg)
 			data.SetError(e)
 		default:
 			msg = e.Error()
+			title = com.TextLine(msg)
 			data.SetError(e)
 		}
 		if c.Request().Method() == echo.HEAD {
