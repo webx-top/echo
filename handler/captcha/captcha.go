@@ -27,6 +27,8 @@ import (
 
 type IDGenerator func(echo.Context, *Options) (string, error)
 
+type IDExists func(echo.Context, *Options, string) bool
+
 var DefaultOptions = &Options{
 	EnableImage:    true,
 	EnableAudio:    true,
@@ -37,6 +39,9 @@ var DefaultOptions = &Options{
 	HeaderName:     `X-Captcha-Id`,
 	IDGenerator: func(_ echo.Context, _ *Options) (string, error) {
 		return captcha.New(), nil
+	},
+	IDExists: func(_ echo.Context, _ *Options, id string) bool {
+		return captcha.Exists(id)
 	},
 }
 
@@ -53,6 +58,7 @@ type Options struct {
 	CookieName     string
 	HeaderName     string
 	IDGenerator    IDGenerator
+	IDExists       IDExists
 }
 
 func (o *Options) SetEnableImage(enable bool) *Options {
@@ -82,6 +88,11 @@ func (o *Options) SetPrefix(prefix string) *Options {
 
 func (o *Options) SetIDGenerator(h IDGenerator) *Options {
 	o.IDGenerator = h
+	return o
+}
+
+func (o *Options) SetIDExists(h IDExists) *Options {
+	o.IDExists = h
 	return o
 }
 
@@ -122,6 +133,9 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 	}
 	if o.IDGenerator == nil {
 		o.IDGenerator = DefaultOptions.IDGenerator
+	}
+	if o.IDExists == nil {
+		o.IDExists = DefaultOptions.IDExists
 	}
 	return func(ctx echo.Context) (err error) {
 		var id, ext string
