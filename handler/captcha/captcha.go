@@ -53,7 +53,7 @@ var DefaultOptions = &Options{
 }
 
 func New(prefix string) *Options {
-	return &Options{EnableImage: true, Prefix: prefix}
+	return &Options{EnableImage: true, Prefix: prefix, idGenerator: DefaultOptions.idGenerator, idExists: DefaultOptions.idExists}
 }
 
 type Options struct {
@@ -139,18 +139,19 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 	}
 	if o == nil {
 		o = DefaultOptions
-	}
-	if len(o.CookieName) == 0 {
-		o.CookieName = DefaultOptions.CookieName
-	}
-	if len(o.HeaderName) == 0 {
-		o.HeaderName = DefaultOptions.HeaderName
-	}
-	if o.idGenerator == nil {
-		o.idGenerator = DefaultOptions.idGenerator
-	}
-	if o.idExists == nil {
-		o.idExists = DefaultOptions.idExists
+	} else {
+		if len(o.CookieName) == 0 {
+			o.CookieName = DefaultOptions.CookieName
+		}
+		if len(o.HeaderName) == 0 {
+			o.HeaderName = DefaultOptions.HeaderName
+		}
+		if o.idGenerator == nil {
+			o.idGenerator = DefaultOptions.idGenerator
+		}
+		if o.idExists == nil {
+			o.idExists = DefaultOptions.idExists
+		}
 	}
 	return func(ctx echo.Context) (err error) {
 		var id, ext string
