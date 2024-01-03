@@ -299,8 +299,8 @@ func BuildSignedString(claims jwt.Claims, mySigningKey interface{}) (string, err
 	return token.SignedString(mySigningKey)
 }
 
-// BuildStandardSignedString example: github.com/golang-jwt/jwt/example_test.go
-func BuildStandardSignedString(claims *jwt.StandardClaims, mySigningKey interface{}) (string, error) {
+// BuildRegisteredSignedString example: github.com/golang-jwt/jwt/example_test.go
+func BuildRegisteredSignedString(claims *jwt.RegisteredClaims, mySigningKey interface{}) (string, error) {
 	return BuildSignedString(claims, mySigningKey)
 }
 
