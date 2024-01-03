@@ -25,6 +25,11 @@ import (
 	"github.com/webx-top/echo"
 )
 
+type ICaptchaID interface {
+	IDGenerate(echo.Context) (string, error)
+	IDExists(echo.Context, string) bool
+}
+
 type IDGenerator func(echo.Context, *Options) (string, error)
 
 type IDExists func(echo.Context, *Options, string) bool
@@ -37,10 +42,10 @@ var DefaultOptions = &Options{
 	Prefix:         `/captcha`,
 	CookieName:     `captchaId`,
 	HeaderName:     `X-Captcha-Id`,
-	IDGenerator: func(_ echo.Context, _ *Options) (string, error) {
+	idGenerator: func(_ echo.Context, _ *Options) (string, error) {
 		return captcha.New(), nil
 	},
-	IDExists: func(_ echo.Context, _ *Options, id string) bool {
+	idExists: func(_ echo.Context, _ *Options, id string) bool {
 		return captcha.Exists(id)
 	},
 }
@@ -57,8 +62,8 @@ type Options struct {
 	Prefix         string
 	CookieName     string
 	HeaderName     string
-	IDGenerator    IDGenerator
-	IDExists       IDExists
+	idGenerator    IDGenerator
+	idExists       IDExists
 }
 
 func (o *Options) SetEnableImage(enable bool) *Options {
@@ -87,13 +92,21 @@ func (o *Options) SetPrefix(prefix string) *Options {
 }
 
 func (o *Options) SetIDGenerator(h IDGenerator) *Options {
-	o.IDGenerator = h
+	o.idGenerator = h
 	return o
 }
 
 func (o *Options) SetIDExists(h IDExists) *Options {
-	o.IDExists = h
+	o.idExists = h
 	return o
+}
+
+func (o *Options) IDGenerate(c echo.Context) (string, error) {
+	return o.idGenerator(c, o)
+}
+
+func (o *Options) IDExists(c echo.Context, id string) bool {
+	return o.idExists(c, o, id)
 }
 
 func (o *Options) SetCookieName(name string) *Options {
@@ -131,11 +144,11 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 	if len(o.HeaderName) == 0 {
 		o.HeaderName = DefaultOptions.HeaderName
 	}
-	if o.IDGenerator == nil {
-		o.IDGenerator = DefaultOptions.IDGenerator
+	if o.idGenerator == nil {
+		o.idGenerator = DefaultOptions.idGenerator
 	}
-	if o.IDExists == nil {
-		o.IDExists = DefaultOptions.IDExists
+	if o.idExists == nil {
+		o.idExists = DefaultOptions.idExists
 	}
 	return func(ctx echo.Context) (err error) {
 		var id, ext string
@@ -178,7 +191,7 @@ func Captcha(opts ...*Options) func(echo.Context) error {
 				}
 			}
 			if !ok && (hasCookieValue || hasHeaderValue) { // 旧的已经全部失效了，自动申请新ID
-				id, err = o.IDGenerator(ctx, o)
+				id, err = o.IDGenerate(ctx)
 				if err != nil {
 					header.Add(`X-Captcha-ID-Error`, `generator: `+err.Error())
 					return err
