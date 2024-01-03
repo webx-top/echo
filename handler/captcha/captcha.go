@@ -30,6 +30,8 @@ type ICaptchaID interface {
 	IDExists(echo.Context, string) bool
 }
 
+var _ ICaptchaID = (*Options)(nil)
+
 type IDGenerator func(echo.Context, *Options) (string, error)
 
 type IDExists func(echo.Context, *Options, string) bool
