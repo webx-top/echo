@@ -3,17 +3,18 @@ package redis
 import (
 	"testing"
 
+	"github.com/alicebob/miniredis"
 	"github.com/stretchr/testify/assert"
 	"github.com/webx-top/echo/defaults"
 	ss "github.com/webx-top/echo/middleware/session/engine"
 )
 
-func testConnect() {
+func testConnect(addr string) {
 
 	redisOptions := &RedisOptions{
 		Size:     10,
 		Network:  `tcp`,
-		Address:  `127.0.0.1:6379`,
+		Address:  addr,
 		Password: ``,
 		DB:       0,
 		KeyPairs: [][]byte{
@@ -27,7 +28,12 @@ func testConnect() {
 }
 
 func TestReconnect(t *testing.T) {
-	testConnect()
+	s, err := miniredis.Run()
+	if err != nil {
+		panic(err)
+	}
+	defer s.Close()
+	testConnect(s.Addr())
 
 	store := ss.Get(`redis`)
 	ctx := defaults.NewMockContext()
@@ -44,7 +50,12 @@ func TestReconnect(t *testing.T) {
 }
 
 func TestReconnect2(t *testing.T) {
-	testConnect()
+	s, err := miniredis.Run()
+	if err != nil {
+		panic(err)
+	}
+	defer s.Close()
+	testConnect(s.Addr())
 
 	store := ss.Get(`redis`)
 	ctx := defaults.NewMockContext()
