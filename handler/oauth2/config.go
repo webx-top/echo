@@ -16,12 +16,12 @@ limitations under the License.
 package oauth2
 
 import (
-	"net/http"
+	//"net/http"
 	"sync"
 
 	"github.com/admpub/goth"
 	"github.com/admpub/goth/providers/amazon"
-	"github.com/admpub/goth/providers/apple"
+	//"github.com/admpub/goth/providers/apple"
 	"github.com/admpub/goth/providers/bitbucket"
 	"github.com/admpub/goth/providers/gitea"
 	"github.com/admpub/goth/providers/github"
@@ -193,8 +193,8 @@ func (c *Config) NewProvider(account *Account) goth.Provider {
 		return stripe.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
 	case "paypal":
 		return paypal.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
-	case "apple":
-		return apple.New(account.Key, account.Secret, account.CallbackURL, http.DefaultClient, account.Scopes...)
+	//case "apple":
+	//	return apple.New(account.Key, account.Secret, account.CallbackURL, http.DefaultClient, account.Scopes...)
 	case "wechat":
 		return wechat.New(account.Key, account.Secret, account.CallbackURL, wechat.WECHAT_LANG_CN)
 	case "uber":
