@@ -21,6 +21,7 @@ package engine
 import (
 	"encoding/base32"
 	"strings"
+	"sync"
 
 	"github.com/admpub/securecookie"
 	"github.com/admpub/sessions"
@@ -74,33 +75,60 @@ func GenerateSessionID(prefix ...string) string {
 	)
 }
 
-var stores = map[string]sessions.Store{}
+type Stores struct {
+	m map[string]sessions.Store
+	l sync.RWMutex
+}
+
+func (s *Stores) Get(name string) sessions.Store {
+	s.l.RLock()
+	store, ok := s.m[name]
+	s.l.RUnlock()
+	if ok {
+		return store
+	}
+	return nil
+}
+
+func (s *Stores) Set(name string, store sessions.Store) {
+	s.l.Lock()
+	defer s.l.Unlock()
+	if old, ok := s.m[name]; ok {
+		if c, ok := old.(Closer); ok {
+			c.Close()
+		}
+	}
+	s.m[name] = store
+}
+
+func (s *Stores) Del(name string) {
+	s.l.Lock()
+	old, ok := s.m[name]
+	if ok {
+		if c, ok := old.(Closer); ok {
+			c.Close()
+		}
+		delete(s.m, name)
+	}
+	s.l.Unlock()
+}
+
+var stores = &Stores{
+	m: map[string]sessions.Store{},
+}
 
 type Closer interface {
 	Close() error
 }
 
 func Reg(name string, store sessions.Store) {
-	if old, ok := stores[name]; ok {
-		if c, ok := old.(Closer); ok {
-			c.Close()
-		}
-	}
-	stores[name] = store
+	stores.Set(name, store)
 }
 
 func Get(name string) sessions.Store {
-	if store, ok := stores[name]; ok {
-		return store
-	}
-	return nil
+	return stores.Get(name)
 }
 
 func Del(name string) {
-	if old, ok := stores[name]; ok {
-		if c, ok := old.(Closer); ok {
-			c.Close()
-		}
-		delete(stores, name)
-	}
+	stores.Del(name)
 }
