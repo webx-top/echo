@@ -23,7 +23,7 @@ func main() {
 			HttpOnly: true,
 		},
 	}
-	store := mysql.RegWithOptions(&mysql.Options{
+	mysql.RegWithOptions(&mysql.Options{
 		Config: dbconfig.Config{
 			Host:    `127.0.0.1`,
 			Engine:  `mysql`,
@@ -37,7 +37,7 @@ func main() {
 			[]byte(`123456789012345678901234567890ab`),
 		},
 	})
-	e.Use(session.Sessions(sessionOptions, store))
+	e.Use(session.Sessions(sessionOptions))
 
 	e.Get(`/`, func(ctx echo.Context) error {
 		n, y := ctx.Session().Get(`count`).(int)

@@ -90,6 +90,13 @@ func (s *Stores) Get(name string) sessions.Store {
 	return nil
 }
 
+func (s *Stores) Exists(name string) bool {
+	s.l.RLock()
+	_, ok := s.m[name]
+	s.l.RUnlock()
+	return ok
+}
+
 func (s *Stores) Set(name string, store sessions.Store) {
 	s.l.Lock()
 	defer s.l.Unlock()
@@ -127,6 +134,10 @@ func Reg(name string, store sessions.Store) {
 
 func Get(name string) sessions.Store {
 	return stores.Get(name)
+}
+
+func Exists(name string) bool {
+	return stores.Exists(name)
 }
 
 func Del(name string) {

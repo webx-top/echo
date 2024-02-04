@@ -18,7 +18,6 @@ package session
 import (
 	"time"
 
-	"github.com/admpub/sessions"
 	"github.com/webx-top/echo"
 )
 
@@ -56,17 +55,17 @@ func saveSession(c echo.Context) {
 	}
 }
 
-func Sessions(options *echo.SessionOptions, store sessions.Store) echo.MiddlewareFuncd {
+func Sessions(options *echo.SessionOptions) echo.MiddlewareFuncd {
 	var newSession func(ctx echo.Context) echo.Sessioner
 	if options == nil {
 		newSession = func(ctx echo.Context) echo.Sessioner {
-			return NewMySession(store, ctx.SessionOptions().Name, ctx)
+			return NewMySession(StoreEngine(options), ctx.SessionOptions().Name, ctx)
 		}
 	} else {
 		newSession = func(ctx echo.Context) echo.Sessioner {
 			sessionOptions := options.Clone()
 			ctx.SetSessionOptions(sessionOptions)
-			return NewMySession(store, sessionOptions.Name, ctx)
+			return NewMySession(StoreEngine(sessionOptions), sessionOptions.Name, ctx)
 		}
 	}
 	return func(h echo.Handler) echo.HandlerFunc {
@@ -97,6 +96,5 @@ func Middleware(options *echo.SessionOptions) echo.MiddlewareFuncd {
 	if options == nil {
 		options = DefaultSessionOptions()
 	}
-	store := StoreEngine(options)
-	return Sessions(options, store)
+	return Sessions(options)
 }
