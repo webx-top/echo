@@ -64,6 +64,9 @@ func Sessions(options *echo.SessionOptions) echo.MiddlewareFuncd {
 	} else {
 		newSession = func(ctx echo.Context) echo.Sessioner {
 			sessionOptions := options.Clone()
+			if !sessionOptions.Secure && ctx.IsSecure() {
+				sessionOptions.Secure = true
+			}
 			ctx.SetSessionOptions(sessionOptions)
 			return NewMySession(StoreEngine(sessionOptions), sessionOptions.Name, ctx)
 		}
