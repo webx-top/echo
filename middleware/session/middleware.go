@@ -55,7 +55,7 @@ func saveSession(c echo.Context) {
 	}
 }
 
-func Sessions(options *echo.SessionOptions, setOpts ...func(*echo.SessionOptions)) echo.MiddlewareFuncd {
+func Sessions(options *echo.SessionOptions, setOpts ...func(echo.Context, *echo.SessionOptions)) echo.MiddlewareFuncd {
 	var newSession func(ctx echo.Context) echo.Sessioner
 	if options == nil {
 		newSession = func(ctx echo.Context) echo.Sessioner {
@@ -65,7 +65,7 @@ func Sessions(options *echo.SessionOptions, setOpts ...func(*echo.SessionOptions
 		newSession = func(ctx echo.Context) echo.Sessioner {
 			sessionOptions := options.Clone()
 			for _, setOpt := range setOpts {
-				setOpt(sessionOptions)
+				setOpt(ctx, sessionOptions)
 			}
 			ctx.SetSessionOptions(sessionOptions)
 			return NewMySession(StoreEngine(sessionOptions), sessionOptions.Name, ctx)
