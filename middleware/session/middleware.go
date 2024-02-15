@@ -95,9 +95,9 @@ func Sessions(options *echo.SessionOptions, setOpts ...func(echo.Context, *echo.
 	}
 }
 
-func Middleware(options *echo.SessionOptions) echo.MiddlewareFuncd {
+func Middleware(options *echo.SessionOptions, setOpts ...func(echo.Context, *echo.SessionOptions)) echo.MiddlewareFuncd {
 	if options == nil {
 		options = DefaultSessionOptions()
 	}
-	return Sessions(options)
+	return Sessions(options, setOpts...)
 }
