@@ -20,7 +20,5 @@ node_modules
 /.vscode
 /middleware/session/test/*.exe
 *.test
-go.mod
-go.sum
 middleware/render/sse/test/test
 tower-app-*
