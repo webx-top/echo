@@ -3,6 +3,7 @@ package defaults
 import (
 	"context"
 
+	"github.com/admpub/realip"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/logger"
@@ -322,4 +323,8 @@ func Shutdown(ctx context.Context) error {
 
 func NewContext(req engine.Request, resp engine.Response) echo.Context {
 	return Default.NewContext(req, resp)
+}
+
+func RealIPConfig() *realip.Config {
+	return Default.RealIPConfig()
 }

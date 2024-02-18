@@ -61,10 +61,6 @@ type (
 		// RemoteAddress returns the client's network address.
 		RemoteAddress() string
 
-		// RealIP returns the client's network address based on `X-Forwarded-For`
-		// or `X-Real-IP` request header.
-		RealIP() string
-
 		// Method returns the request's HTTP function.
 		Method() string
 

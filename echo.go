@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/admpub/log"
+	"github.com/admpub/realip"
 
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/logger"
@@ -51,6 +52,7 @@ type (
 		defaultExtension    string
 		rewriter            Rewriter
 		maxRequestBodySize  int
+		realIPConfig        *realip.Config
 	}
 
 	Middleware interface {
@@ -156,6 +158,7 @@ func (e *Echo) Reset() *Echo {
 	e.maxRequestBodySize = 0
 	e.renderDataWrapper = nil
 	e.rewriter = nil
+	e.realIPConfig = realip.New()
 	return e
 }
 
@@ -916,4 +919,8 @@ func (e *Echo) findRouter(host string) (*Router, []string, []string, bool) {
 
 func (e *Echo) NewContext(req engine.Request, resp engine.Response) Context {
 	return NewContext(req, resp, e)
+}
+
+func (e *Echo) RealIPConfig() *realip.Config {
+	return e.realIPConfig
 }

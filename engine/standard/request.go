@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/admpub/realip"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine"
 )
@@ -80,16 +79,6 @@ func (r *Request) Proto() string {
 
 func (r *Request) RemoteAddress() string {
 	return r.request.RemoteAddr
-}
-
-// RealIP implements `engine.Request#RealIP` function.
-func (r *Request) RealIP() string {
-	if len(r.realIP) > 0 {
-		return r.realIP
-	}
-
-	r.realIP = realip.XRealIP(r.header.Get(echo.HeaderXRealIP), r.header.Get(echo.HeaderXForwardedFor), r.RemoteAddress())
-	return r.realIP
 }
 
 func (r *Request) Method() string {

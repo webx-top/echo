@@ -74,6 +74,7 @@ func (m *Manager) closeMoniter() {
 	m.done = nil
 	if m.watcher != nil {
 		m.watcher.Close()
+		m.watcher = nil
 	}
 }
 

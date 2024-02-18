@@ -49,6 +49,7 @@ type xContext struct {
 	accept              *Accepts
 	auto                bool
 	onHostFound         func(Context) (bool, error)
+	realIP              string
 }
 
 var _ context.Context = (*xContext)(nil)
@@ -230,6 +231,7 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	c.onHostFound = c.echo.onHostFound
 	c.renderDataWrapper = c.echo.renderDataWrapper
 	c.ResetFuncs(c.echo.FuncMap)
+	c.realIP = ""
 	// NOTE: Don't reset because it has to have length c.echo.maxParam at all times
 	for i := 0; i < *c.echo.maxParam; i++ {
 		c.pvalues[i] = ""

@@ -426,7 +426,11 @@ func (c *xContext) Referer() string {
 }
 
 func (c *xContext) RealIP() string {
-	return c.Request().RealIP()
+	if len(c.realIP) > 0 {
+		return c.realIP
+	}
+	c.realIP = c.echo.RealIPConfig().ClientIP(c.Request().RemoteAddress(), c.Header)
+	return c.realIP
 }
 
 // Port returns request client port.

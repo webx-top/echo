@@ -45,7 +45,7 @@ func (v *VisitorInfo) reset() {
 func (v *VisitorInfo) SetFromContext(c echo.Context) {
 	req := c.Request()
 	res := c.Response()
-	v.RealIP = req.RealIP()
+	v.RealIP = c.RealIP()
 	v.UserAgent = req.UserAgent()
 	v.Referer = req.Referer()
 	v.RequestSize = req.Size()
