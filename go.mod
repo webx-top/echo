@@ -1,12 +1,14 @@
 module github.com/webx-top/echo
 
-go 1.20
+go 1.21
+
+toolchain go1.21.6
 
 require (
 	github.com/admpub/boltstore v1.1.1
 	github.com/admpub/decimal v1.3.1
 	github.com/admpub/errors v0.8.2
-	github.com/admpub/events v1.3.5
+	github.com/admpub/events v1.3.6
 	github.com/admpub/fasthttp v0.0.5
 	github.com/admpub/fsnotify v1.7.0
 	github.com/admpub/go-cache v2.0.1+incompatible
