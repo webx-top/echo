@@ -158,7 +158,7 @@ func (e *Echo) Reset() *Echo {
 	e.maxRequestBodySize = 0
 	e.renderDataWrapper = nil
 	e.rewriter = nil
-	e.realIPConfig = realip.New()
+	e.realIPConfig = realip.New().SetIgnorePrivateIP(true)
 	return e
 }
 
