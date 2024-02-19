@@ -16,12 +16,12 @@ require (
 	github.com/admpub/go-reuseport v0.0.4
 	github.com/admpub/goth v0.0.1
 	github.com/admpub/humanize v0.0.0-20190501023926-5f826e92c8ca
-	github.com/admpub/i18n v0.2.6
+	github.com/admpub/i18n v0.3.0
 	github.com/admpub/ipfilter v1.0.6
 	github.com/admpub/jet/v6 v6.0.2
 	github.com/admpub/log v1.3.6
 	github.com/admpub/null v8.0.4+incompatible
-	github.com/admpub/realip v0.1.1
+	github.com/admpub/realip v0.1.2
 	github.com/admpub/redistore v1.2.1
 	github.com/admpub/securecookie v1.3.0
 	github.com/admpub/sessions v0.2.1
