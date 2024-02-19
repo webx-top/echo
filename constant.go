@@ -100,7 +100,11 @@ const (
 	HeaderXRequestedWith      = "X-Requested-With"
 	HeaderServer              = "Server"
 	HeaderOrigin              = "Origin"
+	HeaderExpires             = "Expires"
 	HeaderCacheControl        = "Cache-Control"
+	CacheControlPrefix        = "public, max-age="
+	HeaderConnection          = "Connection"
+	HeaderTransferEncoding    = "Transfer-Encoding"
 
 	// Access control
 	HeaderAccessControlRequestMethod    = "Access-Control-Request-Method"

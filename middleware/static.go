@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/admpub/log"
 
@@ -43,6 +44,7 @@ type (
 		Template string          `json:"template"`
 		Debug    bool            `json:"debug"`
 		FS       http.FileSystem `json:"-"`
+		MaxAge   time.Duration   `json:"maxAge"`
 
 		open   func(string) (http.File, error)
 		render func(echo.Context, interface{}) error
@@ -176,7 +178,7 @@ func (s *StaticOptions) findFile(c echo.Context, root string, hasIndex bool, fil
 			return echo.ErrNotFound
 		}
 	}
-	return c.ServeContent(fp, fi.Name(), fi.ModTime())
+	return c.ServeContent(fp, fi.Name(), fi.ModTime(), s.MaxAge)
 }
 
 func (s *StaticOptions) Middleware() echo.MiddlewareFunc {

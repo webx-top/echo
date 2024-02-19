@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 	"unicode"
 
@@ -159,9 +160,9 @@ func (c *xContext) Stream(step func(w io.Writer) bool) error {
 func (c *xContext) SSEvent(event string, data chan interface{}) (err error) {
 	hdr := c.response.Header()
 	hdr.Set(HeaderContentType, MIMEEventStream)
-	hdr.Set(`Cache-Control`, `no-cache`)
-	hdr.Set(`Connection`, `keep-alive`)
-	hdr.Set(`Transfer-Encoding`, `chunked`)
+	hdr.Set(HeaderCacheControl, `no-cache`)
+	hdr.Set(HeaderConnection, `keep-alive`)
+	hdr.Set(HeaderTransferEncoding, `chunked`)
 	err = c.Stream(func(w io.Writer) bool {
 		recv, ok := <-data
 		if !ok {
@@ -183,12 +184,21 @@ func (c *xContext) SSEvent(event string, data chan interface{}) (err error) {
 	return
 }
 
-func (c *xContext) Attachment(r io.Reader, name string, modtime time.Time, inline ...bool) (err error) {
+func (c *xContext) Attachment(r io.Reader, name string, modtime time.Time, inline ...bool) error {
 	SetAttachmentHeader(c, name, true, inline...)
 	return c.ServeContent(r, name, modtime)
 }
 
-func (c *xContext) File(file string, fs ...http.FileSystem) (err error) {
+func (c *xContext) CacheableAttachment(r io.Reader, name string, modtime time.Time, maxAge time.Duration, inline ...bool) error {
+	SetAttachmentHeader(c, name, true, inline...)
+	return c.ServeContent(r, name, modtime, maxAge)
+}
+
+func (c *xContext) File(file string, fs ...http.FileSystem) error {
+	return c.CacheableFile(file, 0, fs...)
+}
+
+func (c *xContext) CacheableFile(file string, maxAge time.Duration, fs ...http.FileSystem) (err error) {
 	var f http.File
 	customFS := len(fs) > 0 && fs[0] != nil
 	if customFS {
@@ -224,12 +234,22 @@ func (c *xContext) File(file string, fs ...http.FileSystem) (err error) {
 			return err
 		}
 	}
+	if maxAge > time.Second {
+		if c.IsValidCache(fi.ModTime()) {
+			return c.NotModified()
+		}
+		c.SetCacheHeader(fi.ModTime(), maxAge)
+	}
 	c.Response().ServeContent(f, fi.Name(), fi.ModTime())
 	return nil
 }
 
-func (c *xContext) ServeContent(content io.Reader, name string, modtime time.Time) error {
+func (c *xContext) ServeContent(content io.Reader, name string, modtime time.Time, cacheMaxAge ...time.Duration) error {
 	if readSeeker, ok := content.(io.ReadSeeker); ok {
+		if c.IsValidCache(modtime) {
+			return c.NotModified()
+		}
+		c.SetCacheHeader(modtime, cacheMaxAge...)
 		c.Response().ServeContent(readSeeker, name, modtime)
 		return nil
 	}
@@ -238,25 +258,46 @@ func (c *xContext) ServeContent(content io.Reader, name string, modtime time.Tim
 	}, name, modtime)
 }
 
-func (c *xContext) ServeCallbackContent(callback func(Context) (io.Reader, error), name string, modtime time.Time) error {
-	rq := c.Request()
-	rs := c.Response()
+func (c *xContext) IsValidCache(modifiedAt time.Time) bool {
+	t, err := time.Parse(http.TimeFormat, c.Request().Header().Get(HeaderIfModifiedSince))
+	return err == nil && modifiedAt.Before(t.Add(1*time.Second))
+}
 
-	if t, err := time.Parse(http.TimeFormat, rq.Header().Get(HeaderIfModifiedSince)); err == nil && modtime.Before(t.Add(1*time.Second)) {
-		rs.Header().Del(HeaderContentType)
-		rs.Header().Del(HeaderContentLength)
-		return c.NoContent(http.StatusNotModified)
+func (c *xContext) SetCacheHeader(modifiedAt time.Time, maxAge ...time.Duration) {
+	rs := c.Response()
+	hdr := rs.Header()
+	if len(maxAge) > 0 && maxAge[0] > time.Second {
+		now := time.Now().UTC()
+		expiredAt := now.Add(maxAge[0])
+		hdr.Set(HeaderExpires, expiredAt.Format(http.TimeFormat))
+		hdr.Set(HeaderCacheControl, CacheControlPrefix+strconv.Itoa(int(maxAge[0].Seconds())))
+	}
+	hdr.Set(HeaderLastModified, modifiedAt.UTC().Format(http.TimeFormat))
+}
+
+func (c *xContext) NotModified() error {
+	rs := c.Response()
+	rs.Header().Del(HeaderContentType)
+	rs.Header().Del(HeaderContentLength)
+	return c.NoContent(http.StatusNotModified)
+}
+
+func (c *xContext) ServeCallbackContent(callback func(Context) (io.Reader, error), name string, modtime time.Time, cacheMaxAge ...time.Duration) error {
+	if c.IsValidCache(modtime) {
+		return c.NotModified()
 	}
 	content, err := callback(c)
 	if err != nil {
 		return err
 	}
 	if readSeeker, ok := content.(io.ReadSeeker); ok {
+		c.SetCacheHeader(modtime, cacheMaxAge...)
 		c.Response().ServeContent(readSeeker, name, modtime)
 		return nil
 	}
+	rs := c.Response()
 	rs.Header().Set(HeaderContentType, ContentTypeByExtension(name))
-	rs.Header().Set(HeaderLastModified, modtime.UTC().Format(http.TimeFormat))
+	c.SetCacheHeader(modtime, cacheMaxAge...)
 	rs.WriteHeader(http.StatusOK)
 	rs.KeepBody(false)
 	_, err = io.Copy(rs, content)

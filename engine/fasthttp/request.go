@@ -231,7 +231,7 @@ func (r *Request) StdRequest() *http.Request {
 		sk := engine.Bytes2str(k)
 		sv := engine.Bytes2str(v)
 		switch sk {
-		case "Transfer-Encoding":
+		case echo.HeaderTransferEncoding:
 			req.TransferEncoding = append(req.TransferEncoding, sv)
 		default:
 			hdr.Set(sk, sv)

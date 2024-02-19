@@ -139,7 +139,10 @@ type Context interface {
 	Stream(func(io.Writer) bool) error
 	SSEvent(string, chan interface{}) error
 	File(string, ...http.FileSystem) error
+	CacheableFile(string, time.Duration, ...http.FileSystem) error
 	Attachment(io.Reader, string, time.Time, ...bool) error
+	CacheableAttachment(io.Reader, string, time.Time, time.Duration, ...bool) error
+	NotModified() error
 	NoContent(...int) error
 	Redirect(string, ...int) error
 	Error(err error)
@@ -150,11 +153,14 @@ type Context interface {
 	SetData(Data)
 	Data() Data
 
+	IsValidCache(modifiedAt time.Time) bool
+	SetCacheHeader(modifiedAt time.Time, maxAge ...time.Duration)
+
 	// ServeContent sends static content from `io.Reader` and handles caching
 	// via `If-Modified-Since` request header. It automatically sets `Content-Type`
 	// and `Last-Modified` response headers.
-	ServeContent(io.Reader, string, time.Time) error
-	ServeCallbackContent(func(Context) (io.Reader, error), string, time.Time) error
+	ServeContent(io.Reader, string, time.Time, ...time.Duration) error
+	ServeCallbackContent(func(Context) (io.Reader, error), string, time.Time, ...time.Duration) error
 
 	//----------------
 	// FuncMap

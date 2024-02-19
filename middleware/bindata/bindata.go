@@ -20,11 +20,12 @@ package bindata
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/webx-top/echo"
 )
 
-func Static(path string, fs http.FileSystem) echo.MiddlewareFunc {
+func Static(path string, fs http.FileSystem, maxAge ...time.Duration) echo.MiddlewareFunc {
 	length := len(path)
 	return func(next echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
@@ -41,7 +42,7 @@ func Static(path string, fs http.FileSystem) echo.MiddlewareFunc {
 			if err != nil {
 				return echo.ErrNotFound
 			}
-			return c.ServeContent(file, info.Name(), info.ModTime())
+			return c.ServeContent(file, info.Name(), info.ModTime(), maxAge...)
 		})
 	}
 }
