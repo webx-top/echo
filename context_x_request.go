@@ -1,6 +1,7 @@
 package echo
 
 import (
+	"fmt"
 	"io"
 	"mime/multipart"
 	"os"
@@ -518,7 +519,7 @@ func (c *xContext) SaveUploadedFiles(fieldName string, savePath func(*multipart.
 	}
 	files, ok := m.File[fieldName]
 	if !ok {
-		return ErrNotFoundFileInput
+		return fmt.Errorf(`%w: %s`, ErrNotFoundFileInput, fieldName)
 	}
 	var dstFile string
 	for _, fileHdr := range files {
@@ -562,7 +563,7 @@ func (c *xContext) SaveUploadedFilesToWriter(fieldName string, writer func(*mult
 	}
 	files, ok := m.File[fieldName]
 	if !ok {
-		return ErrNotFoundFileInput
+		return fmt.Errorf(`%w: %s`, ErrNotFoundFileInput, fieldName)
 	}
 	var w io.Writer
 	for _, fileHdr := range files {
