@@ -263,7 +263,7 @@ func (e *Echo) parseFormItem(keyNormalizer func(string) string, m interface{}, t
 				value = value.Elem()
 			}
 			itemT = itemT.Elem()
-			index := reflect.ValueOf(name)
+			index := convertMapKey(tc, name)
 			newV := value.MapIndex(index)
 			if !newV.IsValid() {
 				newV = reflect.New(itemT).Elem()
@@ -421,6 +421,22 @@ func (e *Echo) binderValueDecode(name string, typev reflect.Type, tv reflect.Val
 	return ErrNotImplemented
 }
 
+func convertMapKey(typev reflect.Type, key string) reflect.Value {
+	var index reflect.Value
+	keyT := typev.Key()
+	kind := keyT.Kind()
+	if kind != reflect.String {
+		mapKey := param.AsType(kind.String(), key)
+		index = reflect.ValueOf(mapKey)
+	} else {
+		index = reflect.ValueOf(key)
+	}
+	if index.Type().Name() != keyT.Name() && index.CanConvert(keyT) {
+		index = index.Convert(keyT)
+	}
+	return index
+}
+
 func (e *Echo) setMap(logger logger.Logger,
 	parentT reflect.Type, parentV reflect.Value,
 	name string, value reflect.Value, typev reflect.Type,
@@ -429,16 +445,7 @@ func (e *Echo) setMap(logger logger.Logger,
 		value.Set(reflect.MakeMap(value.Type()))
 	}
 	value = reflect.Indirect(value)
-	var index reflect.Value
-	if typev.Key().Kind() != reflect.String {
-		mapKey := param.AsType(typev.Key().Kind().String(), name)
-		index = reflect.ValueOf(mapKey)
-	} else {
-		index = reflect.ValueOf(name)
-	}
-	if index.Type().Name() != typev.Key().Name() && index.CanConvert(typev.Key()) {
-		index = index.Convert(typev.Key())
-	}
+	index := convertMapKey(typev, name)
 	oldVal := value.MapIndex(index)
 	if !oldVal.IsValid() {
 		oldType := value.Type().Elem()

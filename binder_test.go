@@ -79,6 +79,10 @@ type TestMapIntKey struct {
 	Map2 map[TestTypeString]TestTypeInt
 }
 
+type TestMapIntKey2 struct {
+	Map map[int]*TestProfile
+}
+
 func TestMapToAnonymous(t *testing.T) {
 	e := New()
 	m := &TestAnonymous{}
@@ -366,6 +370,25 @@ func TestStructMapIntKey(t *testing.T) {
 		},
 		Map2: map[TestTypeString]TestTypeInt{
 			`a`: 2,
+		},
+	}, m)
+}
+func TestStructMapIntKey2(t *testing.T) {
+	e := New()
+	m := &TestMapIntKey2{}
+	err := FormToStruct(e, m, map[string][]string{
+		`map[1][address]`: {`a`},
+		`map[2][address]`: {`b`},
+		`map[3][address]`: {`c`},
+		`map[5][address]`: {`e`},
+	}, ``)
+	assert.NoError(t, err)
+	assert.Equal(t, &TestMapIntKey2{
+		Map: map[int]*TestProfile{
+			1: {Address: `a`},
+			2: {Address: `b`},
+			3: {Address: `c`},
+			5: {Address: `e`},
 		},
 	}, m)
 }
