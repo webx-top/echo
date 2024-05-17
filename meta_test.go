@@ -115,7 +115,7 @@ func TestEchoMetaRequestValidator(t *testing.T) {
 	c, b := request(POST, "/root/post", e, func(r *http.Request) {
 		r.Form = url.Values{}
 		r.Form.Add(`Name`, `OK`)
-		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
+		r.Header.Set("Content-Type", echo.MIMEApplicationForm)
 		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
 	})
 	assert.Equal(t, http.StatusOK, c)
@@ -123,7 +123,7 @@ func TestEchoMetaRequestValidator(t *testing.T) {
 
 	c, b = request(POST, "/root/post", e, func(r *http.Request) {
 		r.Form = url.Values{}
-		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
+		r.Header.Set("Content-Type", echo.MIMEApplicationForm)
 		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
 	})
 	assert.Equal(t, http.StatusInternalServerError, c)
@@ -156,7 +156,7 @@ func TestEchoMetaRequestValidator2(t *testing.T) {
 	c, b := request(POST, "/root/post2", e, func(r *http.Request) {
 		r.Form = url.Values{}
 		r.Form.Add(`Name`, `OK`)
-		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
+		r.Header.Set("Content-Type", echo.MIMEApplicationForm)
 		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
 	})
 	assert.Equal(t, http.StatusOK, c)
@@ -164,7 +164,7 @@ func TestEchoMetaRequestValidator2(t *testing.T) {
 
 	c, b = request(POST, "/root/post2", e, func(r *http.Request) {
 		r.Form = url.Values{}
-		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
+		r.Header.Set("Content-Type", echo.MIMEApplicationForm)
 		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
 	})
 	assert.Equal(t, http.StatusInternalServerError, c)
@@ -192,7 +192,7 @@ func TestEchoMetaRequestValidator3(t *testing.T) {
 	c, b := request(POST, "/root/post3", e, func(r *http.Request) {
 		r.Form = url.Values{}
 		r.Form.Add(`Name`, `OK`)
-		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
+		r.Header.Set("Content-Type", echo.MIMEApplicationForm)
 		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
 	})
 	assert.Equal(t, http.StatusOK, c)
@@ -200,7 +200,7 @@ func TestEchoMetaRequestValidator3(t *testing.T) {
 
 	c, b = request(POST, "/root/post3", e, func(r *http.Request) {
 		r.Form = url.Values{}
-		r.Header.Set("Content-Type", echo.MIMEMultipartForm)
+		r.Header.Set("Content-Type", echo.MIMEApplicationForm)
 		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
 	})
 	assert.Equal(t, http.StatusInternalServerError, c)

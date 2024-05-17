@@ -21,6 +21,7 @@ package echo
 import (
 	stdJSON "encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -109,7 +110,7 @@ var (
 		},
 		MIMEMultipartForm: func(i interface{}, ctx Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 			_, err := ctx.Request().MultipartForm()
-			if err != nil {
+			if err != nil && !errors.Is(err, http.ErrMissingBoundary) {
 				return err
 			}
 			return FormToStructWithDecoder(ctx.Echo(), i, ctx.Request().Form().All(), ``, valueDecoders, filter...)
