@@ -124,10 +124,11 @@ func (r *Request) PostForm() engine.URLValuer {
 }
 
 func (r *Request) MultipartForm() (*multipart.Form, error) {
-	if r.request.MultipartForm == nil {
-		r.request.ParseMultipartForm(int64(r.MaxSize()))
+	if r.request.MultipartForm != nil {
+		return r.request.MultipartForm, nil
 	}
-	return r.request.MultipartForm, nil
+	err := r.request.ParseMultipartForm(int64(r.MaxSize()))
+	return r.request.MultipartForm, err
 }
 
 func (r *Request) IsTLS() bool {
