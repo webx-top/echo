@@ -8,7 +8,7 @@ func MustGetValidated[T any](c Context) (T, error) {
 		return *v, nil
 	}
 	v = new(T)
-	err := MustValidated[T](c, v)
+	err := MustValidated(c, v)
 	return *v, err
 }
 
