@@ -225,10 +225,8 @@ func (a *KVxData[X, Y]) Size() int {
 }
 
 func (a *KVxData[X, Y]) Has(k string) bool {
-	if _, ok := a.index[k]; ok {
-		return true
-	}
-	return false
+	_, ok := a.index[k]
+	return ok
 }
 
 // Delete 设置某个键的所有值
