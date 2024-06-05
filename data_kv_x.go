@@ -220,6 +220,10 @@ func (a *KVxData[X, Y]) GetItemByIndex(index int, defaults ...func() *KVx[X, Y])
 	return nil
 }
 
+func (a *KVxData[X, Y]) Size() int {
+	return len(a.slice)
+}
+
 func (a *KVxData[X, Y]) Has(k string) bool {
 	if _, ok := a.index[k]; ok {
 		return true

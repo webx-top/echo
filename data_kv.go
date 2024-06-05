@@ -218,6 +218,10 @@ func (a *KVData) GetItemByIndex(index int, defaults ...func() *KV) *KV {
 	return nil
 }
 
+func (a *KVData) Size() int {
+	return len(a.slice)
+}
+
 func (a *KVData) Has(k string) bool {
 	if _, ok := a.index[k]; ok {
 		return true
