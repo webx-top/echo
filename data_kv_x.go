@@ -200,6 +200,26 @@ func (a *KVxData[X, Y]) GetItem(k string, defaults ...func() *KVx[X, Y]) *KVx[X,
 	return nil
 }
 
+func (a *KVxData[X, Y]) GetByIndex(index int, defaults ...string) string {
+	if len(a.slice) > index {
+		return a.slice[index].V
+	}
+	if len(defaults) > 0 {
+		return defaults[0]
+	}
+	return ``
+}
+
+func (a *KVxData[X, Y]) GetItemByIndex(index int, defaults ...func() *KVx[X, Y]) *KVx[X, Y] {
+	if len(a.slice) > index {
+		return a.slice[index]
+	}
+	if len(defaults) > 0 {
+		return defaults[0]()
+	}
+	return nil
+}
+
 func (a *KVxData[X, Y]) Has(k string) bool {
 	if _, ok := a.index[k]; ok {
 		return true

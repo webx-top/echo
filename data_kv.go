@@ -198,6 +198,26 @@ func (a *KVData) GetItem(k string, defaults ...func() *KV) *KV {
 	return nil
 }
 
+func (a *KVData) GetByIndex(index int, defaults ...string) string {
+	if len(a.slice) > index {
+		return a.slice[index].V
+	}
+	if len(defaults) > 0 {
+		return defaults[0]
+	}
+	return ``
+}
+
+func (a *KVData) GetItemByIndex(index int, defaults ...func() *KV) *KV {
+	if len(a.slice) > index {
+		return a.slice[index]
+	}
+	if len(defaults) > 0 {
+		return defaults[0]()
+	}
+	return nil
+}
+
 func (a *KVData) Has(k string) bool {
 	if _, ok := a.index[k]; ok {
 		return true
