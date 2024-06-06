@@ -212,25 +212,31 @@ func (a *Standard) TmplPath(c echo.Context, p string) string {
 	return p
 }
 
+var (
+	quoteDelim = "[\"`]"
+	quoteInner = "([^\"`]+)"
+	quoteRegex = quoteDelim + quoteInner + quoteDelim
+)
+
 func (a *Standard) InitRegexp() {
 	a.quotedLeft = regexp.QuoteMeta(a.DelimLeft)
 	a.quotedRight = regexp.QuoteMeta(a.DelimRight)
 	a.quotedRfirst = regexp.QuoteMeta(a.DelimRight[0:1])
 
 	//{{Include "tmpl"}} or {{Include "tmpl" .}}
-	a.incTagRegex = regexp.MustCompile(a.quotedLeft + a.IncludeTag + `[\s]+"([^"]+)"(?:[\s]+([^` + a.quotedRfirst + `]+))?[\s]*\/?` + a.quotedRight)
+	a.incTagRegex = regexp.MustCompile(a.quotedLeft + a.IncludeTag + `[\s]+` + quoteRegex + `(?:[\s]+([^` + a.quotedRfirst + `]+))?[\s]*\/?` + a.quotedRight)
 
 	//{{Function "funcName"}} or {{Function "funcName" .}}
-	a.funcTagRegex = regexp.MustCompile(a.quotedLeft + a.FunctionTag + `[\s]+"([^"]+)"(?:[\s]+([^` + a.quotedRfirst + `]+))?[\s]*\/?` + a.quotedRight)
+	a.funcTagRegex = regexp.MustCompile(a.quotedLeft + a.FunctionTag + `[\s]+` + quoteRegex + `(?:[\s]+([^` + a.quotedRfirst + `]+))?[\s]*\/?` + a.quotedRight)
 
 	//{{Extend "name"}}
-	a.extTagRegex = regexp.MustCompile(`^[\s]*` + a.quotedLeft + a.ExtendTag + `[\s]+"([^"]+)"(?:[\s]+([^` + a.quotedRfirst + `]+))?[\s]*\/?` + a.quotedRight)
+	a.extTagRegex = regexp.MustCompile(`^[\s]*` + a.quotedLeft + a.ExtendTag + `[\s]+` + quoteRegex + `(?:[\s]+([^` + a.quotedRfirst + `]+))?[\s]*\/?` + a.quotedRight)
 
 	//{{Block "name"}}content{{/Block}}
-	a.blkTagRegex = regexp.MustCompile(`(?s)` + a.quotedLeft + a.BlockTag + `[\s]+"([^"]+)"[\s]*` + a.quotedRight + `(.*?)` + a.quotedLeft + `\/` + a.BlockTag + a.quotedRight)
+	a.blkTagRegex = regexp.MustCompile(`(?s)` + a.quotedLeft + a.BlockTag + `[\s]+` + quoteRegex + `[\s]*` + a.quotedRight + `(.*?)` + a.quotedLeft + `\/` + a.BlockTag + a.quotedRight)
 
 	//{{Block "name"/}}
-	a.rplTagRegex = regexp.MustCompile(a.quotedLeft + a.BlockTag + `[\s]+"([^"]+)"[\s]*\/` + a.quotedRight)
+	a.rplTagRegex = regexp.MustCompile(a.quotedLeft + a.BlockTag + `[\s]+` + quoteRegex + `[\s]*\/` + a.quotedRight)
 
 	//}}...{{ or >...<
 	a.innerTagBlankRegex = regexp.MustCompile(`(?s)(` + a.quotedRight + `|>)[\s]{2,}(` + a.quotedLeft + `|<)`)
