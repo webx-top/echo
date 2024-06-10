@@ -7,24 +7,29 @@ import (
 )
 
 func TestQueryParamToRegexpRule(t *testing.T) {
-	r, rv, ps, kv := QueryParamToRegexpRule(`/a/b/:id`)
+	r, rv, ps, kv := QueryParamToRegexpRule(`/a/b/:id`, false)
 	assert.Equal(t, `^/a/b/(?P<id>[^/]+)$`, r)
 	assert.Equal(t, `/a/b/$1`, rv)
 	assert.Equal(t, []string{`(?P<id>[^/]+)`}, ps)
 	assert.Equal(t, map[string]string{`id`: `(?P<id>[^/]+)`}, kv)
-	r, rv, ps, kv = QueryParamToRegexpRule(`/a/b/:id/:city`)
+	r, rv, ps, kv = QueryParamToRegexpRule(`/a/b/:id/:city`, false)
 	assert.Equal(t, `^/a/b/(?P<id>[^/]+)/(?P<city>[^/]+)$`, r)
 	assert.Equal(t, `/a/b/$1/$2`, rv)
 	assert.Equal(t, []string{`(?P<id>[^/]+)`, `(?P<city>[^/]+)`}, ps)
 	assert.Equal(t, map[string]string{`id`: `(?P<id>[^/]+)`, `city`: `(?P<city>[^/]+)`}, kv)
-	r, rv, ps, kv = QueryParamToRegexpRule(`/a/b/<name:[a-z]+>`)
+	r, rv, ps, kv = QueryParamToRegexpRule(`/a/b/<name:[a-z]+>`, false)
 	assert.Equal(t, `^/a/b/(?P<name>[a-z]+)$`, r)
 	assert.Equal(t, `/a/b/$1`, rv)
 	assert.Equal(t, []string{`(?P<name>[a-z]+)`}, ps)
 	assert.Equal(t, map[string]string{`name`: `(?P<name>[a-z]+)`}, kv)
-	r, rv, ps, kv = QueryParamToRegexpRule(`/a/b/<name:[a-z]+>/<city:[a-z]+>`)
+	r, rv, ps, kv = QueryParamToRegexpRule(`/a/b/<name:[a-z]+>/<city:[a-z]+>`, false)
 	assert.Equal(t, `^/a/b/(?P<name>[a-z]+)/(?P<city>[a-z]+)$`, r)
 	assert.Equal(t, `/a/b/$1/$2`, rv)
+	assert.Equal(t, []string{`(?P<name>[a-z]+)`, `(?P<city>[a-z]+)`}, ps)
+	assert.Equal(t, map[string]string{`name`: `(?P<name>[a-z]+)`, `city`: `(?P<city>[a-z]+)`}, kv)
+	r, rv, ps, kv = QueryParamToRegexpRule(`http://a.b.c/b/<name:[a-z]+>/<city:[a-z]+>`, true)
+	assert.Equal(t, `^http://a\.b\.c/b/(?P<name>[a-z]+)/(?P<city>[a-z]+)$`, r)
+	assert.Equal(t, `http://a.b.c/b/$1/$2`, rv)
 	assert.Equal(t, []string{`(?P<name>[a-z]+)`, `(?P<city>[a-z]+)`}, ps)
 	assert.Equal(t, map[string]string{`name`: `(?P<name>[a-z]+)`, `city`: `(?P<city>[a-z]+)`}, kv)
 }
@@ -63,4 +68,22 @@ func TestRewriteConfig(t *testing.T) {
 	r = c.Rewrite(`/c/d/hah/named/1`)
 	assert.Equal(t, `/m_hah_named_1`, r)
 	assert.Equal(t, `/c/d/hah/named/1`, c.Reverse(`/m_hah_named_1`))
+}
+
+func TestRewriteConfig2(t *testing.T) {
+	c := &RewriteConfig{
+		Rules: map[string]string{
+			`http://a.b.c/`: `http://b.b.c/`,
+			`http://a.*.n/`: `http://b.$1.n/`,
+		},
+		DisableColonParam: true,
+	}
+	c.Init()
+	r := c.Rewrite(`http://a.b.c/`)
+	assert.Equal(t, `http://b.b.c/`, r)
+	assert.Equal(t, `http://a.b.c/`, c.Reverse(`http://b.b.c/`))
+
+	r = c.Rewrite(`http://a.e.n/`)
+	assert.Equal(t, `http://b.e.n/`, r)
+	assert.Equal(t, `http://a.e.n/`, c.Reverse(`http://b.e.n/`))
 }

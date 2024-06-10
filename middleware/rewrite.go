@@ -30,7 +30,8 @@ type (
 		// "/users/:id": "/user/$1",
 		// "/match/<name:[0-9]+>": "/user/$1",
 		// Required.
-		Rules map[string]string `json:"rules"`
+		Rules             map[string]string `json:"rules"`
+		DisableColonParam bool
 
 		addresses  map[string]*RewriteRegExp //"/old": old<*regexp.Regexp>
 		rulesRegex map[*regexp.Regexp]string //old<*regexp.Regexp>: "/new"
@@ -50,7 +51,30 @@ func (c *RewriteConfig) Init() *RewriteConfig {
 	return c
 }
 
-func QueryParamToRegexpRule(query string) (pathRegexp string, newPath string, regexpRules []string, namedRules map[string]string) {
+var regexpQuotedBytes = map[rune]struct{}{
+	'`':  {},
+	'\\': {},
+	'.':  {},
+	'+':  {},
+	'*':  {},
+	'?':  {},
+	'(':  {},
+	')':  {},
+	'|':  {},
+	'[':  {},
+	']':  {},
+	'{':  {},
+	'}':  {},
+	'^':  {},
+	'$':  {},
+}
+
+func NeedQuoteMeta(r rune) bool {
+	_, ok := regexpQuotedBytes[r]
+	return ok
+}
+
+func QueryParamToRegexpRule(query string, disableColonParam bool) (pathRegexp string, newPath string, regexpRules []string, namedRules map[string]string) {
 	fullRule := strings.Builder{}
 	rv := strings.Builder{}
 	var regExp bool
@@ -61,10 +85,13 @@ func QueryParamToRegexpRule(query string) (pathRegexp string, newPath string, re
 	namedRules = map[string]string{}
 	setRuleByParam := func() {
 		rv.WriteString("$" + strconv.Itoa(len(regexpRules)+1))
-		fullRule.WriteString(`(?P<` + name.String() + `>[^/]+)`)
-		rule.WriteString(`(?P<` + name.String() + `>[^/]+)`)
+		nameStr := name.String()
+		if len(nameStr) > 0 {
+			fullRule.WriteString(`(?P<` + nameStr + `>[^/]+)`)
+			rule.WriteString(`(?P<` + nameStr + `>[^/]+)`)
+			namedRules[nameStr] = rule.String()
+		}
 		regexpRules = append(regexpRules, rule.String())
-		namedRules[name.String()] = rule.String()
 		name.Reset()
 		rule.Reset()
 	}
@@ -83,8 +110,11 @@ func QueryParamToRegexpRule(query string) (pathRegexp string, newPath string, re
 			}
 			if !regExpParam {
 				if r == ':' {
-					fullRule.WriteString(`?P<` + name.String() + `>`)
-					rule.WriteString(`?P<` + name.String() + `>`)
+					nameStr := name.String()
+					if len(nameStr) > 0 {
+						fullRule.WriteString(`?P<` + nameStr + `>`)
+						rule.WriteString(`?P<` + nameStr + `>`)
+					}
 					regExpParam = true
 				} else {
 					name.WriteRune(r)
@@ -101,7 +131,7 @@ func QueryParamToRegexpRule(query string) (pathRegexp string, newPath string, re
 				rule.Reset()
 				continue
 			}
-			if r == ':' {
+			if !disableColonParam && r == ':' {
 				param = true
 				continue
 			}
@@ -122,7 +152,9 @@ func QueryParamToRegexpRule(query string) (pathRegexp string, newPath string, re
 			}
 			rv.WriteRune(r)
 		}
-
+		if !regExp && NeedQuoteMeta(r) {
+			fullRule.WriteRune('\\')
+		}
 		fullRule.WriteRune(r)
 	}
 	if name.Len() > 0 {
@@ -155,8 +187,8 @@ func (c *RewriteConfig) Delete(urlPath string) *RewriteConfig {
 	return c
 }
 
-func ValidateRewriteRule(urlPath, newPath string) error {
-	r, _, ps, kv := QueryParamToRegexpRule(urlPath)
+func ValidateRewriteRule(urlPath, newPath string, disableParam bool) error {
+	r, _, ps, kv := QueryParamToRegexpRule(urlPath, disableParam)
 	_, err := regexp.Compile(r)
 	if err != nil {
 		return fmt.Errorf(`%w: %s (routeURL: %s)`, err, r, urlPath)
@@ -178,12 +210,12 @@ func ValidateRewriteRule(urlPath, newPath string) error {
 
 // Add rule
 func (c *RewriteConfig) Add(urlPath, newPath string) *RewriteConfig {
-	r, rv, ps, kv := QueryParamToRegexpRule(urlPath)
+	r, rv, ps, kv := QueryParamToRegexpRule(urlPath, c.DisableColonParam)
 	re := regexp.MustCompile(r)
 	c.rulesRegex[re] = newPath
-	newR := newPath
+	newR := regexp.QuoteMeta(newPath)
 	if len(ps) > 0 {
-		newR = echo.CaptureTokensByValues(ps, kv).Replace(newR)
+		newR = echo.CaptureTokensByValues(ps, kv, true).Replace(newR)
 	}
 	rve := regexp.MustCompile(`^` + newR + `$`)
 	c.rvsesRegex[rve] = rv

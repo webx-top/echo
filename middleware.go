@@ -45,13 +45,17 @@ func CaptureTokens(pattern *regexp.Regexp, input string) *strings.Replacer {
 	return CaptureTokensByValues(values, kv)
 }
 
-func CaptureTokensByValues(values []string, kv map[string]string) *strings.Replacer {
+func CaptureTokensByValues(values []string, kv map[string]string, quoted ...bool) *strings.Replacer {
+	var prefix string
+	if len(quoted) > 0 && quoted[0] {
+		prefix = `\`
+	}
 	replace := make([]string, 0, 2*(len(values)+len(kv)))
 	for i, v := range values {
-		replace = append(replace, "$"+strconv.Itoa(i+1), v)
+		replace = append(replace, prefix+"$"+strconv.Itoa(i+1), v)
 	}
 	for k, v := range kv {
-		replace = append(replace, "{"+k+"}", v)
+		replace = append(replace, prefix+"{"+k+prefix+"}", v)
 	}
 	return strings.NewReplacer(replace...)
 }
