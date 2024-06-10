@@ -193,9 +193,9 @@ func ValidateRewriteRule(urlPath, newPath string, disableParam bool) error {
 	if err != nil {
 		return fmt.Errorf(`%w: %s (routeURL: %s)`, err, r, urlPath)
 	}
-	newR := newPath
+	newR := regexp.QuoteMeta(newPath)
 	if len(ps) > 0 {
-		newR = echo.CaptureTokensByValues(ps, kv).Replace(newR)
+		newR = echo.CaptureTokensByValues(ps, kv, true).Replace(newR)
 	}
 	_, err = regexp.Compile(`^` + newR + `$`)
 	if err != nil {
