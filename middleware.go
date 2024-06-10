@@ -31,20 +31,27 @@ type (
 )
 
 func CaptureTokens(pattern *regexp.Regexp, input string) *strings.Replacer {
-	groups := pattern.FindAllStringSubmatch(input, -1)
-	if groups == nil {
+	groups := pattern.FindStringSubmatch(input)
+	if len(groups) == 0 {
 		return nil
 	}
-	values := groups[0][1:]
-	return CaptureTokensByValues(values)
+	values := groups[1:]
+	kv := make(map[string]string)
+	for i, name := range pattern.SubexpNames() {
+		if i != 0 && len(name) > 0 {
+			kv[name] = groups[i]
+		}
+	}
+	return CaptureTokensByValues(values, kv)
 }
 
-func CaptureTokensByValues(values []string) *strings.Replacer {
-	replace := make([]string, 2*len(values))
+func CaptureTokensByValues(values []string, kv map[string]string) *strings.Replacer {
+	replace := make([]string, 0, 2*(len(values)+len(kv)))
 	for i, v := range values {
-		j := 2 * i
-		replace[j] = "$" + strconv.Itoa(i+1)
-		replace[j+1] = v
+		replace = append(replace, "$"+strconv.Itoa(i+1), v)
+	}
+	for k, v := range kv {
+		replace = append(replace, "{"+k+"}", v)
 	}
 	return strings.NewReplacer(replace...)
 }

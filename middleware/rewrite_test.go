@@ -7,31 +7,36 @@ import (
 )
 
 func TestQueryParamToRegexpRule(t *testing.T) {
-	r, rv, ps := QueryParamToRegexpRule(`/a/b/:id`)
-	assert.Equal(t, `^/a/b/([^/]+)$`, r)
+	r, rv, ps, kv := QueryParamToRegexpRule(`/a/b/:id`)
+	assert.Equal(t, `^/a/b/(?P<id>[^/]+)$`, r)
 	assert.Equal(t, `/a/b/$1`, rv)
-	assert.Equal(t, []string{`([^/]+)`}, ps)
-	r, rv, ps = QueryParamToRegexpRule(`/a/b/:id/:city`)
-	assert.Equal(t, `^/a/b/([^/]+)/([^/]+)$`, r)
+	assert.Equal(t, []string{`(?P<id>[^/]+)`}, ps)
+	assert.Equal(t, map[string]string{`id`: `(?P<id>[^/]+)`}, kv)
+	r, rv, ps, kv = QueryParamToRegexpRule(`/a/b/:id/:city`)
+	assert.Equal(t, `^/a/b/(?P<id>[^/]+)/(?P<city>[^/]+)$`, r)
 	assert.Equal(t, `/a/b/$1/$2`, rv)
-	assert.Equal(t, []string{`([^/]+)`, `([^/]+)`}, ps)
-	r, rv, ps = QueryParamToRegexpRule(`/a/b/<name:[a-z]+>`)
-	assert.Equal(t, `^/a/b/([a-z]+)$`, r)
+	assert.Equal(t, []string{`(?P<id>[^/]+)`, `(?P<city>[^/]+)`}, ps)
+	assert.Equal(t, map[string]string{`id`: `(?P<id>[^/]+)`, `city`: `(?P<city>[^/]+)`}, kv)
+	r, rv, ps, kv = QueryParamToRegexpRule(`/a/b/<name:[a-z]+>`)
+	assert.Equal(t, `^/a/b/(?P<name>[a-z]+)$`, r)
 	assert.Equal(t, `/a/b/$1`, rv)
-	assert.Equal(t, []string{`([a-z]+)`}, ps)
-	r, rv, ps = QueryParamToRegexpRule(`/a/b/<name:[a-z]+>/<city:[a-z]+>`)
-	assert.Equal(t, `^/a/b/([a-z]+)/([a-z]+)$`, r)
+	assert.Equal(t, []string{`(?P<name>[a-z]+)`}, ps)
+	assert.Equal(t, map[string]string{`name`: `(?P<name>[a-z]+)`}, kv)
+	r, rv, ps, kv = QueryParamToRegexpRule(`/a/b/<name:[a-z]+>/<city:[a-z]+>`)
+	assert.Equal(t, `^/a/b/(?P<name>[a-z]+)/(?P<city>[a-z]+)$`, r)
 	assert.Equal(t, `/a/b/$1/$2`, rv)
-	assert.Equal(t, []string{`([a-z]+)`, `([a-z]+)`}, ps)
+	assert.Equal(t, []string{`(?P<name>[a-z]+)`, `(?P<city>[a-z]+)`}, ps)
+	assert.Equal(t, map[string]string{`name`: `(?P<name>[a-z]+)`, `city`: `(?P<city>[a-z]+)`}, kv)
 }
 
 func TestRewriteConfig(t *testing.T) {
 	c := &RewriteConfig{
 		Rules: map[string]string{
-			`/a/b/:id`:                    `/n_$1`,
-			`/c/d/<name:[a-z]+>`:          `/m_$1`,
-			`/c/d/<name:[a-z]+>/add`:      `/m_$1_add`,
-			`/c/d/<name:[a-z]+>/edit/:id`: `/m_$1_edit_$2`,
+			`/a/b/:id`:                      `/n_$1`,
+			`/c/d/<name:[a-z]+>`:            `/m_$1`,
+			`/c/d/<name:[a-z]+>/add`:        `/m_$1_add`,
+			`/c/d/<name:[a-z]+>/edit/:id`:   `/m_$1_edit_$2`,
+			`/c/d/<name1:[a-z]+>/named/:id`: `/m_{name1}_named_{id}`,
 		},
 	}
 	c.Init()
@@ -54,4 +59,8 @@ func TestRewriteConfig(t *testing.T) {
 	r = c.Rewrite(`/c/d/hah/edit/1`)
 	assert.Equal(t, `/m_hah_edit_1`, r)
 	assert.Equal(t, `/c/d/hah/edit/1`, c.Reverse(`/m_hah_edit_1`))
+
+	r = c.Rewrite(`/c/d/hah/named/1`)
+	assert.Equal(t, `/m_hah_named_1`, r)
+	assert.Equal(t, `/c/d/hah/named/1`, c.Reverse(`/m_hah_named_1`))
 }
