@@ -52,7 +52,6 @@ func (c *RewriteConfig) Init() *RewriteConfig {
 }
 
 var regexpQuotedBytes = map[rune]struct{}{
-	'`':  {},
 	'\\': {},
 	'.':  {},
 	'+':  {},
