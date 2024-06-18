@@ -38,6 +38,7 @@ type RenderData struct {
 	Func       template.FuncMap
 	Data       interface{}
 	Stored     param.MapReadonly
+	requestURI string
 }
 
 func (r *RenderData) Now() *com.Time {
@@ -246,7 +247,10 @@ func (r *RenderData) Scheme() string {
 }
 
 func (r *RenderData) RequestURI() string {
-	return r.ctx.RequestURI()
+	if len(r.requestURI) == 0 {
+		r.requestURI = r.ctx.RequestURI()
+	}
+	return r.requestURI
 }
 
 func (r *RenderData) GetNextURL(varNames ...string) string {
