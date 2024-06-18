@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/admpub/log"
@@ -36,15 +37,16 @@ type (
 		// Skipper defines a function to skip middleware.
 		Skipper echo.Skipper `json:"-"`
 
-		Path     string          `json:"path"` //UrlPath
-		Root     string          `json:"root"`
-		Fallback []string        `json:"fallback"`
-		Index    string          `json:"index"`
-		Browse   bool            `json:"browse"`
-		Template string          `json:"template"`
-		Debug    bool            `json:"debug"`
-		FS       http.FileSystem `json:"-"`
-		MaxAge   time.Duration   `json:"maxAge"`
+		Path       string          `json:"path"` //UrlPath
+		Root       string          `json:"root"`
+		Fallback   []string        `json:"fallback"`
+		Index      string          `json:"index"`
+		Browse     bool            `json:"browse"`
+		Template   string          `json:"template"`
+		Debug      bool            `json:"debug"`
+		FS         http.FileSystem `json:"-"`
+		MaxAge     time.Duration   `json:"maxAge"`
+		TrimPrefix string          `json:"trimPrefix"`
 
 		open   func(string) (http.File, error)
 		render func(echo.Context, interface{}) error
@@ -78,8 +80,21 @@ func (s *StaticOptions) Init() *StaticOptions {
 			log.GetLogger("echo").Debug(`[middleware][static] `, `Register assets directory: `, fallback)
 		}
 	}
-	if len(s.Path) > 0 && s.Path[0] != '/' {
-		s.Path = `/` + s.Path
+	if len(s.Path) > 0 {
+		if s.Path[len(s.Path)-1] != '/' {
+			s.Path = s.Path + `/`
+		}
+		if s.Path[0] != '/' {
+			s.Path = `/` + s.Path
+		}
+	}
+	if len(s.TrimPrefix) > 0 {
+		if s.TrimPrefix[len(s.TrimPrefix)-1] != '/' {
+			s.TrimPrefix = s.TrimPrefix + `/`
+		}
+		if s.TrimPrefix[0] != '/' {
+			s.TrimPrefix = `/` + s.TrimPrefix
+		}
 	}
 	if s.Debug {
 		log.GetLogger("echo").Debug(`[middleware][static] `, `Static: `, s.Path, "\t-> ", s.Root)
@@ -207,6 +222,9 @@ func (s *StaticOptions) Middleware() echo.MiddlewareFunc {
 				}
 				file = file[length:]
 				file = path.Clean(file)
+				if len(s.TrimPrefix) > 0 {
+					file = strings.TrimPrefix(file, s.TrimPrefix)
+				}
 			}
 			err := s.findFile(c, s.Root, hasIndex, file, render, opener)
 			if err == nil {
