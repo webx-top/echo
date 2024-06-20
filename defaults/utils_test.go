@@ -58,6 +58,7 @@ func TestMustGetContext(t *testing.T) {
 	assert.Equal(t, `*context.valueCtx`, fmt.Sprintf("%T", req3.Context()))
 	assert.Equal(t, `*echo.xContext`, fmt.Sprintf("%T", MustGetContext(req3.Context())))
 	assert.Equal(t, `0`, MustGetContext(req3.Context()).Internal().String(`_`))
+	assert.True(t, IsMockContext(eCtx))
 }
 
 func TestFastHTTPContext(t *testing.T) {

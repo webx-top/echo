@@ -31,3 +31,8 @@ func NewMockContext(args ...*echo.Echo) echo.Context {
 	}
 	return echo.NewContext(mock.NewRequest(), mock.NewResponse(), e)
 }
+
+func IsMockContext(c echo.Context) bool {
+	_, ok := c.Request().(*mock.Request)
+	return ok
+}
