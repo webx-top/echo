@@ -1,6 +1,7 @@
 package testing
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 
@@ -10,9 +11,25 @@ import (
 	"github.com/webx-top/echo/engine/standard"
 )
 
+type typeCtxKey string
+
+var ctxKeyMock typeCtxKey = `$mock$`
+
+func IsMock(c context.Context) bool {
+	v, _ := c.Value(ctxKeyMock).(bool)
+	return v
+}
+
+func ContextWithMockTag(parent context.Context) context.Context {
+	return context.WithValue(parent, ctxKeyMock, true)
+}
+
 // Request testing
 func Request(method, path string, handler engine.Handler, reqRewrite ...func(*http.Request)) *httptest.ResponseRecorder {
-	req, _ := http.NewRequest(method, path, nil)
+	req, err := http.NewRequest(method, path, nil)
+	if err == nil {
+		req = req.WithContext(ContextWithMockTag(req.Context()))
+	}
 	if len(reqRewrite) > 0 && reqRewrite[0] != nil {
 		reqRewrite[0](req)
 	}

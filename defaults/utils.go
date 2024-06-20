@@ -5,6 +5,7 @@ import (
 
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine/mock"
+	"github.com/webx-top/echo/testing"
 )
 
 func MustGetContext(ctx context.Context, args ...*echo.Echo) echo.Context {
@@ -34,5 +35,8 @@ func NewMockContext(args ...*echo.Echo) echo.Context {
 
 func IsMockContext(c echo.Context) bool {
 	_, ok := c.Request().(*mock.Request)
+	if !ok {
+		ok = testing.IsMock(c)
+	}
 	return ok
 }
