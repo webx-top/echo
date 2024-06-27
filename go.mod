@@ -21,7 +21,7 @@ require (
 	github.com/admpub/jet/v6 v6.0.2
 	github.com/admpub/log v1.3.6
 	github.com/admpub/null v8.0.4+incompatible
-	github.com/admpub/realip v0.2.4
+	github.com/admpub/realip v0.2.6
 	github.com/admpub/redistore v1.2.1
 	github.com/admpub/securecookie v1.3.0
 	github.com/admpub/sessions v0.2.1
