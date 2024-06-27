@@ -83,15 +83,6 @@ func LogWithWriter(writer io.Writer, recv ...func(*VisitorInfo)) echo.Middleware
 	if len(recv) > 0 {
 		logging = recv[0]
 	}
-	if logging == nil {
-		if writer == nil {
-			writer = DefaultLogWriter
-		}
-		logger := std.New(writer, ``, 0)
-		logging = func(v *VisitorInfo) {
-			logger.Println(":" + strconv.Itoa(v.ResponseCode) + ": " + v.Time.Format(time.RFC3339) + " " + v.RealIP + " " + v.Method + " " + v.Scheme + " " + v.Host + " " + v.URI + " " + v.Elapsed.String() + " " + strconv.FormatInt(v.ResponseSize, 10))
-		}
-	}
 	return LogWithConfig(LogConfig{
 		Writer:  writer,
 		Execute: logging,
@@ -111,6 +102,12 @@ func LogWithConfig(config LogConfig) echo.MiddlewareFunc {
 	}
 	if config.Writer == nil {
 		config.Writer = DefaultLogWriter
+	}
+	if config.Execute == nil {
+		logger := std.New(config.Writer, ``, 0)
+		config.Execute = func(v *VisitorInfo) {
+			logger.Println(":" + strconv.Itoa(v.ResponseCode) + ": " + v.Time.Format(time.RFC3339) + " " + v.RealIP + " " + v.Method + " " + v.Scheme + " " + v.Host + " " + v.URI + " " + v.Elapsed.String() + " " + strconv.FormatInt(v.ResponseSize, 10))
+		}
 	}
 	return func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
