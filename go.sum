@@ -974,8 +974,8 @@ github.com/admpub/pp v0.0.7/go.mod h1:6wSDZgDpuysnqYKffOz0KajEg8q/k+CVZ+PnHKyR1y
 github.com/admpub/randomize v0.0.2 h1:bGVxlCqDLm7zwjXoh6bZc472bGcZdOgern30p7Gtf38=
 github.com/admpub/randomize v0.0.2/go.mod h1:Ave65jpQkng5D/Un1EUUgL5iNShKoWo2jGqbct3Lbo0=
 github.com/admpub/realip v0.0.0-20210421084339-374cf5df122d/go.mod h1:f6YCrWcytiBLo9A9OZCqu26WkBm4Y2QeWid8MRBxNSM=
-github.com/admpub/realip v0.2.6 h1:QXalx1hayVHff7GrrvI7Cg6EqtGAc3Gmh2ckhCWFhtw=
-github.com/admpub/realip v0.2.6/go.mod h1:Ini0GwP0RvSbVLPReALn5zYYRi7Z2wpi2C/7HVX9Ii4=
+github.com/admpub/realip v0.2.7 h1:lefF1kpA3liKqq43PzM9D2Ex2imEeix/aMjSmmyMphY=
+github.com/admpub/realip v0.2.7/go.mod h1:Ini0GwP0RvSbVLPReALn5zYYRi7Z2wpi2C/7HVX9Ii4=
 github.com/admpub/redistore v1.2.1 h1:KHdtk+mXKR4l7pM3Y00ZJRHgqt6ri0B1hAKZhZXgEcA=
 github.com/admpub/redistore v1.2.1/go.mod h1:OTxHpPwHxqq+4Gv7wk094z7RwMbAg92Nq+N5mKXcifQ=
 github.com/admpub/securecookie v1.3.0 h1:SIQfKIwb2vWsIj7m1D1ZJQfKEEKB+I7sJQbTy9k3z1k=
