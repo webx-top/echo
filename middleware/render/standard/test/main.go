@@ -119,6 +119,10 @@ func main() {
 	defaults.Get(`/e`, func(ctx echo.Context) error {
 		return ctx.Render(`test2`, demo)
 	})
+	defaults.Get(`/ip`, func(ctx echo.Context) error {
+		echo.Dump(ctx.Request().Header().Std())
+		return ctx.String(ctx.RealIP())
+	})
 
 	pprof.Wrapper(defaults.Default)
 	defaults.Run(standard.New(`:4444`))
