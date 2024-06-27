@@ -255,6 +255,24 @@ func TestEchoRouter(t *testing.T) {
 	assert.Equal(t, "123", b)
 }
 
+func TestEchoRealIP(t *testing.T) {
+	e := New()
+
+	e.Get("/", func(c Context) error {
+		Dump(c.Request().Header().Std())
+		return c.String(c.RealIP())
+	})
+	e.RebuildRouter()
+
+	c, b := request(GET, "/", e, func(r *http.Request) {
+		r.Header.Set(`X-Forwarded-For`, `137.0.10.1`)
+		r.Header.Set(`X-Real-Ip`, `137.0.10.8`)
+		r.RemoteAddr = `127.0.0.1:57092`
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "137.0.10.1", b)
+}
+
 func TestEchoData(t *testing.T) {
 	data := NewData(nil)
 	data.SetCode(0)
