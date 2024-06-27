@@ -83,24 +83,47 @@ func LogWithWriter(writer io.Writer, recv ...func(*VisitorInfo)) echo.Middleware
 	if len(recv) > 0 {
 		logging = recv[0]
 	}
-	if writer == nil {
-		writer = DefaultLogWriter
-	}
-	logger := std.New(writer, ``, 0)
 	if logging == nil {
+		if writer == nil {
+			writer = DefaultLogWriter
+		}
+		logger := std.New(writer, ``, 0)
 		logging = func(v *VisitorInfo) {
 			logger.Println(":" + strconv.Itoa(v.ResponseCode) + ": " + v.Time.Format(time.RFC3339) + " " + v.RealIP + " " + v.Method + " " + v.Scheme + " " + v.Host + " " + v.URI + " " + v.Elapsed.String() + " " + strconv.FormatInt(v.ResponseSize, 10))
 		}
 	}
+	return LogWithConfig(LogConfig{
+		Writer:  writer,
+		Execute: logging,
+	})
+}
+
+type LogConfig struct {
+	// Skipper defines a function to skip middleware.
+	Skipper echo.Skipper       `json:"-"`
+	Writer  io.Writer          `json:"-"`
+	Execute func(*VisitorInfo) `json:"-"`
+}
+
+func LogWithConfig(config LogConfig) echo.MiddlewareFunc {
+	if config.Skipper == nil {
+		config.Skipper = echo.DefaultSkipper
+	}
+	if config.Writer == nil {
+		config.Writer = DefaultLogWriter
+	}
 	return func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
+			if config.Skipper(c) {
+				return h.Handle(c)
+			}
 			info := AcquireVisitorInfo()
 			info.Time = time.Now()
 			if err := h.Handle(c); err != nil {
 				c.Error(err)
 			}
 			info.SetFromContext(c)
-			logging(info)
+			config.Execute(info)
 			ReleaseVisitorInfo(info)
 			return nil
 		})
