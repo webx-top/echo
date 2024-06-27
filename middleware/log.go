@@ -116,11 +116,13 @@ func LogWithConfig(config LogConfig) echo.MiddlewareFunc {
 			}
 			info := AcquireVisitorInfo()
 			info.Time = time.Now()
-			err := h.Handle(c)
+			if err := h.Handle(c); err != nil {
+				c.Error(err)
+			}
 			info.SetFromContext(c)
 			config.Execute(info)
 			ReleaseVisitorInfo(info)
-			return err
+			return nil
 		})
 	}
 }

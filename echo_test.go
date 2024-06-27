@@ -18,6 +18,7 @@ import (
 
 func init() {
 	mw.DefaultLogWriter = log.Writer(log.LevelInfo)
+	log.Sync()
 }
 
 func request(method, path string, e *Echo, reqRewrite ...func(*http.Request)) (int, string) {
@@ -78,6 +79,7 @@ func TestEchoMiddleware(t *testing.T) {
 
 func TestEchoMiddlewareError(t *testing.T) {
 	e := New()
+	e.SetDebug(true)
 	e.Use(mw.Log(), func(next HandlerFunc) HandlerFunc {
 		return func(c Context) error {
 			return errors.New("error")
@@ -87,8 +89,24 @@ func TestEchoMiddlewareError(t *testing.T) {
 
 	e.RebuildRouter()
 
-	c, _ := request(GET, "/", e)
+	c, r := request(GET, "/", e)
 	assert.Equal(t, http.StatusInternalServerError, c)
+	assert.Equal(t, `error`, r)
+}
+
+func TestEchoHandlerError(t *testing.T) {
+	e := New()
+	e.SetDebug(true)
+	e.Use(mw.Log())
+	e.Get("/", func(c Context) error {
+		return errors.New("error")
+	})
+
+	e.RebuildRouter()
+
+	c, r := request(GET, "/", e)
+	assert.Equal(t, http.StatusInternalServerError, c)
+	assert.Equal(t, `error`, r)
 }
 
 func TestEchoRoutePath(t *testing.T) {
