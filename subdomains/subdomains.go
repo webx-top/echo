@@ -58,8 +58,25 @@ func (info *Info) URL(s *Subdomains, uri string) string {
 	return protocol + `://` + info.Host + info.Prefix() + uri
 }
 
+func (info *Info) RelativeURL(s *Subdomains, uri string) string {
+	if len(uri) > 0 && !strings.HasPrefix(uri, `/`) {
+		uri = `/` + uri
+	}
+	if len(info.Host) == 0 {
+		if s.Default == info.Name {
+			return info.Prefix() + uri
+		}
+		return info.Prefix() + `/` + info.Name + uri
+	}
+	return info.Prefix() + uri
+}
+
 func (info *Info) URLByName(s *Subdomains, name string, args ...interface{}) string {
 	return info.URL(s, info.Echo.URI(name, args...))
+}
+
+func (info *Info) RelativeURLByName(s *Subdomains, name string, args ...interface{}) string {
+	return info.RelativeURL(s, info.Echo.URI(name, args...))
 }
 
 type Dispatcher func(r engine.Request, w engine.Response) (*echo.Echo, bool)
@@ -149,9 +166,15 @@ func (s *Subdomains) URL(uri string, args ...string) string {
 	return info.URL(s, uri)
 }
 
-// URLByName 根据路由别名生成网址
-// 可以在名称中采用 #backend#name 的方式来获取子域名别名为bakcend的网址
-func (s *Subdomains) URLByName(name string, params ...interface{}) string {
+func (s *Subdomains) RelativeURL(uri string, args ...string) string {
+	info := s.Get(args...)
+	if info == nil {
+		return uri
+	}
+	return info.RelativeURL(s, uri)
+}
+
+func parseURLName(name string) (string, []string) {
 	var args []string
 	if strings.HasPrefix(name, `#`) {
 		name = strings.TrimPrefix(name, `#`)
@@ -161,11 +184,29 @@ func (s *Subdomains) URLByName(name string, params ...interface{}) string {
 			name = arr[1]
 		}
 	}
+	return name, args
+}
+
+// URLByName 根据路由别名生成网址
+// 可以在名称中采用 #backend#name 的方式来获取子域名别名为bakcend的网址
+func (s *Subdomains) URLByName(name string, params ...interface{}) string {
+	var args []string
+	name, args = parseURLName(name)
 	info := s.Get(args...)
 	if info == nil {
 		return `/not-found:` + name
 	}
 	return info.URLByName(s, name, params...)
+}
+
+func (s *Subdomains) RelativeURLByName(name string, params ...interface{}) string {
+	var args []string
+	name, args = parseURLName(name)
+	info := s.Get(args...)
+	if info == nil {
+		return `/not-found:` + name
+	}
+	return info.RelativeURLByName(s, name, params...)
 }
 
 func (s *Subdomains) FindByDomain(host string) (*echo.Echo, bool) {
