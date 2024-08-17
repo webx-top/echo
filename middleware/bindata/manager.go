@@ -19,7 +19,7 @@
 package bindata
 
 import (
-	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -42,8 +42,7 @@ type TmplManager struct {
 func (a *TmplManager) GetTemplate(fileName string) ([]byte, error) {
 	file, err := a.FileSystem.Open(fileName)
 	if err != nil {
-		err = errors.New(fileName + `: ` + err.Error())
-		return nil, err
+		return nil, fmt.Errorf(fileName+`: %w`, err)
 	}
 	defer file.Close()
 	b, err := io.ReadAll(file)
