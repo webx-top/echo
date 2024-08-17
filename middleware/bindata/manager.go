@@ -44,6 +44,8 @@ func (a *TmplManager) GetTemplate(fileName string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf(fileName+`: %w`, err)
 	}
-	defer file.Close()
-	return io.ReadAll(file)
+	var b []byte
+	b, err = io.ReadAll(file)
+	file.Close()
+	return b, err
 }
