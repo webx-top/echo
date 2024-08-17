@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 
 	"github.com/webx-top/echo/middleware/render/driver"
 )
@@ -42,6 +43,9 @@ type TmplManager struct {
 func (a *TmplManager) GetTemplate(fileName string) ([]byte, error) {
 	file, err := a.FileSystem.Open(fileName)
 	if err != nil {
+		if err != os.ErrNotExist && err.Error() == os.ErrNotExist.Error() {
+			err = os.ErrNotExist
+		}
 		return nil, fmt.Errorf(fileName+`: %w`, err)
 	}
 	defer file.Close()
