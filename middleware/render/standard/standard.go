@@ -322,9 +322,9 @@ func (a *Standard) find(c echo.Context, rel *CcRel,
 	}
 	funcMap = setFunc(rel.Tpl[0], funcMap)
 	t.Funcs(funcMap)
-	b, err := tmplContent(tmplName)
+	var b []byte
+	b, err = tmplContent(tmplName)
 	if err != nil {
-		err = parseError(err, string(b))
 		return
 	}
 	content := string(b)
