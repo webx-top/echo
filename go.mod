@@ -2,8 +2,6 @@ module github.com/webx-top/echo
 
 go 1.21
 
-toolchain go1.21.6
-
 require (
 	github.com/admpub/boltstore v1.1.1
 	github.com/admpub/decimal v1.3.1

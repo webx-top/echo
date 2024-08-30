@@ -21,6 +21,7 @@ package echo
 import (
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -63,7 +64,7 @@ func (c *CookieOptions) SetMaxAge(maxAge int) *CookieOptions {
 	return c
 }
 
-//Cookier interface
+// Cookier interface
 type Cookier interface {
 	Get(key string) string
 	Add(cookies ...*http.Cookie) Cookier
@@ -71,7 +72,7 @@ type Cookier interface {
 	Send()
 }
 
-//NewCookier create a cookie instance
+// NewCookier create a cookie instance
 func NewCookier(ctx Context) Cookier {
 	return &cookie{
 		context: ctx,
@@ -217,6 +218,32 @@ func CookieExpires(stdCookie *http.Cookie, expires time.Time) {
 	}
 	stdCookie.MaxAge = 0
 	stdCookie.Expires = expires
+}
+
+// CookieSameSite 设置SameSite
+func CookieSameSite(stdCookie *http.Cookie, p string) {
+	switch strings.ToLower(p) {
+	case `lax`:
+		stdCookie.SameSite = http.SameSiteLaxMode
+	case `strict`:
+		stdCookie.SameSite = http.SameSiteStrictMode
+	default:
+		stdCookie.SameSite = http.SameSiteDefaultMode
+	}
+}
+
+// CopyCookieOptions copy cookie options
+func CopyCookieOptions(from *http.Cookie, to *http.Cookie) {
+	to.MaxAge = from.MaxAge
+	to.Expires = from.Expires
+	if len(from.Path) == 0 {
+		from.Path = `/`
+	}
+	to.Path = from.Path
+	to.Domain = from.Domain
+	to.Secure = from.Secure
+	to.HttpOnly = from.HttpOnly
+	to.SameSite = from.SameSite
 }
 
 // NewCookie 新建cookie对象

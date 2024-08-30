@@ -78,6 +78,10 @@ func ReleaseVisitorInfo(v *VisitorInfo) {
 	visitorInfoPool.Put(v)
 }
 
+func GetDefaultLogWriter() io.Writer {
+	return std.Writer()
+}
+
 func LogWithWriter(writer io.Writer, recv ...func(*VisitorInfo)) echo.MiddlewareFunc {
 	var logging func(*VisitorInfo)
 	if len(recv) > 0 {

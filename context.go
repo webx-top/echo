@@ -5,6 +5,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/admpub/events"
@@ -276,4 +277,10 @@ func ToStdContext(ctx context.Context, eCtx Context) context.Context {
 
 func AsStdContext(eCtx Context) context.Context {
 	return ToStdContext(eCtx, eCtx)
+}
+
+var typeOfContext = reflect.TypeOf((*Context)(nil)).Elem()
+
+func IsContext(t reflect.Type) bool {
+	return t.Implements(typeOfContext)
 }

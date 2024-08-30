@@ -44,6 +44,10 @@ func (c *xContext) Render(name string, data interface{}, codes ...int) (err erro
 }
 
 func (c *xContext) RenderBy(name string, content func(string) ([]byte, error), data interface{}, codes ...int) (b []byte, err error) {
+	name, err = c.echo.Template(c, name, data)
+	if err != nil {
+		return
+	}
 	c.dataEngine.SetTmplFuncs()
 	if data == nil {
 		data = c.dataEngine.GetData()
@@ -99,6 +103,12 @@ func (c *xContext) Blob(b []byte, codes ...int) (err error) {
 
 // JSON sends a JSON response with status code.
 func (c *xContext) JSON(i interface{}, codes ...int) (err error) {
+	if m, y := i.(JSONModifer); y {
+		i, err = m.JSON(c)
+		if err != nil {
+			return err
+		}
+	}
 	var b []byte
 	if c.echo.Debug() {
 		b, err = json.MarshalIndent(i, "", "  ")
@@ -121,6 +131,12 @@ func (c *xContext) JSONBlob(b []byte, codes ...int) (err error) {
 // JSONP sends a JSONP response with status code. It uses `callback` to construct
 // the JSONP payload.
 func (c *xContext) JSONP(callback string, i interface{}, codes ...int) (err error) {
+	if m, y := i.(JSONModifer); y {
+		i, err = m.JSON(c)
+		if err != nil {
+			return err
+		}
+	}
 	b, err := json.Marshal(i)
 	if err != nil {
 		return err
@@ -133,6 +149,12 @@ func (c *xContext) JSONP(callback string, i interface{}, codes ...int) (err erro
 
 // XML sends an XML response with status code.
 func (c *xContext) XML(i interface{}, codes ...int) (err error) {
+	if m, y := i.(XMLModifer); y {
+		i, err = m.XML(c)
+		if err != nil {
+			return err
+		}
+	}
 	var b []byte
 	if c.echo.Debug() {
 		b, err = xml.MarshalIndent(i, "", "  ")

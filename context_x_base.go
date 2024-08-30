@@ -268,6 +268,10 @@ func (c *xContext) Renderer() Renderer {
 }
 
 func (c *xContext) Fetch(name string, data interface{}) (b []byte, err error) {
+	name, err = c.echo.Template(c, name, data)
+	if err != nil {
+		return
+	}
 	if c.renderer == nil {
 		if c.echo.renderer == nil {
 			return nil, ErrRendererNotRegistered

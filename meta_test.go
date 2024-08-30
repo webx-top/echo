@@ -102,10 +102,9 @@ func TestEchoMetaRequestValidator(t *testing.T) {
 	e.SetValidator(NewValidation())
 	g := e.Group("/root")
 
-	g.Post("/post", e.MetaHandler(
-		nil,
+	g.Post("/post", e.MakeHandler(
 		func(c Context) error {
-			data := c.Internal().Get(`validated`).(*MetaRequest)
+			data := GetValidated(c).(*MetaRequest)
 			return c.String(data.Name)
 		},
 		NewMetaRequest,
@@ -135,6 +134,10 @@ type testRequestData struct {
 	Name string `valid:"required"`
 }
 
+type testResponseData struct {
+	Name string `json:"name,omitempty"`
+}
+
 func TestEchoMetaRequestValidator2(t *testing.T) {
 	e := New()
 	e.Use(middleware.Validate(NewValidation))
@@ -144,7 +147,7 @@ func TestEchoMetaRequestValidator2(t *testing.T) {
 	g.Post("/post2", e.MetaHandler(
 		nil,
 		func(c Context) error {
-			data := c.Internal().Get(`validated`).(*testRequestData)
+			data := GetValidated(c).(*testRequestData)
 			return c.String(data.Name)
 		},
 		func() interface{} {
@@ -181,7 +184,7 @@ func TestEchoMetaRequestValidator3(t *testing.T) {
 	g.Post("/post3", e.MetaHandler(
 		nil,
 		func(c Context) error {
-			data := c.Internal().Get(`validated`).(*testRequestData)
+			data := GetValidated(c).(*testRequestData)
 			return c.String(data.Name)
 		},
 		&testRequestData{},
@@ -205,4 +208,77 @@ func TestEchoMetaRequestValidator3(t *testing.T) {
 	})
 	assert.Equal(t, http.StatusInternalServerError, c)
 	assert.Equal(t, `Name: Can not be empty`, b)
+}
+
+func TestEchoMetaRequestValidatorX(t *testing.T) {
+	e := New()
+	e.Use(middleware.Validate(NewValidation))
+	e.SetDebug(true)
+	g := e.Group("/root")
+	h := HandlerFuncWithArg[testRequestData, testResponseData](func(c Context, data *testRequestData) (testResponseData, error) {
+		c.SetAuto(true)
+		if data == nil {
+			return testResponseData{}, ErrBadRequest
+		}
+		return testResponseData{Name: data.Name}, nil
+	})
+	reqOK := func(r *http.Request) {
+		r.Form = url.Values{}
+		r.Form.Add(`Name`, `OK`)
+		r.Header.Set("Content-Type", echo.MIMEApplicationForm)
+		r.Header.Set("Accept", echo.MIMEApplicationJSON)
+		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
+	}
+	reqInvalid := func(r *http.Request) {
+		r.Form = url.Values{}
+		r.Header.Set("Content-Type", echo.MIMEApplicationForm)
+		r.Body = io.NopCloser(bytes.NewReader([]byte(r.Form.Encode())))
+	}
+	g.Post("/post", e.MakeHandler(h, &testRequestData{}))
+	g.Route("GET,POST", "/post-invalid-arg-type", e.MetaHandler(
+		nil,
+		HandlerFuncWithArg[string, testResponseData](func(c Context, data *string) (testResponseData, error) {
+			c.SetAuto(true)
+			if data == nil {
+				return testResponseData{}, ErrBadRequest
+			}
+			return testResponseData{Name: *data}, nil
+		}),
+		"POST",
+	))
+	g.Route("GET,POST", "/post-x", e.MakeHandler(h, "POST"))
+
+	e.RebuildRouter()
+
+	c, b := request(POST, "/root/post", e, reqInvalid)
+	assert.Equal(t, http.StatusInternalServerError, c)
+	assert.Equal(t, `Name: Can not be empty`, b)
+
+	expected := `{
+  "Code": 1,
+  "State": "Success",
+  "Info": null,
+  "Data": {
+    "name": "OK"
+  }
+}`
+	c, b = request(POST, "/root/post", e, reqOK)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, expected, b)
+
+	c, b = request(GET, "/root/post-invalid-arg-type", e, reqOK)
+	assert.Equal(t, http.StatusBadRequest, c)
+	assert.Equal(t, `Bad Request`, b)
+
+	c, b = request(POST, "/root/post-invalid-arg-type", e, reqOK)
+	assert.Equal(t, http.StatusBadRequest, c)
+	assert.Equal(t, `Bad Request`, b)
+
+	c, b = request(GET, "/root/post-x", e, reqOK)
+	assert.Equal(t, http.StatusBadRequest, c)
+	assert.Equal(t, `Bad Request`, b)
+
+	c, b = request(POST, "/root/post-x", e, reqOK)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, expected, b)
 }

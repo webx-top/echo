@@ -101,7 +101,6 @@ func HandlerTmpl(handlerPath string) string {
 END:
 	if len(u) > 0 {
 		r = append(r, string(u))
-		u = []rune{}
 	}
 	for i, s := range r {
 		r[i] = com.SnakeCase(s)

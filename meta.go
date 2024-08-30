@@ -35,6 +35,11 @@ type MethodGetter interface {
 type RequestValidator func() MetaValidator
 
 func NewBaseRequestValidator(data interface{}, method ...string) *BaseRequestValidator {
+	if len(method) == 0 {
+		if mt, ok := data.(MethodGetter); ok {
+			method = mt.Methods()
+		}
+	}
 	return &BaseRequestValidator{data: data, methods: method}
 }
 
@@ -107,4 +112,27 @@ func (m *MetaHandler) Handle(c Context) error {
 
 func GetValidated(c Context, defaults ...interface{}) interface{} {
 	return c.Internal().Get(`validated`, defaults...)
+}
+
+func MustGetValidated[T any](c Context) (*T, error) {
+	v, y := c.Internal().Get(`validated`).(*T)
+	if y {
+		return v, nil
+	}
+	v = new(T)
+	err := MustValidated(c, v)
+	return v, err
+}
+
+func MustValidated[T any](c Context, v T) error {
+	var valueDecoders BinderValueCustomDecoders
+	var filters []FormDataFilter
+	data := interface{}(v)
+	if it, ok := data.(FiltersGetter); ok {
+		filters = it.Filters(c)
+	}
+	if it, ok := data.(ValueDecodersGetter); ok {
+		valueDecoders = it.ValueDecoders(c)
+	}
+	return c.MustBindAndValidateWithDecoder(v, valueDecoders, filters...)
 }

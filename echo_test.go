@@ -299,3 +299,11 @@ func TestEchoData(t *testing.T) {
 	assert.Equal(t, `Failure`, fmt.Sprintf(`%v`, data.Code))
 	assert.Equal(t, `Failure`, data.State)
 }
+
+func TestHandlerFuncWithArg(t *testing.T) {
+	type testRequest struct{ Name string }
+	type testResponse struct{ Author string }
+	_ = HandlerFuncWithArg[testRequest, testResponse](func(c Context, r *testRequest) (testResponse, error) {
+		return testResponse{Author: r.Name}, nil
+	})
+}

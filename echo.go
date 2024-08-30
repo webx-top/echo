@@ -77,7 +77,8 @@ type (
 		Meta() H
 	}
 
-	HandlerFunc func(Context) error
+	HandlerFunc                      func(Context) error
+	HandlerFuncWithArg[R any, W any] func(Context, *R) (W, error)
 
 	// HTTPErrorHandler is a centralized HTTP error handler.
 	HTTPErrorHandler func(error, Context)
@@ -86,6 +87,17 @@ type (
 	Renderer interface {
 		Render(w io.Writer, name string, data interface{}, c Context) error
 		RenderBy(w io.Writer, name string, content func(string) ([]byte, error), data interface{}, c Context) error
+	}
+
+	JSONModifer interface {
+		JSON(Context) (interface{}, error)
+	}
+
+	XMLModifer interface {
+		XML(Context) (interface{}, error)
+	}
+	Template interface {
+		Template(Context) (string, error)
 	}
 )
 
@@ -108,6 +120,15 @@ func (m AsMiddleware) Handle(h Handler) Handler {
 
 func (h HandlerFunc) Handle(c Context) error {
 	return h(c)
+}
+
+func (h HandlerFuncWithArg[R, W]) Handle(c Context) error {
+	r, _ := GetValidated(c).(*R)
+	w, err := h(c, r)
+	if err != nil {
+		return err
+	}
+	return c.Render(``, w)
 }
 
 // New creates an instance of Echo.
@@ -573,15 +594,43 @@ func (e *Echo) Add(method, path string, handler interface{}, middleware ...inter
 }
 
 // MetaHandler Add meta information about endpoint
+// requests = []interface{}{"POST", H{"k":"v"}} or []interface{}{&myRequestData{},"POST", H{"k":"v"}}
 func (e *Echo) MetaHandler(m H, handler interface{}, requests ...interface{}) Handler {
 	var request interface{}
-	if len(requests) > 0 {
-		request = requests[0]
+	var methods []string
+	for k, v := range requests {
+		switch vv := v.(type) {
+		case string:
+			if InSliceFold(vv, Methods()) {
+				methods = append(methods, vv)
+				continue
+			}
+		case H:
+			if m == nil {
+				m = vv
+			} else {
+				m.DeepMerge(vv)
+			}
+			continue
+		default:
+			if k == 0 {
+				request = vv
+				continue
+			}
+		}
+		panic(fmt.Sprintf(`invalid parameter for MetaHandler: %v (%T)`, v, v))
 	}
-	return e.MetaHandlerWithRequest(m, handler, request)
+	return e.MetaHandlerWithRequest(m, handler, request, methods...)
+}
+
+// Handler Add validateable hanlder about endpoint
+// requests = []interface{}{"POST", H{"k":"v"}} or []interface{}{&myRequestData{},"POST", H{"k":"v"}}
+func (e *Echo) MakeHandler(handler interface{}, requests ...interface{}) Handler {
+	return e.MetaHandler(nil, handler, requests...)
 }
 
 // MetaHandlerWithRequest Add meta information about endpoint
+// methods = []string{"POST", "GET"} or []string{"POST,GET"}
 func (e *Echo) MetaHandlerWithRequest(m H, handler interface{}, request interface{}, methods ...string) Handler {
 	h := &MetaHandler{
 		meta:    m,
@@ -616,6 +665,24 @@ func (e *Echo) MetaHandlerWithRequest(m H, handler interface{}, request interfac
 			}
 			h.request = func() MetaValidator {
 				return NewBaseRequestValidator(reflect.New(t).Interface(), method...)
+			}
+		}
+	} else {
+		t := reflect.Indirect(reflect.ValueOf(handler)).Type()
+		if t.Kind() == reflect.Func && t.NumIn() == 2 {
+			arg1 := t.In(0)
+			arg2 := t.In(1)
+			if arg1.Kind() == reflect.Interface && IsContext(arg1) && arg2.Kind() == reflect.Ptr {
+				t := arg2.Elem()
+				if t.Kind() == reflect.Struct {
+					var method []string
+					for _, me := range methods {
+						method = append(method, splitHTTPMethod.Split(me, -1)...)
+					}
+					h.request = func() MetaValidator {
+						return NewBaseRequestValidator(reflect.New(t).Interface(), method...)
+					}
+				}
 			}
 		}
 	}
@@ -923,4 +990,14 @@ func (e *Echo) NewContext(req engine.Request, resp engine.Response) Context {
 
 func (e *Echo) RealIPConfig() *realip.Config {
 	return e.realIPConfig
+}
+
+func (e *Echo) Template(c Context, name string, data interface{}) (string, error) {
+	if len(name) > 0 {
+		return name, nil
+	}
+	if t, y := data.(Template); y {
+		return t.Template(c)
+	}
+	return name, ErrNotImplemented
 }
