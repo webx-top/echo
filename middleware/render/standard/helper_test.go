@@ -70,3 +70,12 @@ func TestReplaceByMatchedIndex2(t *testing.T) {
 	}
 	assert.Equal(t, content, replaced2)
 }
+
+func TestSliceClip(t *testing.T) {
+	v := []int{1, 2, 3, 4, 5, 6}
+	assert.Equal(t, []int{}, v[0:0])
+	assert.Equal(t, []int{6}, v[len(v)-1:len(v)]) // OK
+	assert.Equal(t, []int{}, v[len(v):])          // OK
+	// v[len(v)] =>  panic: runtime error: index out of range [6] with length 6
+	// 从切片中裁切子切片时可以使用 len(v) 的值作为下标，而通过下标取单个元素值时则下标的值不能大于 len(v)-1
+}
