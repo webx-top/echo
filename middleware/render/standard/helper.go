@@ -24,7 +24,7 @@ func replaceByMatchedIndex(content string, matches [][]int, replaced *string) fu
 					*replaced += content[v[1]:]
 				}
 			} else if k == endK {
-				*replaced += newInnerStr[0] + content[v[1]:]
+				*replaced += content[lastEndIdx:v[0]] + newInnerStr[0] + content[v[1]:]
 			} else {
 				*replaced += content[lastEndIdx:v[0]] + newInnerStr[0]
 			}
@@ -36,7 +36,7 @@ func replaceByMatchedIndex(content string, matches [][]int, replaced *string) fu
 					*replaced = content[0:v[1]]
 				}
 			} else if k == endK {
-				*replaced += content[v[0]:]
+				*replaced += content[lastEndIdx:]
 			} else {
 				*replaced += content[lastEndIdx:v[1]]
 			}
