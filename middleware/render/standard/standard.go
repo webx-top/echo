@@ -423,11 +423,12 @@ func (a *Standard) execute(tmpl *htmlTpl.Template, data interface{}) string {
 }
 
 func (a *Standard) ParseBlock(c echo.Context, content string, subcs map[string]string, extcs map[string]string) {
-	matches := a.blkTagRegex.FindAllStringSubmatch(content, -1)
+	matches := a.blkTagRegex.FindAllStringSubmatchIndex(content, -1)
 	for _, v := range matches {
-		blockName := v[1]
-		content := v[2]
-		extcs[blockName] = a.ContainsSubTpl(c, content, subcs)
+		var blockName, innerData string
+		getMatchedByIndex(content, v, nil, &blockName, &innerData)
+		innerData = trimSpaceInBlock(innerData)
+		extcs[blockName] = a.ContainsSubTpl(c, innerData, subcs)
 	}
 }
 
@@ -438,25 +439,31 @@ func (a *Standard) ParseExtend(c echo.Context, content string, extcs map[string]
 		passObject = "."
 	}
 	content = a.rplTagRegex.ReplaceAllStringFunc(content, func(match string) string {
-		match = match[strings.Index(match, `"`)+1:]
-		match = match[0:strings.Index(match, `"`)]
+		pos := strings.Index(match, `"`)
+		match = match[pos+1:]
+		match = match[0:pos]
 		if v, ok := extcs[match]; ok {
 			return v
 		}
 		return ``
 	})
-	matches := a.blkTagRegex.FindAllStringSubmatch(content, -1)
+	matches := a.blkTagRegex.FindAllStringSubmatchIndex(content, -1)
+	if len(matches) == 0 {
+		return content, m
+	}
 	var superTag string
 	if len(a.SuperTag) > 0 {
 		superTag = a.Tag(a.SuperTag)
 	}
 	rec := make(map[string]uint8)
 	sup := make(map[string]string)
-	for _, v := range matches {
-		matched := v[0]
-		blockName := v[1]
-		innerStr := v[2]
-		if v, ok := extcs[blockName]; ok {
+	var replaced string
+	fn := replaceByMatchedIndex(content, matches, &replaced)
+	for k, v := range matches {
+		var blockName, innerStr string
+		getMatchedByIndex(content, v, nil, &blockName, &innerStr)
+		innerStr = trimSpaceInBlock(innerStr)
+		if val, ok := extcs[blockName]; ok {
 			var suffix string
 			if idx, ok := rec[blockName]; ok {
 				idx++
@@ -468,35 +475,37 @@ func (a *Standard) ParseExtend(c echo.Context, content string, extcs map[string]
 			if len(superTag) > 0 {
 				sv, hasSuper := sup[blockName]
 				if !hasSuper {
-					hasSuper = strings.Contains(v, superTag)
+					hasSuper = strings.Contains(val, superTag)
 					if hasSuper {
-						sup[blockName] = v
+						sup[blockName] = val
 					}
 				} else {
-					v = sv
+					val = sv
 				}
 				if hasSuper {
 					innerStr = a.ContainsSubTpl(c, innerStr, subcs)
-					v = strings.Replace(v, superTag, innerStr, 1)
+					val = strings.Replace(val, superTag, innerStr, 1)
 					if suffix == `` {
-						extcs[blockName] = v
+						extcs[blockName] = val
 					}
 				}
 			}
 			if len(suffix) > 0 {
-				extcs[blockName+suffix] = v
+				extcs[blockName+suffix] = val
 				rec[blockName+suffix] = 0
 			}
 			if hasParent {
-				content = strings.Replace(content, matched, a.DelimLeft+a.BlockTag+` "`+blockName+`"`+a.DelimRight+v+a.DelimLeft+`/`+a.BlockTag+a.DelimRight, 1)
+				innerStr = a.DelimLeft + a.BlockTag + ` "` + blockName + `"` + a.DelimRight + val + a.DelimLeft + `/` + a.BlockTag + a.DelimRight
 			} else {
-				content = strings.Replace(content, matched, a.Tag(`template "`+blockName+suffix+`" `+passObject), 1)
+				innerStr = a.Tag(`template "` + blockName + suffix + `" ` + passObject)
 			}
 		} else {
-			if !hasParent {
-				content = strings.Replace(content, matched, innerStr, 1)
+			if hasParent {
+				fn(k, v)
+				continue
 			}
 		}
+		fn(k, v, innerStr)
 	}
 	//只保留layout中存在的Block
 	for k := range extcs {
@@ -504,15 +513,19 @@ func (a *Standard) ParseExtend(c echo.Context, content string, extcs map[string]
 			delete(extcs, k)
 		}
 	}
-	return content, m
+	return replaced, m
 }
 
 func (a *Standard) ContainsSubTpl(c echo.Context, content string, subcs map[string]string) string {
-	matches := a.incTagRegex.FindAllStringSubmatch(content, -1)
-	for _, v := range matches {
-		matched := v[0]
-		tmplFile := v[1]
-		passObject := v[2]
+	matches := a.incTagRegex.FindAllStringSubmatchIndex(content, -1)
+	if len(matches) == 0 {
+		return content
+	}
+	var replaced string
+	fn := replaceByMatchedIndex(content, matches, &replaced)
+	for k, v := range matches {
+		var tmplFile, passObject string
+		getMatchedByIndex(content, v, nil, &tmplFile, &passObject)
 		tmplFile += a.Ext
 		tmplFile = a.TmplPath(c, tmplFile)
 		if _, ok := subcs[tmplFile]; !ok {
@@ -532,17 +545,21 @@ func (a *Standard) ContainsSubTpl(c echo.Context, content string, subcs map[stri
 		if len(passObject) == 0 {
 			passObject = "."
 		}
-		content = strings.Replace(content, matched, a.Tag(`template "`+driver.CleanTemplateName(tmplFile)+`" `+passObject), -1)
+		fn(k, v, a.Tag(`template "`+driver.CleanTemplateName(tmplFile)+`" `+passObject))
 	}
-	return content
+	return replaced
 }
 
 func (a *Standard) ContainsFunctionResult(c echo.Context, tmplOriginalName string, content string, clips map[string]string) string {
-	matches := a.funcTagRegex.FindAllStringSubmatch(content, -1)
-	for _, v := range matches {
-		matched := v[0]
-		funcName := v[1]
-		passArg := v[2]
+	matches := a.funcTagRegex.FindAllStringSubmatchIndex(content, -1)
+	if len(matches) == 0 {
+		return content
+	}
+	var replaced string
+	fn := replaceByMatchedIndex(content, matches, &replaced)
+	for k, v := range matches {
+		var funcName, passArg string
+		getMatchedByIndex(content, v, nil, &funcName, &passArg)
 		key := funcName + `:` + passArg
 		if _, ok := clips[key]; !ok {
 			if fn, ok := c.GetFunc(funcName).(func(string, string) string); ok {
@@ -551,10 +568,9 @@ func (a *Standard) ContainsFunctionResult(c echo.Context, tmplOriginalName strin
 				clips[key] = ``
 			}
 		}
-
-		content = strings.Replace(content, matched, clips[key], -1)
+		fn(k, v, clips[key])
 	}
-	return content
+	return replaced
 }
 
 func (a *Standard) Tag(content string) string {
@@ -632,31 +648,4 @@ func (a *Standard) Close() {
 			a.TemplateMgr.Close()
 		}
 	}
-}
-
-func setFunc(tplInf *tplInfo, funcMap htmlTpl.FuncMap) htmlTpl.FuncMap {
-	if funcMap == nil {
-		funcMap = htmlTpl.FuncMap{}
-	}
-	funcMap["hasBlock"] = func(blocks ...string) bool {
-		for _, blockName := range blocks {
-			if _, ok := tplInf.Blocks[blockName]; !ok {
-				return false
-			}
-		}
-		return true
-	}
-	funcMap["hasAnyBlock"] = func(blocks ...string) bool {
-		for _, blockName := range blocks {
-			if _, ok := tplInf.Blocks[blockName]; ok {
-				return true
-			}
-		}
-		return false
-	}
-	return funcMap
-}
-
-func parseError(err error, sourceContent string) *echo.PanicError {
-	return echo.ParseTemplateError(err, sourceContent)
 }

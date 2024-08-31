@@ -98,13 +98,13 @@ func main() {
 		},
 	}
 
-	for i := 0; i < 5000; i++ {
-		ts := time.Now()
-		fmt.Printf("==========%v: %v========\\\n", i, ts)
-		str := tpl.Fetch("test", demo, ctx)
-		fmt.Printf("%v\n", str)
-		fmt.Printf("==========cost: %vms========/\n", time.Now().Sub(ts).Milliseconds())
-	}
+	//for i := 0; i < 5000; i++ {
+	ts := time.Now()
+	//fmt.Printf("==========%v: %v========\\\n", i, ts)
+	str := tpl.Fetch("test", demo, ctx)
+	fmt.Printf("%v\n", str)
+	fmt.Printf("==========cost: %vms========/\n", time.Now().Sub(ts).Milliseconds())
+	//}
 
 	runtime.ReadMemStats(memStat)
 	heapAllocEnd := memStat.HeapAlloc
