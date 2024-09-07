@@ -200,7 +200,9 @@ func (c *xContext) DefaultExtension() string {
 }
 
 func (c *xContext) Reset(req engine.Request, res engine.Response) {
-	req.SetMaxSize(c.echo.MaxRequestBodySize())
+	if req != nil {
+		req.SetMaxSize(c.echo.MaxRequestBodySize())
+	}
 	c.validator = c.echo.Validator
 	c.Emitterer = events.Default
 	c.Translator = DefaultNopTranslate

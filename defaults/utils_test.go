@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/admpub/fasthttp"
 	"github.com/stretchr/testify/assert"
@@ -80,4 +81,12 @@ func TestFastHTTPContext(t *testing.T) {
 	for i := 0; i < 50; i++ {
 		assert.Equal(t, i, eCtx.Value(`co_`+strconv.Itoa(i)))
 	}
+}
+
+func TestPooledMockContext(t *testing.T) {
+	ctx := AcquireMockContext()
+	ms := time.Now().UnixMilli()
+	ctx.Set(`test`, ms)
+	assert.Equal(t, ms, ctx.Get(`test`))
+	ReleaseMockContext(ctx)
 }

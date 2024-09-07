@@ -284,3 +284,7 @@ var typeOfContext = reflect.TypeOf((*Context)(nil)).Elem()
 func IsContext(t reflect.Type) bool {
 	return t.Implements(typeOfContext)
 }
+
+type ContextReseter interface {
+	Reset(req engine.Request, res engine.Response)
+}

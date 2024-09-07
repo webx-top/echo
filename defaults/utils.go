@@ -2,6 +2,7 @@ package defaults
 
 import (
 	"context"
+	"sync"
 
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine/mock"
@@ -39,4 +40,31 @@ func IsMockContext(c echo.Context) bool {
 		ok = testing.IsMock(c)
 	}
 	return ok
+}
+
+var poolMockContextIniters = []func(ctx echo.Context){}
+
+func RegisterPoolMockContextIniter(init func(echo.Context)) {
+	poolMockContextIniters = append(poolMockContextIniters, init)
+}
+
+var poolMockContext = sync.Pool{
+	New: func() interface{} {
+		c := echo.NewContext(mock.NewRequest(), mock.NewResponse(), Default)
+		for _, f := range poolMockContextIniters {
+			f(c)
+		}
+		return c
+	},
+}
+
+func AcquireMockContext() echo.Context {
+	return poolMockContext.Get().(echo.Context)
+}
+
+func ReleaseMockContext(ctx echo.Context) {
+	if v, y := ctx.(echo.ContextReseter); y {
+		v.Reset(nil, nil)
+	}
+	poolMockContext.Put(ctx)
 }
