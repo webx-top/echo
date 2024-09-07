@@ -68,7 +68,7 @@ func AcquireMockContext() echo.Context {
 
 func ReleaseMockContext(ctx echo.Context) {
 	if v, y := ctx.(echo.ContextReseter); y {
-		v.Reset(nil, nil)
+		v.Reset(mock.NewRequest(), mock.NewResponse())
 	}
 	poolMockContext.Put(ctx)
 }
