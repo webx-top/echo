@@ -54,16 +54,16 @@ func ResetPoolMockContextIniter(init func(echo.Context)) {
 
 var poolMockContext = sync.Pool{
 	New: func() interface{} {
-		c := echo.NewContext(mock.NewRequest(), mock.NewResponse(), Default)
-		for _, f := range poolMockContextIniters {
-			f(c)
-		}
-		return c
+		return echo.NewContext(mock.NewRequest(), mock.NewResponse(), Default)
 	},
 }
 
 func AcquireMockContext() echo.Context {
-	return poolMockContext.Get().(echo.Context)
+	c := poolMockContext.Get().(echo.Context)
+	for _, f := range poolMockContextIniters {
+		f(c)
+	}
+	return c
 }
 
 func ReleaseMockContext(ctx echo.Context) {

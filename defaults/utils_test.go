@@ -89,4 +89,11 @@ func TestPooledMockContext(t *testing.T) {
 	ctx.Set(`test`, ms)
 	assert.Equal(t, ms, ctx.Get(`test`))
 	ReleaseMockContext(ctx)
+	{
+		ctx := AcquireMockContext()
+		ms := time.Now().UnixMilli()
+		ctx.Set(`test`, ms)
+		assert.Equal(t, ms, ctx.Get(`test`))
+		ReleaseMockContext(ctx)
+	}
 }
