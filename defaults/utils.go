@@ -48,6 +48,10 @@ func RegisterPoolMockContextIniter(init func(echo.Context)) {
 	poolMockContextIniters = append(poolMockContextIniters, init)
 }
 
+func ResetPoolMockContextIniter(init func(echo.Context)) {
+	poolMockContextIniters = poolMockContextIniters[0:0]
+}
+
 var poolMockContext = sync.Pool{
 	New: func() interface{} {
 		c := echo.NewContext(mock.NewRequest(), mock.NewResponse(), Default)
