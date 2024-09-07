@@ -439,10 +439,9 @@ func (a *Standard) ParseExtend(c echo.Context, content string, extcs map[string]
 		passObject = "."
 	}
 	content = a.rplTagRegex.ReplaceAllStringFunc(content, func(match string) string {
-		pos := strings.Index(match, `"`)
-		match = match[pos+1:]
-		match = match[0:pos]
-		if v, ok := extcs[match]; ok {
+		blockName := match[strings.Index(match, `"`)+1:]
+		blockName = blockName[0:strings.Index(blockName, `"`)]
+		if v, ok := extcs[blockName]; ok {
 			return v
 		}
 		return ``
