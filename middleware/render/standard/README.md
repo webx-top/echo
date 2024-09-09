@@ -123,3 +123,37 @@ Include标签也能在Block标签内部使用，例如：
 
 
 点此查看[完整例子](https://github.com/webx-top/echo/tree/master/middleware/render/example)
+
+## 引用模板片段
+标签`Snippet`用于引用模板片段。
+
+标签使用格式为`{{Snippet "函数名" 参数}}`或`{{Snippet "函数名"}}`。
+
+这里的`函数名`为使用`echo.Context.SetFunc()`注册的函数名称，函数类型为：
+
+```go
+func(tmpl string, arg string) string
+```
+或者为
+```go
+func(ctx echo.Context, tmpl string, arg string) string
+```
+
+例如，有名为index的handler函数：
+```go
+func index(ctx echo.Context) error {
+    ctx.SetFunc(`example`,func(tmpl string, arg string) string {
+        // 返回带模板标签的内容
+        return fmt.Sprintf(`{{"tmpl: %q, arg: %q"}}`, tmpl, arg)
+    })
+    return ctx.Render(`index`, nil)
+}
+```
+在模板中使用：
+```html
+{{Snippet "example" exampleArg}}
+```
+渲染此模板将会输出：
+```
+tmpl: "index", arg: "exampleArg"
+```

@@ -58,7 +58,7 @@ func New(templateDir string, args ...logger.Logger) driver.Driver {
 		DelimLeft:         "{{",
 		DelimRight:        "}}",
 		IncludeTag:        "Include",
-		FunctionTag:       "Function",
+		SnippetTag:        "Snippet",
 		ExtendTag:         "Extend",
 		BlockTag:          "Block",
 		SuperTag:          "Super",
@@ -93,7 +93,7 @@ type Standard struct {
 	innerTagBlankRegex *regexp.Regexp
 	stripTagRegex      *regexp.Regexp
 	IncludeTag         string
-	FunctionTag        string
+	SnippetTag         string
 	ExtendTag          string
 	BlockTag           string
 	SuperTag           string
@@ -226,8 +226,8 @@ func (a *Standard) InitRegexp() {
 	//{{Include "tmpl"}} or {{Include "tmpl" .}}
 	a.incTagRegex = regexp.MustCompile(a.quotedLeft + a.IncludeTag + `[\s]+` + quoteRegex + `(?:[\s]+([^` + a.quotedRfirst + `]+))?[\s]*\/?` + a.quotedRight)
 
-	//{{Function "funcName"}} or {{Function "funcName" .}}
-	a.funcTagRegex = regexp.MustCompile(a.quotedLeft + a.FunctionTag + `[\s]+` + quoteRegex + `(?:[\s]+([^` + a.quotedRfirst + `]+))?[\s]*\/?` + a.quotedRight)
+	//{{Snippet "funcName"}} or {{Snippet "funcName" .}}
+	a.funcTagRegex = regexp.MustCompile(a.quotedLeft + a.SnippetTag + `[\s]+` + quoteRegex + `(?:[\s]+([^` + a.quotedRfirst + `]+))?[\s]*\/?` + a.quotedRight)
 
 	//{{Extend "name"}}
 	a.extTagRegex = regexp.MustCompile(`^[\s]*` + a.quotedLeft + a.ExtendTag + `[\s]+` + quoteRegex + `(?:[\s]+([^` + a.quotedRfirst + `]+))?[\s]*\/?` + a.quotedRight)
@@ -353,7 +353,7 @@ func (a *Standard) find(c echo.Context, rel *CcRel,
 	}
 	content = a.ContainsSubTpl(c, content, subcs)
 	clips := map[string]string{}
-	content = a.ContainsFunctionResult(c, tmplOriginalName, content, clips)
+	content = a.ContainsSnippetResult(c, tmplOriginalName, content, clips)
 	tmpl, err = t.Parse(content)
 	if err != nil {
 		err = parseError(err, content)
@@ -366,7 +366,7 @@ func (a *Standard) find(c echo.Context, rel *CcRel,
 			tmpl.AddParseTree(name, v.Tpl[1].Template.Tree)
 			continue
 		}
-		subc = a.ContainsFunctionResult(c, tmplOriginalName, subc, clips)
+		subc = a.ContainsSnippetResult(c, tmplOriginalName, subc, clips)
 		t = tmpl.New(name)
 		subc = a.Tag(`define "`+driver.CleanTemplateName(name)+`"`) + subc + a.Tag(`end`)
 		_, err = t.Parse(subc)
@@ -389,7 +389,7 @@ func (a *Standard) find(c echo.Context, rel *CcRel,
 
 	for name, extc := range extcs {
 		t = tmpl.New(name)
-		extc = a.ContainsFunctionResult(c, tmplOriginalName, extc, clips)
+		extc = a.ContainsSnippetResult(c, tmplOriginalName, extc, clips)
 		extc = a.Tag(`define "`+driver.CleanTemplateName(name)+`"`) + extc + a.Tag(`end`)
 		_, err = t.Parse(extc)
 		if err != nil {
@@ -549,7 +549,7 @@ func (a *Standard) ContainsSubTpl(c echo.Context, content string, subcs map[stri
 	return replaced
 }
 
-func (a *Standard) ContainsFunctionResult(c echo.Context, tmplOriginalName string, content string, clips map[string]string) string {
+func (a *Standard) ContainsSnippetResult(c echo.Context, tmplOriginalName string, content string, clips map[string]string) string {
 	matches := a.funcTagRegex.FindAllStringSubmatchIndex(content, -1)
 	if len(matches) == 0 {
 		return content
@@ -561,9 +561,12 @@ func (a *Standard) ContainsFunctionResult(c echo.Context, tmplOriginalName strin
 		getMatchedByIndex(content, v, nil, &funcName, &passArg)
 		key := funcName + `:` + passArg
 		if _, ok := clips[key]; !ok {
-			if fn, ok := c.GetFunc(funcName).(func(string, string) string); ok {
+			switch fn := c.GetFunc(funcName).(type) {
+			case func(echo.Context, string, string) string:
+				clips[key] = fn(c, tmplOriginalName, passArg)
+			case func(string, string) string:
 				clips[key] = fn(tmplOriginalName, passArg)
-			} else {
+			default:
 				clips[key] = ``
 			}
 		}

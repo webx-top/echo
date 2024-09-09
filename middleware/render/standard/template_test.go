@@ -12,8 +12,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/defaults"
 	"github.com/webx-top/echo/middleware/render/driver"
+	"github.com/webx-top/echo/middleware/tplfunc"
 )
 
 func TestTemplate(t *testing.T) {
@@ -67,6 +69,12 @@ func (b *testTemplateMgr) GetTemplate(name string) ([]byte, error) {
 		return []byte(`{{Extend "index"}}
 {{Block "demoName"}}[插槽]{{/Block}}`), nil
 
+	case `snippet.html`:
+		return []byte(`{{Extend "layout"}}
+{{Block "body"}}
+{{Snippet "testSnippet" A}}
+{{/Block}}`), nil
+
 	default:
 		return nil, fmt.Errorf(`%w: %s`, os.ErrNotExist, name)
 	}
@@ -76,13 +84,24 @@ func TestSlotRender(t *testing.T) {
 	a := New(`test`)
 	a.SetManager(&testTemplateMgr{})
 	a.Init()
-	r := a.Fetch(`index`, nil, defaults.NewMockContext())
+	a.SetFuncMap(func() map[string]interface{} {
+		return tplfunc.New()
+	})
+	ctx := defaults.NewMockContext()
+	r := a.Fetch(`index`, nil, ctx)
 	assert.Equal(t, `首页 -- powered by webx
 这是一个演示`, r)
-	r = a.Fetch(`new`, nil, defaults.NewMockContext())
+	r = a.Fetch(`new`, nil, ctx)
 	assert.Equal(t, `首页 -- powered by webx
 这是一个插槽演示`, r)
-	r = a.Fetch(`new2`, nil, defaults.NewMockContext())
+	r = a.Fetch(`new2`, nil, ctx)
 	assert.Equal(t, `首页 -- powered by webx
 这是一个[插槽]演示`, r)
+
+	ctx.SetFunc(`testSnippet`, func(ctx echo.Context, tmpl string, arg string) string {
+		return `{{"Z"|ToLower}}@` + arg
+	})
+	r = a.Fetch(`snippet`, nil, ctx)
+	assert.Equal(t, `首页 -- powered by webx
+z@A`, r)
 }
