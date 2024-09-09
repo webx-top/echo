@@ -44,7 +44,8 @@
 > 1. Super标签只能在扩展模板（含Extend标签的模板）的Block标签内使用。
 > 2. Extend标签 必须放在页面内容的起始位置才有效
 
-因为最新增加了对多重继承的支持，所以，现在我们还可以创建一个模板`new.html`用来继承上面的`index.html`，比如`new.html`的内容为：
+因为最新增加了对多重继承的支持，所以，现在我们还可以创建一个模板`new.html`用来继承上面的`index.html`。  
+比如`new.html`的内容为：
 
 ```html
 {{Extend "index"}}
@@ -60,41 +61,64 @@
 
 也就是说这个新模板具有这样的继承关系：new.html -> index.html -> layout.html (目前限制为最多不超过10级)
 
-		
+### 在Block中支持插槽
+通过在{{Block "blockName"}}...{{/Block}}内使用这种标签格式`{{Block "slotName"/}}`来实现插槽功能。
+例如在上面的案例中将`index.html`模板文件内容改为：
+
+```html
+{{Extend "layout"}}
+{{Block "title"}}首页 {{Super}}{{/Block}}
+{{Block "body"}}这是一个{{Block "demoName"/}}演示{{/Block}}
+```
+
+修改`new.html`模板文件内容改为：
+
+```html
+{{Extend "index"}}
+{{Block "demoName"}}插槽{{/Block}}
+```
+
+渲染`new.html`模板将会输出：
+
+```html
+首页 -- powered by webx
+这是一个插槽演示
+```
+
 ## 包含子模板
-	
-	例如，有以下两个模板：
-	footer.html:
-		
-		www.webx.top
-	
-	index.html:
-	
-		前面的一些内容
-		{{Include "footer"}}
-		后面的一些内容
-		
-	渲染模板index.html将会输出:
-	
-		前面的一些内容
-		www.webx.top
-		后面的一些内容
-		
-	也可以在循环中包含子模板，例如：
-	
-		{{range .list}}
-		{{Include "footer"}}
-		{{end}}
-		
+例如，有以下两个模板：
+
+footer.html:
+```
+www.webx.top
+```
+index.html:
+```
+前面的一些内容
+{{Include "footer"}}
+后面的一些内容
+```	
+渲染模板index.html将会输出:
+```
+前面的一些内容
+www.webx.top
+后面的一些内容
+```	
+也可以在循环中包含子模板，例如：
+```
+{{range $k, $v := .list}}
+{{Include "footer" $v}}
+{{end}}
+```	
 因为本模板引擎缓存了模板对象，所以它并不会多次读取模板内容，在循环体内也能高效的工作。
 	
 Include标签也能在Block标签内部使用，例如：
-	
-		{{Block "body"}}
-		这是一个演示
-		{{Include "footer"}}
-		{{/Block}}
-
+```
+{{Block "body"}}
+这是一个演示
+{{Include "footer"}}
+{{/Block}}
+```
 另外，Include标签也支持嵌套。
 
 
