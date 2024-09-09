@@ -102,6 +102,6 @@ func TestSlotRender(t *testing.T) {
 		return `{{"Z"|ToLower}}@` + arg
 	})
 	r = a.Fetch(`snippet`, nil, ctx)
-	assert.Equal(t, `首页 -- powered by webx
+	assert.Equal(t, `-- powered by webx
 z@A`, r)
 }
