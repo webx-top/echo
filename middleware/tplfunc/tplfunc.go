@@ -205,6 +205,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"WithURLParams": com.WithURLParams,
 	"FullURL":       com.FullURL,
 	"IsFullURL":     com.IsFullURL,
+	"If":            If,
 }
 
 var (
@@ -337,6 +338,13 @@ func StrToSlice(s string, sep string) []interface{} {
 
 func Concat(s ...string) string {
 	return strings.Join(s, ``)
+}
+
+func If(condition bool, yesValue interface{}, noValue interface{}) interface{} {
+	if condition {
+		return yesValue
+	}
+	return noValue
 }
 
 func InExt(fileName string, exts ...string) bool {
