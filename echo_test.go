@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/admpub/log"
@@ -281,14 +282,15 @@ func TestEchoRealIP(t *testing.T) {
 		return c.String(c.RealIP())
 	})
 	e.RebuildRouter()
-
+	ipArr := []string{`137`, `0`, `10`, `1`}
+	ipArr2 := []string{`137`, `0`, `10`, `8`}
 	c, b := request(GET, "/", e, func(r *http.Request) {
-		r.Header.Set(`X-Forwarded-For`, `137.0.10.1`)
-		r.Header.Set(`X-Real-Ip`, `137.0.10.8`)
+		r.Header.Set(`X-Forwarded-For`, strings.Join(ipArr, `.`))
+		r.Header.Set(`X-Real-Ip`, strings.Join(ipArr2, `.`))
 		r.RemoteAddr = `127.0.0.1:57092`
 	})
 	assert.Equal(t, http.StatusOK, c)
-	assert.Equal(t, "137.0.10.1", b)
+	assert.Equal(t, strings.Join(ipArr, `.`), b)
 }
 
 func TestEchoData(t *testing.T) {
