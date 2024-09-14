@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/webx-top/com"
 )
 
 func TestReplaceByMatchedIndex(t *testing.T) {
@@ -18,10 +19,10 @@ func TestReplaceByMatchedIndex(t *testing.T) {
 </body>`
 	matches := a.incTagRegex.FindAllStringSubmatchIndex(content, -1)
 	var replaced string
-	fn := replaceByMatchedIndex(content, matches, &replaced)
+	fn := com.ReplaceByMatchedIndex(content, matches, &replaced)
 	for k, v := range matches {
 		var tmplFile, passObject string
-		getMatchedByIndex(content, v, nil, &tmplFile, &passObject)
+		com.GetMatchedByIndex(content, v, nil, &tmplFile, &passObject)
 		if k == 0 {
 			assert.Equal(t, `header`, tmplFile)
 			assert.Equal(t, ``, passObject)
@@ -41,7 +42,7 @@ func TestReplaceByMatchedIndex(t *testing.T) {
 </body>`
 	assert.Equal(t, expected, replaced)
 	var replaced2 string
-	fn2 := replaceByMatchedIndex(content, matches, &replaced2)
+	fn2 := com.ReplaceByMatchedIndex(content, matches, &replaced2)
 	for k, v := range matches {
 		fn2(k, v)
 	}
@@ -53,10 +54,10 @@ func TestReplaceByMatchedIndex2(t *testing.T) {
 	content := `{{Include "sub"}}`
 	matches := a.incTagRegex.FindAllStringSubmatchIndex(content, -1)
 	var replaced string
-	fn := replaceByMatchedIndex(content, matches, &replaced)
+	fn := com.ReplaceByMatchedIndex(content, matches, &replaced)
 	for k, v := range matches {
 		var tmplFile, passObject string
-		getMatchedByIndex(content, v, nil, &tmplFile, &passObject)
+		com.GetMatchedByIndex(content, v, nil, &tmplFile, &passObject)
 		assert.Equal(t, `sub`, tmplFile)
 		assert.Equal(t, ``, passObject)
 		fn(k, v, `{P}`)
@@ -64,7 +65,7 @@ func TestReplaceByMatchedIndex2(t *testing.T) {
 	expected := `{P}`
 	assert.Equal(t, expected, replaced)
 	var replaced2 string
-	fn2 := replaceByMatchedIndex(content, matches, &replaced2)
+	fn2 := com.ReplaceByMatchedIndex(content, matches, &replaced2)
 	for k, v := range matches {
 		fn2(k, v)
 	}

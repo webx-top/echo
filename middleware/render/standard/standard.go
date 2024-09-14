@@ -426,7 +426,7 @@ func (a *Standard) ParseBlock(c echo.Context, content string, subcs map[string]s
 	matches := a.blkTagRegex.FindAllStringSubmatchIndex(content, -1)
 	for _, v := range matches {
 		var blockName, innerData string
-		getMatchedByIndex(content, v, nil, &blockName, &innerData)
+		com.GetMatchedByIndex(content, v, nil, &blockName, &innerData)
 		innerData = trimSpaceInBlock(innerData)
 		extcs[blockName] = a.ContainsSubTpl(c, innerData, subcs)
 	}
@@ -457,10 +457,10 @@ func (a *Standard) ParseExtend(c echo.Context, content string, extcs map[string]
 	rec := make(map[string]uint8)
 	sup := make(map[string]string)
 	var replaced string
-	fn := replaceByMatchedIndex(content, matches, &replaced)
+	fn := com.ReplaceByMatchedIndex(content, matches, &replaced)
 	for k, v := range matches {
 		var blockName, innerStr string
-		getMatchedByIndex(content, v, nil, &blockName, &innerStr)
+		com.GetMatchedByIndex(content, v, nil, &blockName, &innerStr)
 		innerStr = trimSpaceInBlock(innerStr)
 		if val, ok := extcs[blockName]; ok {
 			var suffix string
@@ -521,10 +521,10 @@ func (a *Standard) ContainsSubTpl(c echo.Context, content string, subcs map[stri
 		return content
 	}
 	var replaced string
-	fn := replaceByMatchedIndex(content, matches, &replaced)
+	fn := com.ReplaceByMatchedIndex(content, matches, &replaced)
 	for k, v := range matches {
 		var tmplFile, passObject string
-		getMatchedByIndex(content, v, nil, &tmplFile, &passObject)
+		com.GetMatchedByIndex(content, v, nil, &tmplFile, &passObject)
 		tmplFile += a.Ext
 		tmplFile = a.TmplPath(c, tmplFile)
 		if _, ok := subcs[tmplFile]; !ok {
@@ -555,10 +555,10 @@ func (a *Standard) ContainsSnippetResult(c echo.Context, tmplOriginalName string
 		return content
 	}
 	var replaced string
-	fn := replaceByMatchedIndex(content, matches, &replaced)
+	fn := com.ReplaceByMatchedIndex(content, matches, &replaced)
 	for k, v := range matches {
 		var funcName, passArg string
-		getMatchedByIndex(content, v, nil, &funcName, &passArg)
+		com.GetMatchedByIndex(content, v, nil, &funcName, &passArg)
 		key := funcName + `:` + passArg
 		if _, ok := clips[key]; !ok {
 			switch fn := c.GetFunc(funcName).(type) {
