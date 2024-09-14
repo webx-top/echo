@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/webx-top/echo"
+	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/middleware"
 	"github.com/webx-top/echo/middleware/render/driver"
 	"github.com/webx-top/echo/middleware/tplfunc"
@@ -50,17 +51,23 @@ func (t *Config) Parser() func([]byte) []byte {
 	if t.ParseStrings == nil {
 		return nil
 	}
+	var replaces []string
+	for oldVal, newVal := range t.ParseStrings {
+		replaces = append(replaces, oldVal, newVal)
+	}
+	if t.ParseStringFuncs != nil {
+		for oldVal, newVal := range t.ParseStringFuncs {
+			replaces = append(replaces, oldVal, newVal())
+		}
+	}
+	if len(replaces) == 0 {
+		return nil
+	}
+	repl := strings.NewReplacer(replaces...)
 	return func(b []byte) []byte {
-		s := string(b)
-		for oldVal, newVal := range t.ParseStrings {
-			s = strings.Replace(s, oldVal, newVal, -1)
-		}
-		if t.ParseStringFuncs != nil {
-			for oldVal, newVal := range t.ParseStringFuncs {
-				s = strings.Replace(s, oldVal, newVal(), -1)
-			}
-		}
-		return []byte(s)
+		s := engine.Bytes2str(b)
+		s = repl.Replace(s)
+		return engine.Str2bytes(s)
 	}
 }
 
