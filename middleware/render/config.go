@@ -28,7 +28,7 @@ type Config struct {
 	errorPageFuncSetter  []echo.HandlerFunc
 	FuncMapGlobal        map[string]interface{}
 	RendererDo           []func(driver.Driver)
-	CustomParser         func([]byte) []byte
+	CustomParser         func(tmpl string, content []byte) []byte
 }
 
 var DefaultFuncMapSkipper = func(c echo.Context) bool {
@@ -48,7 +48,7 @@ func (t *Config) AddRendererDo(rd ...func(driver.Driver)) *Config {
 	return t
 }
 
-func (t *Config) Parser() func([]byte) []byte {
+func (t *Config) Parser() func(tmpl string, content []byte) []byte {
 	if t.ParseStrings == nil {
 		return t.CustomParser
 	}
@@ -65,14 +65,14 @@ func (t *Config) Parser() func([]byte) []byte {
 		return t.CustomParser
 	}
 	repl := strings.NewReplacer(replaces...)
-	return func(b []byte) []byte {
-		s := engine.Bytes2str(b)
+	return func(tmpl string, content []byte) []byte {
+		s := engine.Bytes2str(content)
 		s = repl.Replace(s)
-		b = engine.Str2bytes(s)
+		content = engine.Str2bytes(s)
 		if t.CustomParser != nil {
-			b = t.CustomParser(b)
+			content = t.CustomParser(tmpl, content)
 		}
-		return b
+		return content
 	}
 }
 

@@ -45,7 +45,7 @@ type Driver interface {
 	Logger() logger.Logger
 
 	//设置模板内容预处理器
-	SetContentProcessor(fn func([]byte) []byte)
+	SetContentProcessor(fn func(tmpl string, content []byte) []byte)
 	SetManager(Manager)
 	Manager() Manager
 
@@ -96,7 +96,7 @@ func (n *NopRenderer) SetTmplPathFixer(_ func(echo.Context, string) string) {}
 func (n *NopRenderer) TmplPath(_ echo.Context, _ string) string             { return `` }
 func (n *NopRenderer) SetLogger(_ logger.Logger)                            {}
 func (n *NopRenderer) Logger() logger.Logger                                { return nil }
-func (n *NopRenderer) SetContentProcessor(fn func([]byte) []byte)           {}
+func (n *NopRenderer) SetContentProcessor(fn func(string, []byte) []byte)   {}
 func (n *NopRenderer) SetManager(mgr Manager)                               { n.mgr = mgr }
 func (n *NopRenderer) SetFuncMap(_ func() map[string]interface{})           {}
 func (n *NopRenderer) Fetch(_ string, _ interface{}, _ echo.Context) string { return `` }

@@ -66,7 +66,7 @@ func New(templateDir string, args ...logger.Logger) driver.Driver {
 		Ext:               ".html",
 		debug:             Debug,
 		fileEvents:        make([]func(string), 0),
-		contentProcessors: make([]func([]byte) []byte, 0),
+		contentProcessors: make([]func(tmpl string, content []byte) []byte, 0),
 	}
 	if len(args) > 0 {
 		t.logger = args[0]
@@ -82,7 +82,7 @@ type Standard struct {
 	CachedRelation     *CacheData
 	TemplateDir        string
 	TemplateMgr        driver.Manager
-	contentProcessors  []func([]byte) []byte
+	contentProcessors  []func(tmpl string, content []byte) []byte
 	DelimLeft          string
 	DelimRight         string
 	incTagRegex        *regexp.Regexp
@@ -139,7 +139,7 @@ func (a *Standard) MonitorEvent(fn func(string)) {
 	a.fileEvents = append(a.fileEvents, fn)
 }
 
-func (a *Standard) SetContentProcessor(fn func([]byte) []byte) {
+func (a *Standard) SetContentProcessor(fn func(tmpl string, content []byte) []byte) {
 	if fn == nil {
 		return
 	}
@@ -579,13 +579,13 @@ func (a *Standard) Tag(content string) string {
 	return a.DelimLeft + content + a.DelimRight
 }
 
-func (a *Standard) preprocess(b []byte) []byte {
+func (a *Standard) preprocess(tmpl string, b []byte) []byte {
 	if b == nil {
 		return nil
 	}
 	if a.contentProcessors != nil {
 		for _, fn := range a.contentProcessors {
-			b = fn(b)
+			b = fn(tmpl, b)
 		}
 	}
 	return a.strip(b)
@@ -601,7 +601,7 @@ func (a *Standard) RawContent(tmpl string) (b []byte, e error) {
 		return
 	}
 	b = bytes.TrimPrefix(b, bytesBOM)
-	b = a.preprocess(b)
+	b = a.preprocess(tmpl, b)
 	return
 }
 
