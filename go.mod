@@ -1,11 +1,11 @@
 module github.com/webx-top/echo
 
-go 1.21
+go 1.22
 
 retract [v2.0.0+incompatible, v2.42.35+incompatible]
 
 require (
-	github.com/admpub/boltstore v1.1.1
+	github.com/admpub/boltstore v1.1.2
 	github.com/admpub/decimal v1.3.1
 	github.com/admpub/errors v0.8.2
 	github.com/admpub/events v1.3.6
@@ -30,7 +30,6 @@ require (
 	github.com/admpub/timeago v1.2.1
 	github.com/admpub/websocket v1.0.4
 	github.com/alicebob/miniredis v2.5.0+incompatible
-	github.com/boltdb/bolt v1.3.1
 	github.com/dustin/go-broadcast v0.0.0-20211018055107-71439988bd91
 	github.com/francoispqt/gojay v1.2.13
 	github.com/go-sql-driver/mysql v1.8.1
@@ -47,6 +46,7 @@ require (
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380
 	github.com/webx-top/tagfast v0.0.1
 	github.com/webx-top/validation v0.0.3
+	go.etcd.io/bbolt v1.3.11
 	golang.org/x/crypto v0.27.0
 	golang.org/x/sync v0.8.0
 	golang.org/x/time v0.6.0

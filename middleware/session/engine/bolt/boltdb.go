@@ -8,9 +8,9 @@ import (
 	"github.com/admpub/boltstore/reaper"
 	"github.com/admpub/boltstore/store"
 	"github.com/admpub/sessions"
-	"github.com/boltdb/bolt"
 	"github.com/webx-top/echo"
 	ss "github.com/webx-top/echo/middleware/session/engine"
+	bolt "go.etcd.io/bbolt"
 )
 
 var (
