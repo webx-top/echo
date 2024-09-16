@@ -278,7 +278,7 @@ func (r *RenderData) IsHidden(a IsHiddenContext) bool {
 
 func (r *RenderData) IsValid(a IsValidContext) bool {
 	if a == nil {
-		return true
+		return false
 	}
 	return a.IsValid(r.ctx)
 }
