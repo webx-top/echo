@@ -269,6 +269,26 @@ func (c *xContext) Renderer() Renderer {
 	return c.echo.renderer
 }
 
+func (c *xContext) getRenderData(data interface{}) interface{} {
+	if data == nil {
+		data = c.dataEngine.GetData()
+		if c.renderDataWrapper == nil {
+			return data
+		}
+		rdata := c.Internal().Get(`wrappedNilRenderData`)
+		if rdata != nil {
+			return rdata
+		}
+		data = c.renderDataWrapper(c, data)
+		c.Internal().Set(`wrappedNilRenderData`, data)
+		return data
+	}
+	if c.renderDataWrapper != nil {
+		data = c.renderDataWrapper(c, data)
+	}
+	return data
+}
+
 func (c *xContext) Fetch(name string, data interface{}) (b []byte, err error) {
 	name, err = c.echo.Template(c, name, data)
 	if err != nil {
@@ -282,9 +302,7 @@ func (c *xContext) Fetch(name string, data interface{}) (b []byte, err error) {
 	}
 	buf := bufferpool.Get()
 	defer bufferpool.Release(buf)
-	if c.renderDataWrapper != nil {
-		data = c.renderDataWrapper(c, data)
-	}
+	data = c.getRenderData(data)
 	err = c.renderer.Render(buf, name, data, c)
 	if err != nil {
 		return

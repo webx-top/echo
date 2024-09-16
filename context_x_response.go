@@ -30,9 +30,6 @@ func (c *xContext) Render(name string, data interface{}, codes ...int) (err erro
 		}
 	}
 	c.dataEngine.SetTmplFuncs()
-	if data == nil {
-		data = c.dataEngine.GetData()
-	}
 	b, err := c.Fetch(name, data)
 	if err != nil {
 		return
@@ -49,9 +46,6 @@ func (c *xContext) RenderBy(name string, content func(string) ([]byte, error), d
 		return
 	}
 	c.dataEngine.SetTmplFuncs()
-	if data == nil {
-		data = c.dataEngine.GetData()
-	}
 	if c.renderer == nil {
 		if c.echo.renderer == nil {
 			return nil, ErrRendererNotRegistered
@@ -60,9 +54,7 @@ func (c *xContext) RenderBy(name string, content func(string) ([]byte, error), d
 	}
 	buf := bufferpool.Get()
 	defer bufferpool.Release(buf)
-	if c.renderDataWrapper != nil {
-		data = c.renderDataWrapper(c, data)
-	}
+	data = c.getRenderData(data)
 	err = c.renderer.RenderBy(buf, name, content, data, c)
 	if err != nil {
 		return

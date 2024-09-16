@@ -290,7 +290,17 @@ func (r *RenderData) Render(a RenderContext) template.HTML {
 	if a == nil {
 		return template.HTML(``)
 	}
-	return a.Render(r.ctx, r)
+	return a.Render(r.ctx)
+}
+
+func (r *RenderData) RenderData(a RenderDataContext, data interface{}) template.HTML {
+	if a == nil {
+		return template.HTML(``)
+	}
+	if data == nil {
+		data = r
+	}
+	return a.RenderData(r.ctx, r)
 }
 
 type (
@@ -301,6 +311,9 @@ type (
 		IsValid(Context) bool
 	}
 	RenderContext interface {
-		Render(Context, interface{}) template.HTML
+		Render(Context) template.HTML
+	}
+	RenderDataContext interface {
+		RenderData(Context, interface{}) template.HTML
 	}
 )
