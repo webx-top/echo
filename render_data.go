@@ -268,3 +268,36 @@ func (r *RenderData) WithNextURL(urlStr string, varNames ...string) string {
 func (r *RenderData) GetOtherURL(urlStr string, next string) string {
 	return GetOtherURL(r.ctx, next)
 }
+
+func (r *RenderData) IsHidden(a IsHiddenContext) bool {
+	if a == nil {
+		return true
+	}
+	return a.IsHidden(r.ctx)
+}
+
+func (r *RenderData) IsValid(a IsValidContext) bool {
+	if a == nil {
+		return true
+	}
+	return a.IsValid(r.ctx)
+}
+
+func (r *RenderData) Render(a RenderContext) template.HTML {
+	if a == nil {
+		return template.HTML(``)
+	}
+	return a.Render(r.ctx)
+}
+
+type (
+	IsHiddenContext interface {
+		IsHidden(Context) bool
+	}
+	IsValidContext interface {
+		IsValid(Context) bool
+	}
+	RenderContext interface {
+		Render(Context) template.HTML
+	}
+)
