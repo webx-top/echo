@@ -22,6 +22,9 @@ func DefaultRenderDataWrapper(ctx Context, data interface{}) interface{} {
 }
 
 func NewRenderData(ctx Context, data interface{}) *RenderData {
+	if v, ok := data.(*RenderData); ok {
+		return v
+	}
 	return &RenderData{
 		ctx:    ctx,
 		now:    com.NewTime(time.Now()),
