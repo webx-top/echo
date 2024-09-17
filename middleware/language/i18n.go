@@ -61,7 +61,6 @@ func fixedPath(ppath string, open func(string) http.FileSystem) string {
 }
 
 func NewI18n(c *Config) *I18n {
-	c.Fallback = fixedPath(c.Fallback, c.FSFunc())
 	for index, value := range c.RulesPath {
 		c.RulesPath[index] = fixedPath(value, c.FSFunc())
 	}
