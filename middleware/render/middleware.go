@@ -46,9 +46,9 @@ type Options struct {
 	Skipper              echo.Skipper
 	ErrorPages           map[int]string
 	ErrorProcessors      []ErrorProcessor
+	ErrorCodeLinks       map[code.Code]echo.KVList
 	DefaultHTTPErrorCode int
 	SetFuncMap           []echo.HandlerFunc
-	CodeLinks            map[code.Code]echo.KVList
 }
 
 func (opt *Options) AddFuncSetter(set ...echo.HandlerFunc) *Options {
@@ -169,8 +169,8 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			code = e.Code.HTTPCode()
 			msg = e.Message
 			title = com.TextLine(msg)
-			if opt.CodeLinks != nil {
-				if v, y := opt.CodeLinks[e.Code]; y {
+			if opt.ErrorCodeLinks != nil {
+				if v, y := opt.ErrorCodeLinks[e.Code]; y {
 					if len(links) > 0 {
 						links = append(links, v...)
 					} else {

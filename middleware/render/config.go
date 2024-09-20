@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/webx-top/echo"
+	"github.com/webx-top/echo/code"
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/middleware"
 	"github.com/webx-top/echo/middleware/render/driver"
@@ -21,6 +22,7 @@ type Config struct {
 	ParseStringFuncs     map[string]func() string
 	ErrorPages           map[int]string
 	ErrorProcessors      []ErrorProcessor
+	ErrorCodeLinks       map[code.Code]echo.KVList
 	DefaultHTTPErrorCode int
 	StaticOptions        *middleware.StaticOptions
 	Debug                bool
@@ -114,6 +116,7 @@ func (t *Config) HTTPErrorHandler() echo.HTTPErrorHandler {
 	opt := &Options{
 		ErrorPages:           t.ErrorPages,
 		ErrorProcessors:      t.ErrorProcessors,
+		ErrorCodeLinks:       t.ErrorCodeLinks,
 		DefaultHTTPErrorCode: t.DefaultHTTPErrorCode,
 	}
 	opt.SetFuncSetter(t.errorPageFuncSetter...)
