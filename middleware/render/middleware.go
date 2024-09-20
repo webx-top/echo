@@ -21,6 +21,7 @@ import (
 
 	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
+	"github.com/webx-top/echo/code"
 )
 
 var (
@@ -47,6 +48,7 @@ type Options struct {
 	ErrorProcessors      []ErrorProcessor
 	DefaultHTTPErrorCode int
 	SetFuncMap           []echo.HandlerFunc
+	CodeLinks            map[code.Code]echo.KVList
 }
 
 func (opt *Options) AddFuncSetter(set ...echo.HandlerFunc) *Options {
@@ -148,6 +150,10 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 				break
 			}
 		}
+		var links echo.KVList
+		if v, y := c.Get(`links`).(echo.KVList); y {
+			links = v
+		}
 		switch e := err.(type) {
 		case *echo.HTTPError:
 			if e.Code > 0 {
@@ -163,6 +169,15 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			code = e.Code.HTTPCode()
 			msg = e.Message
 			title = com.TextLine(msg)
+			if opt.CodeLinks != nil {
+				if v, y := opt.CodeLinks[e.Code]; y {
+					if len(links) > 0 {
+						links = append(links, v...)
+					} else {
+						links = v
+					}
+				}
+			}
 			data.SetError(e)
 		default:
 			msg = e.Error()
@@ -208,6 +223,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			"debug":   c.Echo().Debug(),
 			"code":    code,
 			"panic":   panicErr,
+			"links":   links,
 		}, data.GetCode().Int())
 
 	END:
