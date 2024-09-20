@@ -42,7 +42,7 @@ require (
 	github.com/russross/blackfriday v1.6.0
 	github.com/stretchr/testify v1.9.0
 	github.com/webx-top/captcha v0.1.0
-	github.com/webx-top/com v1.3.2
+	github.com/webx-top/com v1.3.3
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380
 	github.com/webx-top/tagfast v0.0.1
 	github.com/webx-top/validation v0.0.3
