@@ -1,6 +1,7 @@
 package subdomains
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/admpub/log"
@@ -15,7 +16,7 @@ var Default = New()
 
 func New() *Subdomains {
 	s := &Subdomains{
-		Hosts:    map[string]string{},
+		Hosts:    map[string][]string{},
 		Alias:    map[string]*Info{},
 		Default:  ``,
 		Protocol: `http`,
@@ -82,8 +83,9 @@ func (info *Info) RelativeURLByName(s *Subdomains, name string, args ...interfac
 type Dispatcher func(r engine.Request, w engine.Response) (*echo.Echo, bool)
 
 type Subdomains struct {
-	Hosts      map[string]string //{host:name}
+	Hosts      map[string][]string //{host:name}
 	Alias      map[string]*Info
+	Prefixes   []string
 	Default    string //default name
 	Protocol   string //http/https
 	Boot       string
@@ -116,7 +118,11 @@ func (s *Subdomains) Add(name string, e *echo.Echo) *Subdomains {
 		}
 	}
 	for _, host := range hosts {
-		s.Hosts[host] = name
+		if _, ok := s.Hosts[host]; !ok {
+			s.Hosts[host] = []string{name}
+		} else {
+			s.Hosts[host] = append(s.Hosts[host], name)
+		}
 	}
 	info := &Info{
 		Protocol: `http`,
@@ -124,12 +130,17 @@ func (s *Subdomains) Add(name string, e *echo.Echo) *Subdomains {
 		Host:     hosts[0],
 		Echo:     e,
 	}
-	info2 := strings.SplitN(info.Host, `://`, 2)
-	if len(info2) == 2 {
-		info.Protocol = info2[0]
-		info.Host = info2[1]
-		if len(info.Protocol) == 0 {
-			info.Protocol = "http"
+	if strings.HasPrefix(info.Host, `/`) {
+		info.Host = ``
+	}
+	if len(info.Host) > 0 {
+		info2 := strings.SplitN(info.Host, `://`, 2)
+		if len(info2) == 2 {
+			info.Protocol = info2[0]
+			info.Host = info2[1]
+			if len(info.Protocol) == 0 {
+				info.Protocol = "http"
+			}
 		}
 	}
 	s.Alias[name] = info
@@ -209,26 +220,56 @@ func (s *Subdomains) RelativeURLByName(name string, params ...interface{}) strin
 	return info.RelativeURLByName(s, name, params...)
 }
 
-func (s *Subdomains) FindByDomain(host string) (*echo.Echo, bool) {
-	name, exists := s.Hosts[host]
-	if !exists {
-		if p := strings.LastIndexByte(host, ':'); p > -1 {
-			name, exists = s.Hosts[host[0:p]]
-		}
+func (s *Subdomains) sort(names []string) []string {
+	sort.Slice(names, func(i, j int) bool {
+		return len(s.Alias[names[i]].Prefix()) > len(s.Alias[names[j]].Prefix())
+	})
+	return names
+}
+
+func (s *Subdomains) sortHosts() {
+	for k := range s.Hosts {
+		s.Hosts[k] = s.sort(s.Hosts[k])
+	}
+}
+
+func (s *Subdomains) FindByDomain(host string, upath string) (*echo.Echo, bool) {
+	var (
+		names  []string
+		exists bool
+	)
+	if len(s.Hosts) == 1 && len(s.Hosts[``]) > 0 {
+		names = s.Hosts[``]
+		exists = true
+	} else {
+		names, exists = s.Hosts[host]
 		if !exists {
-			name = s.Default
+			if p := strings.LastIndexByte(host, ':'); p > -1 {
+				names, exists = s.Hosts[host[0:p]]
+				if !exists {
+					names, exists = s.Hosts[``]
+				}
+			}
 		}
 	}
 	var info *Info
-	info, exists = s.Alias[name]
 	if exists {
-		return info.Echo, true
+		for _, name := range names {
+			info, exists = s.Alias[name]
+			if exists && strings.HasPrefix(upath, info.Prefix()) {
+				return info.Echo, exists
+			}
+		}
 	}
-	return nil, false
+	info, exists = s.Alias[s.Default]
+	if exists {
+		return info.Echo, exists
+	}
+	return nil, exists
 }
 
 func (s *Subdomains) DefaultDispatcher(r engine.Request, w engine.Response) (*echo.Echo, bool) {
-	return s.FindByDomain(r.Host())
+	return s.FindByDomain(r.Host(), r.URL().Path())
 }
 
 func (s *Subdomains) ServeHTTP(r engine.Request, w engine.Response) {
@@ -244,6 +285,8 @@ func (s *Subdomains) Run(args ...interface{}) {
 	if s.dispatcher == nil {
 		s.dispatcher = s.DefaultDispatcher
 	}
+	s.sortHosts()
+	echo.Dump(s.Hosts)
 	var eng engine.Engine
 	var arg interface{}
 	size := len(args)
