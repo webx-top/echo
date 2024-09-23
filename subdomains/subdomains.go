@@ -256,7 +256,7 @@ func (s *Subdomains) FindByDomain(host string, upath string) (*echo.Echo, bool) 
 	if exists {
 		for _, name := range names {
 			info, exists = s.Alias[name]
-			if exists && strings.HasPrefix(upath, info.Prefix()) {
+			if exists && (upath == info.Prefix() || strings.HasPrefix(upath, info.Prefix()+`/`)) {
 				return info.Echo, exists
 			}
 		}
@@ -281,12 +281,28 @@ func (s *Subdomains) ServeHTTP(r engine.Request, w engine.Response) {
 	}
 }
 
-func (s *Subdomains) Run(args ...interface{}) {
+func (s *Subdomains) Ready() *Info {
 	if s.dispatcher == nil {
 		s.dispatcher = s.DefaultDispatcher
 	}
 	s.sortHosts()
-	echo.Dump(s.Hosts)
+	e := s.Get(s.Boot)
+	if e == nil {
+		for _, info := range s.Alias {
+			e = info
+			break
+		}
+	}
+	for _, info := range s.Alias {
+		if e == info {
+			continue
+		}
+		info.Commit()
+	}
+	return e
+}
+
+func (s *Subdomains) Run(args ...interface{}) {
 	var eng engine.Engine
 	var arg interface{}
 	size := len(args)
@@ -329,19 +345,7 @@ func (s *Subdomains) Run(args ...interface{}) {
 			eng = fasthttp.New(`:80`)
 		}
 	}
-	e := s.Get(s.Boot)
-	if e == nil {
-		for _, info := range s.Alias {
-			e = info
-			break
-		}
-	}
-	for _, info := range s.Alias {
-		if e == info {
-			continue
-		}
-		info.Commit()
-	}
+	e := s.Ready()
 	e.Logger().Info(`Server has been launched.`)
 	e.Run(eng, s)
 	e.Logger().Info(`Server has been closed.`)
