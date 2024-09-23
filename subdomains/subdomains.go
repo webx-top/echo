@@ -6,6 +6,7 @@ import (
 
 	"github.com/admpub/log"
 
+	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/engine/fasthttp"
@@ -120,7 +121,7 @@ func (s *Subdomains) Add(name string, e *echo.Echo) *Subdomains {
 	for _, host := range hosts {
 		if _, ok := s.Hosts[host]; !ok {
 			s.Hosts[host] = []string{name}
-		} else {
+		} else if !com.InSlice(name, s.Hosts[host]) {
 			s.Hosts[host] = append(s.Hosts[host], name)
 		}
 	}
