@@ -45,10 +45,7 @@ func (info *Info) URL(s *Subdomains, uri string) string {
 		return domain + info.Prefix() + uri
 	}
 	if len(info.Host) == 0 {
-		if s.Default == info.Name {
-			return info.Prefix() + uri
-		}
-		return info.Prefix() + `/` + info.Name + uri
+		return info.Prefix() + uri
 	}
 	protocol := info.Protocol
 	if len(protocol) == 0 {
@@ -63,12 +60,6 @@ func (info *Info) URL(s *Subdomains, uri string) string {
 func (info *Info) RelativeURL(s *Subdomains, uri string) string {
 	if len(uri) > 0 && !strings.HasPrefix(uri, `/`) {
 		uri = `/` + uri
-	}
-	if len(info.Host) == 0 {
-		if s.Default == info.Name {
-			return info.Prefix() + uri
-		}
-		return info.Prefix() + `/` + info.Name + uri
 	}
 	return info.Prefix() + uri
 }
