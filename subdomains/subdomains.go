@@ -1,8 +1,10 @@
 package subdomains
 
 import (
+	"slices"
 	"sort"
 	"strings"
+	"sync/atomic"
 
 	"github.com/admpub/log"
 
@@ -17,8 +19,8 @@ var Default = New()
 
 func New() *Subdomains {
 	s := &Subdomains{
-		Hosts:    map[string][]string{},
-		Alias:    map[string]*Info{},
+		Hosts:    InitSafeMap[*[]string](),
+		Alias:    InitSafeMap[*Info](),
 		Default:  ``,
 		Protocol: `http`,
 	}
@@ -75,9 +77,10 @@ func (info *Info) RelativeURLByName(s *Subdomains, name string, args ...interfac
 type Dispatcher func(r engine.Request, w engine.Response) (*echo.Echo, bool)
 
 type Subdomains struct {
-	Hosts      map[string][]string //{host:name}
-	Alias      map[string]*Info
+	Hosts      SafeMap[*[]string] //{host:name}
+	Alias      SafeMap[*Info]
 	Prefixes   []string
+	hostsNum   atomic.Int32
 	Default    string //default name
 	Protocol   string //http/https
 	Boot       string
@@ -109,12 +112,33 @@ func (s *Subdomains) Add(name string, e *echo.Echo) *Subdomains {
 			hosts = append(hosts, ``)
 		}
 	}
+	var hasRemoved bool
+	var addedHosts int
+	var appendsHosts []string
 	for _, host := range hosts {
-		if _, ok := s.Hosts[host]; !ok {
-			s.Hosts[host] = []string{name}
-		} else if !com.InSlice(name, s.Hosts[host]) {
-			s.Hosts[host] = append(s.Hosts[host], name)
+		if aliases, ok := s.Hosts.GetOk(host); !ok {
+			s.Hosts.Set(host, &[]string{name})
+			addedHosts++
+		} else if !com.InSlice(name, *aliases) {
+			*aliases = append(*aliases, name)
+			appendsHosts = append(appendsHosts, host)
 		}
+	}
+	s.Hosts.Range(func(host string, aliases *[]string) bool {
+		index := slices.Index(*aliases, name)
+		if index > -1 && !com.InSlice(host, hosts) {
+			*aliases = slices.Delete(*aliases, index, index+1)
+			hasRemoved = true
+		}
+		return true
+	})
+	if hasRemoved {
+		s.Hosts.ClearEmpty(func(_ string, val *[]string) bool {
+			return len(*val) == 0
+		})
+	}
+	if addedHosts > 0 || hasRemoved {
+		s.hostsNum.Store(int32(s.Hosts.Size()))
 	}
 	info := &Info{
 		Protocol: `http`,
@@ -135,7 +159,14 @@ func (s *Subdomains) Add(name string, e *echo.Echo) *Subdomains {
 			}
 		}
 	}
-	s.Alias[name] = info
+	s.Alias.Set(name, info)
+	if len(e.Prefix()) > 0 {
+		for _, host := range appendsHosts {
+			if aliases, ok := s.Hosts.GetOk(host); ok {
+				s.sort(*aliases)
+			}
+		}
+	}
 	return s
 }
 
@@ -144,16 +175,17 @@ func (s *Subdomains) Get(args ...string) *Info {
 	if len(args) > 0 {
 		name = args[0]
 	}
-	if e, ok := s.Alias[name]; ok {
+	if e, ok := s.Alias.GetOk(name); ok {
 		return e
 	}
 	return nil
 }
 
 func (s *Subdomains) SetDebug(on bool) *Subdomains {
-	for _, info := range s.Alias {
+	s.Alias.Range(func(key string, info *Info) bool {
 		info.SetDebug(on)
-	}
+		return true
+	})
 	return s
 }
 
@@ -214,46 +246,48 @@ func (s *Subdomains) RelativeURLByName(name string, params ...interface{}) strin
 
 func (s *Subdomains) sort(names []string) []string {
 	sort.Slice(names, func(i, j int) bool {
-		return len(s.Alias[names[i]].Prefix()) > len(s.Alias[names[j]].Prefix())
+		return len(s.Alias.Get(names[i]).Prefix()) > len(s.Alias.Get(names[j]).Prefix())
 	})
 	return names
 }
 
-func (s *Subdomains) sortHosts() {
-	for k := range s.Hosts {
-		s.Hosts[k] = s.sort(s.Hosts[k])
-	}
+func (s *Subdomains) SortHosts() {
+	s.Hosts.Range(func(key string, val *[]string) bool {
+		s.sort(*val)
+		return true
+	})
 }
 
 func (s *Subdomains) FindByDomain(host string, upath string) (*echo.Echo, bool) {
 	var (
-		names  []string
+		names  *[]string
 		exists bool
 	)
-	if len(s.Hosts) == 1 && len(s.Hosts[``]) > 0 {
-		names = s.Hosts[``]
-		exists = true
-	} else {
-		names, exists = s.Hosts[host]
+	if s.hostsNum.Load() == 1 {
+		names = s.Hosts.Get(``)
+		exists = names != nil && len(*names) > 0
+	}
+	if !exists {
+		names, exists = s.Hosts.GetOk(host)
 		if !exists {
 			if p := strings.LastIndexByte(host, ':'); p > -1 {
-				names, exists = s.Hosts[host[0:p]]
+				names, exists = s.Hosts.GetOk(host[0:p])
 				if !exists {
-					names, exists = s.Hosts[``]
+					names, exists = s.Hosts.GetOk(``)
 				}
 			}
 		}
 	}
 	var info *Info
-	if exists {
-		for _, name := range names {
-			info, exists = s.Alias[name]
+	if exists && names != nil {
+		for _, name := range *names {
+			info, exists = s.Alias.GetOk(name)
 			if exists && (upath == info.Prefix() || strings.HasPrefix(upath, info.Prefix()+`/`)) {
 				return info.Echo, exists
 			}
 		}
 	}
-	info, exists = s.Alias[s.Default]
+	info, exists = s.Alias.GetOk(s.Default)
 	if exists {
 		return info.Echo, exists
 	}
@@ -277,20 +311,22 @@ func (s *Subdomains) Ready() *Info {
 	if s.dispatcher == nil {
 		s.dispatcher = s.DefaultDispatcher
 	}
-	s.sortHosts()
+	s.hostsNum.Store(int32(s.Hosts.Size()))
+	s.SortHosts()
 	e := s.Get(s.Boot)
 	if e == nil {
-		for _, info := range s.Alias {
+		s.Alias.Range(func(key string, info *Info) bool {
 			e = info
-			break
-		}
+			return false
+		})
 	}
-	for _, info := range s.Alias {
+	s.Alias.Range(func(key string, info *Info) bool {
 		if e == info {
-			continue
+			return true
 		}
 		info.Commit()
-	}
+		return true
+	})
 	return e
 }
 
