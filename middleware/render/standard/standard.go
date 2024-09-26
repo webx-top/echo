@@ -25,7 +25,7 @@ package standard
 import (
 	"bytes"
 	"fmt"
-	htmlTpl "html/template"
+	"html/template"
 	"io"
 	"os"
 	"path/filepath"
@@ -53,7 +53,7 @@ func New(templateDir string, args ...logger.Logger) driver.Driver {
 		panic(err.Error())
 	}
 	t := &Standard{
-		CachedRelation:    NewCache(),
+		cache:             com.InitSafeMap[string, *CacheData](),
 		TemplateDir:       templateDir,
 		DelimLeft:         "{{",
 		DelimRight:        "}}",
@@ -79,7 +79,7 @@ func New(templateDir string, args ...logger.Logger) driver.Driver {
 }
 
 type Standard struct {
-	CachedRelation     *CacheData
+	cache              com.SafeMap[string, *CacheData]
 	TemplateDir        string
 	TemplateMgr        driver.Manager
 	contentProcessors  []func(tmpl string, content []byte) []byte
@@ -150,22 +150,9 @@ func (a *Standard) SetFuncMap(fn func() map[string]interface{}) {
 	a.getFuncs = fn
 }
 
-func (a *Standard) deleteCachedRelation(name string) {
-	if cs, ok := a.CachedRelation.GetOk(name); ok {
-		_ = cs
-		a.CachedRelation.Reset()
-		a.logger.Info("remove cached template object")
-		/*
-			for key, _ := range cs.Rel {
-				if key == name {
-					continue
-				}
-				a.deleteCachedRelation(key)
-			}
-			a.Logger.Info("remove cached template object:", name)
-			delete(a.CachedRelation, name)
-		*/
-	}
+func (a *Standard) deleteCaches(_ string) {
+	a.cache.Reset()
+	a.logger.Info("remove cached template object")
 }
 
 func (a *Standard) Init() {
@@ -177,7 +164,7 @@ func (a *Standard) Init() {
 			if typ == "dir" {
 				return
 			}
-			a.deleteCachedRelation(name)
+			a.deleteCaches(name)
 			for _, fn := range a.fileEvents {
 				fn(name)
 			}
@@ -259,52 +246,39 @@ func (a *Standard) RenderBy(w io.Writer, tmplName string, tmplContent func(strin
 	return tmpl.ExecuteTemplate(w, tmpl.Name(), values)
 }
 
-func (a *Standard) parse(c echo.Context, tmplName string, tmplContent func(string) ([]byte, error)) (tmpl *htmlTpl.Template, err error) {
+func (a *Standard) parse(c echo.Context, tmplName string, tmplContent func(string) ([]byte, error)) (tmpl *template.Template, err error) {
 	tmplOriginalName := tmplName
 	tmplName = tmplName + a.Ext
 	tmplName = a.TmplPath(c, tmplName)
 	cachedKey := tmplName
-	rel, ok := a.CachedRelation.GetOk(cachedKey)
-	if ok && rel.Tpl[0].Template != nil {
-		tmpl = rel.Tpl[0].Template
-		if a.debug {
-			a.logger.Debug(` `+tmplName, tmpl.DefinedTemplates())
-		}
+	cachedData, ok := a.cache.GetOk(cachedKey)
+	if ok {
+		tmpl = cachedData.template
 		return
 	}
 	var v interface{}
-	var shared bool
-	v, err, shared = a.sg.Do(cachedKey, func() (interface{}, error) {
-		var funcMap htmlTpl.FuncMap
+	v, err, _ = a.sg.Do(cachedKey, func() (interface{}, error) {
+		var funcMap template.FuncMap
 		if a.getFuncs != nil {
-			funcMap = htmlTpl.FuncMap(a.getFuncs())
+			funcMap = template.FuncMap(a.getFuncs())
 		}
 		if funcMap == nil {
-			funcMap = htmlTpl.FuncMap{}
+			funcMap = template.FuncMap{}
 		}
-		return a.find(c, rel, tmplOriginalName, tmplName, tmplContent, cachedKey, funcMap)
+		return a.find(c, tmplOriginalName, tmplName, tmplContent, cachedKey, funcMap)
 	})
 	if err != nil {
 		return
 	}
-	if !shared {
-		tmpl = v.(*htmlTpl.Template)
-		return
-	}
-	rel, ok = a.CachedRelation.GetOk(cachedKey)
-	if ok && rel.Tpl[0].Template != nil {
-		tmpl = rel.Tpl[0].Template
-		return
-	}
+	tmpl = v.(*template.Template)
 	return
-	//return a.find(c, rel, tmplOriginalName, tmplName, cachedKey, funcMap)
 }
 
 var bytesBOM = []byte("\xEF\xBB\xBF")
 
-func (a *Standard) find(c echo.Context, rel *CcRel,
+func (a *Standard) find(c echo.Context,
 	tmplOriginalName string, tmplName string, tmplContent func(string) ([]byte, error),
-	cachedKey string, funcMap htmlTpl.FuncMap) (tmpl *htmlTpl.Template, err error) {
+	cachedKey string, funcMap template.FuncMap) (tmpl *template.Template, err error) {
 	if a.debug {
 		start := time.Now()
 		a.logger.Debug(` ◐ compile template: `, tmplName)
@@ -312,16 +286,11 @@ func (a *Standard) find(c echo.Context, rel *CcRel,
 			a.logger.Debug(` ◑ finished compile: `+tmplName, ` (elapsed: `+time.Since(start).String()+`)`)
 		}()
 	}
-	t := htmlTpl.New(driver.CleanTemplateName(tmplName))
-	t.Delims(a.DelimLeft, a.DelimRight)
-	if rel == nil {
-		rel = &CcRel{
-			Rel: map[string]uint8{cachedKey: 0},
-			Tpl: [2]*tplInfo{NewTplInfo(nil), NewTplInfo(nil)},
-		}
-	}
-	funcMap = setFunc(rel.Tpl[0], funcMap)
-	t.Funcs(funcMap)
+	tmpl = template.New(driver.CleanTemplateName(tmplName))
+	tmpl.Delims(a.DelimLeft, a.DelimRight)
+	cacheData := NewCache(tmpl)
+	funcMap = cacheData.setFunc(funcMap)
+	tmpl.Funcs(funcMap)
 	var b []byte
 	b, err = tmplContent(tmplName)
 	if err != nil {
@@ -344,63 +313,40 @@ func (a *Standard) find(c echo.Context, rel *CcRel,
 		}
 		content = string(b)
 		content, m = a.ParseExtend(c, content, extcs, passObject, subcs)
-
-		if v, ok := a.CachedRelation.GetOk(extFile); !ok {
-			a.CachedRelation.Set(extFile, NewRel(cachedKey))
-		} else if _, ok := v.GetOk(cachedKey); !ok {
-			v.Set(cachedKey, 0)
-		}
 	}
 	content = a.ContainsSubTpl(c, content, subcs)
 	clips := map[string]string{}
 	content = a.ContainsSnippetResult(c, tmplOriginalName, content, clips)
-	tmpl, err = t.Parse(content)
+	tmpl, err = tmpl.Parse(content)
 	if err != nil {
 		err = parseError(err, content)
 		return
 	}
+
+	var defines string
+
+	// include
 	for name, subc := range subcs {
-		v, ok := a.CachedRelation.GetOk(name)
-		if ok && v.Tpl[1].Template != nil {
-			v.Set(cachedKey, 0)
-			tmpl.AddParseTree(name, v.Tpl[1].Template.Tree)
-			continue
-		}
 		subc = a.ContainsSnippetResult(c, tmplOriginalName, subc, clips)
-		t = tmpl.New(name)
 		subc = a.Tag(`define "`+driver.CleanTemplateName(name)+`"`) + subc + a.Tag(`end`)
-		_, err = t.Parse(subc)
-		if err != nil {
-			err = parseError(err, subc)
-			return
-		}
-
-		if ok {
-			v.Set(cachedKey, 0)
-			v.Tpl[1].Template = t
-		} else {
-			a.CachedRelation.Set(name, &CcRel{
-				Rel: map[string]uint8{cachedKey: 0},
-				Tpl: [2]*tplInfo{NewTplInfo(nil), NewTplInfo(t)},
-			})
-		}
-
+		defines += subc
 	}
 
+	// block
 	for name, extc := range extcs {
-		t = tmpl.New(name)
 		extc = a.ContainsSnippetResult(c, tmplOriginalName, extc, clips)
 		extc = a.Tag(`define "`+driver.CleanTemplateName(name)+`"`) + extc + a.Tag(`end`)
-		_, err = t.Parse(extc)
-		if err != nil {
-			err = parseError(err, extc)
-			return
-		}
-		rel.Tpl[0].Blocks[name] = struct{}{}
+		defines += extc
+		cacheData.blocks[name] = struct{}{}
 	}
 
-	rel.Tpl[0].Template = tmpl
-	a.CachedRelation.Set(cachedKey, rel)
+	// parse define...
+	tmpl, err = tmpl.Parse(defines)
+	if err != nil {
+		err = parseError(err, defines)
+		return
+	}
+	a.cache.Set(cachedKey, cacheData)
 	return
 }
 
@@ -412,7 +358,7 @@ func (a *Standard) Fetch(tmplName string, data interface{}, c echo.Context) stri
 	return a.execute(content, data)
 }
 
-func (a *Standard) execute(tmpl *htmlTpl.Template, data interface{}) string {
+func (a *Standard) execute(tmpl *template.Template, data interface{}) string {
 	buf := bufferpool.Get()
 	defer bufferpool.Release(buf)
 	err := tmpl.ExecuteTemplate(buf, tmpl.Name(), data)
@@ -637,7 +583,7 @@ func (a *Standard) ClearCache() {
 	if a.TemplateMgr != nil {
 		a.TemplateMgr.ClearCache()
 	}
-	a.CachedRelation.Reset()
+	a.cache.Reset()
 }
 
 func (a *Standard) Close() {

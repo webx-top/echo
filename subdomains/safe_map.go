@@ -95,3 +95,11 @@ func (a *SafeMap[T]) ClearEmpty(f func(key string, val T) bool) {
 	}
 	a.mu.Unlock()
 }
+
+func (a *SafeMap[T]) Reset() {
+	a.mu.Lock()
+	for key := range a.mp {
+		delete(a.mp, key)
+	}
+	a.mu.Unlock()
+}

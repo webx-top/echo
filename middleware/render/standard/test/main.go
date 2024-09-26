@@ -35,10 +35,14 @@ func main() {
 	t.Execute(os.Stdout, nil)
 	//return
 
-	tpl := render.New("standard", "./template/")
+	tpl := render.New("standard2", "./template/")
 	tpl.Init()
 	tpl.SetFuncMap(func() map[string]interface{} {
 		funcs := tplfunc.New()
+		funcs[`HeapAlloc`] = func() string {
+			runtime.ReadMemStats(memStat)
+			return com.FormatBytes(memStat.HeapAlloc)
+		}
 		return funcs
 	})
 	//tpl.SetDebug(true)

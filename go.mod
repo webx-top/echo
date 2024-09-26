@@ -42,7 +42,7 @@ require (
 	github.com/russross/blackfriday v1.6.0
 	github.com/stretchr/testify v1.9.0
 	github.com/webx-top/captcha v0.1.0
-	github.com/webx-top/com v1.3.3
+	github.com/webx-top/com v1.3.7
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380
 	github.com/webx-top/tagfast v0.0.1
 	github.com/webx-top/validation v0.0.3
@@ -58,7 +58,6 @@ require (
 	github.com/CloudyKit/fastprinter v0.0.0-20200109182630-33d98a066a53 // indirect
 	github.com/admpub/color v1.8.1 // indirect
 	github.com/admpub/confl v0.2.4 // indirect
-	github.com/admpub/pp v0.0.7 // indirect
 	github.com/admpub/randomize v0.0.2 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect

@@ -105,3 +105,24 @@ func TestSlotRender(t *testing.T) {
 	assert.Equal(t, `-- powered by webx
 z@A`, r)
 }
+
+// go test -bench=BenchmarkXxx
+func BenchmarkXxx(b *testing.B) {
+	a := New(`test`)
+	a.SetManager(&testTemplateMgr{})
+	a.Init()
+	a.SetFuncMap(func() map[string]interface{} {
+		return tplfunc.New()
+	})
+	b.Run("fetch", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			ctx := defaults.NewMockContext()
+			a.Fetch(`index`, nil, ctx)
+			a.Fetch(`new`, nil, ctx)
+			a.Fetch(`new2`, nil, ctx)
+			a.Fetch(`snippet`, nil, ctx)
+		}
+	})
+
+	b.ReportAllocs()
+}

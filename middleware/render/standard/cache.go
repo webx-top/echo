@@ -1,39 +1,40 @@
 package standard
 
-import "sync"
+import (
+	"html/template"
+)
 
-func NewCache() *CacheData {
+func NewCache(t *template.Template) *CacheData {
 	return &CacheData{
-		m: map[string]*CcRel{},
+		template: t,
+		blocks:   map[string]struct{}{},
 	}
 }
 
 type CacheData struct {
-	m map[string]*CcRel
-	l sync.RWMutex
+	template *template.Template
+	blocks   map[string]struct{}
 }
 
-func (c *CacheData) GetOk(cacheKey string) (*CcRel, bool) {
-	c.l.RLock()
-	r, y := c.m[cacheKey]
-	c.l.RUnlock()
-	return r, y
-}
-
-func (c *CacheData) Set(cacheKey string, r *CcRel) {
-	c.l.Lock()
-	c.m[cacheKey] = r
-	c.l.Unlock()
-}
-
-func (c *CacheData) Remove(cacheKey string) {
-	c.l.Lock()
-	delete(c.m, cacheKey)
-	c.l.Unlock()
-}
-
-func (c *CacheData) Reset() {
-	c.l.Lock()
-	c.m = map[string]*CcRel{}
-	c.l.Unlock()
+func (c *CacheData) setFunc(funcMap template.FuncMap) template.FuncMap {
+	if funcMap == nil {
+		funcMap = template.FuncMap{}
+	}
+	funcMap["hasBlock"] = func(blocks ...string) bool {
+		for _, blockName := range blocks {
+			if _, ok := c.blocks[blockName]; !ok {
+				return false
+			}
+		}
+		return true
+	}
+	funcMap["hasAnyBlock"] = func(blocks ...string) bool {
+		for _, blockName := range blocks {
+			if _, ok := c.blocks[blockName]; ok {
+				return true
+			}
+		}
+		return false
+	}
+	return funcMap
 }
