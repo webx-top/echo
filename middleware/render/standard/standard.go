@@ -281,9 +281,9 @@ func (a *Standard) find(c echo.Context,
 	cachedKey string, funcMap template.FuncMap) (tmpl *template.Template, err error) {
 	if a.debug {
 		start := time.Now()
-		a.logger.Debug(` ◐ compile template: `, tmplName)
+		a.logger.Warn(` ◐ compile template: `, tmplName)
 		defer func() {
-			a.logger.Debug(` ◑ finished compile: `+tmplName, ` (elapsed: `+time.Since(start).String()+`)`)
+			a.logger.Warn(` ◑ finished compile: `+tmplName, ` (elapsed: `+time.Since(start).String()+`)`)
 		}()
 	}
 	tmpl = template.New(driver.CleanTemplateName(tmplName))

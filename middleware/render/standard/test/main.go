@@ -26,6 +26,7 @@ type Nested struct {
 	Children []*Nested
 }
 
+// go build -gcflags="-m"
 func main() {
 	memStat := new(runtime.MemStats)
 	runtime.ReadMemStats(memStat)
@@ -36,12 +37,13 @@ func main() {
 	//return
 
 	tpl := render.New("standard2", "./template/")
+	tpl.SetDebug(true)
 	tpl.Init()
 	tpl.SetFuncMap(func() map[string]interface{} {
 		funcs := tplfunc.New()
-		funcs[`HeapAlloc`] = func() string {
+		funcs[`HeapInuse`] = func() string {
 			runtime.ReadMemStats(memStat)
-			return com.FormatBytes(memStat.HeapAlloc)
+			return com.FormatBytes(memStat.HeapInuse)
 		}
 		return funcs
 	})
