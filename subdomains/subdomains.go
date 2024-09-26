@@ -146,9 +146,6 @@ func (s *Subdomains) Add(name string, e *echo.Echo) *Subdomains {
 		Host:     hosts[0],
 		Echo:     e,
 	}
-	if strings.HasPrefix(info.Host, `/`) {
-		info.Host = ``
-	}
 	if len(info.Host) > 0 {
 		info2 := strings.SplitN(info.Host, `://`, 2)
 		if len(info2) == 2 {
