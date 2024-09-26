@@ -36,6 +36,32 @@ func (a *SafeMap[T]) Get(key string) T {
 	return val
 }
 
+func (a *SafeMap[T]) Gets(keys ...string) []T {
+	a.mu.RLock()
+	res := make([]T, 0, len(keys))
+	for _, key := range keys {
+		val, ok := a.mp[key]
+		if ok {
+			res = append(res, val)
+		}
+	}
+	a.mu.RUnlock()
+	return res
+}
+
+func (a *SafeMap[T]) GetsFunc(keys ...func() string) []T {
+	a.mu.RLock()
+	res := make([]T, 0, len(keys))
+	for _, key := range keys {
+		val, ok := a.mp[key()]
+		if ok {
+			res = append(res, val)
+		}
+	}
+	a.mu.RUnlock()
+	return res
+}
+
 func (a *SafeMap[T]) Set(key string, info T) {
 	a.mu.Lock()
 	a.mp[key] = info

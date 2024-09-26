@@ -268,22 +268,23 @@ func (s *Subdomains) FindByDomain(host string, upath string) (*echo.Echo, bool) 
 		names, exists = s.Hosts.GetOk(host)
 		if !exists {
 			if p := strings.LastIndexByte(host, ':'); p > -1 {
-				names, exists = s.Hosts.GetOk(host[0:p])
-				if !exists {
-					names, exists = s.Hosts.GetOk(``)
+				nsList := s.Hosts.Gets(host[0:p], ``)
+				if len(nsList) > 0 {
+					names = nsList[0]
+					exists = true
 				}
 			}
 		}
 	}
-	var info *Info
 	if exists && names != nil {
-		for _, name := range *names {
-			info, exists = s.Alias.GetOk(name)
-			if exists && (upath == info.Prefix() || strings.HasPrefix(upath, info.Prefix()+`/`)) {
+		infos := s.Alias.Gets(*names...)
+		for _, info := range infos {
+			if upath == info.Prefix() || strings.HasPrefix(upath, info.Prefix()+`/`) {
 				return info.Echo, exists
 			}
 		}
 	}
+	var info *Info
 	info, exists = s.Alias.GetOk(s.Default)
 	if exists {
 		return info.Echo, exists
