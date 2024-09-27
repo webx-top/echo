@@ -83,8 +83,8 @@ func TestEchoMiddlewareError(t *testing.T) {
 	e.SetDebug(true)
 	e.Use(mw.Log(), func(next HandlerFunc) HandlerFunc {
 		return func(c Context) error {
-			assert.Equal(t, `/`, c.RequestURI())
-			assert.Equal(t, `https://github.com/`, c.FullRequestURI())
+			assert.Equal(t, `/?id=5&name=测试`, c.RequestURI())
+			assert.Equal(t, `https://github.com/?id=5&name=测试`, c.FullRequestURI())
 			assert.Equal(t, ``, c.Request().URI())
 			return errors.New("error")
 		}
@@ -93,7 +93,7 @@ func TestEchoMiddlewareError(t *testing.T) {
 
 	e.RebuildRouter()
 
-	c, r := request(GET, "https://github.com/", e)
+	c, r := request(GET, "https://github.com/?id=5&name=测试", e)
 	assert.Equal(t, http.StatusInternalServerError, c)
 	assert.Equal(t, `error`, r)
 }
