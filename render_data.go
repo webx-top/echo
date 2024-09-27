@@ -224,6 +224,10 @@ func (r *RenderData) TimeAgo(v interface{}, options ...string) string {
 	return timeago.Timestamp(param.AsInt64(v), r.Lang().Format(false, `-`), option)
 }
 
+func (r *RenderData) RootPrefix() string {
+	return r.ctx.Echo().Prefix()
+}
+
 func (r *RenderData) Prefix() string {
 	return r.ctx.Route().Prefix
 }
