@@ -371,8 +371,19 @@ func (c *xContext) Site() string {
 	return c.Scheme() + `://` + c.Request().Host() + `/`
 }
 
+func (c *xContext) FullRequestURI() string {
+	return c.Scheme() + `://` + c.Request().Host() + c.RequestURI()
+}
+
 func (c *xContext) RequestURI() string {
-	return c.Scheme() + `://` + c.Request().Host() + c.Request().URL().String()
+	if len(c.Request().URI()) == 0 {
+		q := c.Request().URL().RawQuery()
+		if len(q) > 0 {
+			q = `?` + q
+		}
+		return c.Request().URL().Path() + q
+	}
+	return c.Request().URI()
 }
 
 // Scheme returns request scheme as `http` or `https`.
