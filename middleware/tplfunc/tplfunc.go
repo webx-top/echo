@@ -123,7 +123,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"Contains":   strings.Contains,
 	"HasPrefix":  strings.HasPrefix,
 	"HasSuffix":  strings.HasSuffix,
-	"Trim":       strings.TrimSpace,
+	"Trim":       Trim,
 	"TrimLeft":   strings.TrimLeft,
 	"TrimRight":  strings.TrimRight,
 	"TrimPrefix": strings.TrimPrefix,
@@ -222,6 +222,13 @@ func Hash(text, salt string, positions ...uint) string {
 		positions = HashClipPositions
 	}
 	return com.MakePassword(text, salt, positions...)
+}
+
+func Trim(s string, cutset ...string) string {
+	if len(cutset) == 0 || len(cutset[0]) == 0 {
+		return strings.TrimSpace(s)
+	}
+	return strings.Trim(s, cutset[0])
 }
 
 func Unquote(s string) string {
