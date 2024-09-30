@@ -216,6 +216,7 @@ type Context interface {
 	Method() string
 	Format() string
 	SetFormat(string)
+	IsMethod(method string) bool
 	IsPost() bool
 	IsGet() bool
 	IsPut() bool

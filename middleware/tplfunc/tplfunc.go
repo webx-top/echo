@@ -356,9 +356,8 @@ func If(condition bool, yesValue interface{}, noValue interface{}) interface{} {
 
 func InExt(fileName string, exts ...string) bool {
 	ext := filepath.Ext(fileName)
-	ext = strings.ToLower(ext)
 	for _, _ext := range exts {
-		if ext == strings.ToLower(_ext) {
+		if strings.EqualFold(ext, _ext) {
 			return true
 		}
 	}

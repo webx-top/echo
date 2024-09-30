@@ -260,39 +260,43 @@ func (c *xContext) Format() string {
 	return c.format
 }
 
+func (c *xContext) IsMethod(method string) bool {
+	return strings.EqualFold(c.Method(), method)
+}
+
 // IsPost CREATE：在服务器新建一个资源
 func (c *xContext) IsPost() bool {
-	return c.Method() == POST
+	return c.IsMethod(POST)
 }
 
 // IsGet SELECT：从服务器取出资源（一项或多项）
 func (c *xContext) IsGet() bool {
-	return c.Method() == GET
+	return c.IsMethod(GET)
 }
 
 // IsPut UPDATE：在服务器更新资源（客户端提供改变后的完整资源）
 func (c *xContext) IsPut() bool {
-	return c.Method() == PUT
+	return c.IsMethod(PUT)
 }
 
 // IsDel DELETE：从服务器删除资源
 func (c *xContext) IsDel() bool {
-	return c.Method() == DELETE
+	return c.IsMethod(DELETE)
 }
 
 // IsHead 获取资源的元数据
 func (c *xContext) IsHead() bool {
-	return c.Method() == HEAD
+	return c.IsMethod(HEAD)
 }
 
 // IsPatch UPDATE：在服务器更新资源（客户端提供改变的属性）
 func (c *xContext) IsPatch() bool {
-	return c.Method() == PATCH
+	return c.IsMethod(PATCH)
 }
 
 // IsOptions 获取信息，关于资源的哪些属性是客户端可以改变的
 func (c *xContext) IsOptions() bool {
-	return c.Method() == OPTIONS
+	return c.IsMethod(OPTIONS)
 }
 
 func (c *xContext) IsSecure() bool {
@@ -302,7 +306,7 @@ func (c *xContext) IsSecure() bool {
 // IsWebsocket returns boolean of this request is in webSocket.
 func (c *xContext) IsWebsocket() bool {
 	upgrade := c.Header(`Upgrade`)
-	return upgrade == `websocket` || upgrade == `Websocket`
+	return strings.EqualFold(upgrade, `websocket`)
 }
 
 // IsUpload returns boolean of whether file uploads in this request or not..
