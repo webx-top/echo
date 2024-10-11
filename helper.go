@@ -267,6 +267,11 @@ func (h HandlerFuncs) Call(c Context, key string) error {
 	return fn(c)
 }
 
+// https://developers.google.cn/search/docs/crawling-indexing/block-indexing?hl=zh-cn#http-response-header
+func SearchEngineNoindex(c Context) {
+	c.Response().Header().Set(`X-Robots-Tag`, `noindex`)
+}
+
 var DefaultNextURLVarName = `next`
 
 func GetNextURL(ctx Context, varNames ...string) string {
