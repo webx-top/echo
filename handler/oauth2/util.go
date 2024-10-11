@@ -284,7 +284,7 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 
 // validateState ensures that the state token param from the original
 // AuthURL matches the one included in the current (callback) request.
-func validateState(ctx echo.Context, sess goth.Session) error {
+func validateState(ctx echo.Context, _ goth.Session) error {
 	originalState, ok := ctx.Session().Get(StateSessionName).(string)
 	if !ok || len(originalState) == 0 || originalState != GetState(ctx) {
 		return ErrStateTokenMismatch
