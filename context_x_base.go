@@ -16,7 +16,7 @@ import (
 	"github.com/webx-top/poolx/bufferpool"
 )
 
-type xContext struct {
+type XContext struct {
 	Translator
 	events.Emitterer
 	transaction         *BaseTransaction
@@ -52,11 +52,11 @@ type xContext struct {
 	realIP              string
 }
 
-var _ context.Context = (*xContext)(nil)
+var _ context.Context = (*XContext)(nil)
 
 // NewContext creates a Context object.
 func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
-	c := &xContext{
+	c := &XContext{
 		validator:         e.Validator,
 		Translator:        DefaultNopTranslate,
 		Emitterer:         events.Default,
@@ -79,51 +79,51 @@ func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 	return c
 }
 
-func (c *xContext) StdContext() context.Context {
+func (c *XContext) StdContext() context.Context {
 	return c.request.Context()
 }
 
-func (c *xContext) WithContext(ctx context.Context) *http.Request {
+func (c *XContext) WithContext(ctx context.Context) *http.Request {
 	return c.request.WithContext(ctx)
 }
 
-func (c *xContext) SetValue(key string, value interface{}) {
+func (c *XContext) SetValue(key string, value interface{}) {
 	c.request.SetValue(key, value)
 }
 
-func (c *xContext) Internal() *param.SafeMap {
+func (c *XContext) Internal() *param.SafeMap {
 	return c.internal
 }
 
-func (c *xContext) SetEmitterer(emitterer events.Emitterer) {
+func (c *XContext) SetEmitterer(emitterer events.Emitterer) {
 	c.Emitterer = emitterer
 }
 
-func (c *xContext) Handler() Handler {
+func (c *XContext) Handler() Handler {
 	return c.handler
 }
 
-func (c *xContext) Deadline() (deadline time.Time, ok bool) {
+func (c *XContext) Deadline() (deadline time.Time, ok bool) {
 	return c.StdContext().Deadline()
 }
 
-func (c *xContext) Done() <-chan struct{} {
+func (c *XContext) Done() <-chan struct{} {
 	return c.StdContext().Done()
 }
 
-func (c *xContext) Err() error {
+func (c *XContext) Err() error {
 	return c.StdContext().Err()
 }
 
-func (c *xContext) Value(key interface{}) interface{} {
+func (c *XContext) Value(key interface{}) interface{} {
 	return c.StdContext().Value(key)
 }
 
-func (c *xContext) Handle(ctx Context) error {
+func (c *XContext) Handle(ctx Context) error {
 	return c.handler.Handle(ctx)
 }
 
-func (c *xContext) Route() *Route {
+func (c *XContext) Route() *Route {
 	if c.route == nil {
 		if c.rid < 0 || c.rid >= len(c.echo.router.routes) {
 			c.route = defaultRoute
@@ -134,24 +134,24 @@ func (c *xContext) Route() *Route {
 	return c.route
 }
 
-func (c *xContext) SetAuto(on bool) Context {
+func (c *XContext) SetAuto(on bool) Context {
 	c.auto = on
 	return c
 }
 
 // Error invokes the registered HTTP error handler. Generally used by middleware.
-func (c *xContext) Error(err error) {
+func (c *XContext) Error(err error) {
 	c.echo.httpErrorHandler(err, c)
 }
 
-func (c *xContext) NewError(code pkgCode.Code, msg string, args ...interface{}) *Error {
+func (c *XContext) NewError(code pkgCode.Code, msg string, args ...interface{}) *Error {
 	if len(msg) > 0 {
 		msg = c.T(msg, args...)
 	}
 	return NewError(msg, code).NoClone()
 }
 
-func (c *xContext) NewErrorWith(err error, code pkgCode.Code, args ...interface{}) *Error {
+func (c *XContext) NewErrorWith(err error, code pkgCode.Code, args ...interface{}) *Error {
 	var msg string
 	if len(args) > 0 {
 		msg = param.AsString(args[0])
@@ -167,29 +167,29 @@ func (c *xContext) NewErrorWith(err error, code pkgCode.Code, args ...interface{
 }
 
 // Logger returns the `Logger` instance.
-func (c *xContext) Logger() logger.Logger {
+func (c *XContext) Logger() logger.Logger {
 	return c.echo.logger
 }
 
 // Object returns the `context` object.
-func (c *xContext) Object() *xContext {
+func (c *XContext) Object() *XContext {
 	return c
 }
 
 // Echo returns the `Echo` instance.
-func (c *xContext) Echo() *Echo {
+func (c *XContext) Echo() *Echo {
 	return c.echo
 }
 
-func (c *xContext) SetTranslator(t Translator) {
+func (c *XContext) SetTranslator(t Translator) {
 	c.Translator = t
 }
 
-func (c *xContext) SetDefaultExtension(ext string) {
+func (c *XContext) SetDefaultExtension(ext string) {
 	c.defaultExtension = ext
 }
 
-func (c *xContext) DefaultExtension() string {
+func (c *XContext) DefaultExtension() string {
 	if c.withFormatExtension {
 		return `.` + c.Format()
 	}
@@ -199,7 +199,7 @@ func (c *xContext) DefaultExtension() string {
 	return c.echo.defaultExtension
 }
 
-func (c *xContext) Reset(req engine.Request, res engine.Response) {
+func (c *XContext) Reset(req engine.Request, res engine.Response) {
 	if req != nil {
 		req.SetMaxSize(c.echo.MaxRequestBodySize())
 	}
@@ -240,36 +240,36 @@ func (c *xContext) Reset(req engine.Request, res engine.Response) {
 	}
 }
 
-func (c *xContext) GetFunc(key string) interface{} {
+func (c *XContext) GetFunc(key string) interface{} {
 	return c.funcs[key]
 }
 
-func (c *xContext) SetFunc(key string, val interface{}) {
+func (c *XContext) SetFunc(key string, val interface{}) {
 	if ctxFunc, ok := val.(func(Context) interface{}); ok {
 		val = ctxFunc(c)
 	}
 	c.funcs[key] = val
 }
 
-func (c *xContext) ResetFuncs(funcs map[string]interface{}) {
+func (c *XContext) ResetFuncs(funcs map[string]interface{}) {
 	c.funcs = map[string]interface{}{}
 	for name, fn := range funcs {
 		c.SetFunc(name, fn)
 	}
 }
 
-func (c *xContext) Funcs() map[string]interface{} {
+func (c *XContext) Funcs() map[string]interface{} {
 	return c.funcs
 }
 
-func (c *xContext) Renderer() Renderer {
+func (c *XContext) Renderer() Renderer {
 	if c.renderer != nil {
 		return c.renderer
 	}
 	return c.echo.renderer
 }
 
-func (c *xContext) getRenderData(data interface{}) interface{} {
+func (c *XContext) getRenderData(data interface{}) interface{} {
 	if data == nil {
 		data = c.dataEngine.GetData()
 		if c.renderDataWrapper == nil {
@@ -289,7 +289,7 @@ func (c *xContext) getRenderData(data interface{}) interface{} {
 	return data
 }
 
-func (c *xContext) Fetch(name string, data interface{}) (b []byte, err error) {
+func (c *XContext) Fetch(name string, data interface{}) (b []byte, err error) {
 	name, err = c.echo.Template(c, name, data)
 	if err != nil {
 		return
@@ -311,75 +311,75 @@ func (c *xContext) Fetch(name string, data interface{}) (b []byte, err error) {
 	return
 }
 
-func (c *xContext) Validate(item interface{}, args ...interface{}) error {
+func (c *XContext) Validate(item interface{}, args ...interface{}) error {
 	return Validate(c, item, args...)
 }
 
-func (c *xContext) Validator() Validator {
+func (c *XContext) Validator() Validator {
 	return c.validator
 }
 
-func (c *xContext) SetValidator(v Validator) {
+func (c *XContext) SetValidator(v Validator) {
 	c.validator = v
 }
 
 // SetRenderer registers an HTML template renderer.
-func (c *xContext) SetRenderer(r Renderer) {
+func (c *XContext) SetRenderer(r Renderer) {
 	c.renderer = r
 }
 
 // SetRenderDataWrapper .
-func (c *xContext) SetRenderDataWrapper(dataWrapper DataWrapper) {
+func (c *XContext) SetRenderDataWrapper(dataWrapper DataWrapper) {
 	c.renderDataWrapper = dataWrapper
 }
 
 // RenderDataWrapper .
-func (c *xContext) RenderDataWrapper() DataWrapper {
+func (c *XContext) RenderDataWrapper() DataWrapper {
 	return c.renderDataWrapper
 }
 
-func (c *xContext) SetSessioner(s Sessioner) {
+func (c *XContext) SetSessioner(s Sessioner) {
 	c.sessioner = s
 }
 
-func (c *xContext) Atop(v string) param.String {
+func (c *XContext) Atop(v string) param.String {
 	return param.String(v)
 }
 
-func (c *xContext) ToParamString(v string) param.String {
+func (c *XContext) ToParamString(v string) param.String {
 	return param.String(v)
 }
 
-func (c *xContext) ToStringSlice(v []string) param.StringSlice {
+func (c *XContext) ToStringSlice(v []string) param.StringSlice {
 	return param.StringSlice(v)
 }
 
-func (c *xContext) SetFormat(format string) {
+func (c *XContext) SetFormat(format string) {
 	c.format = format
 }
 
-func (c *xContext) WithFormatExtension(on bool) {
+func (c *XContext) WithFormatExtension(on bool) {
 	c.withFormatExtension = on
 }
 
-func (c *xContext) SetCode(code int) {
+func (c *XContext) SetCode(code int) {
 	c.code = code
 }
 
-func (c *xContext) Code() int {
+func (c *XContext) Code() int {
 	return c.code
 }
 
-func (c *xContext) SetData(data Data) {
+func (c *XContext) SetData(data Data) {
 	c.dataEngine = data
 }
 
-func (c *xContext) Data() Data {
+func (c *XContext) Data() Data {
 	return c.dataEngine
 }
 
 // MapData 映射数据到结构体
-func (c *xContext) MapData(i interface{}, data map[string][]string, names ...string) error {
+func (c *XContext) MapData(i interface{}, data map[string][]string, names ...string) error {
 	var name string
 	if len(names) > 0 {
 		name = names[0]
@@ -387,7 +387,7 @@ func (c *xContext) MapData(i interface{}, data map[string][]string, names ...str
 	return FormToStruct(c.echo, i, data, name)
 }
 
-func (c *xContext) AddPreResponseHook(hook func() error) Context {
+func (c *XContext) AddPreResponseHook(hook func() error) Context {
 	if c.preResponseHook == nil {
 		c.preResponseHook = []func() error{hook}
 	} else {
@@ -396,24 +396,24 @@ func (c *xContext) AddPreResponseHook(hook func() error) Context {
 	return c
 }
 
-func (c *xContext) SetPreResponseHook(hook ...func() error) Context {
+func (c *XContext) SetPreResponseHook(hook ...func() error) Context {
 	c.preResponseHook = hook
 	return c
 }
 
-func (c *xContext) OnHostFound(onHostFound func(Context) (bool, error)) Context {
+func (c *XContext) OnHostFound(onHostFound func(Context) (bool, error)) Context {
 	c.onHostFound = onHostFound
 	return c
 }
 
-func (c *xContext) FireHostFound() (bool, error) {
+func (c *XContext) FireHostFound() (bool, error) {
 	if c.onHostFound == nil {
 		return true, nil
 	}
 	return c.onHostFound(c)
 }
 
-func (c *xContext) preResponse() error {
+func (c *XContext) preResponse() error {
 	if c.preResponseHook == nil {
 		c.cookier.Send()
 		return nil
@@ -427,13 +427,13 @@ func (c *xContext) preResponse() error {
 	return nil
 }
 
-func (c *xContext) PrintFuncs() {
+func (c *XContext) PrintFuncs() {
 	for key, fn := range c.Funcs() {
 		fmt.Printf("[Template Func](%p) %-15s -> %s \n", fn, key, HandlerName(fn))
 	}
 }
 
-func (c *xContext) Dispatch(route string) Handler {
+func (c *XContext) Dispatch(route string) Handler {
 	u, err := url.Parse(route)
 	if err != nil {
 		return ErrorHandler(err)

@@ -49,7 +49,7 @@ func TestMustGetContext(t *testing.T) {
 	assert.Equal(t, req.Form.Get(`reqTest`), req2.Form.Get(`reqTest`))
 	assert.Equal(t, `000`, req2.Context().Value(testContextKey).(string))
 	assert.Equal(t, `*context.valueCtx`, fmt.Sprintf("%T", req2.Context()))
-	assert.Equal(t, `*echo.xContext`, fmt.Sprintf("%T", MustGetContext(req2.Context())))
+	assert.Equal(t, `*echo.XContext`, fmt.Sprintf("%T", MustGetContext(req2.Context())))
 	assert.Equal(t, `0`, MustGetContext(req2.Context()).Internal().String(`_`))
 
 	req3 := req.WithContext(context.WithValue(req.Context(), testContextKey, `000`))
@@ -57,7 +57,7 @@ func TestMustGetContext(t *testing.T) {
 	assert.Equal(t, req.Form.Get(`reqTest`), req3.Form.Get(`reqTest`))
 	assert.Equal(t, `000`, req3.Context().Value(testContextKey).(string))
 	assert.Equal(t, `*context.valueCtx`, fmt.Sprintf("%T", req3.Context()))
-	assert.Equal(t, `*echo.xContext`, fmt.Sprintf("%T", MustGetContext(req3.Context())))
+	assert.Equal(t, `*echo.XContext`, fmt.Sprintf("%T", MustGetContext(req3.Context())))
 	assert.Equal(t, `0`, MustGetContext(req3.Context()).Internal().String(`_`))
 	assert.True(t, IsMockContext(eCtx))
 }

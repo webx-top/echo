@@ -497,7 +497,7 @@ func (m *methodHandler) checkMethodNotAllowed() HandlerFunc {
 	return NotFoundHandler
 }
 
-func (m *methodHandler) applyHandler(method string, ctx *xContext) {
+func (m *methodHandler) applyHandler(method string, ctx *XContext) {
 	endpoint := m.find(method)
 	if endpoint != nil {
 		ctx.handler = endpoint.handler
@@ -905,7 +905,7 @@ func (n *node) checkMethodNotAllowed() Handler {
 	return n.methodHandler.checkMethodNotAllowed()
 }
 
-func (n *node) applyHandler(method string, ctx *xContext) {
+func (n *node) applyHandler(method string, ctx *XContext) {
 	n.methodHandler.applyHandler(method, ctx)
 	ctx.path = n.ppath
 	ctx.pnames = n.pnames

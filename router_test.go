@@ -38,7 +38,7 @@ func TestRouterRegexpKind(t *testing.T) {
 	ctx := e.NewContext(nil, nil)
 	found := r.Find(`GET`, `/1_2000_2/123`, ctx)
 	assert.True(t, found)
-	assert.Equal(t, fmt.Sprintf(`%p`, h), fmt.Sprintf(`%p`, ctx.(*xContext).handler))
+	assert.Equal(t, fmt.Sprintf(`%p`, h), fmt.Sprintf(`%p`, ctx.(*XContext).handler))
 
 	ctx = e.NewContext(nil, nil)
 	found = r.Find(`GET`, `/1_2000_3/123`, ctx)
@@ -68,8 +68,8 @@ func TestRouterRegexpKind2(t *testing.T) {
 	ctx := e.NewContext(nil, nil)
 	found := r.Find(`GET`, `/1_2000_2/123/100`, ctx)
 	assert.True(t, found)
-	fmt.Println(HandlerName(ctx.(*xContext).handler))
-	assert.Equal(t, fmt.Sprintf(`%p`, h2), fmt.Sprintf(`%p`, ctx.(*xContext).handler))
+	fmt.Println(HandlerName(ctx.(*XContext).handler))
+	assert.Equal(t, fmt.Sprintf(`%p`, h2), fmt.Sprintf(`%p`, ctx.(*XContext).handler))
 }
 
 func TestRouterRegexpKind3(t *testing.T) {
@@ -93,7 +93,7 @@ func TestRouterRegexpKind3(t *testing.T) {
 	ctx := e.NewContext(nil, nil)
 	found := r.Find(`GET`, `/g/100`, ctx)
 	assert.True(t, found)
-	assert.Equal(t, fmt.Sprintf(`%p`, h2), fmt.Sprintf(`%p`, ctx.(*xContext).handler))
+	assert.Equal(t, fmt.Sprintf(`%p`, h2), fmt.Sprintf(`%p`, ctx.(*XContext).handler))
 
 	ctx = e.NewContext(nil, nil)
 	found = r.Find(`GET`, `/g/a`, ctx)
@@ -126,7 +126,7 @@ func TestRouterRegexpKind4(t *testing.T) {
 	ctx := e.NewContext(nil, nil)
 	found := r.Find(`GET`, `/g/b100`, ctx)
 	assert.True(t, found)
-	assert.Equal(t, fmt.Sprintf(`%p`, h2), fmt.Sprintf(`%p`, ctx.(*xContext).handler))
+	assert.Equal(t, fmt.Sprintf(`%p`, h2), fmt.Sprintf(`%p`, ctx.(*XContext).handler))
 }
 
 func TestRouterParamKind(t *testing.T) {

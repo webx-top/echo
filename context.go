@@ -46,7 +46,7 @@ type Context interface {
 	Response() engine.Response
 	Handle(Context) error
 	Logger() logger.Logger
-	Object() *xContext
+	Object() *XContext
 	Echo() *Echo
 	Route() *Route
 	Reset(engine.Request, engine.Response)

@@ -14,17 +14,17 @@ import (
 )
 
 // Request returns *http.Request.
-func (c *xContext) Request() engine.Request {
+func (c *XContext) Request() engine.Request {
 	return c.request
 }
 
 // Path returns the registered path for the handler.
-func (c *xContext) Path() string {
+func (c *XContext) Path() string {
 	return c.path
 }
 
 // P returns path parameter by index.
-func (c *xContext) P(i int, defaults ...string) (value string) {
+func (c *XContext) P(i int, defaults ...string) (value string) {
 	l := len(c.pvalues)
 	if i < l {
 		value = c.pvalues[i]
@@ -35,12 +35,12 @@ func (c *xContext) P(i int, defaults ...string) (value string) {
 	return
 }
 
-func (c *xContext) Px(n int, defaults ...string) param.String {
+func (c *XContext) Px(n int, defaults ...string) param.String {
 	return param.String(c.P(n, defaults...))
 }
 
 // Param returns path parameter by name.
-func (c *xContext) Param(name string, defaults ...string) (value string) {
+func (c *XContext) Param(name string, defaults ...string) (value string) {
 	l := len(c.pvalues)
 	for i, n := range c.pnames {
 		if i < l && n == name {
@@ -55,19 +55,19 @@ func (c *xContext) Param(name string, defaults ...string) (value string) {
 	return
 }
 
-func (c *xContext) Paramx(name string, defaults ...string) param.String {
+func (c *XContext) Paramx(name string, defaults ...string) param.String {
 	return param.String(c.Param(name, defaults...))
 }
 
-func (c *xContext) ParamNames() []string {
+func (c *XContext) ParamNames() []string {
 	return c.pnames
 }
 
-func (c *xContext) ParamValues() []string {
+func (c *XContext) ParamValues() []string {
 	return c.pvalues[:len(c.pvalues)]
 }
 
-func (c *xContext) SetParamNames(names ...string) {
+func (c *XContext) SetParamNames(names ...string) {
 	c.pnames = names
 
 	l := len(names)
@@ -84,7 +84,7 @@ func (c *xContext) SetParamNames(names ...string) {
 	}
 }
 
-func (c *xContext) SetParamValues(values ...string) {
+func (c *XContext) SetParamValues(values ...string) {
 	// NOTE: Don't just set c.pvalues = values, because it has to have length c.echo.maxParam at all times
 	// It will brake the Router#Find code
 	limit := len(values)
@@ -96,29 +96,29 @@ func (c *xContext) SetParamValues(values ...string) {
 	}
 }
 
-func (c *xContext) AddHostParam(name string, value string) {
+func (c *XContext) AddHostParam(name string, value string) {
 	c.hnames = append(c.hnames, name)
 	c.hvalues = append(c.hvalues, value)
 }
 
-func (c *xContext) SetHostParamNames(names ...string) {
+func (c *XContext) SetHostParamNames(names ...string) {
 	c.hnames = names
 }
 
-func (c *xContext) SetHostParamValues(values ...string) {
+func (c *XContext) SetHostParamValues(values ...string) {
 	c.hvalues = values
 }
 
-func (c *xContext) HostParamNames() []string {
+func (c *XContext) HostParamNames() []string {
 	return c.hnames
 }
 
-func (c *xContext) HostParamValues() []string {
+func (c *XContext) HostParamValues() []string {
 	return c.hvalues[:len(c.hvalues)]
 }
 
 // HostP returns host parameter by index.
-func (c *xContext) HostP(i int, defaults ...string) (value string) {
+func (c *XContext) HostP(i int, defaults ...string) (value string) {
 	l := len(c.hvalues)
 	if i < l {
 		value = c.hvalues[i]
@@ -130,7 +130,7 @@ func (c *xContext) HostP(i int, defaults ...string) (value string) {
 }
 
 // HostParam returns host parameter by name.
-func (c *xContext) HostParam(name string, defaults ...string) (value string) {
+func (c *XContext) HostParam(name string, defaults ...string) (value string) {
 	l := len(c.hvalues)
 	for i, n := range c.hnames {
 		if i < l && n == name {
@@ -146,7 +146,7 @@ func (c *xContext) HostParam(name string, defaults ...string) (value string) {
 }
 
 // Query returns query parameter by name.
-func (c *xContext) Query(name string, defaults ...string) (value string) {
+func (c *XContext) Query(name string, defaults ...string) (value string) {
 	value = c.request.URL().QueryValue(name)
 	if len(value) == 0 && len(defaults) > 0 {
 		return defaults[0]
@@ -154,24 +154,24 @@ func (c *xContext) Query(name string, defaults ...string) (value string) {
 	return
 }
 
-func (c *xContext) Queryx(name string, defaults ...string) param.String {
+func (c *XContext) Queryx(name string, defaults ...string) param.String {
 	return param.String(c.Query(name, defaults...))
 }
 
-func (c *xContext) QueryValues(name string) []string {
+func (c *XContext) QueryValues(name string) []string {
 	return c.request.URL().QueryValues(name)
 }
 
-func (c *xContext) QueryxValues(name string) param.StringSlice {
+func (c *XContext) QueryxValues(name string) param.StringSlice {
 	return param.StringSlice(c.request.URL().QueryValues(name))
 }
 
-func (c *xContext) Queries() map[string][]string {
+func (c *XContext) Queries() map[string][]string {
 	return c.request.URL().Query()
 }
 
 // Form returns form parameter by name.
-func (c *xContext) Form(name string, defaults ...string) (value string) {
+func (c *XContext) Form(name string, defaults ...string) (value string) {
 	value = c.request.FormValue(name)
 	if len(value) == 0 && len(defaults) > 0 {
 		return defaults[0]
@@ -179,69 +179,69 @@ func (c *xContext) Form(name string, defaults ...string) (value string) {
 	return
 }
 
-func (c *xContext) Formx(name string, defaults ...string) param.String {
+func (c *XContext) Formx(name string, defaults ...string) param.String {
 	return param.String(c.Form(name, defaults...))
 }
 
-func (c *xContext) FormValues(name string) []string {
+func (c *XContext) FormValues(name string) []string {
 	return c.request.Form().Gets(name)
 }
 
-func (c *xContext) FormxValues(name string) param.StringSlice {
+func (c *XContext) FormxValues(name string) param.StringSlice {
 	return param.StringSlice(c.request.Form().Gets(name))
 }
 
-func (c *xContext) Forms() map[string][]string {
+func (c *XContext) Forms() map[string][]string {
 	return c.request.Form().All()
 }
 
 // Bind binds the request body into specified type `i`. The default binder does
 // it based on Content-Type header.
-func (c *xContext) Bind(i interface{}, filter ...FormDataFilter) error {
+func (c *XContext) Bind(i interface{}, filter ...FormDataFilter) error {
 	return c.echo.binder.Bind(i, c, filter...)
 }
 
-func (c *xContext) BindAndValidate(i interface{}, filter ...FormDataFilter) error {
+func (c *XContext) BindAndValidate(i interface{}, filter ...FormDataFilter) error {
 	return c.echo.binder.BindAndValidate(i, c, filter...)
 }
 
-func (c *xContext) MustBind(i interface{}, filter ...FormDataFilter) error {
+func (c *XContext) MustBind(i interface{}, filter ...FormDataFilter) error {
 	return c.echo.binder.MustBind(i, c, filter...)
 }
 
-func (c *xContext) MustBindAndValidate(i interface{}, filter ...FormDataFilter) error {
+func (c *XContext) MustBindAndValidate(i interface{}, filter ...FormDataFilter) error {
 	return c.echo.binder.MustBindAndValidate(i, c, filter...)
 }
 
-func (c *xContext) BindWithDecoder(i interface{}, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+func (c *XContext) BindWithDecoder(i interface{}, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 	return c.echo.binder.BindWithDecoder(i, c, valueDecoders, filter...)
 }
 
-func (c *xContext) BindAndValidateWithDecoder(i interface{}, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+func (c *XContext) BindAndValidateWithDecoder(i interface{}, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 	return c.echo.binder.BindAndValidateWithDecoder(i, c, valueDecoders, filter...)
 }
 
-func (c *xContext) MustBindWithDecoder(i interface{}, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+func (c *XContext) MustBindWithDecoder(i interface{}, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 	return c.echo.binder.MustBindWithDecoder(i, c, valueDecoders, filter...)
 }
 
-func (c *xContext) MustBindAndValidateWithDecoder(i interface{}, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+func (c *XContext) MustBindAndValidateWithDecoder(i interface{}, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 	return c.echo.binder.MustBindAndValidateWithDecoder(i, c, valueDecoders, filter...)
 }
 
-func (c *xContext) Header(name string) string {
+func (c *XContext) Header(name string) string {
 	return c.Request().Header().Get(name)
 }
 
-func (c *xContext) IsAjax() bool {
+func (c *XContext) IsAjax() bool {
 	return c.Header(`X-Requested-With`) == `XMLHttpRequest`
 }
 
-func (c *xContext) IsPjax() bool {
+func (c *XContext) IsPjax() bool {
 	return len(c.Header(`X-PJAX`)) > 0 || len(c.PjaxContainer()) > 0
 }
 
-func (c *xContext) PjaxContainer() string {
+func (c *XContext) PjaxContainer() string {
 	container := c.Header(`X-PJAX-Container`)
 	if len(container) > 0 {
 		return container
@@ -249,75 +249,75 @@ func (c *xContext) PjaxContainer() string {
 	return c.Query(`_pjax`)
 }
 
-func (c *xContext) Method() string {
+func (c *XContext) Method() string {
 	return c.Request().Method()
 }
 
-func (c *xContext) Format() string {
+func (c *XContext) Format() string {
 	if len(c.format) == 0 {
 		c.format = c.ResolveFormat()
 	}
 	return c.format
 }
 
-func (c *xContext) IsMethod(method string) bool {
+func (c *XContext) IsMethod(method string) bool {
 	return strings.EqualFold(c.Method(), method)
 }
 
 // IsPost CREATE：在服务器新建一个资源
-func (c *xContext) IsPost() bool {
+func (c *XContext) IsPost() bool {
 	return c.IsMethod(POST)
 }
 
 // IsGet SELECT：从服务器取出资源（一项或多项）
-func (c *xContext) IsGet() bool {
+func (c *XContext) IsGet() bool {
 	return c.IsMethod(GET)
 }
 
 // IsPut UPDATE：在服务器更新资源（客户端提供改变后的完整资源）
-func (c *xContext) IsPut() bool {
+func (c *XContext) IsPut() bool {
 	return c.IsMethod(PUT)
 }
 
 // IsDel DELETE：从服务器删除资源
-func (c *xContext) IsDel() bool {
+func (c *XContext) IsDel() bool {
 	return c.IsMethod(DELETE)
 }
 
 // IsHead 获取资源的元数据
-func (c *xContext) IsHead() bool {
+func (c *XContext) IsHead() bool {
 	return c.IsMethod(HEAD)
 }
 
 // IsPatch UPDATE：在服务器更新资源（客户端提供改变的属性）
-func (c *xContext) IsPatch() bool {
+func (c *XContext) IsPatch() bool {
 	return c.IsMethod(PATCH)
 }
 
 // IsOptions 获取信息，关于资源的哪些属性是客户端可以改变的
-func (c *xContext) IsOptions() bool {
+func (c *XContext) IsOptions() bool {
 	return c.IsMethod(OPTIONS)
 }
 
-func (c *xContext) IsSecure() bool {
+func (c *XContext) IsSecure() bool {
 	return c.Scheme() == `https`
 }
 
 // IsWebsocket returns boolean of this request is in webSocket.
-func (c *xContext) IsWebsocket() bool {
+func (c *XContext) IsWebsocket() bool {
 	upgrade := c.Header(`Upgrade`)
 	return strings.EqualFold(upgrade, `websocket`)
 }
 
 // IsUpload returns boolean of whether file uploads in this request or not..
-func (c *xContext) IsUpload() bool {
+func (c *XContext) IsUpload() bool {
 	return c.ResolveContentType() == MIMEMultipartForm
 }
 
 // ResolveContentType Get the content type.
 // e.g. From `multipart/form-data; boundary=--` to `multipart/form-data`
 // If none is specified, returns `text/html` by default.
-func (c *xContext) ResolveContentType() string {
+func (c *XContext) ResolveContentType() string {
 	contentType := c.Header(HeaderContentType)
 	if len(contentType) == 0 {
 		return `text/html`
@@ -329,7 +329,7 @@ func (c *xContext) ResolveContentType() string {
 // a Request.Format attribute, specifically `html`, `xml`, `json`, or `txt`,
 // returning a default of `html` when Accept header cannot be mapped to a
 // value above.
-func (c *xContext) ResolveFormat() string {
+func (c *XContext) ResolveFormat() string {
 	if format := c.Query(`format`); len(format) > 0 {
 		return format
 	}
@@ -354,7 +354,7 @@ func (c *xContext) ResolveFormat() string {
 	return `html`
 }
 
-func (c *xContext) Accept() *Accepts {
+func (c *XContext) Accept() *Accepts {
 	if c.accept != nil {
 		return c.accept
 	}
@@ -366,20 +366,20 @@ func (c *xContext) Accept() *Accepts {
 }
 
 // Protocol returns request protocol name, such as HTTP/1.1 .
-func (c *xContext) Protocol() string {
+func (c *XContext) Protocol() string {
 	return c.Request().Proto()
 }
 
 // Site returns base site url as scheme://domain/ type.
-func (c *xContext) Site() string {
+func (c *XContext) Site() string {
 	return c.Scheme() + `://` + c.Request().Host() + `/`
 }
 
-func (c *xContext) FullRequestURI() string {
+func (c *XContext) FullRequestURI() string {
 	return c.Scheme() + `://` + c.Request().Host() + c.RequestURI()
 }
 
-func (c *xContext) RequestURI() string {
+func (c *XContext) RequestURI() string {
 	if len(c.Request().URI()) == 0 {
 		q := c.Request().URL().RawQuery()
 		if len(q) > 0 {
@@ -391,7 +391,7 @@ func (c *xContext) RequestURI() string {
 }
 
 // Scheme returns request scheme as `http` or `https`.
-func (c *xContext) Scheme() string {
+func (c *XContext) Scheme() string {
 	scheme := c.Header(HeaderXForwardedProto)
 	if len(scheme) > 0 {
 		return scheme
@@ -401,13 +401,13 @@ func (c *xContext) Scheme() string {
 
 // Domain returns host name.
 // Alias of Host method.
-func (c *xContext) Domain() string {
+func (c *XContext) Domain() string {
 	return c.Host()
 }
 
 // Host returns host name.
 // if no host info in request, return localhost.
-func (c *xContext) Host() string {
+func (c *XContext) Host() string {
 	host := c.Request().Host()
 	if len(host) > 0 {
 		delim := `:`
@@ -429,7 +429,7 @@ func (c *xContext) Host() string {
 }
 
 // Proxy returns proxy client ips slice.
-func (c *xContext) Proxy() []string {
+func (c *XContext) Proxy() []string {
 	if ips := c.Header(`X-Forwarded-For`); len(ips) > 0 {
 		return strings.Split(ips, `,`)
 	}
@@ -437,11 +437,11 @@ func (c *xContext) Proxy() []string {
 }
 
 // Referer returns http referer header.
-func (c *xContext) Referer() string {
+func (c *XContext) Referer() string {
 	return c.Header(`Referer`)
 }
 
-func (c *xContext) RealIP() string {
+func (c *XContext) RealIP() string {
 	if len(c.realIP) > 0 {
 		return c.realIP
 	}
@@ -451,7 +451,7 @@ func (c *xContext) RealIP() string {
 
 // Port returns request client port.
 // when error or empty, return 80.
-func (c *xContext) Port() int {
+func (c *XContext) Port() int {
 	host := c.Request().Host()
 	delim := `:`
 	if len(host) > 0 && host[0] == '[' {
@@ -483,11 +483,11 @@ func (c *xContext) Port() int {
 //
 //	var user User
 //	err := c.MapForm(&user,`user`)
-func (c *xContext) MapForm(i interface{}, names ...string) error {
+func (c *XContext) MapForm(i interface{}, names ...string) error {
 	return c.MapData(i, c.Request().Form().All(), names...)
 }
 
-func (c *xContext) SaveUploadedFile(fieldName string, saveAbsPath string, saveFileName ...func(*multipart.FileHeader) (string, error)) (*multipart.FileHeader, error) {
+func (c *XContext) SaveUploadedFile(fieldName string, saveAbsPath string, saveFileName ...func(*multipart.FileHeader) (string, error)) (*multipart.FileHeader, error) {
 	fileSrc, fileHdr, err := c.Request().FormFile(fieldName)
 	if err != nil {
 		return fileHdr, err
@@ -515,7 +515,7 @@ func (c *xContext) SaveUploadedFile(fieldName string, saveAbsPath string, saveFi
 	return fileHdr, nil
 }
 
-func (c *xContext) SaveUploadedFileToWriter(fieldName string, writer io.Writer) (*multipart.FileHeader, error) {
+func (c *XContext) SaveUploadedFileToWriter(fieldName string, writer io.Writer) (*multipart.FileHeader, error) {
 	fileSrc, fileHdr, err := c.Request().FormFile(fieldName)
 	if err != nil {
 		return fileHdr, err
@@ -527,7 +527,7 @@ func (c *xContext) SaveUploadedFileToWriter(fieldName string, writer io.Writer) 
 	return fileHdr, nil
 }
 
-func (c *xContext) SaveUploadedFiles(fieldName string, savePath func(*multipart.FileHeader) (string, error)) error {
+func (c *XContext) SaveUploadedFiles(fieldName string, savePath func(*multipart.FileHeader) (string, error)) error {
 	m, err := c.Request().MultipartForm()
 	if err != nil {
 		return err
@@ -571,7 +571,7 @@ func (c *xContext) SaveUploadedFiles(fieldName string, savePath func(*multipart.
 	return nil
 }
 
-func (c *xContext) SaveUploadedFilesToWriter(fieldName string, writer func(*multipart.FileHeader) (io.Writer, error)) error {
+func (c *XContext) SaveUploadedFilesToWriter(fieldName string, writer func(*multipart.FileHeader) (io.Writer, error)) error {
 	m, err := c.Request().MultipartForm()
 	if err != nil {
 		return err
@@ -613,6 +613,6 @@ func (c *xContext) SaveUploadedFilesToWriter(fieldName string, writer func(*mult
 }
 
 // HasAnyRequest 是否提交了参数
-func (c *xContext) HasAnyRequest() bool {
+func (c *XContext) HasAnyRequest() bool {
 	return len(c.Request().Form().All()) > 0
 }
