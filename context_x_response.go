@@ -23,7 +23,7 @@ func (c *xContext) Response() engine.Response {
 
 // Render renders a template with data and sends a text/html response with status
 // code. Templates can be registered using `Echo.SetRenderer()`.
-func (c *xContext) Render(name string, data interface{}, codes ...int) (err error) {
+func (c *xContext) Render(name string, data interface{}, codes ...int) error {
 	if c.auto {
 		if ok, err := c.echo.AutoDetectRenderFormat(c, data); ok {
 			return err
@@ -32,12 +32,11 @@ func (c *xContext) Render(name string, data interface{}, codes ...int) (err erro
 	c.dataEngine.SetTmplFuncs()
 	b, err := c.Fetch(name, data)
 	if err != nil {
-		return
+		return err
 	}
 	b = bytes.TrimLeftFunc(b, unicode.IsSpace)
 	c.response.Header().Set(HeaderContentType, MIMETextHTMLCharsetUTF8)
-	err = c.Blob(b, codes...)
-	return
+	return c.Blob(b, codes...)
 }
 
 func (c *xContext) RenderBy(name string, content func(string) ([]byte, error), data interface{}, codes ...int) (b []byte, err error) {
@@ -64,17 +63,15 @@ func (c *xContext) RenderBy(name string, content func(string) ([]byte, error), d
 }
 
 // HTML sends an HTTP response with status code.
-func (c *xContext) HTML(html string, codes ...int) (err error) {
+func (c *xContext) HTML(html string, codes ...int) error {
 	c.response.Header().Set(HeaderContentType, MIMETextHTMLCharsetUTF8)
-	err = c.Blob([]byte(html), codes...)
-	return
+	return c.Blob(engine.Str2bytes(html), codes...)
 }
 
 // String sends a string response with status code.
-func (c *xContext) String(s string, codes ...int) (err error) {
+func (c *xContext) String(s string, codes ...int) error {
 	c.response.Header().Set(HeaderContentType, MIMETextPlainCharsetUTF8)
-	err = c.Blob([]byte(s), codes...)
-	return
+	return c.Blob(engine.Str2bytes(s), codes...)
 }
 
 func (c *xContext) Blob(b []byte, codes ...int) (err error) {
@@ -167,35 +164,32 @@ func (c *xContext) XMLBlob(b []byte, codes ...int) (err error) {
 	return
 }
 
-func (c *xContext) Stream(step func(w io.Writer) bool) error {
+func (c *xContext) Stream(step func(w io.Writer) (bool, error)) error {
 	return c.response.Stream(step)
 }
 
-func (c *xContext) SSEvent(event string, data chan interface{}) (err error) {
+func (c *xContext) SSEvent(event string, data chan interface{}) error {
 	hdr := c.response.Header()
 	hdr.Set(HeaderContentType, MIMEEventStream)
 	hdr.Set(HeaderCacheControl, `no-cache`)
 	hdr.Set(HeaderConnection, `keep-alive`)
 	hdr.Set(HeaderTransferEncoding, `chunked`)
-	err = c.Stream(func(w io.Writer) bool {
+	return c.Stream(func(w io.Writer) (bool, error) {
 		recv, ok := <-data
 		if !ok {
-			return ok
+			return ok, nil
 		}
-		b, _err := c.Fetch(event, recv)
-		if _err != nil {
-			err = _err
-			return false
+		b, err := c.Fetch(event, recv)
+		if err != nil {
+			return false, err
 		}
 		//c.Logger().Debugf(`SSEvent: %s`, b)
-		_, _err = w.Write(b)
-		if _err != nil {
-			err = _err
-			return false
+		_, err = w.Write(b)
+		if err != nil {
+			return false, err
 		}
-		return true
+		return true, err
 	})
-	return
 }
 
 func (c *xContext) Attachment(r io.Reader, name string, modtime time.Time, inline ...bool) error {

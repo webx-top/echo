@@ -160,16 +160,16 @@ func (r *Response) ServeContent(content io.ReadSeeker, name string, modtime time
 	r.committed = true
 }
 
-func (r *Response) Stream(step func(io.Writer) bool) (err error) {
+func (r *Response) Stream(step func(io.Writer) (bool, error)) (err error) {
 	for {
 		select {
 		case <-r.request.Context().Done():
-			return
+			return nil
 		default:
-			keepOpen := step(r)
+			keepOpen, err := step(r)
 			r.Flush()
-			if !keepOpen {
-				return
+			if !keepOpen || err != nil {
+				return err
 			}
 		}
 	}

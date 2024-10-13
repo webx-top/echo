@@ -204,19 +204,19 @@ func (r *Response) ServeContent(content io.ReadSeeker, name string, modtime time
 	r.mutex.Unlock()
 }
 
-func (r *Response) Stream(step func(io.Writer) bool) (err error) {
+func (r *Response) Stream(step func(io.Writer) (bool, error)) error {
 	r.mutex.RLock()
 	ctx := r.request.Context()
 	r.mutex.RUnlock()
 	for {
 		select {
 		case <-ctx.Done():
-			return
+			return nil
 		default:
-			keepOpen := step(r)
+			keepOpen, err := step(r)
 			r.Flush()
-			if !keepOpen {
-				return
+			if !keepOpen || err != nil {
+				return err
 			}
 		}
 	}

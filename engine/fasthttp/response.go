@@ -147,7 +147,7 @@ func (r *Response) ServeContent(content io.ReadSeeker, name string, modtime time
 	r.committed = true
 }
 
-func (r *Response) Stream(step func(io.Writer) bool) (err error) {
+func (r *Response) Stream(step func(io.Writer) (bool, error)) (err error) {
 	err = echo.ErrNotImplemented
 	return
 	// r.request.context.SetBodyStreamWriter(func(w *bufio.Writer) {
