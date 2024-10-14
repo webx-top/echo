@@ -2,24 +2,23 @@ package param
 
 import (
 	"html/template"
-	"sync"
 	"time"
+
+	"github.com/webx-top/com"
 )
 
 func NewMap() *SafeMap {
-	return &SafeMap{}
+	return &SafeMap{
+		SafeMap: com.NewSafeMap[any, any](),
+	}
 }
 
 type SafeMap struct {
-	sync.Map
-}
-
-func (s *SafeMap) Set(key, value interface{}) {
-	s.Store(key, value)
+	*com.SafeMap[any, any]
 }
 
 func (s *SafeMap) Get(key interface{}, defaults ...interface{}) interface{} {
-	value, ok := s.Load(key)
+	value, ok := s.GetOk(key)
 	if (!ok || value == nil) && len(defaults) > 0 {
 		if fallback, ok := defaults[0].(func() interface{}); ok {
 			return fallback()
@@ -29,17 +28,33 @@ func (s *SafeMap) Get(key interface{}, defaults ...interface{}) interface{} {
 	return value
 }
 
-func (s *SafeMap) GetOk(key interface{}) (interface{}, bool) {
-	return s.Load(key)
-}
-
 func (s *SafeMap) Has(key interface{}) bool {
-	_, ok := s.Load(key)
+	_, ok := s.GetOk(key)
 	return ok
 }
 
 func (s *SafeMap) GetOrSet(key, value interface{}) (actual interface{}, loaded bool) {
-	return s.LoadOrStore(key, value)
+	actual, loaded = s.GetOk(key)
+	if loaded {
+		return
+	}
+	if f, y := value.(func() interface{}); y {
+		actual = f()
+	} else {
+		actual = value
+	}
+	s.Set(key, actual)
+	return
+}
+
+func (s *SafeMap) Load(key interface{}) (actual interface{}, loaded bool) {
+	actual, loaded = s.GetOk(key)
+	return
+}
+
+func (s *SafeMap) LoadOrStore(key, value interface{}) (actual interface{}, loaded bool) {
+	actual, loaded = s.GetOrSet(key, value)
+	return
 }
 
 func (s *SafeMap) String(key interface{}, defaults ...interface{}) string {
