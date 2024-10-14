@@ -57,6 +57,10 @@ func (s *SafeMap) LoadOrStore(key, value interface{}) (actual interface{}, loade
 	return
 }
 
+func (s *SafeMap) Store(key, value interface{}) {
+	s.Set(key, value)
+}
+
 func (s *SafeMap) String(key interface{}, defaults ...interface{}) string {
 	return AsString(s.Get(key, defaults...))
 }
