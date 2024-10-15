@@ -33,6 +33,9 @@ func (s *SafeMap) Has(key interface{}) bool {
 	return ok
 }
 
+// GetOrSet get or set
+//
+//	value: `func() interface{}` or `func() (interface{}, bool)` or other
 func (s *SafeMap) GetOrSet(key, value interface{}) (actual interface{}, loaded bool) {
 	actual, loaded = s.GetOk(key)
 	if loaded {
@@ -59,6 +62,9 @@ func (s *SafeMap) Load(key interface{}) (actual interface{}, loaded bool) {
 	return
 }
 
+// LoadOrStore load or store
+//
+//	value: `func() interface{}` or `func() (interface{}, bool)` or other
 func (s *SafeMap) LoadOrStore(key, value interface{}) (actual interface{}, loaded bool) {
 	actual, loaded = s.GetOrSet(key, value)
 	return
