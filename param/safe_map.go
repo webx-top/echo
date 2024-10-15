@@ -38,9 +38,16 @@ func (s *SafeMap) GetOrSet(key, value interface{}) (actual interface{}, loaded b
 	if loaded {
 		return
 	}
-	if f, y := value.(func() interface{}); y {
+	switch f := value.(type) {
+	case func() interface{}:
 		actual = f()
-	} else {
+	case func() (interface{}, bool):
+		var store bool
+		actual, store = f()
+		if !store {
+			return
+		}
+	default:
 		actual = value
 	}
 	s.Set(key, actual)
