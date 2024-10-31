@@ -168,6 +168,7 @@ func (c *cookie) DecryptGet(key string) string {
 	if len(val) == 0 || c.context.CookieOptions().Cryptor == nil {
 		return val
 	}
+	val = com.URLSafeBase64(val, false)
 	decrypted, err := c.context.CookieOptions().Cryptor.DecryptString(val)
 	if err == nil {
 		val = decrypted
@@ -260,7 +261,7 @@ func (c *cookie) EncryptSet(key string, val string, args ...interface{}) Cookier
 	if len(val) > 0 && c.context.CookieOptions().Cryptor != nil {
 		encrypted, err := c.context.CookieOptions().Cryptor.EncryptString(key)
 		if err == nil {
-			val = encrypted
+			val = com.URLSafeBase64(encrypted, true)
 		} else {
 			c.context.Logger().Warnf(`%v: %s`, err, val)
 			return c
