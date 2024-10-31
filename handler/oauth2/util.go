@@ -188,17 +188,14 @@ func fetchUser(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	sv, err := DecryptValue(ctx, ctx.Cookie().Get(SessionName))
-	if err != nil {
-		return EmptyUser, err
-	}
-	if len(sv) == 0 {
+	sv, ok := ctx.Session().Get(SessionName).(string)
+	if !ok || len(sv) == 0 {
 		return EmptyUser, errors.New("could not find a matching session for this request")
 	}
 
 	defer func() {
 		if err != nil {
-			ctx.Cookie().Set(SessionName, ``, -1).Send()
+			ctx.Session().Delete(SessionName).Save()
 		}
 	}()
 
@@ -253,9 +250,7 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 	}
 
 	defer func() {
-		if err != nil {
-			ctx.Cookie().Set(SessionName, ``, -1).Send()
-		}
+		ctx.Cookie().Set(SessionName, ``, -1).Send()
 	}()
 
 	var sess goth.Session
@@ -291,11 +286,7 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	sessData, err := EncryptValue(ctx, sess.Marshal())
-	if err != nil {
-		return EmptyUser, err
-	}
-	ctx.Cookie().Set(SessionName, sessData).Send()
+	ctx.Session().Set(SessionName, sess.Marshal()).Save()
 
 	user, err = provider.FetchUser(sess)
 	return user, err
