@@ -3,7 +3,10 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"os"
 
+	"github.com/webx-top/codec"
+	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine/fasthttp"
 	"github.com/webx-top/echo/engine/standard"
@@ -15,7 +18,16 @@ import (
 )
 
 func main() {
+	account := &oauth2.Account{
+		On:     true,
+		Name:   `github`,
+		Key:    os.Getenv(`OAUTH_CLIENT_ID`),
+		Secret: os.Getenv(`OAUTH_CLIENT_SECRET`),
+	}
 	port := flag.String(`p`, "8080", "port")
+	flag.StringVar(&account.Name, `provider`, account.Name, "-provider "+account.Name)
+	flag.StringVar(&account.Key, `clientID`, account.Key, "-clientID <clientID>")
+	flag.StringVar(&account.Secret, `clientSecret`, account.Secret, "-clientSecret <clientSecret>")
 	flag.Parse()
 	e := echo.New()
 	e.Use(mw.Log())
@@ -28,6 +40,7 @@ func main() {
 			MaxAge:   0,
 			Secure:   false,
 			HttpOnly: true,
+			Cryptor:  echo.NewCookieCryptor(codec.Default, com.RandomString(16)),
 		},
 	}
 
@@ -51,12 +64,7 @@ func main() {
 		return c.HTML(`Login: <a href="/oauth/login/github" target="_blank">github</a>`)
 	})
 	config := oauth2.NewConfig()
-	config.AddAccount(&oauth2.Account{
-		On:     true,
-		Name:   `github`,
-		Key:    `9b168a10a77fbcafcdcf`,
-		Secret: `929bbf6136084052faf4f5768c14af805173ac27`,
-	})
+	config.AddAccount(account)
 	options := oauth2.New(`http://www.coscms.com`, config)
 	options.SetSuccessHandler(func(ctx echo.Context) error {
 		user := options.User(ctx)
@@ -71,10 +79,10 @@ func main() {
 	switch `` {
 	case `fast`:
 		// FastHTTP
-		e.Run(fasthttp.New(":" + *port))
+		e.Run(fasthttp.New("127.0.0.1:" + *port))
 
 	default:
 		// Standard
-		e.Run(standard.New(":" + *port))
+		e.Run(standard.New("127.0.0.1:" + *port))
 	}
 }

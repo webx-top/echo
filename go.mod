@@ -42,7 +42,8 @@ require (
 	github.com/russross/blackfriday v1.6.0
 	github.com/stretchr/testify v1.9.0
 	github.com/webx-top/captcha v0.1.0
-	github.com/webx-top/com v1.3.10
+	github.com/webx-top/codec v0.3.0
+	github.com/webx-top/com v1.3.11
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380
 	github.com/webx-top/tagfast v0.0.1
 	github.com/webx-top/validation v0.0.3
@@ -79,7 +80,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/volatiletech/inflect v0.0.1 // indirect
-	github.com/volatiletech/strmangle v0.0.6 // indirect
+	github.com/volatiletech/strmangle v0.0.8 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect

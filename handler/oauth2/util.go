@@ -16,14 +16,18 @@ limitations under the License.
 package oauth2
 
 import (
+	"bytes"
+	"compress/gzip"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
 	"net/url"
 	"strings"
 
 	"github.com/admpub/goth"
+	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 )
 
@@ -60,7 +64,7 @@ func BeginAuthHandler(ctx echo.Context) error {
 	}
 	next := ctx.Form(`next`)
 	if len(next) > 0 {
-		ctx.Session().Set(`next`, next)
+		ctx.Cookie().Set(`next`, next).Send()
 	}
 	return ctx.Redirect(authURL)
 }
@@ -139,7 +143,15 @@ func GetAuthURL(ctx echo.Context) (string, error) {
 	}
 	authURL = fixedRedirectURIQueryString(ctx, authURL)
 	authURL = fixedURL(ctx, authURL)
-	err = ctx.Session().Set(SessionName, sess.Marshal()).Set(StateSessionName, state).Save()
+	sessData, err := EncryptValue(ctx, sess.Marshal())
+	if err != nil {
+		return "", err
+	}
+	state, err = EncryptValue(ctx, state)
+	if err != nil {
+		return "", err
+	}
+	ctx.Cookie().Set(SessionName, sessData).Set(StateSessionName, state).Send()
 	return authURL, err
 }
 
@@ -176,14 +188,17 @@ func fetchUser(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	sv, ok := ctx.Session().Get(SessionName).(string)
-	if !ok || len(sv) == 0 {
+	sv, err := DecryptValue(ctx, ctx.Cookie().Get(SessionName))
+	if err != nil {
+		return EmptyUser, err
+	}
+	if len(sv) == 0 {
 		return EmptyUser, errors.New("could not find a matching session for this request")
 	}
 
 	defer func() {
 		if err != nil {
-			ctx.Session().Delete(SessionName).Save()
+			ctx.Cookie().Set(SessionName, ``, -1).Send()
 		}
 	}()
 
@@ -229,14 +244,17 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, errors.New(providerName + `: ` + errorDescription)
 	}
 
-	sv, ok := ctx.Session().Get(SessionName).(string)
-	if !ok || len(sv) == 0 {
+	sv, err := DecryptValue(ctx, ctx.Cookie().Get(SessionName))
+	if err != nil {
+		return EmptyUser, fmt.Errorf(providerName+`: %w`, err)
+	}
+	if len(sv) == 0 {
 		return EmptyUser, errors.New("could not find a matching session for this request")
 	}
 
 	defer func() {
 		if err != nil {
-			ctx.Session().Delete(SessionName).Save()
+			ctx.Cookie().Set(SessionName, ``, -1).Send()
 		}
 	}()
 
@@ -273,10 +291,11 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	err = ctx.Session().Set(SessionName, sess.Marshal()).Save()
+	sessData, err := EncryptValue(ctx, sess.Marshal())
 	if err != nil {
 		return EmptyUser, err
 	}
+	ctx.Cookie().Set(SessionName, sessData).Send()
 
 	user, err = provider.FetchUser(sess)
 	return user, err
@@ -285,11 +304,11 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 // validateState ensures that the state token param from the original
 // AuthURL matches the one included in the current (callback) request.
 func validateState(ctx echo.Context, _ goth.Session) error {
-	originalState, ok := ctx.Session().Get(StateSessionName).(string)
-	if !ok || len(originalState) == 0 || originalState != GetState(ctx) {
+	originalState, err := DecryptValue(ctx, ctx.Cookie().Get(StateSessionName))
+	if err != nil || len(originalState) == 0 || originalState != GetState(ctx) {
 		return ErrStateTokenMismatch
 	}
-	ctx.Session().Delete(StateSessionName)
+	ctx.Cookie().Set(StateSessionName, ``, -1)
 	return nil
 }
 
@@ -311,4 +330,57 @@ func getProviderName(ctx echo.Context) (string, error) {
 		return provider, errors.New("you must select a provider")
 	}
 	return provider, nil
+}
+
+func EncryptValue(ctx echo.Context, value string) (string, error) {
+	if len(value) == 0 {
+		return value, nil
+	}
+	var err error
+	value, err = CompressValue(value)
+	if err != nil {
+		return "", err
+	}
+	return ctx.CookieOptions().EncryptString(value)
+}
+
+func DecryptValue(ctx echo.Context, value string) (string, error) {
+	if len(value) == 0 {
+		return value, nil
+	}
+	var err error
+	value, err = ctx.CookieOptions().DecryptString(value)
+	if err != nil {
+		return "", err
+	}
+	return UncompressValue(value)
+}
+
+func UncompressValue(value string) (string, error) {
+	rdata := strings.NewReader(value)
+	r, err := gzip.NewReader(rdata)
+	if err != nil {
+		return "", err
+	}
+	s, err := io.ReadAll(r)
+	if err != nil {
+		return "", err
+	}
+	return com.Bytes2str(s), nil
+}
+
+func CompressValue(value string) (val string, err error) {
+	var b bytes.Buffer
+	gz := gzip.NewWriter(&b)
+	if _, err = gz.Write(com.Str2bytes(value)); err != nil {
+		return
+	}
+	if err = gz.Flush(); err != nil {
+		return
+	}
+	if err = gz.Close(); err != nil {
+		return
+	}
+	val = b.String()
+	return
 }

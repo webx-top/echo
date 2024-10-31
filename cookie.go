@@ -25,12 +25,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/webx-top/codec"
+	"github.com/webx-top/com"
 	"github.com/webx-top/echo/param"
 )
 
 var (
 	DefaultCookieOptions = &CookieOptions{
-		Path: `/`,
+		Path:    `/`,
+		Cryptor: NewCookieCryptor(codec.Default, com.RandomString(16)),
 	}
 )
 
@@ -51,6 +54,34 @@ type CookieOptions struct {
 	Secure   bool
 	HttpOnly bool
 	SameSite string // strict / lax
+	Cryptor  CookieCryptor
+}
+
+type CookieCryptor interface {
+	EncryptString(input string) (string, error)
+	DecryptString(input string) (string, error)
+}
+
+type Codec interface {
+	Encode(rawData, authKey string) string
+	Decode(cryptedData, authKey string) string
+}
+
+func NewCookieCryptor(codec Codec, secret string) CookieCryptor {
+	return cookieCodec{secret: secret, codec: codec}
+}
+
+type cookieCodec struct {
+	secret string
+	codec  Codec
+}
+
+func (c cookieCodec) EncryptString(input string) (string, error) {
+	return c.codec.Encode(input, c.secret), nil
+}
+
+func (c cookieCodec) DecryptString(input string) (string, error) {
+	return c.codec.Decode(input, c.secret), nil
 }
 
 func (c *CookieOptions) Clone() *CookieOptions {
@@ -64,11 +95,27 @@ func (c *CookieOptions) SetMaxAge(maxAge int) *CookieOptions {
 	return c
 }
 
+func (c *CookieOptions) EncryptString(input string) (string, error) {
+	if c.Cryptor == nil {
+		return input, nil
+	}
+	return c.Cryptor.EncryptString(input)
+}
+
+func (c *CookieOptions) DecryptString(input string) (string, error) {
+	if c.Cryptor == nil {
+		return input, nil
+	}
+	return c.Cryptor.DecryptString(input)
+}
+
 // Cookier interface
 type Cookier interface {
 	Get(key string) string
+	DecryptGet(key string) string
 	Add(cookies ...*http.Cookie) Cookier
 	Set(key string, val string, args ...interface{}) Cookier
+	EncryptSet(key string, val string, args ...interface{}) Cookier
 	Send()
 }
 
@@ -112,6 +159,21 @@ func (c *cookie) Get(key string) string {
 	var val string
 	if v := c.context.Request().Cookie(c.context.CookieOptions().Prefix + key); len(v) > 0 {
 		val, _ = url.QueryUnescape(v)
+	}
+	return val
+}
+
+func (c *cookie) DecryptGet(key string) string {
+	val := c.Get(key)
+	if len(val) == 0 || c.context.CookieOptions().Cryptor == nil {
+		return val
+	}
+	decrypted, err := c.context.CookieOptions().Cryptor.DecryptString(val)
+	if err == nil {
+		val = decrypted
+	} else {
+		c.context.Logger().Warnf(`%v: %s`, err, val)
+		val = ``
 	}
 	return val
 }
@@ -192,6 +254,19 @@ func (c *cookie) Set(key string, val string, args ...interface{}) Cookier {
 	}
 	c.record(cookie)
 	return c
+}
+
+func (c *cookie) EncryptSet(key string, val string, args ...interface{}) Cookier {
+	if len(val) > 0 && c.context.CookieOptions().Cryptor != nil {
+		encrypted, err := c.context.CookieOptions().Cryptor.EncryptString(key)
+		if err == nil {
+			val = encrypted
+		} else {
+			c.context.Logger().Warnf(`%v: %s`, err, val)
+			return c
+		}
+	}
+	return c.Set(key, val, args...)
 }
 
 // CookieMaxAge 设置有效时长（秒）
