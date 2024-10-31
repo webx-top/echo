@@ -64,7 +64,7 @@ func BeginAuthHandler(ctx echo.Context) error {
 	}
 	next := ctx.Form(echo.DefaultNextURLVarName)
 	if len(next) > 0 {
-		ctx.Cookie().Set(echo.DefaultNextURLVarName, next).Send()
+		ctx.Cookie().Set(echo.DefaultNextURLVarName, next)
 	}
 	return ctx.Redirect(authURL)
 }
@@ -151,7 +151,7 @@ func GetAuthURL(ctx echo.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	ctx.Cookie().Set(SessionName, sessData).Set(StateSessionName, state).Send()
+	ctx.Cookie().Set(SessionName, sessData).Set(StateSessionName, state)
 	return authURL, err
 }
 
@@ -250,7 +250,7 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 	}
 
 	defer func() {
-		ctx.Cookie().Set(SessionName, ``, -1).Send()
+		ctx.Cookie().Set(SessionName, ``, -1)
 	}()
 
 	var sess goth.Session
@@ -333,7 +333,12 @@ func EncryptValue(ctx echo.Context, value string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return ctx.CookieOptions().EncryptString(value)
+	value, err = ctx.CookieOptions().EncryptString(value)
+	if err != nil {
+		return "", err
+	}
+	value = url.QueryEscape(value)
+	return value, err
 }
 
 func DecryptValue(ctx echo.Context, value string) (string, error) {
@@ -341,6 +346,10 @@ func DecryptValue(ctx echo.Context, value string) (string, error) {
 		return value, nil
 	}
 	var err error
+	value, err = url.QueryUnescape(value)
+	if err != nil {
+		return "", err
+	}
 	value, err = ctx.CookieOptions().DecryptString(value)
 	if err != nil {
 		return "", err
