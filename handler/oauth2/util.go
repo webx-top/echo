@@ -62,9 +62,9 @@ func BeginAuthHandler(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(400, err.Error()).SetRaw(err)
 	}
-	next := ctx.Form(`next`)
+	next := ctx.Form(echo.DefaultNextURLVarName)
 	if len(next) > 0 {
-		ctx.Cookie().Set(`next`, next).Send()
+		ctx.Cookie().Set(echo.DefaultNextURLVarName, next).Send()
 	}
 	return ctx.Redirect(authURL)
 }
