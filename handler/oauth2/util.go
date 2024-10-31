@@ -333,11 +333,15 @@ func EncryptValue(ctx echo.Context, value string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	value, err = ctx.CookieOptions().EncryptString(value)
-	if err != nil {
-		return "", err
+	if ctx.CookieOptions().Cryptor != nil {
+		value, err = ctx.CookieOptions().Cryptor.EncryptString(value)
+		if err != nil {
+			return "", err
+		}
+		value = com.URLSafeBase64(value, true)
+	} else {
+		value = url.QueryEscape(value)
 	}
-	value = url.QueryEscape(value)
 	return value, err
 }
 
@@ -346,13 +350,17 @@ func DecryptValue(ctx echo.Context, value string) (string, error) {
 		return value, nil
 	}
 	var err error
-	value, err = url.QueryUnescape(value)
-	if err != nil {
-		return "", err
-	}
-	value, err = ctx.CookieOptions().DecryptString(value)
-	if err != nil {
-		return "", err
+	if ctx.CookieOptions().Cryptor != nil {
+		value = com.URLSafeBase64(value, false)
+		value, err = ctx.CookieOptions().Cryptor.DecryptString(value)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		value, err = url.QueryUnescape(value)
+		if err != nil {
+			return "", err
+		}
 	}
 	value, err = UncompressValue(value)
 	if err != nil {
