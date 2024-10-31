@@ -328,6 +328,7 @@ func EncryptValue(ctx echo.Context, value string) (string, error) {
 		return value, nil
 	}
 	var err error
+	value = ctx.RealIP() + `|` + com.Md5(ctx.Request().UserAgent()) + `|` + value
 	value, err = CompressValue(value)
 	if err != nil {
 		return "", err
@@ -344,7 +345,18 @@ func DecryptValue(ctx echo.Context, value string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return UncompressValue(value)
+	value, err = UncompressValue(value)
+	if err != nil {
+		return "", err
+	}
+	parts := strings.SplitN(value, `|`, 3)
+	if len(parts) != 3 {
+		return "", nil
+	}
+	if parts[0] != ctx.RealIP() || parts[1] != com.Md5(ctx.Request().UserAgent()) {
+		return "", nil
+	}
+	return parts[2], nil
 }
 
 func UncompressValue(value string) (string, error) {
