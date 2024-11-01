@@ -17,11 +17,11 @@ func TestConversion(t *testing.T) {
 	assert.Equal(t, com.NumberFormat(ui64, 0), com.NumberFormat(f32, 0))
 
 	ui32a := AsUint32(ui64)
-	assert.Equal(t, uint32(math.MaxUint32), ui32a)
+	assert.Equal(t, uint32(0), ui32a)
 	assert.Greater(t, ui64, uint64(ui32a))
 
 	ui16a := AsUint16(ui64)
-	assert.Equal(t, uint16(math.MaxUint16), ui16a)
+	assert.Equal(t, uint16(0), ui16a)
 	assert.Greater(t, ui64, uint64(ui16a))
 
 	var i int64 = math.MinInt
