@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 	"fmt"
 	"html/template"
-	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -156,222 +155,35 @@ func AsCSS(val interface{}) template.CSS {
 }
 
 func AsBool(val interface{}) bool {
-	switch v := val.(type) {
-	case bool:
-		return v
-	case string:
-		if len(v) > 0 {
-			r, _ := strconv.ParseBool(v)
-			return r
-		}
-		return false
-	case nil:
-		return false
-	default:
-		p := fmt.Sprint(v)
-		if len(p) > 0 {
-			r, _ := strconv.ParseBool(p)
-			return r
-		}
-	}
-	return false
+	return com.Bool(val)
 }
 
 func AsFloat64(val interface{}) float64 {
-	switch v := val.(type) {
-	case float32:
-		return float64(v)
-	case float64:
-		return v
-	case int8:
-		return float64(v)
-	case uint8:
-		return float64(v)
-	case int16:
-		return float64(v)
-	case uint16:
-		return float64(v)
-	case int32:
-		return float64(v)
-	case uint32:
-		return float64(v)
-	case int:
-		return float64(v)
-	case uint:
-		return float64(v)
-	case int64:
-		return float64(v)
-	case uint64:
-		return float64(v)
-	case string:
-		i, _ := strconv.ParseFloat(v, 64)
-		return i
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseFloat(s, 64)
-		return i
-	}
+	return com.Float64(val)
 }
 
 func AsFloat32(val interface{}) float32 {
-	switch v := val.(type) {
-	case float32:
-		return v
-	case float64:
-		if v > math.MaxFloat32 {
-			return 0
-		}
-		return float32(v)
-	case int8:
-		return float32(v)
-	case uint8:
-		return float32(v)
-	case int16:
-		return float32(v)
-	case uint16:
-		return float32(v)
-	case int32:
-		return float32(v)
-	case uint32:
-		return float32(v)
-	case int:
-		return float32(v)
-	case uint:
-		return float32(v)
-	case int64:
-		return float32(v)
-	case uint64:
-		return float32(v)
-	case string:
-		f, _ := strconv.ParseFloat(v, 32)
-		return float32(f)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(val)
-		f, _ := strconv.ParseFloat(s, 32)
-		return float32(f)
-	}
+	return com.Float32(val)
 }
 
 func AsInt8(val interface{}) int8 {
-	switch v := val.(type) {
-	case int8:
-		return v
-	case float32:
-		return int8(v)
-	case float64:
-		return int8(v)
-	case string:
-		i, _ := strconv.ParseInt(v, 10, 8)
-		return int8(i)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(val)
-		i, _ := strconv.ParseInt(s, 10, 8)
-		return int8(i)
-	}
+	return com.Int8(val)
 }
 
 func AsInt16(val interface{}) int16 {
-	switch v := val.(type) {
-	case int16:
-		return v
-	case string:
-		i, _ := strconv.ParseInt(v, 10, 16)
-		return int16(i)
-	case nil:
-		return 0
-	case float32:
-		return int16(v)
-	case float64:
-		return int16(v)
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseInt(s, 10, 16)
-		return int16(i)
-	}
+	return com.Int16(val)
 }
 
 func AsInt(val interface{}) int {
-	switch v := val.(type) {
-	case int8:
-		return int(v)
-	case int16:
-		return int(v)
-	case int32:
-		return int(v)
-	case int:
-		return v
-	case string:
-		i, _ := strconv.Atoi(v)
-		return i
-	case nil:
-		return 0
-	case float32:
-		return int(v)
-	case float64:
-		return int(v)
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.Atoi(s)
-		return i
-	}
+	return com.Int(val)
 }
 
 func AsInt32(val interface{}) int32 {
-	switch v := val.(type) {
-	case int8:
-		return int32(v)
-	case int16:
-		return int32(v)
-	case int32:
-		return v
-	case float32:
-		return int32(v)
-	case float64:
-		return int32(v)
-	case string:
-		i, _ := strconv.ParseInt(v, 10, 32)
-		return int32(i)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseInt(s, 10, 32)
-		return int32(i)
-	}
+	return com.Int32(val)
 }
 
 func AsInt64(val interface{}) int64 {
-	switch v := val.(type) {
-	case int64:
-		return v
-	case int32:
-		return int64(v)
-	case uint32:
-		return int64(v)
-	case int:
-		return int64(v)
-	case uint:
-		return int64(v)
-	case float32:
-		return int64(v)
-	case float64:
-		return int64(v)
-	case string:
-		i, _ := strconv.ParseInt(v, 10, 64)
-		return i
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseInt(s, 10, 64)
-		return i
-	}
+	return com.Int64(val)
 }
 
 func Decr(val interface{}, n int64) int64 {
@@ -387,155 +199,23 @@ func Incr(val interface{}, n int64) int64 {
 }
 
 func AsUint8(val interface{}) uint8 {
-	switch v := val.(type) {
-	case uint8:
-		return v
-	case float32:
-		if v > 0 {
-			return uint8(v)
-		}
-		return 0
-	case float64:
-		if v > 0 {
-			return uint8(v)
-		}
-		return 0
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 8)
-		return uint8(i)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseUint(s, 10, 8)
-		return uint8(i)
-	}
+	return com.Uint8(val)
 }
 
 func AsUint16(val interface{}) uint16 {
-	switch v := val.(type) {
-	case uint8:
-		return uint16(v)
-	case uint16:
-		return v
-	case float32:
-		if v > 0 {
-			return uint16(v)
-		}
-		return 0
-	case float64:
-		if v > 0 {
-			return uint16(v)
-		}
-		return 0
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 16)
-		return uint16(i)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseUint(s, 10, 16)
-		return uint16(i)
-	}
+	return com.Uint16(val)
 }
 
 func AsUint(val interface{}) uint {
-	switch v := val.(type) {
-	case uint8:
-		return uint(v)
-	case uint16:
-		return uint(v)
-	case uint32:
-		return uint(v)
-	case uint:
-		return v
-	case float32:
-		if v > 0 {
-			return uint(v)
-		}
-		return 0
-	case float64:
-		if v > 0 {
-			return uint(v)
-		}
-		return 0
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 0)
-		return uint(i)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseUint(s, 10, 0)
-		return uint(i)
-	}
+	return com.Uint(val)
 }
 
 func AsUint32(val interface{}) uint32 {
-	switch v := val.(type) {
-	case uint8:
-		return uint32(v)
-	case uint16:
-		return uint32(v)
-	case uint32:
-		return v
-	case uint:
-		return uint32(v)
-	case float32:
-		if v > 0 {
-			return uint32(v)
-		}
-		return 0
-	case float64:
-		if v > 0 {
-			return uint32(v)
-		}
-		return 0
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 32)
-		return uint32(i)
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseUint(s, 10, 32)
-		return uint32(i)
-	}
+	return com.Uint32(val)
 }
 
 func AsUint64(val interface{}) uint64 {
-	switch v := val.(type) {
-	case uint8:
-		return uint64(v)
-	case uint16:
-		return uint64(v)
-	case uint32:
-		return uint64(v)
-	case uint:
-		return uint64(v)
-	case uint64:
-		return v
-	case float32:
-		if v > 0 && v <= math.MaxUint64 {
-			return uint64(v)
-		}
-		return 0
-	case float64:
-		if v > 0 && v <= math.MaxUint64 {
-			return uint64(v)
-		}
-		return 0
-	case string:
-		i, _ := strconv.ParseUint(v, 10, 64)
-		return i
-	case nil:
-		return 0
-	default:
-		s := fmt.Sprint(v)
-		i, _ := strconv.ParseUint(s, 10, 64)
-		return i
-	}
+	return com.Uint64(val)
 }
 
 func AsTimestamp(val interface{}) time.Time {
