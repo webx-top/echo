@@ -3,6 +3,7 @@ package oauth2
 import (
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/webx-top/com"
@@ -33,4 +34,12 @@ func TestCompressValue(t *testing.T) {
 	v, err = com.Base64Decode(encrypted)
 	require.Error(t, err)
 	t.Log(v)
+}
+
+func TestPackValue(t *testing.T) {
+	r := PackValue(`127.0.0.1`, `echo/1.1`, `test`)
+	t.Log(r)
+	r, err := UnpackValue(`127.0.0.1`, `echo/1.1`, r, time.Minute)
+	require.NoError(t, err)
+	require.Equal(t, `test`, r)
 }
