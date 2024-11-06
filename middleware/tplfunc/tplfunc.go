@@ -160,6 +160,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	// ======================
 	"JSONEncode":       JSONEncode,
 	"JSONDecode":       JSONDecode,
+	"JSONDecodeSlice":  JSONDecodeSlice,
 	"URLEncode":        com.URLEncode,
 	"URLDecode":        URLDecode,
 	"RawURLEncode":     com.RawURLEncode,
@@ -269,6 +270,15 @@ func JSONEncode(s interface{}, indents ...string) string {
 
 func JSONDecode(s string) map[string]interface{} {
 	r := map[string]interface{}{}
+	e := com.JSONDecode([]byte(s), &r)
+	if e != nil {
+		log.Println(e)
+	}
+	return r
+}
+
+func JSONDecodeSlice(s string) []interface{} {
+	r := []interface{}{}
 	e := com.JSONDecode([]byte(s), &r)
 	if e != nil {
 		log.Println(e)
