@@ -259,7 +259,7 @@ func (c *cookie) Set(key string, val string, args ...interface{}) Cookier {
 
 func (c *cookie) EncryptSet(key string, val string, args ...interface{}) Cookier {
 	if len(val) > 0 && c.context.CookieOptions().Cryptor != nil {
-		encrypted, err := c.context.CookieOptions().Cryptor.EncryptString(key)
+		encrypted, err := c.context.CookieOptions().Cryptor.EncryptString(val)
 		if err == nil {
 			val = com.URLSafeBase64(encrypted, true)
 		} else {
