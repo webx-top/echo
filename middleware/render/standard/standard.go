@@ -297,12 +297,13 @@ func (a *Standard) find(c echo.Context,
 		return
 	}
 	content := string(b)
-	subcs := map[string]string{} //子模板内容
-	extcs := map[string]string{} //母板内容
+	includes := map[string]string{} //子模板内容
+	blocks := map[string]string{}   //母板内容
 	m := a.extTagRegex.FindAllStringSubmatch(content, 1)
 	content = a.rplTagRegex.ReplaceAllString(content, ``)
+	parentsBlocks := map[string]struct{}{}
 	for i := 0; i < 10 && len(m) > 0; i++ {
-		a.ParseBlock(c, content, subcs, extcs)
+		a.ParseBlock(c, content, includes, blocks)
 		extFile := m[0][1] + a.Ext
 		passObject := m[0][2]
 		extFile = a.TmplPath(c, extFile)
@@ -312,9 +313,15 @@ func (a *Standard) find(c echo.Context,
 			return
 		}
 		content = string(b)
-		content, m = a.ParseExtend(c, content, extcs, passObject, subcs)
+		content, m = a.ParseExtend(c, content, blocks, passObject, includes, parentsBlocks)
 	}
-	content = a.ContainsSubTpl(c, content, subcs)
+	//只保留layout中存在的Block
+	for k := range blocks {
+		if _, ok := parentsBlocks[k]; !ok {
+			delete(blocks, k)
+		}
+	}
+	content = a.ContainsSubTpl(c, content, includes)
 	clips := map[string]string{}
 	content = a.ContainsSnippetResult(c, tmplOriginalName, content, clips)
 	tmpl, err = tmpl.Parse(content)
@@ -326,14 +333,14 @@ func (a *Standard) find(c echo.Context,
 	var defines string
 
 	// include
-	for name, subc := range subcs {
+	for name, subc := range includes {
 		subc = a.ContainsSnippetResult(c, tmplOriginalName, subc, clips)
 		subc = a.Tag(`define "`+driver.CleanTemplateName(name)+`"`) + subc + a.Tag(`end`)
 		defines += subc
 	}
 
 	// block
-	for name, extc := range extcs {
+	for name, extc := range blocks {
 		extc = a.ContainsSnippetResult(c, tmplOriginalName, extc, clips)
 		extc = a.Tag(`define "`+driver.CleanTemplateName(name)+`"`) + extc + a.Tag(`end`)
 		defines += extc
@@ -368,17 +375,17 @@ func (a *Standard) execute(tmpl *template.Template, data interface{}) string {
 	return com.Bytes2str(buf.Bytes())
 }
 
-func (a *Standard) ParseBlock(c echo.Context, content string, subcs map[string]string, extcs map[string]string) {
+func (a *Standard) ParseBlock(c echo.Context, content string, includes map[string]string, blocks map[string]string) {
 	matches := a.blkTagRegex.FindAllStringSubmatchIndex(content, -1)
 	for _, v := range matches {
 		var blockName, innerData string
 		com.GetMatchedByIndex(content, v, nil, &blockName, &innerData)
 		innerData = trimSpaceInBlock(innerData)
-		extcs[blockName] = a.ContainsSubTpl(c, innerData, subcs)
+		blocks[blockName] = a.ContainsSubTpl(c, innerData, includes)
 	}
 }
 
-func (a *Standard) ParseExtend(c echo.Context, content string, extcs map[string]string, passObject string, subcs map[string]string) (string, [][]string) {
+func (a *Standard) ParseExtend(c echo.Context, content string, blocks map[string]string, passObject string, includes map[string]string, parentBlocks map[string]struct{}) (string, [][]string) {
 	m := a.extTagRegex.FindAllStringSubmatch(content, 1)
 	hasParent := len(m) > 0
 	if len(passObject) == 0 {
@@ -387,7 +394,7 @@ func (a *Standard) ParseExtend(c echo.Context, content string, extcs map[string]
 	content = a.rplTagRegex.ReplaceAllStringFunc(content, func(match string) string {
 		blockName := match[strings.Index(match, `"`)+1:]
 		blockName = blockName[0:strings.Index(blockName, `"`)]
-		if v, ok := extcs[blockName]; ok {
+		if v, ok := blocks[blockName]; ok {
 			return v
 		}
 		return ``
@@ -408,7 +415,7 @@ func (a *Standard) ParseExtend(c echo.Context, content string, extcs map[string]
 		var blockName, innerStr string
 		com.GetMatchedByIndex(content, v, nil, &blockName, &innerStr)
 		innerStr = trimSpaceInBlock(innerStr)
-		if val, ok := extcs[blockName]; ok {
+		if val, ok := blocks[blockName]; ok {
 			var suffix string
 			if idx, ok := rec[blockName]; ok {
 				idx++
@@ -428,15 +435,15 @@ func (a *Standard) ParseExtend(c echo.Context, content string, extcs map[string]
 					val = sv
 				}
 				if hasSuper {
-					innerStr = a.ContainsSubTpl(c, innerStr, subcs)
+					innerStr = a.ContainsSubTpl(c, innerStr, includes)
 					val = strings.Replace(val, superTag, innerStr, 1)
 					if suffix == `` {
-						extcs[blockName] = val
+						blocks[blockName] = val
 					}
 				}
 			}
 			if len(suffix) > 0 {
-				extcs[blockName+suffix] = val
+				blocks[blockName+suffix] = val
 				rec[blockName+suffix] = 0
 			}
 			if hasParent {
@@ -452,16 +459,16 @@ func (a *Standard) ParseExtend(c echo.Context, content string, extcs map[string]
 		}
 		fn(k, v, innerStr)
 	}
-	//只保留layout中存在的Block
-	for k := range extcs {
-		if _, ok := rec[k]; !ok {
-			delete(extcs, k)
+	for k := range rec {
+		if _, ok := parentBlocks[k]; ok {
+			continue
 		}
+		parentBlocks[k] = struct{}{}
 	}
 	return replaced, m
 }
 
-func (a *Standard) ContainsSubTpl(c echo.Context, content string, subcs map[string]string) string {
+func (a *Standard) ContainsSubTpl(c echo.Context, content string, includes map[string]string) string {
 	matches := a.incTagRegex.FindAllStringSubmatchIndex(content, -1)
 	if len(matches) == 0 {
 		return content
@@ -473,18 +480,18 @@ func (a *Standard) ContainsSubTpl(c echo.Context, content string, subcs map[stri
 		com.GetMatchedByIndex(content, v, nil, &tmplFile, &passObject)
 		tmplFile += a.Ext
 		tmplFile = a.TmplPath(c, tmplFile)
-		if _, ok := subcs[tmplFile]; !ok {
+		if _, ok := includes[tmplFile]; !ok {
 			// if v, ok := a.CachedRelation[tmplFile]; ok && v.Tpl[1] != nil {
-			// 	subcs[tmplFile] = ""
+			// 	includes[tmplFile] = ""
 			// } else {
 			b, err := a.RawContent(tmplFile)
 			if err != nil {
 				return fmt.Sprintf("RenderTemplate %v read err: %s", tmplFile, err)
 			}
 			str := string(b)
-			subcs[tmplFile] = "" //先登记，避免死循环
-			str = a.ContainsSubTpl(c, str, subcs)
-			subcs[tmplFile] = str
+			includes[tmplFile] = "" //先登记，避免死循环
+			str = a.ContainsSubTpl(c, str, includes)
+			includes[tmplFile] = str
 			//}
 		}
 		if len(passObject) == 0 {
