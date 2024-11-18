@@ -1,8 +1,6 @@
 package param
 
 import (
-	"bytes"
-	"encoding/gob"
 	"fmt"
 	"html/template"
 	"reflect"
@@ -28,40 +26,7 @@ const (
 )
 
 func AsType(typ string, val interface{}) interface{} {
-	switch typ {
-	case `string`:
-		return AsString(val)
-	case `bytes`, `[]byte`:
-		return AsBytes(val)
-	case `bool`:
-		return AsBool(val)
-	case `float64`:
-		return AsFloat64(val)
-	case `float32`:
-		return AsFloat32(val)
-	case `int8`:
-		return AsInt8(val)
-	case `int16`:
-		return AsInt16(val)
-	case `int`:
-		return AsInt(val)
-	case `int32`:
-		return AsInt32(val)
-	case `int64`:
-		return AsInt64(val)
-	case `uint8`:
-		return AsUint8(val)
-	case `uint16`:
-		return AsUint16(val)
-	case `uint`:
-		return AsUint(val)
-	case `uint32`:
-		return AsUint32(val)
-	case `uint64`:
-		return AsUint64(val)
-	default:
-		return val
-	}
+	return com.AsType(typ, val)
 }
 
 func AsString(val interface{}) string {
@@ -69,22 +34,7 @@ func AsString(val interface{}) string {
 }
 
 func AsBytes(val interface{}) []byte {
-	switch v := val.(type) {
-	case []byte:
-		return v
-	case nil:
-		return nil
-	case string:
-		return []byte(v)
-	default:
-		var buf bytes.Buffer
-		enc := gob.NewEncoder(&buf)
-		err := enc.Encode(val)
-		if err != nil {
-			return nil
-		}
-		return buf.Bytes()
-	}
+	return com.Bytes(val)
 }
 
 func Split(val interface{}, sep string, limit ...int) StringSlice {
