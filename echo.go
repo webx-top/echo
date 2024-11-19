@@ -823,6 +823,14 @@ func (e *Echo) URI(handler interface{}, params ...interface{}) string {
 	return uri
 }
 
+// GetRoutePathByName get route path by name
+func (e *Echo) GetRoutePathByName(name string) string {
+	if indexes, ok := e.router.nroute[name]; ok && len(indexes) > 0 {
+		return e.router.routes[indexes[0]].Path
+	}
+	return ``
+}
+
 // URL is an alias for `URI` function.
 func (e *Echo) URL(h interface{}, params ...interface{}) string {
 	return e.URI(h, params...)

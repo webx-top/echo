@@ -290,6 +290,11 @@ func URL(h interface{}, params ...interface{}) string {
 	return Default.URL(h, params...)
 }
 
+// GetRoutePathByName get route path by name
+func GetRoutePathByName(name string) string {
+	return Default.GetRoutePathByName(name)
+}
+
 // Routes returns the registered routes.
 func Routes() []*echo.Route {
 	return Default.Routes()
