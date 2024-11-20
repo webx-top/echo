@@ -295,6 +295,11 @@ func GetRoutePathByName(name string) string {
 	return Default.GetRoutePathByName(name)
 }
 
+// GetRouteByName get route by name
+func GetRouteByName(name string) *echo.Route {
+	return Default.GetRouteByName(name)
+}
+
 // Routes returns the registered routes.
 func Routes() []*echo.Route {
 	return Default.Routes()

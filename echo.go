@@ -831,6 +831,14 @@ func (e *Echo) GetRoutePathByName(name string) string {
 	return ``
 }
 
+// GetRouteByName get route by name
+func (e *Echo) GetRouteByName(name string) *Route {
+	if indexes, ok := e.router.nroute[name]; ok && len(indexes) > 0 {
+		return e.router.routes[indexes[0]]
+	}
+	return nil
+}
+
 // URL is an alias for `URI` function.
 func (e *Echo) URL(h interface{}, params ...interface{}) string {
 	return e.URI(h, params...)
