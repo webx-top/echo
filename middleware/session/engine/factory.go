@@ -23,6 +23,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/admpub/log"
 	"github.com/admpub/securecookie"
 	"github.com/admpub/sessions"
 	"github.com/webx-top/echo"
@@ -55,8 +56,10 @@ func StoreEngine(options *echo.SessionOptions) (store sessions.Store) {
 	}
 	store = Get(options.Engine)
 	if store == nil {
+		log.Errorf(`the session storage engine named %q does not exist`, options.Engine)
 		if options.Engine != `cookie` {
 			store = Get(`cookie`)
+			log.Warn(`session uses default storage engine: cookie`)
 		}
 	}
 	return
