@@ -13,7 +13,6 @@ import (
 	"github.com/webx-top/echo/handler/oauth2"
 	mw "github.com/webx-top/echo/middleware"
 	"github.com/webx-top/echo/middleware/session"
-	boltStore "github.com/webx-top/echo/middleware/session/engine/bolt"
 	cookieStore "github.com/webx-top/echo/middleware/session/engine/cookie"
 )
 
@@ -32,7 +31,7 @@ func main() {
 	e := echo.New()
 	e.Use(mw.Log())
 	sessionOptions := &echo.SessionOptions{
-		Engine: `bolt`,
+		Engine: `cookie`,
 		Name:   `SESSIONID`,
 		CookieOptions: &echo.CookieOptions{
 			Path:     `/`,
@@ -48,14 +47,6 @@ func main() {
 		KeyPairs: [][]byte{
 			[]byte(`123456789012345678901234567890ab`),
 		},
-	})
-
-	boltStore.RegWithOptions(&boltStore.BoltOptions{
-		File: `./session.db`,
-		KeyPairs: [][]byte{
-			[]byte(`123456789012345678901234567890ab`),
-		},
-		BucketName: `session`,
 	})
 
 	e.Use(session.Middleware(sessionOptions))
