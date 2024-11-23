@@ -18,6 +18,7 @@ package session
 import (
 	"sync"
 
+	"github.com/admpub/log"
 	codec "github.com/admpub/securecookie"
 	"github.com/admpub/sessions"
 	"github.com/webx-top/echo"
@@ -55,6 +56,7 @@ func StoreEngine(options *echo.SessionOptions) (store sessions.Store) {
 	store = ss.StoreEngine(options)
 	if store == nil {
 		store = FallbackStore()
+		log.Warn(`session uses fallback storage engine: cookie`)
 	}
 	return
 }
