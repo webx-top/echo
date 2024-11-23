@@ -1,6 +1,6 @@
 module github.com/webx-top/echo
 
-go 1.22
+go 1.23
 
 retract [v2.0.0+incompatible, v2.42.35+incompatible]
 
@@ -20,7 +20,7 @@ require (
 	github.com/admpub/log v1.3.6
 	github.com/admpub/realip v0.2.7
 	github.com/admpub/securecookie v1.3.0
-	github.com/admpub/sessions v0.2.1
+	github.com/admpub/sessions v0.2.2
 	github.com/admpub/sockjs-go/v3 v3.0.1
 	github.com/admpub/sse v0.0.0-20160126180136-ee05b128a739
 	github.com/admpub/timeago v1.2.2
@@ -63,7 +63,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/phuslu/iploc v1.0.20241031 // indirect
+	github.com/phuslu/iploc v1.0.20241122 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

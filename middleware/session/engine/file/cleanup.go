@@ -15,16 +15,18 @@ var (
 // sessions from the database.
 //
 // The design is based on https://github.com/yosssi/boltstore
-func (m *filesystemStore) Cleanup(interval time.Duration, maxAge int) (chan<- struct{}, <-chan struct{}) {
+func (m *filesystemStore) Cleanup(interval time.Duration, maxAge int, emptyDataAge int) (chan<- struct{}, <-chan struct{}) {
 	if interval <= 0 {
 		interval = DefaultInterval
 	}
 	if maxAge <= 0 {
 		maxAge = engine.DefaultMaxAge
 	}
-
+	if emptyDataAge <= 0 {
+		maxAge = engine.EmptyDataAge
+	}
 	quit, done := make(chan struct{}), make(chan struct{})
-	go m.cleanup(interval, maxAge, quit, done)
+	go m.cleanup(interval, maxAge, emptyDataAge, quit, done)
 	return quit, done
 }
 
@@ -35,7 +37,7 @@ func (m *filesystemStore) StopCleanup(quit chan<- struct{}, done <-chan struct{}
 }
 
 // cleanup deletes expired sessions at set intervals.
-func (m *filesystemStore) cleanup(interval time.Duration, maxAge int, quit <-chan struct{}, done chan<- struct{}) {
+func (m *filesystemStore) cleanup(interval time.Duration, maxAge int, emptyDataAge int, quit <-chan struct{}, done chan<- struct{}) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
@@ -47,7 +49,7 @@ func (m *filesystemStore) cleanup(interval time.Duration, maxAge int, quit <-cha
 			return
 		case <-ticker.C:
 			// Delete expired sessions on each tick.
-			err := m.DeleteExpired(float64(maxAge))
+			err := m.DeleteExpired(float64(maxAge), float64(emptyDataAge))
 			if err != nil {
 				log.Printf("sessions: filesystem: unable to delete expired sessions: %v", err)
 			}

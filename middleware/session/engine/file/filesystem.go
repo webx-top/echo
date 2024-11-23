@@ -34,6 +34,7 @@ type FileOptions struct {
 	KeyPairs      [][]byte      `json:"-"`
 	CheckInterval time.Duration `json:"checkInterval"`
 	MaxAge        int           `json:"maxAge"`
+	EmptyDataAge  int           `json:"emptyDataAge"`
 	MaxLength     int           `json:"maxLength"`
 }
 
@@ -102,5 +103,5 @@ func (m *filesystemStore) Init() {
 
 func (m *filesystemStore) init() {
 	m.Close()
-	m.quiteC, m.doneC = m.Cleanup(m.options.CheckInterval, m.options.MaxAge)
+	m.quiteC, m.doneC = m.Cleanup(m.options.CheckInterval, m.options.MaxAge, m.options.EmptyDataAge)
 }

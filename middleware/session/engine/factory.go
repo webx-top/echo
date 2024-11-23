@@ -32,6 +32,7 @@ import (
 // Defaults for sessions.Options
 const (
 	DefaultMaxAge = 86400 * 30 // 30days
+	EmptyDataAge  = 3600       // 1hour
 )
 
 func NewSession(ctx echo.Context) echo.Sessioner {
