@@ -471,10 +471,13 @@ func (e *Echo) setMap(logger logger.Logger,
 				if oldVal.Type().Name() != originalType.Name() && oldVal.CanConvert(originalType) {
 					oldVal = oldVal.Convert(originalType)
 				}
-			}
-			value.SetMapIndex(index, oldVal)
-			if !converted {
-				return errors.New(`binder: [setMap] unsupported type ` + oldVal.Kind().String() + `: ` + name)
+				if oldVal.Type().AssignableTo(originalType) {
+					value.SetMapIndex(index, oldVal)
+				} else {
+					return errors.New(`binder: [setMap] unsupported type ` + oldVal.Kind().String() + `: ` + name)
+				}
+			} else {
+				value.SetMapIndex(index, oldVal)
 			}
 		}
 		return nil
