@@ -297,14 +297,14 @@ func (r *RenderData) Render(a RenderContext) template.HTML {
 	return a.Render(r.ctx)
 }
 
-func (r *RenderData) RenderData(a RenderDataContext, data interface{}) template.HTML {
+func (r *RenderData) RenderWithData(a RenderContextWithData, data interface{}) template.HTML {
 	if a == nil {
 		return template.HTML(``)
 	}
 	if data == nil {
 		data = r
 	}
-	return a.RenderData(r.ctx, r)
+	return a.RenderWithData(r.ctx, r)
 }
 
 type (
@@ -317,7 +317,7 @@ type (
 	RenderContext interface {
 		Render(Context) template.HTML
 	}
-	RenderDataContext interface {
-		RenderData(Context, interface{}) template.HTML
+	RenderContextWithData interface {
+		RenderWithData(Context, interface{}) template.HTML
 	}
 )
