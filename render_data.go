@@ -304,7 +304,7 @@ func (r *RenderData) RenderWithData(a RenderContextWithData, data interface{}) t
 	if data == nil {
 		data = r
 	}
-	return a.RenderWithData(r.ctx, r)
+	return a.RenderWithData(r.ctx, data)
 }
 
 type (
