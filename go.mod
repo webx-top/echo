@@ -20,7 +20,7 @@ require (
 	github.com/admpub/log v1.3.6
 	github.com/admpub/realip v0.2.7
 	github.com/admpub/securecookie v1.3.0
-	github.com/admpub/sessions v0.2.2
+	github.com/admpub/sessions v0.2.3
 	github.com/admpub/sockjs-go/v3 v3.0.1
 	github.com/admpub/sse v0.0.0-20160126180136-ee05b128a739
 	github.com/admpub/timeago v1.2.2
@@ -28,22 +28,22 @@ require (
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/dustin/go-broadcast v0.0.0-20211018055107-71439988bd91
 	github.com/francoispqt/gojay v1.2.13
-	github.com/goccy/go-json v0.10.3
+	github.com/goccy/go-json v0.10.4
 	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/json-iterator/go v1.1.12
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/rs/zerolog v1.33.0
 	github.com/russross/blackfriday v1.6.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/webx-top/captcha v0.1.0
 	github.com/webx-top/codec v0.3.0
 	github.com/webx-top/com v1.3.19
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380
 	github.com/webx-top/tagfast v0.0.1
 	github.com/webx-top/validation v0.0.3
-	golang.org/x/crypto v0.29.0
-	golang.org/x/sync v0.9.0
+	golang.org/x/crypto v0.31.0
+	golang.org/x/sync v0.10.0
 	golang.org/x/time v0.8.0
 	gopkg.in/redis.v5 v5.2.9
 )
@@ -63,14 +63,14 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/phuslu/iploc v1.0.20241122 // indirect
+	github.com/phuslu/iploc v1.0.20241129 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
-	golang.org/x/net v0.31.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
-	golang.org/x/text v0.20.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
