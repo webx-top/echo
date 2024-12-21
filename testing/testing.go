@@ -30,8 +30,8 @@ func Request(method, path string, handler engine.Handler, reqRewrite ...func(*ht
 	if err == nil {
 		req = req.WithContext(ContextWithMockTag(req.Context()))
 	}
-	if len(reqRewrite) > 0 && reqRewrite[0] != nil {
-		reqRewrite[0](req)
+	for _, rfn := range reqRewrite {
+		rfn(req)
 	}
 	rec := httptest.NewRecorder()
 
