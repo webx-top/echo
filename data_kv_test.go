@@ -22,6 +22,7 @@ func TestDataKVSort(t *testing.T) {
 	test.Eq(t, third, m.GetItem(`third`))
 	test.Eq(t, second, m.GetItem(`second`))
 	test.Eq(t, first, m.GetItem(`first`))
+	test.Eq(t, []*echo.KV{first, second, third}, m.Slice())
 }
 
 func TestDataKVxSort(t *testing.T) {

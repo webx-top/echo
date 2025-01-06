@@ -312,10 +312,9 @@ func (a *KVxData[X, Y]) Delete(ks ...string) *KVxData[X, Y] {
 }
 
 func (a *KVxData[X, Y]) Sort() *KVxData[X, Y] {
-	if !a.sorted.Load() {
+	if a.sorted.CompareAndSwap(false, true) {
 		a.mu.Lock()
 		sort.Sort(a)
-		a.sorted.Store(true)
 		a.mu.Unlock()
 	}
 	return a
