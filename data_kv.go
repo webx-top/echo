@@ -136,10 +136,10 @@ func (a *KVData) Clone() KVData {
 		c := v.Clone()
 		b.slice[i] = &c
 	}
-	for i, v := range a.index {
+	for name, v := range a.index {
 		c := make([]int, len(v))
 		copy(c, v)
-		b.index[i] = c
+		b.index[name] = c
 	}
 	return b
 }
