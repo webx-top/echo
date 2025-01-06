@@ -16,6 +16,12 @@ func KVxOptV[X any, Y any](v string) KVxOption[X, Y] {
 	}
 }
 
+func KVxOptPriority[X any, Y any](priority int) KVxOption[X, Y] {
+	return func(a *KVx[X, Y]) {
+		a.priority = priority
+	}
+}
+
 func KVxOptH[X any, Y any](h H) KVxOption[X, Y] {
 	return func(a *KVx[X, Y]) {
 		a.H = h

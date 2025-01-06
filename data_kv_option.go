@@ -16,6 +16,12 @@ func KVOptV(v string) KVOption {
 	}
 }
 
+func KVOptPriority(priority int) KVOption {
+	return func(a *KV) {
+		a.priority = priority
+	}
+}
+
 func KVOptH(h H) KVOption {
 	return func(a *KV) {
 		a.H = h

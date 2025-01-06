@@ -1,6 +1,9 @@
 package echo
 
-import "context"
+import (
+	"context"
+	"sort"
+)
 
 func NewKVx[X any, Y any](k, v string) *KVx[X, Y] {
 	return &KVx[X, Y]{K: k, V: v}
@@ -8,11 +11,28 @@ func NewKVx[X any, Y any](k, v string) *KVx[X, Y] {
 
 // KV 键值对
 type KVx[X any, Y any] struct {
-	K  string
-	V  string
-	H  H `json:",omitempty" xml:",omitempty"`
-	X  X `json:",omitempty" xml:",omitempty"`
-	fn func(context.Context) Y
+	K        string
+	V        string
+	H        H `json:",omitempty" xml:",omitempty"`
+	X        X `json:",omitempty" xml:",omitempty"`
+	fn       func(context.Context) Y
+	priority int
+}
+
+func (a *KVx[X, Y]) Clone() KVx[X, Y] {
+	return KVx[X, Y]{
+		K:        a.K,
+		V:        a.V,
+		H:        a.H.Clone(),
+		X:        a.X,
+		fn:       a.fn,
+		priority: a.priority,
+	}
+}
+
+func (a *KVx[X, Y]) SetPriority(priority int) *KVx[X, Y] {
+	a.priority = priority
+	return a
 }
 
 func (a *KVx[X, Y]) SetK(k string) *KVx[X, Y] {
@@ -95,17 +115,38 @@ func NewKVxData[X any, Y any]() *KVxData[X, Y] {
 
 // KVxData 键值对数据（保持顺序）
 type KVxData[X any, Y any] struct {
-	slice []*KVx[X, Y]
-	index map[string][]int
+	slice  []*KVx[X, Y]
+	index  map[string][]int
+	sorted bool
+}
+
+func (a *KVxData[X, Y]) Clone() KVxData[X, Y] {
+	b := KVxData[X, Y]{
+		slice:  make([]*KVx[X, Y], len(a.slice)),
+		index:  map[string][]int{},
+		sorted: a.sorted,
+	}
+	for i, v := range a.slice {
+		c := v.Clone()
+		b.slice[i] = &c
+	}
+	for i, v := range a.index {
+		c := make([]int, len(v))
+		copy(c, v)
+		b.index[i] = c
+	}
+	return b
 }
 
 // Slice 返回切片
 func (a *KVxData[X, Y]) Slice() []*KVx[X, Y] {
+	a.Sort()
 	return a.slice
 }
 
 // Keys 返回所有K值
 func (a *KVxData[X, Y]) Keys() []string {
+	a.Sort()
 	keys := make([]string, len(a.slice))
 	for i, v := range a.slice {
 		if v == nil {
@@ -131,6 +172,9 @@ func (a *KVxData[X, Y]) Indexes() map[string][]int {
 func (a *KVxData[X, Y]) Reset() *KVxData[X, Y] {
 	a.index = map[string][]int{}
 	a.slice = []*KVx[X, Y]{}
+	if a.sorted {
+		a.sorted = false
+	}
 	return a
 }
 
@@ -145,6 +189,9 @@ func (a *KVxData[X, Y]) Add(k, v string, options ...KVxOption[X, Y]) *KVxData[X,
 		option(an)
 	}
 	a.slice = append(a.slice, an)
+	if a.sorted {
+		a.sorted = false
+	}
 	return a
 }
 
@@ -154,6 +201,9 @@ func (a *KVxData[X, Y]) AddItem(item *KVx[X, Y]) *KVxData[X, Y] {
 	}
 	a.index[item.K] = append(a.index[item.K], len(a.slice))
 	a.slice = append(a.slice, item)
+	if a.sorted {
+		a.sorted = false
+	}
 	return a
 }
 
@@ -165,12 +215,18 @@ func (a *KVxData[X, Y]) Set(k, v string, options ...KVxOption[X, Y]) *KVxData[X,
 		option(an)
 	}
 	a.slice = []*KVx[X, Y]{an}
+	if a.sorted {
+		a.sorted = false
+	}
 	return a
 }
 
 func (a *KVxData[X, Y]) SetItem(item *KVx[X, Y]) *KVxData[X, Y] {
 	a.index[item.K] = []int{0}
 	a.slice = []*KVx[X, Y]{item}
+	if a.sorted {
+		a.sorted = false
+	}
 	return a
 }
 
@@ -258,5 +314,66 @@ func (a *KVxData[X, Y]) Delete(ks ...string) *KVxData[X, Y] {
 		newSlice = append(newSlice, v)
 	}
 	a.slice = newSlice
+	if a.sorted {
+		a.sorted = false
+	}
 	return a
+}
+
+func (a *KVxData[X, Y]) Sort() *KVxData[X, Y] {
+	if !a.sorted {
+		sort.Sort(a)
+		a.sorted = true
+	}
+	return a
+}
+
+// sort.Interface
+
+func (a *KVxData[X, Y]) Len() int {
+	return len(a.slice)
+}
+
+func (a *KVxData[X, Y]) Less(i, j int) bool {
+	return a.slice[i].priority > a.slice[j].priority
+}
+
+func (a *KVxData[X, Y]) Swap(i, j int) {
+	var n int
+	if a.slice[i].K == a.slice[j].K {
+		for index, sindex := range a.index[a.slice[i].K] {
+			switch sindex {
+			case i:
+				a.index[a.slice[i].K][index] = j
+				n++
+			case j:
+				a.index[a.slice[i].K][index] = i
+				n++
+			default:
+				if n >= 2 {
+					goto END
+				}
+			}
+		}
+	} else {
+		for key, values := range a.index {
+			for index, sindex := range values {
+				switch sindex {
+				case i:
+					a.index[key][index] = j
+					n++
+				case j:
+					a.index[key][index] = i
+					n++
+				default:
+					if n >= 2 {
+						goto END
+					}
+				}
+			}
+		}
+	}
+
+END:
+	a.slice[i], a.slice[j] = a.slice[j], a.slice[i]
 }
