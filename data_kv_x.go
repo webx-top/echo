@@ -3,6 +3,8 @@ package echo
 import (
 	"context"
 	"sort"
+	"sync"
+	"sync/atomic"
 )
 
 func NewKVx[X any, Y any](k, v string) *KVx[X, Y] {
@@ -117,15 +119,16 @@ func NewKVxData[X any, Y any]() *KVxData[X, Y] {
 type KVxData[X any, Y any] struct {
 	slice  []*KVx[X, Y]
 	index  map[string][]int
-	sorted bool
+	sorted atomic.Bool
+	mu     sync.Mutex
 }
 
-func (a *KVxData[X, Y]) Clone() KVxData[X, Y] {
+func (a *KVxData[X, Y]) Clone() *KVxData[X, Y] {
 	b := KVxData[X, Y]{
-		slice:  make([]*KVx[X, Y], len(a.slice)),
-		index:  map[string][]int{},
-		sorted: a.sorted,
+		slice: make([]*KVx[X, Y], len(a.slice)),
+		index: map[string][]int{},
 	}
+	b.sorted.Store(a.sorted.Load())
 	for i, v := range a.slice {
 		c := v.Clone()
 		b.slice[i] = &c
@@ -135,7 +138,7 @@ func (a *KVxData[X, Y]) Clone() KVxData[X, Y] {
 		copy(c, v)
 		b.index[name] = c
 	}
-	return b
+	return &b
 }
 
 // Slice 返回切片
@@ -172,9 +175,7 @@ func (a *KVxData[X, Y]) Indexes() map[string][]int {
 func (a *KVxData[X, Y]) Reset() *KVxData[X, Y] {
 	a.index = map[string][]int{}
 	a.slice = []*KVx[X, Y]{}
-	if a.sorted {
-		a.sorted = false
-	}
+	a.sorted.CompareAndSwap(true, false)
 	return a
 }
 
@@ -189,9 +190,7 @@ func (a *KVxData[X, Y]) Add(k, v string, options ...KVxOption[X, Y]) *KVxData[X,
 		option(an)
 	}
 	a.slice = append(a.slice, an)
-	if a.sorted {
-		a.sorted = false
-	}
+	a.sorted.CompareAndSwap(true, false)
 	return a
 }
 
@@ -201,9 +200,7 @@ func (a *KVxData[X, Y]) AddItem(item *KVx[X, Y]) *KVxData[X, Y] {
 	}
 	a.index[item.K] = append(a.index[item.K], len(a.slice))
 	a.slice = append(a.slice, item)
-	if a.sorted {
-		a.sorted = false
-	}
+	a.sorted.CompareAndSwap(true, false)
 	return a
 }
 
@@ -215,18 +212,14 @@ func (a *KVxData[X, Y]) Set(k, v string, options ...KVxOption[X, Y]) *KVxData[X,
 		option(an)
 	}
 	a.slice = []*KVx[X, Y]{an}
-	if a.sorted {
-		a.sorted = false
-	}
+	a.sorted.CompareAndSwap(true, false)
 	return a
 }
 
 func (a *KVxData[X, Y]) SetItem(item *KVx[X, Y]) *KVxData[X, Y] {
 	a.index[item.K] = []int{0}
 	a.slice = []*KVx[X, Y]{item}
-	if a.sorted {
-		a.sorted = false
-	}
+	a.sorted.CompareAndSwap(true, false)
 	return a
 }
 
@@ -314,16 +307,16 @@ func (a *KVxData[X, Y]) Delete(ks ...string) *KVxData[X, Y] {
 		newSlice = append(newSlice, v)
 	}
 	a.slice = newSlice
-	if a.sorted {
-		a.sorted = false
-	}
+	a.sorted.CompareAndSwap(true, false)
 	return a
 }
 
 func (a *KVxData[X, Y]) Sort() *KVxData[X, Y] {
-	if !a.sorted {
+	if !a.sorted.Load() {
+		a.mu.Lock()
 		sort.Sort(a)
-		a.sorted = true
+		a.sorted.Store(true)
+		a.mu.Unlock()
 	}
 	return a
 }

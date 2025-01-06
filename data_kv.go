@@ -3,6 +3,8 @@ package echo
 import (
 	"context"
 	"sort"
+	"sync"
+	"sync/atomic"
 )
 
 func NewKV(k, v string) *KV {
@@ -117,7 +119,8 @@ func NewKVData() *KVData {
 type KVData struct {
 	slice  []*KV
 	index  map[string][]int
-	sorted bool
+	sorted atomic.Bool
+	mu     sync.Mutex
 }
 
 // Slice 返回切片
@@ -126,12 +129,13 @@ func (a *KVData) Slice() []*KV {
 	return a.slice
 }
 
-func (a *KVData) Clone() KVData {
+func (a *KVData) Clone() *KVData {
 	b := KVData{
-		slice:  make([]*KV, len(a.slice)),
-		index:  map[string][]int{},
-		sorted: a.sorted,
+		slice: make([]*KV, len(a.slice)),
+		index: map[string][]int{},
+		mu:    sync.Mutex{},
 	}
+	b.sorted.Store(a.sorted.Load())
 	for i, v := range a.slice {
 		c := v.Clone()
 		b.slice[i] = &c
@@ -141,7 +145,7 @@ func (a *KVData) Clone() KVData {
 		copy(c, v)
 		b.index[name] = c
 	}
-	return b
+	return &b
 }
 
 // Keys 返回所有K值
@@ -172,9 +176,7 @@ func (a *KVData) Indexes() map[string][]int {
 func (a *KVData) Reset() *KVData {
 	a.index = map[string][]int{}
 	a.slice = []*KV{}
-	if a.sorted {
-		a.sorted = false
-	}
+	a.sorted.CompareAndSwap(true, false)
 	return a
 }
 
@@ -189,9 +191,7 @@ func (a *KVData) Add(k, v string, options ...KVOption) *KVData {
 		option(an)
 	}
 	a.slice = append(a.slice, an)
-	if a.sorted {
-		a.sorted = false
-	}
+	a.sorted.CompareAndSwap(true, false)
 	return a
 }
 
@@ -201,9 +201,7 @@ func (a *KVData) AddItem(item *KV) *KVData {
 	}
 	a.index[item.K] = append(a.index[item.K], len(a.slice))
 	a.slice = append(a.slice, item)
-	if a.sorted {
-		a.sorted = false
-	}
+	a.sorted.CompareAndSwap(true, false)
 	return a
 }
 
@@ -215,18 +213,14 @@ func (a *KVData) Set(k, v string, options ...KVOption) *KVData {
 		option(an)
 	}
 	a.slice = []*KV{an}
-	if a.sorted {
-		a.sorted = false
-	}
+	a.sorted.CompareAndSwap(true, false)
 	return a
 }
 
 func (a *KVData) SetItem(item *KV) *KVData {
 	a.index[item.K] = []int{0}
 	a.slice = []*KV{item}
-	if a.sorted {
-		a.sorted = false
-	}
+	a.sorted.CompareAndSwap(true, false)
 	return a
 }
 
@@ -314,16 +308,16 @@ func (a *KVData) Delete(ks ...string) *KVData {
 		newSlice = append(newSlice, v)
 	}
 	a.slice = newSlice
-	if a.sorted {
-		a.sorted = false
-	}
+	a.sorted.CompareAndSwap(true, false)
 	return a
 }
 
 func (a *KVData) Sort() *KVData {
-	if !a.sorted {
+	if !a.sorted.Load() {
+		a.mu.Lock()
 		sort.Sort(a)
-		a.sorted = true
+		a.sorted.Store(true)
+		a.mu.Unlock()
 	}
 	return a
 }
