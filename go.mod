@@ -14,7 +14,7 @@ require (
 	github.com/admpub/go-reuseport v0.0.4
 	github.com/admpub/goth v0.0.4
 	github.com/admpub/humanize v0.0.0-20190501023926-5f826e92c8ca
-	github.com/admpub/i18n v0.4.3
+	github.com/admpub/i18n v0.4.4
 	github.com/admpub/ipfilter v1.0.6
 	github.com/admpub/jet/v6 v6.0.2
 	github.com/admpub/log v1.3.6
