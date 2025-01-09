@@ -80,20 +80,27 @@ func NewI18n(c *Config) *I18n {
 			panic("== i18n error: " + errMsg + "\n")
 		}
 	}
-	defaultInstance = &I18n{
+	ins := &I18n{
 		TranslatorFactory: f,
 		translators:       make(map[string]*i18n.Translator),
 		config:            c,
 	}
-	defaultInstance.GetAndCache(c.Default)
+	ins.GetAndCache(c.Default)
 
-	return defaultInstance
+	if defaultInstance == nil {
+		SetDefault(ins)
+	}
+	return ins
+}
+
+func SetDefault(ins *I18n) {
+	defaultInstance = ins
 }
 
 func (a *I18n) Monitor() *I18n {
 	onchange := func(file string) {
 		log.Info("reload language: ", file)
-		defaultInstance.Reload(file)
+		a.Reload(file)
 	}
 	callback := &com.MonitorEvent{
 		Modify: onchange,
@@ -168,9 +175,9 @@ func (a *I18n) Get(langCode string) *i18n.Translator {
 
 func (a *I18n) Translate(langCode, key string, args map[string]string) string {
 	t := a.Get(langCode)
-	translation, err := t.Translate(key, args)
-	if err != nil {
-		return key
+	translation, errs := t.Translate(key, args)
+	if errs != nil {
+		return i18n.TrimGroupPrefix(key)
 	}
 	return translation
 }
@@ -181,18 +188,18 @@ func (a *I18n) T(langCode, key string, args ...interface{}) (t string) {
 			t = a.Translate(langCode, key, v)
 			return
 		}
-		t = a.Translate(langCode, key, map[string]string{})
+		t = a.Translate(langCode, key, nil)
 		t = fmt.Sprintf(t, args...)
 		return
 	}
-	t = a.Translate(langCode, key, map[string]string{})
+	t = a.Translate(langCode, key, nil)
 	return
 }
 
 // T 多语言翻译
 func T(langCode, key string, args ...interface{}) (t string) {
 	if defaultInstance == nil {
-		t = key
+		t = i18n.TrimGroupPrefix(key)
 		if len(args) > 0 {
 			t = fmt.Sprintf(t, args...)
 		}

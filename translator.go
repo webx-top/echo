@@ -26,13 +26,25 @@ import (
 
 // T 标记为多语言文本
 func T(format string, args ...interface{}) string {
+	format = trimTranslatorGroupPrefix(format)
 	if len(args) > 0 {
 		return fmt.Sprintf(format, args...)
 	}
 	return format
 }
 
+func trimTranslatorGroupPrefix(format string) string {
+	if len(format) > 1 && format[0] == '#' {
+		format = format[1:]
+		if pos := strings.Index(format, `#`); pos > -1 && pos < len(format)-1 {
+			format = format[pos+1:]
+		}
+	}
+	return format
+}
+
 func E(format string, args ...interface{}) error {
+	format = trimTranslatorGroupPrefix(format)
 	if len(args) > 0 {
 		return fmt.Errorf(format, args...)
 	}
