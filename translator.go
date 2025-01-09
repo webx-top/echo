@@ -24,27 +24,12 @@ import (
 	"strings"
 )
 
-// T 标记为多语言文本
-func T(format string, args ...interface{}) string {
-	format = trimTranslatorGroupPrefix(format)
-	if len(args) > 0 {
-		return fmt.Sprintf(format, args...)
-	}
-	return format
-}
-
-func trimTranslatorGroupPrefix(format string) string {
-	if len(format) > 1 && format[0] == '#' {
-		format = format[1:]
-		if pos := strings.Index(format, `#`); pos > -1 && pos < len(format)-1 {
-			format = format[pos+1:]
-		}
-	}
+// T 标记为多语言文本(fake)
+func T(format string, _ ...interface{}) string {
 	return format
 }
 
 func E(format string, args ...interface{}) error {
-	format = trimTranslatorGroupPrefix(format)
 	if len(args) > 0 {
 		return fmt.Errorf(format, args...)
 	}
@@ -140,8 +125,22 @@ type NopTranslate struct {
 	code LangCode
 }
 
+func trimTranslatorGroupPrefix(format string) string {
+	if len(format) > 1 && format[0] == '#' {
+		format = format[1:]
+		if pos := strings.Index(format, `#`); pos > -1 && pos < len(format)-1 {
+			format = format[pos+1:]
+		}
+	}
+	return format
+}
+
 func (n *NopTranslate) T(format string, args ...interface{}) string {
-	return T(format, args...)
+	format = trimTranslatorGroupPrefix(format)
+	if len(args) > 0 {
+		return fmt.Sprintf(format, args...)
+	}
+	return format
 }
 
 func (n *NopTranslate) E(format string, args ...interface{}) error {
