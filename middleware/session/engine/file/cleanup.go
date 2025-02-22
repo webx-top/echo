@@ -23,7 +23,7 @@ func (m *filesystemStore) Cleanup(interval time.Duration, maxAge int, emptyDataA
 		maxAge = engine.DefaultMaxAge
 	}
 	if emptyDataAge <= 0 {
-		maxAge = engine.EmptyDataAge
+		emptyDataAge = engine.EmptyDataAge
 	}
 	quit, done := make(chan struct{}), make(chan struct{})
 	go m.cleanup(interval, maxAge, emptyDataAge, quit, done)
