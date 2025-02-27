@@ -113,6 +113,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"ToFloat64":      ToFloat64,
 	"ToFixed":        ToFixed,
 	"ToDecimal":      ToDecimal,
+	"NumberMore":     NumberMore, // {{ 1000 | NumberMore 99 }} 99+
 	"Math":           Math,
 	"NumberFormat":   NumberFormat,
 	"NumberTrim":     NumberTrim,
@@ -239,6 +240,32 @@ func Trim(s string, cutset ...string) string {
 func Unquote(s string) string {
 	r, _ := strconv.Unquote(`"` + s + `"`)
 	return r
+}
+
+func NumberMore(max interface{}, n interface{}) interface{} {
+	var more bool
+	switch v := n.(type) {
+	case uint:
+		more = v > com.Uint(max)
+	case uint32:
+		more = v > com.Uint32(max)
+	case uint64:
+		more = v > com.Uint64(max)
+	case int:
+		more = v > com.Int(max)
+	case int32:
+		more = v > com.Int32(max)
+	case int64:
+		more = v > com.Int64(max)
+	case float64:
+		more = v > com.Float64(max)
+	case float32:
+		more = v > com.Float32(max)
+	}
+	if more {
+		return com.String(max) + `+`
+	}
+	return n
 }
 
 func UnicodeDecode(str string) string {
