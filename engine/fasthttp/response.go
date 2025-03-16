@@ -45,7 +45,7 @@ func NewResponse(r *Request) *Response {
 }
 
 func (r *Response) Object() interface{} {
-	return r.request.context
+	return r.fasthttpCtx()
 }
 
 func (r *Response) Header() engine.Header {
@@ -58,7 +58,7 @@ func (r *Response) WriteHeader(code int) {
 		return
 	}
 	r.status = code
-	r.request.context.SetStatusCode(code)
+	r.fasthttpCtx().SetStatusCode(code)
 	r.committed = true
 }
 
@@ -98,7 +98,7 @@ func (r *Response) Writer() io.Writer {
 }
 
 func (r *Response) Hijacker(fn func(net.Conn)) error {
-	r.request.context.Hijack(fasthttp.HijackHandler(fn))
+	r.fasthttpCtx().Hijack(fasthttp.HijackHandler(fn))
 	r.committed = true
 	return nil
 }
@@ -106,30 +106,30 @@ func (r *Response) Hijacker(fn func(net.Conn)) error {
 func (r *Response) Body() []byte {
 	switch strings.ToLower(r.header.Get(`Content-Encoding`)) {
 	case `gzip`:
-		body, err := r.request.context.Response.BodyGunzip()
+		body, err := r.fasthttpCtx().Response.BodyGunzip()
 		if err != nil {
 			r.logger.Error(err)
 		}
 		return body
 	case `deflate`:
-		body, err := r.request.context.Response.BodyInflate()
+		body, err := r.fasthttpCtx().Response.BodyInflate()
 		if err != nil {
 			r.logger.Error(err)
 		}
 		return body
 	default:
-		return r.request.context.Response.Body()
+		return r.fasthttpCtx().Response.Body()
 	}
 }
 
 func (r *Response) Redirect(url string, code int) {
-	//r.request.context.Redirect(url, code)  bug: missing port number
+	//r.fasthttpCtx().Redirect(url, code)  bug: missing port number
 	r.header.Set(`Location`, url)
 	r.WriteHeader(code)
 }
 
 func (r *Response) NotFound() {
-	r.request.context.NotFound()
+	r.fasthttpCtx().NotFound()
 	r.committed = true
 }
 
@@ -138,8 +138,12 @@ func (r *Response) SetCookie(cookie *http.Cookie) {
 }
 
 func (r *Response) ServeFile(file string) {
-	fasthttp.ServeFile(r.request.context, file)
+	fasthttp.ServeFile(r.fasthttpCtx(), file)
 	r.committed = true
+}
+
+func (r *Response) fasthttpCtx() *fasthttp.RequestCtx {
+	return r.request.context
 }
 
 func (r *Response) ServeContent(content io.ReadSeeker, name string, modtime time.Time) {
@@ -154,7 +158,7 @@ func (r *Response) Stream(step func(io.Writer) (bool, error)) (err error) {
 		defer close(done)
 		for {
 			select {
-			case <-r.request.context.Done():
+			case <-r.fasthttpCtx().Done():
 				r.logger.Debug(`Context Cancelled`)
 				return
 			case _, ok := <-done:
@@ -180,12 +184,12 @@ func (r *Response) Stream(step func(io.Writer) (bool, error)) (err error) {
 			}
 		}
 	}
-	r.request.context.SetBodyStreamWriter(f)
+	r.fasthttpCtx().SetBodyStreamWriter(f)
 	return r.end()
 }
 
 func (r *Response) end() error {
-	ctx := r.request.context
+	ctx := r.fasthttpCtx()
 	conn := ctx.Conn()
 	bw := bufio.NewWriter(conn)
 	if err := ctx.Response.Write(bw); err != nil {
