@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"errors"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -20,15 +21,16 @@ import (
 )
 
 type Request struct {
-	config     *engine.Config
-	requestMu  sync.RWMutex
-	context    *fasthttp.RequestCtx
-	url        engine.URL
-	header     engine.Header
-	value      *Value
-	realIP     string
-	stdRequest *http.Request
-	maxSize    int
+	config        *engine.Config
+	requestMu     sync.RWMutex
+	context       *fasthttp.RequestCtx
+	url           engine.URL
+	header        engine.Header
+	value         *Value
+	realIP        string
+	stdRequest    *http.Request
+	multipartForm *multipart.Form
+	maxSize       int
 }
 
 func NewRequest(c *fasthttp.RequestCtx) *Request {
@@ -133,7 +135,18 @@ func (r *Request) PostForm() engine.URLValuer {
 }
 
 func (r *Request) MultipartForm() (*multipart.Form, error) {
-	return r.context.MultipartForm()
+	if r.multipartForm != nil {
+		return r.multipartForm, nil
+	}
+	var err error
+	r.multipartForm, err = r.context.MultipartForm()
+	if err == nil {
+		return r.multipartForm, err
+	}
+	if !errors.Is(err, fasthttp.ErrNoMultipartForm) {
+		return nil, err
+	}
+	return nil, http.ErrMissingBoundary
 }
 
 func (r *Request) IsTLS() bool {

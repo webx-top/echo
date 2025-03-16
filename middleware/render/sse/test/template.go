@@ -51,7 +51,7 @@ table {
 	border-spacing: 0;
 }
 </style>
-    <script src="//cdn.bootcss.com/jquery/1.7/jquery.min.js"></script>
+    <script src="https://www.coscms.com/public/assets/backend/js/jquery3.6.min.js?t=20250313215353"></script>
     <script>
         $(document).ready(function() {
 			$('#message_form').focus();

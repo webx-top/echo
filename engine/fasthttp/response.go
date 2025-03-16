@@ -4,6 +4,7 @@
 package fasthttp
 
 import (
+	"bufio"
 	"errors"
 	"io"
 	"net"
@@ -14,7 +15,6 @@ import (
 	"github.com/admpub/fasthttp"
 	"github.com/admpub/log"
 
-	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/logger"
 )
@@ -148,29 +148,53 @@ func (r *Response) ServeContent(content io.ReadSeeker, name string, modtime time
 }
 
 func (r *Response) Stream(step func(io.Writer) (bool, error)) (err error) {
-	err = echo.ErrNotImplemented
-	return
-	// r.request.context.SetBodyStreamWriter(func(w *bufio.Writer) {
-	// 	for {
-	// 		select {
-	// 		case <-r.request.context.Done():
-	// 			r.logger.Debug(`Context Cancelled`)
-	// 			return
-	// 		default:
-	// 			keepOpen := step(w)
-	// 			err = w.Flush()
-	// 			if err != nil {
-	// 				r.logger.Debug(`Push: `, err)
-	// 				return
-	// 			}
-	// 			if !keepOpen {
-	// 				r.logger.Debug(`keepOpen: closed`)
-	// 				return
-	// 			}
-	// 			time.Sleep(time.Second)
-	// 		}
-	// 	}
-	// })
+	f := func(w *bufio.Writer) {
+		done := make(chan struct{}, 1)
+		done <- struct{}{}
+		defer close(done)
+		for {
+			select {
+			case <-r.request.context.Done():
+				r.logger.Debug(`Context Cancelled`)
+				return
+			case _, ok := <-done:
+				if !ok {
+					return
+				}
+				var keepOpen bool
+				keepOpen, err = step(w)
+				if err != nil {
+					r.logger.Debug(`SSE: `, err)
+					return
+				}
+				err = w.Flush()
+				if err != nil {
+					r.logger.Debug(`Push: `, err)
+					return
+				}
+				if !keepOpen {
+					r.logger.Debug(`keepOpen: closed`)
+					return
+				}
+				done <- struct{}{}
+			}
+		}
+	}
+	r.request.context.SetBodyStreamWriter(f)
+	return r.end()
+}
+
+func (r *Response) end() error {
+	ctx := r.request.context
+	conn := ctx.Conn()
+	bw := bufio.NewWriter(conn)
+	if err := ctx.Response.Write(bw); err != nil {
+		return err
+	}
+	if err := bw.Flush(); err != nil {
+		return err
+	}
+	return conn.Close()
 }
 
 func (r *Response) Error(errMsg string, args ...int) {

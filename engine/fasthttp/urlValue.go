@@ -7,7 +7,6 @@ import (
 	"net/url"
 
 	"github.com/admpub/fasthttp"
-	"github.com/admpub/log"
 	"github.com/webx-top/echo/engine"
 )
 
@@ -163,12 +162,8 @@ func (v *Value) init() {
 	for key, vals := range v.postArgs.All() {
 		form[key] = vals
 	}
-	mf, err := v.request.MultipartForm()
-	if err != nil {
-		log.Error(err.Error())
-	}
-	if mf != nil && mf.Value != nil {
-		for key, vals := range mf.Value {
+	if v.request.multipartForm != nil && v.request.multipartForm.Value != nil {
+		for key, vals := range v.request.multipartForm.Value {
 			form[key] = vals
 		}
 	}

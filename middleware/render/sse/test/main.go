@@ -13,8 +13,9 @@ import (
 )
 
 func main() {
-	engine := ``
+	engine := `fast`
 	e := echo.New()
+	e.SetDebug(true)
 	e.Use(mw.Log(), mw.Recover())
 	e.Use(render.Middleware(render.New(`sse`, ``)))
 
@@ -23,9 +24,9 @@ func main() {
 	e.Delete("/room/:roomid", roomDELETE)
 	e.Get("/stream/:roomid", stream)
 	if len(engine) == 0 {
-		e.Run(standard.New(":8080"))
+		e.Run(standard.New(":8181"))
 	} else {
-		e.Run(fasthttp.New(":8080"))
+		e.Run(fasthttp.New(":8181"))
 	}
 }
 
