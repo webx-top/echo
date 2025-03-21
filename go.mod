@@ -31,7 +31,7 @@ require (
 	github.com/dustin/go-broadcast v0.0.0-20211018055107-71439988bd91
 	github.com/francoispqt/gojay v1.2.13
 	github.com/goccy/go-json v0.10.5
-	github.com/golang-jwt/jwt/v4 v4.5.1
+	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/json-iterator/go v1.1.12
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/opentracing/opentracing-go v1.2.0
