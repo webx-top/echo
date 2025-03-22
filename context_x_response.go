@@ -100,7 +100,7 @@ func (c *XContext) JSON(i interface{}, codes ...int) (err error) {
 		}
 	}
 	var b []byte
-	if ft, ok := c.route.Get(`encodingFilter`).(EncodingFilter); ok {
+	if ft, ok := c.route.Get(metaKeyEncodingFilter).(EncodingFilter); ok {
 		b, err = json.MarshalWithOption(
 			i,
 			json.OptionFilter(filter.Exclude(ft.OmitFields...)),
@@ -132,7 +132,7 @@ func (c *XContext) JSONP(callback string, i interface{}, codes ...int) (err erro
 		}
 	}
 	var b []byte
-	if ft, ok := c.route.Get(`encodingFilter`).(EncodingFilter); ok {
+	if ft, ok := c.route.Get(metaKeyEncodingFilter).(EncodingFilter); ok {
 		b, err = json.MarshalWithOption(
 			i,
 			json.OptionFilter(filter.Exclude(ft.OmitFields...)),
@@ -159,7 +159,7 @@ func (c *XContext) XML(i interface{}, codes ...int) (err error) {
 		}
 	}
 	var b []byte
-	if ft, ok := c.route.Get(`encodingFilter`).(EncodingFilter); ok {
+	if ft, ok := c.route.Get(metaKeyEncodingFilter).(EncodingFilter); ok {
 		b, err = xml.MarshalWithOption(
 			i,
 			xml.OptionFilter(filter.Exclude(ft.OmitFields...)),

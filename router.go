@@ -147,6 +147,16 @@ func (r *Route) SetMetaKV(key string, value interface{}) IRouter {
 	return r
 }
 
+const metaKeyEncodingFilter = `encodingFilter`
+
+func (r *Route) SetEncodingFilter(ef EncodingFilter) IRouter {
+	if r.Meta == nil {
+		r.Meta = H{}
+	}
+	r.Meta[metaKeyEncodingFilter] = ef
+	return r
+}
+
 func (r *Route) GetName() string {
 	return r.Name
 }
@@ -230,7 +240,7 @@ func (r *Route) Int(name string, defaults ...interface{}) int {
 }
 
 func (r *Route) Get(name string, defaults ...interface{}) interface{} {
-	if r.Meta == nil {
+	if r == nil || r.Meta == nil {
 		return nil
 	}
 	return r.Meta.Get(name, defaults...)

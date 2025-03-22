@@ -82,7 +82,7 @@ func TestEchoMeta(t *testing.T) {
 
 	c, b := request(GET, "/root/", e)
 	assert.Equal(t, http.StatusOK, c)
-	expected2, _ := json.MarshalIndent(expected, "", "  ")
+	expected2, _ := json.Marshal(expected)
 	assert.Equal(t, string(expected2), b)
 	assert.Equal(t, `/root/`, e.URI(`test.echo.meta`))
 
@@ -92,7 +92,7 @@ func TestEchoMeta(t *testing.T) {
 		"child":  "sub",  // group meta
 		"parent": "root", // group meta
 	}
-	expected2, _ = json.MarshalIndent(expected, "", "  ")
+	expected2, _ = json.Marshal(expected)
 	assert.Equal(t, string(expected2), b)
 }
 
@@ -254,14 +254,7 @@ func TestEchoMetaRequestValidatorX(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, c)
 	assert.Equal(t, `Name: Can not be empty`, b)
 
-	expected := `{
-  "Code": 1,
-  "State": "Success",
-  "Info": null,
-  "Data": {
-    "name": "OK"
-  }
-}`
+	expected := `{"Code":1,"State":"Success","Info":null,"Data":{"name":"OK"}}`
 	c, b = request(POST, "/root/post", e, reqOK)
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, expected, b)
