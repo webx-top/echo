@@ -1,6 +1,7 @@
 package echo
 
 import (
+	"encoding/json"
 	"fmt"
 	"mime"
 	"net/url"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/admpub/log"
 	"github.com/webx-top/com"
-	"github.com/webx-top/echo/encoding/json"
 )
 
 var workDir string

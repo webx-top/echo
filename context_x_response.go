@@ -2,7 +2,6 @@ package echo
 
 import (
 	"bytes"
-	"encoding/xml"
 	"io"
 	"net/http"
 	"os"
@@ -11,7 +10,9 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/webx-top/echo/encoding/json"
+	"github.com/admpub/xencoding/filter"
+	json "github.com/admpub/xencoding/json/standard"
+	xml "github.com/admpub/xencoding/xml/standard"
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/poolx/bufferpool"
 )
@@ -99,8 +100,12 @@ func (c *XContext) JSON(i interface{}, codes ...int) (err error) {
 		}
 	}
 	var b []byte
-	if c.echo.Debug() {
-		b, err = json.MarshalIndent(i, "", "  ")
+	if ft, ok := c.route.Meta.Get(`encodingFilter`).(EncodingFilter); ok {
+		b, err = json.MarshalWithOption(
+			i,
+			json.OptionFilter(filter.Exclude(ft.OmitFields...)),
+			json.OptionSelector(filter.Include(ft.OnlyFields...)),
+		)
 	} else {
 		b, err = json.Marshal(i)
 	}
@@ -126,7 +131,16 @@ func (c *XContext) JSONP(callback string, i interface{}, codes ...int) (err erro
 			return err
 		}
 	}
-	b, err := json.Marshal(i)
+	var b []byte
+	if ft, ok := c.route.Meta.Get(`encodingFilter`).(EncodingFilter); ok {
+		b, err = json.MarshalWithOption(
+			i,
+			json.OptionFilter(filter.Exclude(ft.OmitFields...)),
+			json.OptionSelector(filter.Include(ft.OnlyFields...)),
+		)
+	} else {
+		b, err = json.Marshal(i)
+	}
 	if err != nil {
 		return err
 	}
@@ -145,8 +159,12 @@ func (c *XContext) XML(i interface{}, codes ...int) (err error) {
 		}
 	}
 	var b []byte
-	if c.echo.Debug() {
-		b, err = xml.MarshalIndent(i, "", "  ")
+	if ft, ok := c.route.Meta.Get(`encodingFilter`).(EncodingFilter); ok {
+		b, err = xml.MarshalWithOption(
+			i,
+			xml.OptionFilter(filter.Exclude(ft.OmitFields...)),
+			xml.OptionSelector(filter.Include(ft.OnlyFields...)),
+		)
 	} else {
 		b, err = xml.Marshal(i)
 	}

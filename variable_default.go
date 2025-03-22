@@ -19,7 +19,7 @@
 package echo
 
 import (
-	stdJSON "encoding/json"
+	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -28,7 +28,6 @@ import (
 	"time"
 
 	"github.com/webx-top/com"
-	"github.com/webx-top/echo/encoding/json"
 	"github.com/webx-top/echo/param"
 )
 
@@ -78,9 +77,9 @@ var (
 			err := json.NewDecoder(body).Decode(i)
 			if err != nil {
 				switch ev := err.(type) {
-				case *stdJSON.UnmarshalTypeError:
+				case *json.UnmarshalTypeError:
 					return NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Unmarshal type error: expected=%v, got=%v, field=%v, offset=%v", ev.Type, ev.Value, ev.Field, ev.Offset)).SetRaw(err)
-				case *stdJSON.SyntaxError:
+				case *json.SyntaxError:
 					return NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Syntax error: offset=%v, error=%v", ev.Offset, ev.Error())).SetRaw(err)
 				}
 				return NewHTTPError(http.StatusBadRequest, err.Error()).SetRaw(err)

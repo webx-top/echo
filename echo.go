@@ -99,6 +99,11 @@ type (
 	Template interface {
 		Template(Context) (string, error)
 	}
+
+	EncodingFilter struct {
+		OmitFields []string
+		OnlyFields []string
+	}
 )
 
 func (m MiddlewareFunc) Handle(h Handler) Handler {

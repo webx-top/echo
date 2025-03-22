@@ -2,6 +2,7 @@ package echo_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/url"
@@ -10,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/webx-top/echo"
 	. "github.com/webx-top/echo"
-	"github.com/webx-top/echo/encoding/json"
 	"github.com/webx-top/echo/middleware"
 )
 

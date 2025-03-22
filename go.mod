@@ -1,8 +1,6 @@
 module github.com/webx-top/echo
 
-go 1.23.0
-
-toolchain go1.24.0
+go 1.24.0
 
 retract [v2.0.0+incompatible, v2.42.35+incompatible]
 
@@ -27,11 +25,11 @@ require (
 	github.com/admpub/sse v0.0.0-20160126180136-ee05b128a739
 	github.com/admpub/timeago v1.2.2
 	github.com/admpub/websocket v1.0.4
+	github.com/admpub/xencoding v0.0.2
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/dustin/go-broadcast v0.0.0-20211018055107-71439988bd91
 	github.com/francoispqt/gojay v1.2.13
 	github.com/goccy/go-json v0.10.5
-	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/json-iterator/go v1.1.12
 	github.com/mitchellh/go-homedir v1.1.0

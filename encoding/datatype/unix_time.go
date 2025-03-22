@@ -1,4 +1,4 @@
-package json
+package datatype
 
 import (
 	"strconv"
@@ -7,7 +7,7 @@ import (
 
 type UnixTime time.Time
 
-func (u UnixTime) MarshalJSON() ([]byte, error) {
+func (u UnixTime) MarshalText() ([]byte, error) {
 	seconds := time.Time(u).Unix()
 	return []byte(strconv.FormatInt(seconds, 10)), nil
 }
