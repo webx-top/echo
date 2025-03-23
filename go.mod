@@ -1,6 +1,6 @@
 module github.com/webx-top/echo
 
-go 1.24.0
+go 1.24
 
 retract [v2.0.0+incompatible, v2.42.35+incompatible]
 
@@ -25,13 +25,10 @@ require (
 	github.com/admpub/sse v0.0.0-20160126180136-ee05b128a739
 	github.com/admpub/timeago v1.2.2
 	github.com/admpub/websocket v1.0.4
-	github.com/admpub/xencoding v0.0.2
+	github.com/admpub/xencoding v0.0.3
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/dustin/go-broadcast v0.0.0-20211018055107-71439988bd91
-	github.com/francoispqt/gojay v1.2.13
-	github.com/goccy/go-json v0.10.5
 	github.com/golang-jwt/jwt/v5 v5.2.2
-	github.com/json-iterator/go v1.1.12
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/rs/zerolog v1.34.0
@@ -56,9 +53,12 @@ require (
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/francoispqt/gojay v1.2.13 // indirect
+	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/gomodule/redigo v1.8.3 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

@@ -25,6 +25,7 @@ import (
 
 	md2html "github.com/russross/blackfriday"
 	"github.com/webx-top/echo"
+	"github.com/webx-top/echo/engine"
 )
 
 type (
@@ -104,16 +105,16 @@ func Markdown(options ...*Options) echo.MiddlewareFunc {
 
 						// Create a directory index
 						w.Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
-						if _, err = fmt.Fprintf(w, `<!doctype html>
+						if _, err = w.Write(engine.Str2bytes(`<!doctype html>
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>`+file+`</title>
+        <title>` + file + `</title>
         <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible" />
         <meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" name="viewport" />
         <link href="/favicon.ico" rel="shortcut icon">
     </head>
-    <body>`); err != nil {
+    <body>`)); err != nil {
 							return err
 						}
 						if _, err = fmt.Fprintf(w, "<ul id=\"fileList\">\n"); err != nil {
