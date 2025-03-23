@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/admpub/xencoding/filter"
 	"github.com/webx-top/echo/param"
 )
 
@@ -147,13 +148,53 @@ func (r *Route) SetMetaKV(key string, value interface{}) IRouter {
 	return r
 }
 
-const metaKeyEncodingFilter = `encodingFilter`
+const metaKeyEncodingConfig = `encodingConfig`
 
-func (r *Route) SetEncodingFilter(ef EncodingFilter) IRouter {
+func (r *Route) SetEncodingConfig(ef EncodingConfig) IRouter {
 	if r.Meta == nil {
 		r.Meta = H{}
 	}
-	r.Meta[metaKeyEncodingFilter] = ef
+	r.Meta[metaKeyEncodingConfig] = ef
+	return r
+}
+
+func (r *Route) SetEncodingOmitFields(names ...string) IRouter {
+	if r.Meta == nil {
+		r.Meta = H{}
+		r.Meta[metaKeyEncodingConfig] = EncodingConfig{
+			filter: filter.Exclude(names...),
+		}
+		return r
+	}
+	cfg, ok := r.Meta[metaKeyEncodingConfig].(EncodingConfig)
+	if !ok {
+		cfg = EncodingConfig{
+			filter: filter.Exclude(names...),
+		}
+	} else {
+		cfg.filter = filter.Exclude(names...)
+	}
+	r.Meta[metaKeyEncodingConfig] = cfg
+	return r
+}
+
+func (r *Route) SetEncodingOnlyFields(names ...string) IRouter {
+	if r.Meta == nil {
+		r.Meta = H{}
+		r.Meta[metaKeyEncodingConfig] = EncodingConfig{
+			selector: filter.Include(names...),
+		}
+		return r
+	}
+	cfg, ok := r.Meta[metaKeyEncodingConfig].(EncodingConfig)
+	if !ok {
+		cfg = EncodingConfig{
+			selector: filter.Include(names...),
+		}
+	} else {
+		cfg.selector = filter.Include(names...)
+	}
+	r.Meta[metaKeyEncodingConfig] = cfg
 	return r
 }
 

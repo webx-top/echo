@@ -10,7 +10,6 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/admpub/xencoding/filter"
 	json "github.com/admpub/xencoding/json/standard"
 	xml "github.com/admpub/xencoding/xml/standard"
 	"github.com/webx-top/echo/engine"
@@ -100,11 +99,11 @@ func (c *XContext) JSON(i interface{}, codes ...int) (err error) {
 		}
 	}
 	var b []byte
-	if ft, ok := c.route.Get(metaKeyEncodingFilter).(EncodingFilter); ok {
+	if ft, ok := c.route.Get(metaKeyEncodingConfig).(EncodingConfig); ok {
 		b, err = json.MarshalWithOption(
 			i,
-			json.OptionFilter(filter.Exclude(ft.OmitFields...)),
-			json.OptionSelector(filter.Include(ft.OnlyFields...)),
+			json.OptionFilter(ft.filter),
+			json.OptionSelector(ft.selector),
 		)
 	} else {
 		b, err = json.Marshal(i)
@@ -132,11 +131,11 @@ func (c *XContext) JSONP(callback string, i interface{}, codes ...int) (err erro
 		}
 	}
 	var b []byte
-	if ft, ok := c.route.Get(metaKeyEncodingFilter).(EncodingFilter); ok {
+	if ft, ok := c.route.Get(metaKeyEncodingConfig).(EncodingConfig); ok {
 		b, err = json.MarshalWithOption(
 			i,
-			json.OptionFilter(filter.Exclude(ft.OmitFields...)),
-			json.OptionSelector(filter.Include(ft.OnlyFields...)),
+			json.OptionFilter(ft.filter),
+			json.OptionSelector(ft.selector),
 		)
 	} else {
 		b, err = json.Marshal(i)
@@ -159,11 +158,11 @@ func (c *XContext) XML(i interface{}, codes ...int) (err error) {
 		}
 	}
 	var b []byte
-	if ft, ok := c.route.Get(metaKeyEncodingFilter).(EncodingFilter); ok {
+	if ft, ok := c.route.Get(metaKeyEncodingConfig).(EncodingConfig); ok {
 		b, err = xml.MarshalWithOption(
 			i,
-			xml.OptionFilter(filter.Exclude(ft.OmitFields...)),
-			xml.OptionSelector(filter.Include(ft.OnlyFields...)),
+			xml.OptionFilter(ft.filter),
+			xml.OptionSelector(ft.selector),
 		)
 	} else {
 		b, err = xml.Marshal(i)
