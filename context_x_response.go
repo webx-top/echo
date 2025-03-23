@@ -99,7 +99,7 @@ func (c *XContext) JSON(i interface{}, codes ...int) (err error) {
 		}
 	}
 	var b []byte
-	if ft, ok := c.route.Get(metaKeyEncodingConfig).(EncodingConfig); ok {
+	if ft, ok := c.Route().Get(metaKeyEncodingConfig).(EncodingConfig); ok {
 		b, err = json.MarshalWithOption(
 			i,
 			json.OptionFilter(ft.filter),
@@ -131,7 +131,7 @@ func (c *XContext) JSONP(callback string, i interface{}, codes ...int) (err erro
 		}
 	}
 	var b []byte
-	if ft, ok := c.route.Get(metaKeyEncodingConfig).(EncodingConfig); ok {
+	if ft, ok := c.Route().Get(metaKeyEncodingConfig).(EncodingConfig); ok {
 		b, err = json.MarshalWithOption(
 			i,
 			json.OptionFilter(ft.filter),
@@ -158,7 +158,7 @@ func (c *XContext) XML(i interface{}, codes ...int) (err error) {
 		}
 	}
 	var b []byte
-	if ft, ok := c.route.Get(metaKeyEncodingConfig).(EncodingConfig); ok {
+	if ft, ok := c.Route().Get(metaKeyEncodingConfig).(EncodingConfig); ok {
 		b, err = xml.MarshalWithOption(
 			i,
 			xml.OptionFilter(ft.filter),

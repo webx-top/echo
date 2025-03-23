@@ -75,6 +75,9 @@ type IRouter interface {
 	SetMeta(param.Store) IRouter
 	SetMetaKV(string, interface{}) IRouter
 	GetMeta() param.Store
+	SetEncodingConfig(ef EncodingConfig) IRouter
+	SetEncodingOmitFields(names ...string) IRouter
+	SetEncodingOnlyFields(names ...string) IRouter
 }
 
 type Closer interface {

@@ -296,6 +296,31 @@ func TestEchoRealIP(t *testing.T) {
 	assert.Equal(t, strings.Join(ipArr, `.`), b)
 }
 
+func TestEchoEncodingConfig(t *testing.T) {
+	e := New()
+	type User struct {
+		Name     string `json:"name" xml:"name"`
+		Password string `json:"password" xml:"password"`
+	}
+	u := &User{
+		Name:     `test`,
+		Password: `123456`,
+	}
+	e.Get("/xml", func(c Context) error {
+		return c.XML(u)
+	}).SetEncodingOmitFields(`password`)
+	e.Get("/json", func(c Context) error {
+		return c.JSON(u)
+	}).SetEncodingOmitFields(`password`)
+	e.RebuildRouter()
+	c, b := request(GET, "/xml", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<User><name>test</name></User>", b)
+	c, b = request(GET, "/json", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `{"name":"test"}`, b)
+}
+
 func TestEchoData(t *testing.T) {
 	data := NewData(nil)
 	data.SetCode(0)

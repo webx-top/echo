@@ -130,6 +130,29 @@ func (r Routes) GetMeta() H {
 	return nil
 }
 
+const metaKeyEncodingConfig = `encodingConfig`
+
+func (r Routes) SetEncodingConfig(cfg EncodingConfig) IRouter {
+	for _, route := range r {
+		route.SetEncodingConfig(cfg)
+	}
+	return r
+}
+
+func (r Routes) SetEncodingOmitFields(names ...string) IRouter {
+	for _, route := range r {
+		route.SetEncodingOmitFields(names...)
+	}
+	return r
+}
+
+func (r Routes) SetEncodingOnlyFields(names ...string) IRouter {
+	for _, route := range r {
+		route.SetEncodingOnlyFields(names...)
+	}
+	return r
+}
+
 func (r *Route) SetName(name string) IRouter {
 	r.Name = name
 	return r
@@ -148,13 +171,11 @@ func (r *Route) SetMetaKV(key string, value interface{}) IRouter {
 	return r
 }
 
-const metaKeyEncodingConfig = `encodingConfig`
-
-func (r *Route) SetEncodingConfig(ef EncodingConfig) IRouter {
+func (r *Route) SetEncodingConfig(cfg EncodingConfig) IRouter {
 	if r.Meta == nil {
 		r.Meta = H{}
 	}
-	r.Meta[metaKeyEncodingConfig] = ef
+	r.Meta[metaKeyEncodingConfig] = cfg
 	return r
 }
 
