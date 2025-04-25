@@ -217,6 +217,8 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 				return
 			}
 		}
+
+	END:
 		data.SetData(echo.H{
 			"title":   title,
 			"content": msg,
@@ -225,8 +227,6 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			"panic":   panicErr,
 			"links":   links,
 		}, data.GetCode().Int())
-
-	END:
 		if renderErr := c.SetAuto(true).Render(tmpl, nil); renderErr != nil {
 			msg += "\n" + renderErr.Error()
 			c.String(msg, code)
