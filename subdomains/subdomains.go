@@ -40,14 +40,22 @@ type Info struct {
 }
 
 func (info *Info) URL(s *Subdomains, uri string) string {
+	return info.makeURL(s, uri, false)
+}
+
+func (info *Info) makeURL(s *Subdomains, uri string, uriHasPrefix bool) string {
 	if len(uri) > 0 && !strings.HasPrefix(uri, `/`) {
 		uri = `/` + uri
 	}
+	var prefix string
+	if !uriHasPrefix {
+		prefix = info.Prefix()
+	}
 	if domain := echo.String(`subdomains.` + info.Name + `.url`); len(domain) > 0 {
-		return domain + info.Prefix() + uri
+		return domain + prefix + uri
 	}
 	if len(info.Host) == 0 {
-		return info.Prefix() + uri
+		return prefix + uri
 	}
 	protocol := info.Protocol
 	if len(protocol) == 0 {
@@ -56,22 +64,29 @@ func (info *Info) URL(s *Subdomains, uri string) string {
 			protocol = `http`
 		}
 	}
-	return protocol + `://` + info.Host + info.Prefix() + uri
+	return protocol + `://` + info.Host + prefix + uri
 }
 
-func (info *Info) RelativeURL(s *Subdomains, uri string) string {
+func (info *Info) RelativeURL(uri string) string {
+	return info.makeRelativeURL(uri, false)
+}
+
+func (info *Info) makeRelativeURL(uri string, uriHasPrefix bool) string {
 	if len(uri) > 0 && !strings.HasPrefix(uri, `/`) {
 		uri = `/` + uri
 	}
-	return info.Prefix() + uri
+	if !uriHasPrefix {
+		return info.Prefix() + uri
+	}
+	return uri
 }
 
 func (info *Info) URLByName(s *Subdomains, name string, args ...interface{}) string {
-	return info.URL(s, info.Echo.URI(name, args...))
+	return info.makeURL(s, info.Echo.URI(name, args...), true)
 }
 
-func (info *Info) RelativeURLByName(s *Subdomains, name string, args ...interface{}) string {
-	return info.RelativeURL(s, info.Echo.URI(name, args...))
+func (info *Info) RelativeURLByName(name string, args ...interface{}) string {
+	return info.makeRelativeURL(info.Echo.URI(name, args...), true)
 }
 
 type Dispatcher func(r engine.Request, w engine.Response) (*echo.Echo, bool)
@@ -203,7 +218,7 @@ func (s *Subdomains) RelativeURL(uri string, args ...string) string {
 	if info == nil {
 		return uri
 	}
-	return info.RelativeURL(s, uri)
+	return info.RelativeURL(uri)
 }
 
 func parseURLName(name string) (string, []string) {
@@ -238,7 +253,7 @@ func (s *Subdomains) RelativeURLByName(name string, params ...interface{}) strin
 	if info == nil {
 		return `/not-found:` + name
 	}
-	return info.RelativeURLByName(s, name, params...)
+	return info.RelativeURLByName(name, params...)
 }
 
 func (s *Subdomains) sort(names []string) []string {
