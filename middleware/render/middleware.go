@@ -227,7 +227,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			"panic":   panicErr,
 			"links":   links,
 		}, data.GetCode().Int())
-		if renderErr := c.SetAuto(true).Render(tmpl, nil); renderErr != nil {
+		if renderErr := c.SetAuto(true).Render(tmpl, data.GetData()); renderErr != nil {
 			msg += "\n" + renderErr.Error()
 			c.String(msg, code)
 		}
