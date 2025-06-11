@@ -155,6 +155,10 @@ func (r *RenderData) SiteURI() string {
 	return r.Site() + strings.TrimPrefix(r.URI(), `/`)
 }
 
+func (r *RenderData) FullURL(myURL string) string {
+	return com.FullURL(r.Site(), myURL)
+}
+
 func (r *RenderData) Referer() string {
 	return r.ctx.Referer()
 }
