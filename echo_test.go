@@ -221,10 +221,14 @@ func TestGroupMiddleware(t *testing.T) {
 
 func TestEchoHandler(t *testing.T) {
 	e := New()
+	e.Extra().Set(`testKey`, `testValue`)
 
 	// HandlerFunc
 	e.Get("/ok", func(c Context) error {
 		return c.String("OK")
+	})
+	e.Get("/extra", func(c Context) error {
+		return c.String(c.Echo().Extra().String(`testKey`))
 	})
 	e.Get("/view/:id", func(c Context) error {
 		return c.String(c.Param(`id`))
@@ -242,6 +246,9 @@ func TestEchoHandler(t *testing.T) {
 	c, b := request(GET, "/ok", e)
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "OK", b)
+	c, b = request(GET, "/extra", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "testValue", b)
 	c, b = request(GET, "/view/123", e)
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "123", b)

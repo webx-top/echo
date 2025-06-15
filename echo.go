@@ -54,6 +54,7 @@ type (
 		rewriter            Rewriter
 		maxRequestBodySize  int
 		realIPConfig        *realip.Config
+		extra               H
 	}
 
 	Middleware interface {
@@ -204,7 +205,12 @@ func (e *Echo) Reset() *Echo {
 	e.renderDataWrapper = nil
 	e.rewriter = nil
 	e.realIPConfig = realip.New().SetIgnorePrivateIP(true)
+	e.extra = H{}
 	return e
+}
+
+func (e *Echo) Extra() H {
+	return e.extra
 }
 
 func (e *Echo) ParseHeaderAccept(on bool) *Echo {
