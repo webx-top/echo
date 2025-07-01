@@ -16,6 +16,8 @@ github.com/admpub/confl v0.2.4 h1:pQfAPZcP4zVwhJQCvp+8Kwpcm/dQP3Mjkk0elt2OYcM=
 github.com/admpub/confl v0.2.4/go.mod h1:IHabolnzuiUZKCt2spNhDHPMAJFIqcdzi5Sl5gJlB1U=
 github.com/admpub/decimal v1.3.1 h1:+lLbDXQoBb0fxtnMK7r3ZRFFdREV5GIUNculDQ6oSo8=
 github.com/admpub/decimal v1.3.1/go.mod h1:QJItPT9L1pPsXkS6fnwWB0FHlSDE7G0x6KOQfgAWyM4=
+github.com/admpub/decimal v1.3.2 h1:h8cl5/P0rprBTOZ06zeQ7Npwr5kNA/bZjspuf851EK4=
+github.com/admpub/decimal v1.3.2/go.mod h1:Lllp43lvskmi++859aMgNVH6TPp5MuHiA/uWRkH8kh4=
 github.com/admpub/events v1.3.6 h1:sspprUCsMj/mZUPLfs5Ol7xNUvGl2v1QlQnp1U+ouQE=
 github.com/admpub/events v1.3.6/go.mod h1:i7MCA/n2a8k/SApXTw+RigSfXO/GKnQQwEty1su24Jc=
 github.com/admpub/fasthttp v0.0.7 h1:3wcunm1GdBfDjDhnpRVrOZBc8Wh3gL+EusuRgKnPSyE=
@@ -63,6 +65,8 @@ github.com/alicebob/miniredis v2.5.0+incompatible h1:yBHoLpsyjupjz3NL3MhKMVkR41j
 github.com/alicebob/miniredis v2.5.0+incompatible/go.mod h1:8HZjEj4yU0dwhYHky+DxYx+6BMjkBbe5ONFIF1MXffk=
 github.com/andybalholm/brotli v1.1.1 h1:PR2pgnyFznKEugtsUo0xLdDop5SKXd5Qf5ysW+7XdTA=
 github.com/andybalholm/brotli v1.1.1/go.mod h1:05ib4cKhjx3OQYUY22hTVd34Bc8upXjOLL2rKwwZBoA=
+github.com/andybalholm/brotli v1.2.0 h1:ukwgCxwYrmACq68yiUqwIWnGY0cTPox/M94sVwToPjQ=
+github.com/andybalholm/brotli v1.2.0/go.mod h1:rzTDkvFWvIrjDXZHkuS16NPggd91W3kUSvPlQ1pLaKY=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/araddon/gou v0.0.0-20190110011759-c797efecbb61 h1:Xz25cuW4REGC5W5UtpMU3QItMIImag615HiQcRbxqKQ=
 github.com/araddon/gou v0.0.0-20190110011759-c797efecbb61/go.mod h1:ikc1XA58M+Rx7SEbf0bLJCfBkwayZ8T5jBo5FXK8Uz8=

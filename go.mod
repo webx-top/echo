@@ -5,7 +5,7 @@ go 1.24
 retract [v2.0.0+incompatible, v2.42.35+incompatible]
 
 require (
-	github.com/admpub/decimal v1.3.1
+	github.com/admpub/decimal v1.3.2
 	github.com/admpub/events v1.3.6
 	github.com/admpub/fasthttp v0.0.7
 	github.com/admpub/fsnotify v1.7.0
@@ -51,7 +51,7 @@ require (
 	github.com/admpub/color v1.8.1 // indirect
 	github.com/admpub/confl v0.2.4 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
-	github.com/andybalholm/brotli v1.1.1 // indirect
+	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/francoispqt/gojay v1.2.13 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
