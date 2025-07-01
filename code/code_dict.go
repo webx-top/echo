@@ -26,6 +26,7 @@ var CodeDict = CodeMap{
 	InvalidAppID: {"InvalidAppID", http.StatusBadRequest},
 	InvalidToken: {"InvalidToken", http.StatusBadRequest},
 
+	DataNotChanged:      {"DataNotChanged", http.StatusNotModified},
 	DataSizeTooBig:      {"DataSizeTooBig", http.StatusRequestEntityTooLarge},
 	DataAlreadyExists:   {"DataAlreadyExists", http.StatusBadRequest},
 	DataFormatIncorrect: {"DataFormatIncorrect", http.StatusBadRequest},
