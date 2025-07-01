@@ -35,16 +35,19 @@ const (
 	InvalidParameter    Code = -101 //无效的参数
 	DataNotFound        Code = -100 //数据未找到
 
-	// - 用户状态
+	// - 验证码
 
 	CaptchaCodeRequired Code = -11 // captcha code 不能为空
 	CaptchaIdMissing    Code = -10 // 缺少captchaId
 	CaptchaError        Code = -9  //验证码错误
-	BalanceNoEnough     Code = -5  //余额不足
-	UserDisabled        Code = -4  //用户被禁用
-	UserNotFound        Code = -3  //用户未找到
-	NonPrivileged       Code = -2  //无权限
-	Unauthenticated     Code = -1  //未登录
+
+	// - 用户状态
+
+	BalanceNoEnough Code = -5 //余额不足
+	UserDisabled    Code = -4 //用户被禁用
+	UserNotFound    Code = -3 //用户未找到
+	NonPrivileged   Code = -2 //无权限
+	Unauthenticated Code = -1 //未登录
 
 	// - 通用
 

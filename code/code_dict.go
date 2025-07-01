@@ -39,16 +39,19 @@ var CodeDict = CodeMap{
 	InvalidParameter:    {"InvalidParameter", http.StatusBadRequest},
 	DataNotFound:        {"DataNotFound", http.StatusNotFound},
 
-	// - 用户状态
+	// - 验证码
 
 	CaptchaCodeRequired: {"CaptchaCodeRequired", http.StatusBadRequest},
 	CaptchaIdMissing:    {"CaptchaIdMissing", http.StatusBadRequest},
 	CaptchaError:        {"CaptchaError", http.StatusBadRequest},
-	BalanceNoEnough:     {"BalanceNoEnough", http.StatusPreconditionFailed},
-	UserDisabled:        {"UserDisabled", http.StatusBadRequest},
-	UserNotFound:        {"UserNotFound", http.StatusBadRequest},
-	NonPrivileged:       {"NonPrivileged", http.StatusForbidden},
-	Unauthenticated:     {"Unauthenticated", http.StatusUnauthorized},
+
+	// - 用户状态
+
+	BalanceNoEnough: {"BalanceNoEnough", http.StatusPreconditionFailed},
+	UserDisabled:    {"UserDisabled", http.StatusBadRequest},
+	UserNotFound:    {"UserNotFound", http.StatusBadRequest},
+	NonPrivileged:   {"NonPrivileged", http.StatusForbidden},
+	Unauthenticated: {"Unauthenticated", http.StatusUnauthorized},
 
 	// - 通用
 
