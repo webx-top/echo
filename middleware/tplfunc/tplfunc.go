@@ -116,6 +116,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"NumberMore":     NumberMore, // {{ 1000 | NumberMore 99 }} 99+
 	"Math":           Math,
 	"NumberFormat":   NumberFormat,
+	"NumFormat":      com.NumFormat,
 	"NumberTrim":     NumberTrim,
 	"DurationFormat": DurationFormat,
 	"DelimLeft":      DelimLeft,
