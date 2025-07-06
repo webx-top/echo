@@ -40,9 +40,19 @@ func (r *Response) Header() engine.Header {
 	return r.header
 }
 
+func (r *Response) requestURI() string {
+	if len(r.request.RequestURI) > 0 {
+		return r.request.RequestURI
+	}
+	if r.request.URL != nil {
+		return r.request.URL.Path
+	}
+	return `-`
+}
+
 func (r *Response) WriteHeader(code int) {
 	if r.committed {
-		r.logger.Warn("response already committed")
+		r.logger.Warnf("%v [%s]", engine.ErrAlreadyCommitted, r.requestURI())
 		return
 	}
 	r.status = code

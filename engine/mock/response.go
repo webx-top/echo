@@ -36,7 +36,7 @@ func (r *Response) Header() engine.Header {
 
 func (r *Response) WriteHeader(code int) {
 	if r.Committed() {
-		r.logger.Warn("response already committed")
+		r.logger.Warn(engine.ErrAlreadyCommitted.Error())
 		return
 	}
 
@@ -49,7 +49,7 @@ func (r *Response) WriteHeader(code int) {
 
 func (r *Response) writeHeaderNoLock(code int) {
 	if r.committed {
-		r.logger.Warn("response already committed")
+		r.logger.Warn(engine.ErrAlreadyCommitted.Error())
 		return
 	}
 

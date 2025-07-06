@@ -5,7 +5,7 @@ package fasthttp
 
 import (
 	"bufio"
-	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -18,8 +18,6 @@ import (
 	"github.com/webx-top/echo/engine"
 	"github.com/webx-top/echo/logger"
 )
-
-var ErrAlreadyCommitted = errors.New(`response already committed`)
 
 type Response struct {
 	request           *Request
@@ -52,9 +50,19 @@ func (r *Response) Header() engine.Header {
 	return r.header
 }
 
+func (r *Response) requestURI() string {
+	if len(r.request.context.RequestURI()) > 0 {
+		return r.request.URI()
+	}
+	if r.request.context.URI() != nil {
+		return engine.Bytes2str(r.request.context.URI().Path())
+	}
+	return `-`
+}
+
 func (r *Response) WriteHeader(code int) {
 	if r.committed {
-		r.logger.Warn(ErrAlreadyCommitted.Error())
+		r.logger.Warnf(`%v [%v]`, engine.ErrAlreadyCommitted, r.requestURI())
 		return
 	}
 	r.status = code
@@ -264,7 +272,7 @@ func (w *netHTTPResponseWriter) WriteHeader(statusCode int) {
 
 func (w *netHTTPResponseWriter) Write(b []byte) (int, error) {
 	if w.response.committed {
-		return 0, ErrAlreadyCommitted
+		return 0, fmt.Errorf(`%w [%v]`, engine.ErrAlreadyCommitted, w.response.requestURI())
 	}
 	return w.response.Write(b)
 }
