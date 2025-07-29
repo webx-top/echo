@@ -17,3 +17,9 @@ func TestNumberFormat(t *testing.T) {
 	assert.Equal(t, "12,234,567", NumberTrim(12234567.987, 0))
 	assert.Equal(t, "234567.9", NumberTrim(234567.987, 1, ``))
 }
+
+func TestInExt(t *testing.T) {
+	assert.True(t, InExt(`a/b/c/d.jpg`, `.jpg`))
+	assert.False(t, InExt(`a/b/c/d.jpeg`, `.jpg`))
+	assert.True(t, InExt(`a/b/c/d.jpeg`, `.jpeg`))
+}

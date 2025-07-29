@@ -397,7 +397,24 @@ func If(condition bool, yesValue interface{}, noValue interface{}) interface{} {
 }
 
 func InExt(fileName string, exts ...string) bool {
-	ext := filepath.Ext(fileName)
+	var max int
+	for _, _ext := range exts {
+		l := len(_ext)
+		if max < l {
+			max = l
+		}
+	}
+	var ext string
+	for i, j := len(fileName)-1, 0; i >= 0; i-- {
+		j++
+		if fileName[i] == '.' {
+			ext = fileName[i:]
+			break
+		}
+		if j >= max {
+			return false
+		}
+	}
 	for _, _ext := range exts {
 		if strings.EqualFold(ext, _ext) {
 			return true
