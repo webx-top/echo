@@ -321,12 +321,31 @@ func (r *Route) GetStore(names ...string) H {
 
 func (r *Route) MakeURI(e *Echo, params ...interface{}) (uri string) {
 	length := len(params)
+	var withoutExt bool
 	if length != 1 {
-		uri = fmt.Sprintf(r.Format, params...)
-		uri = e.wrapURI(uri)
+		if length == 0 {
+			uri = e.wrapURI(r.Format, withoutExt)
+			return
+		}
+		var ok bool
+		withoutExt, ok = params[0].(bool)
+		if ok {
+			if length == 2 {
+				params = []interface{}{params[1]}
+				goto END
+			}
+			uri = fmt.Sprintf(r.Format, params[1:]...)
+		} else {
+			uri = fmt.Sprintf(r.Format, params...)
+		}
+		uri = e.wrapURI(uri, withoutExt)
 		return
 	}
+
+END:
 	switch val := params[0].(type) {
+	case bool:
+		uri = e.wrapURI(r.Format, val)
 	case url.Values:
 		uri = r.Path
 		if len(r.Params) > 0 {
@@ -337,7 +356,7 @@ func (r *Route) MakeURI(e *Echo, params ...interface{}) (uri string) {
 			}
 			uri = fmt.Sprintf(r.Format, values...)
 		}
-		uri = e.wrapURI(uri)
+		uri = e.wrapURI(uri, withoutExt)
 		q := val.Encode()
 		if len(q) > 0 {
 			uri += `?` + q
@@ -355,7 +374,7 @@ func (r *Route) MakeURI(e *Echo, params ...interface{}) (uri string) {
 			}
 			uri = fmt.Sprintf(r.Format, values...)
 		}
-		uri = e.wrapURI(uri)
+		uri = e.wrapURI(uri, withoutExt)
 		sep := `?`
 		keys := make([]string, 0, len(val))
 		for k := range val {
@@ -379,7 +398,7 @@ func (r *Route) MakeURI(e *Echo, params ...interface{}) (uri string) {
 			}
 			uri = fmt.Sprintf(r.Format, values...)
 		}
-		uri = e.wrapURI(uri)
+		uri = e.wrapURI(uri, withoutExt)
 		sep := `?`
 		keys := make([]string, 0, len(val))
 		for k := range val {
@@ -403,7 +422,7 @@ func (r *Route) MakeURI(e *Echo, params ...interface{}) (uri string) {
 			}
 			uri = fmt.Sprintf(r.Format, values...)
 		}
-		uri = e.wrapURI(uri)
+		uri = e.wrapURI(uri, withoutExt)
 		sep := `?`
 		keys := make([]string, 0, len(val))
 		for k := range val {
@@ -416,10 +435,10 @@ func (r *Route) MakeURI(e *Echo, params ...interface{}) (uri string) {
 		}
 	case []interface{}:
 		uri = fmt.Sprintf(r.Format, val...)
-		uri = e.wrapURI(uri)
+		uri = e.wrapURI(uri, withoutExt)
 	default:
 		uri = fmt.Sprintf(r.Format, val)
-		uri = e.wrapURI(uri)
+		uri = e.wrapURI(uri, withoutExt)
 	}
 	return
 }

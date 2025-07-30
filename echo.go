@@ -882,11 +882,11 @@ func (e *Echo) Rewriter() Rewriter {
 	return e.rewriter
 }
 
-func (e *Echo) wrapURI(uri string) string {
+func (e *Echo) wrapURI(uri string, withoutExt bool) string {
 	if e.rewriter != nil {
 		uri = e.rewriter.Rewrite(uri)
 	}
-	if len(e.defaultExtension) > 0 && !strings.HasSuffix(uri, e.defaultExtension) {
+	if !withoutExt && len(e.defaultExtension) > 0 && !strings.HasSuffix(uri, e.defaultExtension) {
 		uri += e.defaultExtension
 	}
 	return uri
