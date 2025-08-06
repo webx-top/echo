@@ -43,8 +43,6 @@ github.com/admpub/log v1.4.0/go.mod h1:bo7BVOu/p+GdOQnv5XhPiPQ60nhLRMhYbAQgKE0gY
 github.com/admpub/realip v0.0.0-20210421084339-374cf5df122d/go.mod h1:f6YCrWcytiBLo9A9OZCqu26WkBm4Y2QeWid8MRBxNSM=
 github.com/admpub/realip v0.2.7 h1:lefF1kpA3liKqq43PzM9D2Ex2imEeix/aMjSmmyMphY=
 github.com/admpub/realip v0.2.7/go.mod h1:Ini0GwP0RvSbVLPReALn5zYYRi7Z2wpi2C/7HVX9Ii4=
-github.com/admpub/rundelay v0.0.0-20250806095154-00445fb72be4 h1:GYiz6+JmfbAQXrDZgP6LEcke0ns1O4oiW2mFvmANYGQ=
-github.com/admpub/rundelay v0.0.0-20250806095154-00445fb72be4/go.mod h1:L1NBUnbjEYOFfOXIOV28C/6Jb87nUmtbD6gqTBvbc3g=
 github.com/admpub/securecookie v1.3.0 h1:SIQfKIwb2vWsIj7m1D1ZJQfKEEKB+I7sJQbTy9k3z1k=
 github.com/admpub/securecookie v1.3.0/go.mod h1:KWWRXAWYIUtoK6P7P6vuFXQ8ndFX9v1XgVBfg1zHjf4=
 github.com/admpub/sessions v0.3.0 h1:IlxkNCDZyg89sXJHl3q/nqpSk81hIz1Q1vVOiqhwi4w=
