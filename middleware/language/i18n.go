@@ -21,11 +21,13 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/admpub/i18n"
 	"github.com/admpub/log"
 	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
+	"golang.org/x/sync/singleflight"
 )
 
 var defaultInstance *I18n
@@ -35,6 +37,7 @@ type I18n struct {
 	lock        sync.RWMutex
 	translators map[string]*i18n.Translator
 	config      *Config
+	sg          singleflight.Group
 }
 
 func fixedPath(ppath string, open func(string) http.FileSystem) string {
@@ -99,8 +102,28 @@ func SetDefault(ins *I18n) {
 
 func (a *I18n) Monitor() *I18n {
 	onchange := func(file string) {
-		log.Info("reload language: ", file)
-		a.Reload(file)
+		run := func() (interface{}, error) {
+			log.Info("reload language: ", file)
+			var err error
+			defer func() {
+				if e := recover(); e != nil {
+					err = fmt.Errorf(`%v`, e)
+				}
+			}()
+			time.Sleep(time.Second)
+			a.Reload(file)
+			return nil, err
+		}
+		_, err, _ := a.sg.Do(file, run)
+		if err != nil {
+			log.Warnf(`failed to reload language %s: %v`, file, err)
+			log.Infof(`start retrying to load the language file %s`, file)
+			time.Sleep(time.Second)
+			_, err, _ = a.sg.Do(file, run)
+			if err != nil {
+				log.Errorf(`failed to reload language %s: %v`, file, err)
+			}
+		}
 	}
 	callback := &com.MonitorEvent{
 		Modify: onchange,
