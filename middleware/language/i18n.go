@@ -24,7 +24,6 @@ import (
 
 	"github.com/admpub/i18n"
 	"github.com/webx-top/echo"
-	"golang.org/x/sync/singleflight"
 )
 
 var defaultInstance *I18n
@@ -34,7 +33,6 @@ type I18n struct {
 	lock        sync.RWMutex
 	translators map[string]*i18n.Translator
 	config      *Config
-	sg          singleflight.Group
 }
 
 func fixedPath(ppath string, open func(string) http.FileSystem) string {

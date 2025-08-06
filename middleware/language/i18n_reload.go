@@ -8,6 +8,7 @@ import (
 
 	"github.com/admpub/log"
 	"github.com/webx-top/com"
+	"golang.org/x/sync/singleflight"
 )
 
 func (a *I18n) safeReload(file string) error {
@@ -35,7 +36,6 @@ func (a *I18n) Reload(langCode string) {
 }
 
 func (a *I18n) Monitor() *I18n {
-
 	reload := func(file string) error {
 		err := a.safeReload(file)
 		if err == nil {
@@ -51,8 +51,10 @@ func (a *I18n) Monitor() *I18n {
 		return err
 	}
 
+	sg := singleflight.Group{}
+
 	onchange := func(file string) {
-		a.sg.Do(file, func() (interface{}, error) {
+		sg.Do(file, func() (interface{}, error) {
 			return nil, reload(file)
 		})
 	}
