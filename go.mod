@@ -1,6 +1,6 @@
 module github.com/webx-top/echo
 
-go 1.24
+go 1.24.5
 
 retract [v2.0.0+incompatible, v2.42.35+incompatible]
 
@@ -19,6 +19,7 @@ require (
 	github.com/admpub/jet/v6 v6.0.2
 	github.com/admpub/log v1.4.0
 	github.com/admpub/realip v0.2.7
+	github.com/admpub/rundelay v0.0.0-20250806095154-00445fb72be4
 	github.com/admpub/securecookie v1.3.0
 	github.com/admpub/sessions v0.3.0
 	github.com/admpub/sockjs-go/v3 v3.0.1
