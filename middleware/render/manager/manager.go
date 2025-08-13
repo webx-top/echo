@@ -25,6 +25,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/admpub/fsnotify"
 	"github.com/admpub/log"
@@ -64,15 +65,25 @@ type Manager struct {
 	once     sync.Once
 }
 
-var empty = &fsnotify.Watcher{}
-
 func (m *Manager) closeMoniter() {
 	if m.isClosed.Load() {
 		return
 	}
 	m.isClosed.Store(true)
 	m.firstDir.Store(``)
-	m.done <- true
+	t := time.NewTimer(time.Second * 2)
+	defer t.Stop()
+	for {
+		select {
+		case m.done <- true:
+			return
+		case <-t.C:
+			go func() {
+				<-m.done
+			}()
+			return
+		}
+	}
 }
 
 func (m *Manager) getWatcher() (wt *fsnotify.Watcher, err error) {
@@ -232,85 +243,83 @@ func (m *Manager) watch() error {
 		logSuffix = ": " + v + " etc"
 	}
 	m.Logger.Debug("TemplateMgr watcher is start" + logSuffix + ".")
-	defer func() {
-		watcher.Close()
-		m.watcher.Store(empty)
-	}()
-	go func() {
-		for {
-			select {
-			case ev := <-watcher.Events:
-				if _, ok := m.ignores.GetOk(filepath.Base(ev.Name)); ok {
-					return
+	defer watcher.Close()
+
+	for {
+		select {
+		case ev := <-watcher.Events:
+			if _, ok := m.ignores.GetOk(filepath.Base(ev.Name)); ok {
+				continue
+			}
+			if _, ok := m.ignores.GetOk(`*` + filepath.Ext(ev.Name)); ok {
+				continue
+			}
+			d, err := os.Stat(ev.Name)
+			if err != nil {
+				continue
+			}
+			if ev.Op&fsnotify.Create == fsnotify.Create {
+				if d.IsDir() {
+					watcher.Add(ev.Name)
+					m.onChange(ev.Name, "dir", "create")
+					continue
 				}
-				if _, ok := m.ignores.GetOk(`*` + filepath.Ext(ev.Name)); ok {
-					return
+				m.onChange(ev.Name, "file", "create")
+				if m.allowCached(ev.Name) {
+					content, err := os.ReadFile(ev.Name)
+					if err != nil {
+						m.Logger.Infof("loaded template %v failed: %v", ev.Name, err)
+						continue
+					}
+					m.Logger.Infof("loaded template file %v success", ev.Name)
+					m.CacheTemplate(ev.Name, content)
 				}
-				d, err := os.Stat(ev.Name)
-				if err != nil {
-					return
+			} else if ev.Op&fsnotify.Remove == fsnotify.Remove {
+				if d.IsDir() {
+					watcher.Remove(ev.Name)
+					m.onChange(ev.Name, "dir", "delete")
+					continue
 				}
-				if ev.Op&fsnotify.Create == fsnotify.Create {
-					if d.IsDir() {
-						watcher.Add(ev.Name)
-						m.onChange(ev.Name, "dir", "create")
-						return
-					}
-					m.onChange(ev.Name, "file", "create")
-					if m.allowCached(ev.Name) {
-						content, err := os.ReadFile(ev.Name)
-						if err != nil {
-							m.Logger.Infof("loaded template %v failed: %v", ev.Name, err)
-							return
-						}
-						m.Logger.Infof("loaded template file %v success", ev.Name)
-						m.CacheTemplate(ev.Name, content)
-					}
-				} else if ev.Op&fsnotify.Remove == fsnotify.Remove {
-					if d.IsDir() {
-						watcher.Remove(ev.Name)
-						m.onChange(ev.Name, "dir", "delete")
-						return
-					}
-					m.onChange(ev.Name, "file", "delete")
-					if m.allowCached(ev.Name) {
-						m.CacheDelete(ev.Name)
-					}
-				} else if ev.Op&fsnotify.Write == fsnotify.Write {
-					if d.IsDir() {
-						m.onChange(ev.Name, "dir", "modify")
-						return
-					}
-					m.onChange(ev.Name, "file", "modify")
-					if m.allowCached(ev.Name) {
-						content, err := os.ReadFile(ev.Name)
-						if err != nil {
-							m.Logger.Errorf("reloaded template %v failed: %v", ev.Name, err)
-							return
-						}
-						m.CacheTemplate(ev.Name, content)
-						m.Logger.Infof("reloaded template %v success", ev.Name)
-					}
-				} else if ev.Op&fsnotify.Rename == fsnotify.Rename {
-					if d.IsDir() {
-						watcher.Remove(ev.Name)
-						m.onChange(ev.Name, "dir", "rename")
-						return
-					}
-					m.onChange(ev.Name, "file", "rename")
-					if m.allowCached(ev.Name) {
-						m.CacheDelete(ev.Name)
-					}
+				m.onChange(ev.Name, "file", "delete")
+				if m.allowCached(ev.Name) {
+					m.CacheDelete(ev.Name)
 				}
-			case err := <-watcher.Errors:
-				if err != nil {
-					m.Logger.Error("error:", err)
+			} else if ev.Op&fsnotify.Write == fsnotify.Write {
+				if d.IsDir() {
+					m.onChange(ev.Name, "dir", "modify")
+					continue
+				}
+				m.onChange(ev.Name, "file", "modify")
+				if m.allowCached(ev.Name) {
+					content, err := os.ReadFile(ev.Name)
+					if err != nil {
+						m.Logger.Errorf("reloaded template %v failed: %v", ev.Name, err)
+						continue
+					}
+					m.CacheTemplate(ev.Name, content)
+					m.Logger.Infof("reloaded template %v success", ev.Name)
+				}
+			} else if ev.Op&fsnotify.Rename == fsnotify.Rename {
+				if d.IsDir() {
+					watcher.Remove(ev.Name)
+					m.onChange(ev.Name, "dir", "rename")
+					continue
+				}
+				m.onChange(ev.Name, "file", "rename")
+				if m.allowCached(ev.Name) {
+					m.CacheDelete(ev.Name)
 				}
 			}
+		case err := <-watcher.Errors:
+			if err != nil {
+				m.Logger.Error("error:", err)
+			}
+		case <-m.done:
+			goto END
 		}
-	}()
+	}
 
-	<-m.done
+END:
 	m.Logger.Debug("TemplateMgr watcher is closed" + logSuffix + ".")
 	return nil
 }
