@@ -34,7 +34,7 @@ import (
 	"github.com/webx-top/echo/middleware/render/driver"
 )
 
-var Default driver.Manager = &driver.BaseManager{}
+var Default driver.Manager = New()
 
 func New() *Manager {
 	m := &Manager{
@@ -70,9 +70,9 @@ func (m *Manager) closeMoniter() {
 	if m.isClosed.Load() {
 		return
 	}
+	m.isClosed.Store(true)
 	m.firstDir.Store(``)
 	m.done <- true
-	m.isClosed.Store(true)
 }
 
 func (m *Manager) getWatcher() (wt *fsnotify.Watcher, err error) {
