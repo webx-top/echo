@@ -177,9 +177,7 @@ func (a *Standard) Init() {
 }
 
 func (a *Standard) SetManager(mgr driver.Manager) {
-	if a.TemplateMgr != nil {
-		a.TemplateMgr.Close()
-	}
+	a.closeTemplateMgr()
 	a.TemplateMgr = mgr
 }
 
@@ -595,6 +593,10 @@ func (a *Standard) ClearCache() {
 
 func (a *Standard) Close() {
 	a.ClearCache()
+	a.closeTemplateMgr()
+}
+
+func (a *Standard) closeTemplateMgr() {
 	if a.TemplateMgr != nil {
 		if a.TemplateMgr == manager.Default {
 			a.TemplateMgr.CancelWatchDir(a.TemplateDir)
