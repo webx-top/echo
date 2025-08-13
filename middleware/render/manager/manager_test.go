@@ -1,36 +1,40 @@
 package manager
 
 import (
-	"fmt"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/admpub/log"
+	"github.com/webx-top/echo/middleware/render/driver"
 )
 
 func TestManagerLoop(t *testing.T) {
+	mgr := New()
 	for i := 0; i < 3; i++ {
-		TestManager(t)
+		testManager(t, mgr)
 	}
 }
 
 func TestManager(t *testing.T) {
+	mgr := New()
+	testManager(t, mgr)
+}
+
+func testManager(t *testing.T, mgr driver.Manager) {
 	dirs := []string{
 		`./group_a/a`, `./group_b/b`,
 	}
 	changed := make(chan string)
-	Default.AddCallback(`./`, func(name, typ, event string) {
-		changed <- fmt.Sprintln(name, typ, event)
-	})
 	go func() {
-		for {
-			select {
-			case t := <-changed:
-				println(`---------->`, t)
-			}
+		for t := range <-changed {
+			println(`---------->`, t)
 		}
 	}()
+	println(`~~~~~~~~~~~~>AddCallback`)
+	// mgr.AddCallback(`./`, func(name, typ, event string) {
+	// 	changed <- fmt.Sprintln(name, typ, event)
+	// })
 	defer log.Sync()
 	log.GetLogger(`watcher`).SetLevel(`Debug`)
 	var err error
@@ -39,21 +43,22 @@ func TestManager(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		err = Default.AddWatchDir(dir)
+		err = mgr.AddWatchDir(dir)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	Default.Start()
-	defer Default.Close()
+	println(`~~~~~~~~~~~~>Start`)
+	mgr.Start()
+	defer mgr.Close()
 
 	err = os.WriteFile(`./group_a/a/test.log`, []byte(time.Now().String()), os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
 	//log.GetLogger(`watcher`).SetLevel(`Debug`)
-	b, err := Default.GetTemplate(`./group_a/a/test.log`)
+	b, err := mgr.GetTemplate(`./group_a/a/test.log`)
 	if err != nil {
 		panic(err)
 	}
@@ -64,9 +69,13 @@ func TestManager(t *testing.T) {
 		println(`cancel ./group_b`)
 		Default.CancelWatchDir(`./group_b`)
 	*/
-	for file := range Default.(*Manager).caches {
-		println(`===>:`, file)
-	}
+	// for file := range mgr.(*Manager).caches {
+	// 	println(`===>:`, file)
+	// }
+	// mgr.(*Manager).caches.Range(func(file string, _ []byte) bool {
+	// 	println(`===>:`, file)
+	// 	return true
+	// })
 	time.Sleep(2 * time.Second)
 
 	err = os.WriteFile(`./group_b/b/test.log`, []byte(time.Now().String()), os.ModePerm)

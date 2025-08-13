@@ -8,7 +8,7 @@ require (
 	github.com/admpub/decimal v1.3.2
 	github.com/admpub/events v1.3.6
 	github.com/admpub/fasthttp v0.0.7
-	github.com/admpub/fsnotify v1.7.0
+	github.com/admpub/fsnotify v1.7.1
 	github.com/admpub/go-cache v2.0.1+incompatible
 	github.com/admpub/go-isatty v0.0.11
 	github.com/admpub/go-reuseport v0.5.0
@@ -40,7 +40,7 @@ require (
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380
 	github.com/webx-top/tagfast v0.0.1
 	github.com/webx-top/validation v0.0.3
-	golang.org/x/crypto v0.40.0
+	golang.org/x/crypto v0.41.0
 	golang.org/x/sync v0.16.0
 	golang.org/x/time v0.12.0
 	gopkg.in/redis.v5 v5.2.9
@@ -68,9 +68,9 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
-	golang.org/x/net v0.42.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
-	golang.org/x/sys v0.34.0 // indirect
-	golang.org/x/text v0.27.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
