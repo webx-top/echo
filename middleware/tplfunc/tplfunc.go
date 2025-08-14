@@ -797,12 +797,28 @@ func Eq(left interface{}, right interface{}) bool {
 	return fmt.Sprintf("%v", left) == fmt.Sprintf("%v", right)
 }
 
-func ToHTML(raw string) template.HTML {
-	return template.HTML(raw)
+func ToHTML(raw interface{}) template.HTML {
+	switch v := raw.(type) {
+	case template.HTML:
+		return v
+	case string:
+		return template.HTML(v)
+	default:
+		return template.HTML(com.String(raw))
+	}
 }
 
-func ToHTMLAttr(raw string) template.HTMLAttr {
-	return template.HTMLAttr(raw)
+func ToHTMLAttr(raw interface{}) template.HTMLAttr {
+	switch v := raw.(type) {
+	case template.HTML:
+		return template.HTMLAttr(string(v))
+	case template.HTMLAttr:
+		return v
+	case string:
+		return template.HTMLAttr(v)
+	default:
+		return template.HTMLAttr(com.String(raw))
+	}
 }
 
 func ToHTMLAttrs(raw map[string]interface{}) (r map[template.HTMLAttr]interface{}) {
@@ -813,16 +829,43 @@ func ToHTMLAttrs(raw map[string]interface{}) (r map[template.HTMLAttr]interface{
 	return
 }
 
-func ToJS(raw string) template.JS {
-	return template.JS(raw)
+func ToJS(raw interface{}) template.JS {
+	switch v := raw.(type) {
+	case template.HTML:
+		return template.JS(string(v))
+	case template.JS:
+		return v
+	case string:
+		return template.JS(v)
+	default:
+		return template.JS(com.String(raw))
+	}
 }
 
-func ToCSS(raw string) template.CSS {
-	return template.CSS(raw)
+func ToCSS(raw interface{}) template.CSS {
+	switch v := raw.(type) {
+	case template.HTML:
+		return template.CSS(string(v))
+	case template.CSS:
+		return v
+	case string:
+		return template.CSS(v)
+	default:
+		return template.CSS(com.String(raw))
+	}
 }
 
-func ToURL(raw string) template.URL {
-	return template.URL(raw)
+func ToURL(raw interface{}) template.URL {
+	switch v := raw.(type) {
+	case template.HTML:
+		return template.URL(string(v))
+	case template.URL:
+		return v
+	case string:
+		return template.URL(v)
+	default:
+		return template.URL(com.String(raw))
+	}
 }
 
 func AddSuffix(s string, suffix string, args ...string) string {
