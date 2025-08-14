@@ -22,6 +22,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/admpub/events"
 )
 
 // T 标记为多语言文本(fake)
@@ -35,6 +37,11 @@ func E(format string, args ...interface{}) error {
 	}
 	return errors.New(format)
 }
+
+type (
+	translator      = Translator
+	eventsEmitterer = events.Emitterer
+)
 
 type Translator interface {
 	T(format string, args ...interface{}) string

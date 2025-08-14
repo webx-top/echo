@@ -20,8 +20,9 @@ import (
 // response objects, path parameters, data and registered handler.
 type Context interface {
 	context.Context
-	events.Emitterer
+	eventsEmitterer
 	SetEmitterer(events.Emitterer)
+	Emitterer() events.Emitterer
 	Handler() Handler
 
 	//Transaction
@@ -40,8 +41,9 @@ type Context interface {
 	SetValidator(Validator)
 	Validator() Validator
 	Validate(item interface{}, args ...interface{}) error
-	Translator
+	translator
 	SetTranslator(Translator)
+	Translator() Translator
 	Request() engine.Request
 	Response() engine.Response
 	Handle(Context) error

@@ -17,8 +17,8 @@ import (
 )
 
 type XContext struct {
-	Translator
-	events.Emitterer
+	translator
+	eventsEmitterer
 	transaction         *BaseTransaction
 	validator           Validator
 	sessioner           Sessioner
@@ -58,8 +58,8 @@ var _ context.Context = (*XContext)(nil)
 func NewContext(req engine.Request, res engine.Response, e *Echo) Context {
 	c := &XContext{
 		validator:         e.Validator,
-		Translator:        DefaultNopTranslate,
-		Emitterer:         events.Default,
+		translator:        DefaultNopTranslate,
+		eventsEmitterer:   events.Default,
 		transaction:       DefaultNopTransaction,
 		request:           req,
 		response:          res,
@@ -96,7 +96,11 @@ func (c *XContext) Internal() *param.SafeMap {
 }
 
 func (c *XContext) SetEmitterer(emitterer events.Emitterer) {
-	c.Emitterer = emitterer
+	c.eventsEmitterer = emitterer
+}
+
+func (c *XContext) Emitterer() events.Emitterer {
+	return c.eventsEmitterer
 }
 
 func (c *XContext) Handler() Handler {
@@ -182,7 +186,11 @@ func (c *XContext) Echo() *Echo {
 }
 
 func (c *XContext) SetTranslator(t Translator) {
-	c.Translator = t
+	c.translator = t
+}
+
+func (c *XContext) Translator() Translator {
+	return c.translator
 }
 
 func (c *XContext) SetDefaultExtension(ext string) {
@@ -204,8 +212,8 @@ func (c *XContext) Reset(req engine.Request, res engine.Response) {
 		req.SetMaxSize(c.echo.MaxRequestBodySize())
 	}
 	c.validator = c.echo.Validator
-	c.Emitterer = events.Default
-	c.Translator = DefaultNopTranslate
+	c.eventsEmitterer = events.Default
+	c.translator = DefaultNopTranslate
 	c.transaction = DefaultNopTransaction
 	c.sessioner = DefaultSession
 	c.cookier = NewCookier(c)
