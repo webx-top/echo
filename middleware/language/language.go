@@ -1,19 +1,17 @@
 /*
+Copyright 2016 Wenhui Shen <www.webx.top>
 
-   Copyright 2016 Wenhui Shen <www.webx.top>
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+	http://www.apache.org/licenses/LICENSE-2.0
 
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 package language
 
@@ -60,12 +58,20 @@ type Language struct {
 }
 
 func (a *Language) Init(c *Config) {
+	if len(c.Default) > 0 {
+		c.Default = echo.NewLangCode(c.Default).Normalize()
+	}
+	if len(c.Fallback) > 0 {
+		c.Fallback = echo.NewLangCode(c.Fallback).Normalize()
+	}
 	if c.AllList != nil {
-		for _, lang := range c.AllList {
-			a.Set(lang, true, lang == c.Default)
+		for index, lang := range c.AllList {
+			lang = echo.NewLangCode(lang).Normalize()
+			a.Set(lang, true, lang == c.Default, true)
+			c.AllList[index] = lang
 		}
 	} else {
-		a.Set(c.Default, true, true)
+		a.Set(c.Default, true, true, true)
 		if c.Default != `en` {
 			a.Set(`en`, true)
 		}
@@ -76,15 +82,24 @@ func (a *Language) Init(c *Config) {
 	}
 }
 
+// Set 记录语言
+//   - on: 使用启用此语言
+//   - args[0]: setDefault 是否设置为默认语言
+//   - args[1]: normalized 是否已经标准格式化 lang 值
 func (a *Language) Set(lang string, on bool, args ...bool) *Language {
+	var setDefault, normalized bool
+	com.ExtractSlicex(args, &setDefault, &normalized)
 	if a.List == nil {
 		a.List = make(map[string]bool)
+	}
+	if !normalized {
+		lang = echo.NewLangCode(lang).Normalize()
 	}
 	if _, ok := a.List[lang]; !ok {
 		a.Index = append(a.Index, lang)
 	}
 	a.List[lang] = on
-	if on && len(args) > 0 && args[0] {
+	if on && setDefault {
 		a.Default = lang
 	}
 	return a
@@ -102,7 +117,8 @@ func (a *Language) DetectURI(r engine.Request) string {
 	if len(lang) == 0 {
 		return lang
 	}
-	on, ok := a.List[lang]
+	normalized := echo.NewLangCode(lang).Normalize()
+	on, ok := a.List[normalized]
 	if !ok {
 		return ``
 	}
@@ -110,7 +126,7 @@ func (a *Language) DetectURI(r engine.Request) string {
 	if !on {
 		return ``
 	}
-	return lang
+	return normalized
 }
 
 func (a *Language) Valid(lang string) bool {
@@ -134,7 +150,6 @@ func ParseHeader(al string, n int) []string {
 func (a *Language) DetectHeader(r engine.Request) string {
 	lg := ParseHeader(r.Header().Get(`Accept-Language`), 5)
 	for _, lang := range lg {
-		lang = strings.ToLower(lang)
 		if a.Valid(lang) {
 			return lang
 		}
@@ -150,6 +165,9 @@ func (a *Language) Middleware() echo.MiddlewareFunc {
 	return echo.MiddlewareFunc(func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
 			lang := c.Query(LangVarName)
+			if len(lang) > 0 {
+				lang = echo.NewLangCode(lang).Normalize()
+			}
 			var hasCookie bool
 			if !a.Valid(lang) {
 				lang = a.DetectURI(c.Request())
