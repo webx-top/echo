@@ -23,7 +23,7 @@ require (
 	github.com/admpub/sessions v0.3.0
 	github.com/admpub/sockjs-go/v3 v3.0.1
 	github.com/admpub/sse v0.0.0-20160126180136-ee05b128a739
-	github.com/admpub/timeago v1.2.2
+	github.com/admpub/timeago v1.3.0
 	github.com/admpub/websocket v1.0.4
 	github.com/admpub/xencoding v0.0.3
 	github.com/alicebob/miniredis v2.5.0+incompatible
@@ -36,7 +36,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/webx-top/captcha v0.1.0
 	github.com/webx-top/codec v0.3.0
-	github.com/webx-top/com v1.3.31
+	github.com/webx-top/com v1.4.0
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380
 	github.com/webx-top/tagfast v0.0.1
 	github.com/webx-top/validation v0.0.3

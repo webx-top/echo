@@ -219,13 +219,13 @@ func (r *RenderData) Fetch(tmpl string, data interface{}) template.HTML {
 
 func (r *RenderData) TimeAgo(v interface{}, options ...string) string {
 	if datetime, ok := v.(string); ok {
-		return timeago.Take(datetime, r.Lang().Format(false, `-`))
+		return timeago.Take(datetime, r.Lang().Normalize())
 	}
 	var option string
 	if len(options) > 0 {
 		option = options[0]
 	}
-	return timeago.Timestamp(param.AsInt64(v), r.Lang().Format(false, `-`), option)
+	return timeago.Timestamp(param.AsInt64(v), r.Lang().Normalize(), option)
 }
 
 func (r *RenderData) RootPrefix() string {
