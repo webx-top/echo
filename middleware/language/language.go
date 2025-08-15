@@ -117,8 +117,7 @@ func (a *Language) DetectURI(r engine.Request) string {
 	if len(lang) == 0 {
 		return lang
 	}
-	normalized := echo.NewLangCode(lang).Normalize()
-	on, ok := a.List[normalized]
+	on, ok := a.List[lang]
 	if !ok {
 		return ``
 	}
@@ -126,7 +125,7 @@ func (a *Language) DetectURI(r engine.Request) string {
 	if !on {
 		return ``
 	}
-	return normalized
+	return lang
 }
 
 func (a *Language) Valid(lang string) bool {
@@ -165,9 +164,6 @@ func (a *Language) Middleware() echo.MiddlewareFunc {
 	return echo.MiddlewareFunc(func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
 			lang := c.Query(LangVarName)
-			if len(lang) > 0 {
-				lang = echo.NewLangCode(lang).Normalize()
-			}
 			var hasCookie bool
 			if !a.Valid(lang) {
 				lang = a.DetectURI(c.Request())
