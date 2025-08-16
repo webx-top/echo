@@ -51,14 +51,18 @@ func (r *RenderData) UnixTime() int64 {
 	return r.now.Unix()
 }
 
+// RawT 文本译文原始功能
 func (r *RenderData) RawT(format string, args ...interface{}) string {
 	return r.ctx.T(format, args...)
 }
 
+// T 文本译文
+// 可以重写 T 函数，重写的 T 函数功能应该是 RawT + ExtT 的组合效果
 func (r *RenderData) T(format string, args ...interface{}) string {
 	return r.ctx.T(format, args...)
 }
 
+// ExtT 文本译文附加功能
 func (r *RenderData) ExtT(format string, args ...interface{}) string {
 	return r.ctx.T(format, args...)
 }
