@@ -62,9 +62,9 @@ func (r *RenderData) T(format string, args ...interface{}) string {
 	return r.ctx.T(format, args...)
 }
 
-// ExtT 文本译文附加功能
-func (r *RenderData) ExtT(format string, args ...interface{}) string {
-	return r.ctx.T(format, args...)
+// ExtT 获取到文本译文后的附加功能
+func (r *RenderData) ExtT(v string, args ...interface{}) string {
+	return v
 }
 
 func (r *RenderData) Lang() LangCode {
