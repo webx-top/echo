@@ -51,7 +51,15 @@ func (r *RenderData) UnixTime() int64 {
 	return r.now.Unix()
 }
 
+func (r *RenderData) RawT(format string, args ...interface{}) string {
+	return r.ctx.T(format, args...)
+}
+
 func (r *RenderData) T(format string, args ...interface{}) string {
+	return r.ctx.T(format, args...)
+}
+
+func (r *RenderData) ExtT(format string, args ...interface{}) string {
 	return r.ctx.T(format, args...)
 }
 
