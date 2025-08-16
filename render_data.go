@@ -63,7 +63,7 @@ func (r *RenderData) T(format string, args ...interface{}) string {
 }
 
 // ExtT 获取到文本译文后的附加功能
-func (r *RenderData) ExtT(v string, args ...interface{}) string {
+func (r *RenderData) ExtT(v string, _ ...interface{}) string {
 	return v
 }
 
