@@ -461,6 +461,16 @@ func (e *Echo) Pre(middleware ...interface{}) {
 	e.premiddleware = append(middlewares, e.premiddleware...)
 }
 
+func (e *Echo) PreAppend(middleware ...interface{}) {
+	for _, m := range middleware {
+		e.ValidMiddleware(m)
+		e.premiddleware = append(e.premiddleware, m)
+		if e.MiddlewareDebug {
+			e.logger.Debugf(`Middleware[Pre](%p): [] -> %s`, m, HandlerName(m))
+		}
+	}
+}
+
 // Clear middleware
 func (e *Echo) Clear(middleware ...interface{}) {
 	e.middleware = Clear(e.middleware, middleware...)
