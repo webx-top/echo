@@ -298,8 +298,8 @@ func (r *RenderData) RelativeURL(uri string) string {
 	return r.ctx.RelativeURL(uri)
 }
 
-func (r *RenderData) URLFor(uri string, abs ...bool) string {
-	return r.ctx.URLFor(uri, abs...)
+func (r *RenderData) URLFor(uri string, relative ...bool) string {
+	return r.ctx.URLFor(uri, relative...)
 }
 
 func (r *RenderData) URLByName(name string, args ...interface{}) string {
