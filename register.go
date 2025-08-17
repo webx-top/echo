@@ -90,7 +90,7 @@ type Prefixer interface {
 
 type URLGenerator interface {
 	RelativeURL(uri string) string
-	URL(uri string, abs ...bool) string
+	URLFor(uri string, abs ...bool) string
 	URLByName(name string, args ...interface{}) string
 	RelativeURLByName(name string, args ...interface{}) string
 }

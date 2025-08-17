@@ -479,7 +479,7 @@ func (c *XContext) RelativeURL(uri string) string {
 	return c.echo.uriAddLangCode(c, c.echo.MakeRelativeURL(uri, false))
 }
 
-func (c *XContext) URL(uri string, abs ...bool) string {
+func (c *XContext) URLFor(uri string, abs ...bool) string {
 	if len(abs) > 0 && abs[0] {
 		return c.RelativeURL(uri)
 	}
