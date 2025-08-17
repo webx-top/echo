@@ -12,6 +12,7 @@ type Hoster interface {
 	FormatMap(params H) string
 	RegExp() *regexp.Regexp
 	Match(host string) (r []string, hasExpr bool)
+	HasParam(name string) bool
 }
 
 type host struct {
@@ -20,10 +21,16 @@ type host struct {
 	format string
 	regExp *regexp.Regexp
 	names  []string
+	namek  map[string]struct{}
 }
 
 func (h *host) Name() string {
 	return h.name
+}
+
+func (h *host) HasParam(name string) bool {
+	_, ok := h.namek[name]
+	return ok
 }
 
 func (h *host) Alias() string {
@@ -69,7 +76,7 @@ func (h *host) Match(host string) (r []string, hasExpr bool) {
 }
 
 func NewHost(name string) *host {
-	return &host{name: name}
+	return &host{name: name, namek: map[string]struct{}{}}
 }
 
 var hostRegExp = regexp.MustCompile(`<([^:]+)(?:\:(.+?))?>`)
@@ -113,5 +120,8 @@ func ParseURIRegExp(uriRegexp string, dflRegexp string) (names []string, format 
 
 func (h *host) Parse() *host {
 	h.names, h.format, h.regExp = ParseURIRegExp(h.name, ``)
+	for _, name := range h.names {
+		h.namek[name] = struct{}{}
+	}
 	return h
 }
