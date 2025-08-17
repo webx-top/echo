@@ -21,7 +21,7 @@ import (
 type Context interface {
 	context.Context
 	eventsEmitterer
-	RouteDispatcher
+	IRouteDispatchPath
 	URLGenerator
 	SetEmitterer(events.Emitterer)
 	Emitterer() events.Emitterer

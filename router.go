@@ -619,8 +619,8 @@ func NewRouter(e *Echo) *Router {
 }
 
 func (r *Router) Handle(c Context) Handler {
-	if len(c.DispatchRoute()) > 0 {
-		return r.Dispatch(c, c.DispatchRoute())
+	if len(c.DispatchPath()) > 0 {
+		return r.Dispatch(c, c.DispatchPath())
 	}
 	return r.Dispatch(c, c.Request().URL().Path())
 }

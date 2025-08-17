@@ -95,7 +95,7 @@ type URLGenerator interface {
 	RelativeURLByName(name string, args ...interface{}) string
 }
 
-type RouteDispatcher interface {
-	SetDispatchRoute(route string)
-	DispatchRoute() string
+type IRouteDispatchPath interface {
+	SetDispatchPath(route string)
+	DispatchPath() string
 }

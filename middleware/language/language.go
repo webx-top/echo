@@ -106,11 +106,11 @@ func (a *Language) Set(lang string, on bool, args ...bool) *Language {
 }
 
 func (a *Language) DetectURI(c echo.Context) string {
-	route := c.DispatchRoute()
-	if len(route) == 0 {
-		route = c.Request().URL().Path()
+	dispatchPath := c.DispatchPath()
+	if len(dispatchPath) == 0 {
+		dispatchPath = c.Request().URL().Path()
 	}
-	p := strings.TrimPrefix(route, `/`)
+	p := strings.TrimPrefix(dispatchPath, `/`)
 	s := strings.Index(p, `/`)
 	var lang string
 	if s != -1 {
@@ -125,7 +125,7 @@ func (a *Language) DetectURI(c echo.Context) string {
 	if !ok {
 		return ``
 	}
-	c.SetDispatchRoute(strings.TrimPrefix(p, lang))
+	c.SetDispatchPath(strings.TrimPrefix(p, lang))
 	if !on {
 		return ``
 	}

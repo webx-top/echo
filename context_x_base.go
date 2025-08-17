@@ -462,11 +462,11 @@ func (c *XContext) Dispatch(route string) Handler {
 	return c.Echo().Router().Dispatch(c, u.Path)
 }
 
-func (c *XContext) SetDispatchRoute(route string) {
+func (c *XContext) SetDispatchPath(route string) {
 	c.dispatchRoute = route
 }
 
-func (c *XContext) DispatchRoute() string {
+func (c *XContext) DispatchPath() string {
 	return c.dispatchRoute
 }
 
