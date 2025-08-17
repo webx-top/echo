@@ -120,6 +120,9 @@ func ParseURIRegExp(uriRegexp string, dflRegexp string) (names []string, format 
 
 func (h *host) Parse() *host {
 	h.names, h.format, h.regExp = ParseURIRegExp(h.name, ``)
+	if h.namek == nil {
+		h.namek = map[string]struct{}{}
+	}
 	for _, name := range h.names {
 		h.namek[name] = struct{}{}
 	}
