@@ -21,6 +21,13 @@ func (t TypeHost) URI(handler interface{}, params ...interface{}) string {
 	return t.prefix + t.echo.URI(handler, params...)
 }
 
+func (t TypeHost) URIWithContext(c Context, handler interface{}, params ...interface{}) string {
+	if t.router == nil || t.echo == nil {
+		return ``
+	}
+	return t.echo.uriAddLangCode(c, t.prefix+t.echo.URI(handler, params...))
+}
+
 func (t TypeHost) String() string {
 	return t.prefix
 }

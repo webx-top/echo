@@ -72,13 +72,7 @@ func (info *Info) RelativeURL(uri string) string {
 }
 
 func (info *Info) makeRelativeURL(uri string, uriHasPrefix bool) string {
-	if len(uri) > 0 && !strings.HasPrefix(uri, `/`) {
-		uri = `/` + uri
-	}
-	if !uriHasPrefix {
-		return info.Prefix() + uri
-	}
-	return uri
+	return info.MakeRelativeURL(uri, uriHasPrefix)
 }
 
 func (info *Info) URLByName(s *Subdomains, name string, args ...interface{}) string {

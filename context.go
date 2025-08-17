@@ -21,6 +21,8 @@ import (
 type Context interface {
 	context.Context
 	eventsEmitterer
+	RouteDispatcher
+	URLGenerator
 	SetEmitterer(events.Emitterer)
 	Emitterer() events.Emitterer
 	Handler() Handler

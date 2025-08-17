@@ -145,6 +145,14 @@ func Debug() bool {
 	return Default.Debug()
 }
 
+func SetMultilingual(on bool) {
+	Default.SetMultilingual(on)
+}
+
+func Multilingual() bool {
+	return Default.Multilingual()
+}
+
 // Use adds handler to the middleware chain.
 func Use(middleware ...interface{}) {
 	Default.Use(middleware...)

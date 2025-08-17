@@ -50,6 +50,7 @@ type XContext struct {
 	auto                bool
 	onHostFound         func(Context) (bool, error)
 	realIP              string
+	dispatchRoute       string
 }
 
 var _ context.Context = (*XContext)(nil)
@@ -242,6 +243,7 @@ func (c *XContext) Reset(req engine.Request, res engine.Response) {
 	c.renderDataWrapper = c.echo.renderDataWrapper
 	c.ResetFuncs(c.echo.FuncMap)
 	c.realIP = ""
+	c.dispatchRoute = ""
 	// NOTE: Don't reset because it has to have length c.echo.maxParam at all times
 	for i := 0; i < *c.echo.maxParam; i++ {
 		c.pvalues[i] = ""
@@ -458,4 +460,33 @@ func (c *XContext) Dispatch(route string) Handler {
 	}
 	c.handler = NotFoundHandler
 	return c.Echo().Router().Dispatch(c, u.Path)
+}
+
+func (c *XContext) SetDispatchRoute(route string) {
+	c.dispatchRoute = route
+}
+
+func (c *XContext) DispatchRoute() string {
+	return c.dispatchRoute
+}
+
+//  URLGenerator
+
+func (c *XContext) RelativeURL(uri string) string {
+	return c.echo.uriAddLangCode(c, c.echo.MakeRelativeURL(uri, false))
+}
+
+func (c *XContext) URL(uri string, abs ...bool) string {
+	if len(abs) > 0 && abs[0] {
+		return c.RelativeURL(uri)
+	}
+	return c.siteRoot() + c.echo.uriAddLangCode(c, c.echo.MakeRelativeURL(uri, false))
+}
+
+func (c *XContext) URLByName(name string, args ...interface{}) string {
+	return c.echo.URIWithContext(c, name, args...)
+}
+
+func (c *XContext) RelativeURLByName(name string, args ...interface{}) string {
+	return c.echo.MakeRelativeURL(c.echo.URIWithContext(c, name, args...), true)
 }

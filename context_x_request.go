@@ -372,11 +372,15 @@ func (c *XContext) Protocol() string {
 
 // Site returns base site url as scheme://domain/ type.
 func (c *XContext) Site() string {
-	return c.Scheme() + `://` + c.Request().Host() + `/`
+	return c.siteRoot() + `/`
+}
+
+func (c *XContext) siteRoot() string {
+	return c.Scheme() + `://` + c.Request().Host()
 }
 
 func (c *XContext) FullRequestURI() string {
-	return c.Scheme() + `://` + c.Request().Host() + c.RequestURI()
+	return c.siteRoot() + c.RequestURI()
 }
 
 func (c *XContext) RequestURI() string {

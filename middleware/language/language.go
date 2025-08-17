@@ -105,8 +105,12 @@ func (a *Language) Set(lang string, on bool, args ...bool) *Language {
 	return a
 }
 
-func (a *Language) DetectURI(r engine.Request) string {
-	p := strings.TrimPrefix(r.URL().Path(), `/`)
+func (a *Language) DetectURI(c echo.Context) string {
+	route := c.DispatchRoute()
+	if len(route) == 0 {
+		route = c.Request().URL().Path()
+	}
+	p := strings.TrimPrefix(route, `/`)
 	s := strings.Index(p, `/`)
 	var lang string
 	if s != -1 {
@@ -121,7 +125,7 @@ func (a *Language) DetectURI(r engine.Request) string {
 	if !ok {
 		return ``
 	}
-	r.URL().SetPath(strings.TrimPrefix(p, lang))
+	c.SetDispatchRoute(strings.TrimPrefix(p, lang))
 	if !on {
 		return ``
 	}
@@ -166,7 +170,7 @@ func (a *Language) Middleware() echo.MiddlewareFunc {
 			lang := c.Query(LangVarName)
 			var hasCookie bool
 			if !a.Valid(lang) {
-				lang = a.DetectURI(c.Request())
+				lang = a.DetectURI(c)
 				if !a.Valid(lang) {
 					lang = c.GetCookie(LangVarName)
 					if !a.Valid(lang) {
@@ -180,12 +184,16 @@ func (a *Language) Middleware() echo.MiddlewareFunc {
 				c.SetCookie(LangVarName, lang)
 			}
 			tr := a.translatePool.Get().(*Translate)
-			tr.Reset(lang, a.I18n)
+			tr.Reset(lang, a)
 			defer a.translatePool.Put(tr)
 			c.SetTranslator(tr)
 			return h.Handle(c)
 		})
 	})
+}
+
+func (a *Language) Config() *Config {
+	return a.I18n.config
 }
 
 func (a *Language) Handler(e echo.RouteRegister, i18nJSVarName string) {

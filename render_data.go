@@ -292,6 +292,26 @@ func (r *RenderData) GetOtherURL(urlStr string, next string) string {
 	return GetOtherURL(r.ctx, next)
 }
 
+//  URLGenerator
+
+func (r *RenderData) RelativeURL(uri string) string {
+	return r.ctx.RelativeURL(uri)
+}
+
+func (r *RenderData) URLFor(uri string, abs ...bool) string {
+	return r.ctx.URL(uri, abs...)
+}
+
+func (r *RenderData) URLByName(name string, args ...interface{}) string {
+	return r.ctx.URLByName(name, args...)
+}
+
+func (r *RenderData) RelativeURLByName(name string, args ...interface{}) string {
+	return r.ctx.RelativeURLByName(name, args...)
+}
+
+// Functions dependent on Context
+
 func (r *RenderData) IsHidden(a IsHiddenContext) bool {
 	if a == nil {
 		return true
