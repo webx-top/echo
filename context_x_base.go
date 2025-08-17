@@ -487,9 +487,9 @@ func (c *XContext) URLFor(uri string, relative ...bool) string {
 }
 
 func (c *XContext) URLByName(name string, args ...interface{}) string {
-	return c.echo.URIWithContext(c, name, args...)
+	return c.siteRoot() + c.echo.URIWithContext(c, name, args...)
 }
 
 func (c *XContext) RelativeURLByName(name string, args ...interface{}) string {
-	return c.echo.MakeRelativeURL(c.echo.URIWithContext(c, name, args...), true)
+	return c.echo.URIWithContext(c, name, args...)
 }
