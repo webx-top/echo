@@ -467,6 +467,9 @@ func (c *XContext) SetDispatchPath(route string) {
 }
 
 func (c *XContext) DispatchPath() string {
+	if len(c.dispatchRoute) == 0 {
+		return c.Request().URL().Path()
+	}
 	return c.dispatchRoute
 }
 

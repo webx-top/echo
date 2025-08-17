@@ -107,9 +107,6 @@ func (a *Language) Set(lang string, on bool, args ...bool) *Language {
 
 func (a *Language) DetectURI(c echo.Context) string {
 	dispatchPath := c.DispatchPath()
-	if len(dispatchPath) == 0 {
-		dispatchPath = c.Request().URL().Path()
-	}
 	p := strings.TrimPrefix(dispatchPath, `/`)
 	s := strings.Index(p, `/`)
 	var lang string
