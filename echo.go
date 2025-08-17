@@ -461,7 +461,7 @@ func (e *Echo) Pre(middleware ...interface{}) {
 	e.premiddleware = append(middlewares, e.premiddleware...)
 }
 
-func (e *Echo) PreAppend(middleware ...interface{}) {
+func (e *Echo) PreUse(middleware ...interface{}) {
 	for _, m := range middleware {
 		e.ValidMiddleware(m)
 		e.premiddleware = append(e.premiddleware, m)

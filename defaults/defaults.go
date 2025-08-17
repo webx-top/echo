@@ -163,6 +163,10 @@ func Pre(middleware ...interface{}) {
 	Default.Pre(middleware...)
 }
 
+func PreUse(middleware ...interface{}) {
+	Default.PreUse(middleware...)
+}
+
 // Clear middleware
 func Clear(middleware ...interface{}) {
 	Default.Clear(middleware...)
