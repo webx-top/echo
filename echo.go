@@ -922,22 +922,13 @@ func (e *Echo) Rewriter() Rewriter {
 }
 
 func (e *Echo) wrapURI(c Context, uri string, withoutExt bool) string {
-	uri = e.uriAddLangCode(c, uri)
 	if e.rewriter != nil {
 		uri = e.rewriter.Rewrite(uri)
 	}
 	if !withoutExt && len(e.defaultExtension) > 0 && !strings.HasSuffix(uri, e.defaultExtension) {
 		uri += e.defaultExtension
 	}
-	if c == nil {
-		return uri
-	}
-	if e.multilingual {
-		langCode := c.Lang().Normalize()
-		if c.LangDefault() != langCode {
-			uri = `/` + langCode + uri
-		}
-	}
+	uri = e.uriAddLangCode(c, uri)
 	return uri
 }
 
