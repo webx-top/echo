@@ -191,17 +191,18 @@ func (c *XContext) SSEvent(event string, data chan interface{}) error {
 	hdr.Set(HeaderCacheControl, `no-cache`)
 	hdr.Set(HeaderConnection, `keep-alive`)
 	hdr.Set(HeaderTransferEncoding, `chunked`)
+	if c.renderer == nil {
+		if c.echo.renderer == nil {
+			return ErrRendererNotRegistered
+		}
+		c.renderer = c.echo.renderer
+	}
 	return c.Stream(func(w io.Writer) (bool, error) {
 		recv, ok := <-data
 		if !ok {
 			return ok, nil
 		}
-		b, err := c.Fetch(event, recv)
-		if err != nil {
-			return false, err
-		}
-		//c.Logger().Debugf(`SSEvent: %s`, b)
-		_, err = w.Write(b)
+		err := c.renderer.Render(w, event, recv, c)
 		if err != nil {
 			return false, err
 		}
