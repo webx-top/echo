@@ -14,7 +14,7 @@ require (
 	github.com/admpub/go-reuseport v0.5.0
 	github.com/admpub/goth v0.0.4
 	github.com/admpub/humanize v0.0.0-20190501023926-5f826e92c8ca
-	github.com/admpub/i18n v0.5.1
+	github.com/admpub/i18n v0.5.2
 	github.com/admpub/ipfilter v1.0.6
 	github.com/admpub/jet/v6 v6.0.2
 	github.com/admpub/log v1.4.0
@@ -64,7 +64,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/phuslu/iploc v1.0.20250801 // indirect
+	github.com/phuslu/iploc v1.0.20250815 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
