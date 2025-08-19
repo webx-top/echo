@@ -30,8 +30,17 @@ func NewTranslate(language string, langObject *Language) *Translate {
 }
 
 type Translate struct {
-	code echo.LangCode
-	lang *Language
+	code  echo.LangCode
+	lang  *Language
+	_pool bool
+}
+
+func (t *Translate) Release() {
+	t.code = nil
+	t.lang = nil
+	if t._pool {
+		t.lang.translatePool.Put(t)
+	}
 }
 
 func (t *Translate) Reset(language string, langObject *Language) *Translate {

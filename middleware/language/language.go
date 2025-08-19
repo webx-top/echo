@@ -39,7 +39,7 @@ func New(c ...*Config) *Language {
 		Default: DefaultLang,
 		translatePool: sync.Pool{
 			New: func() interface{} {
-				return &Translate{}
+				return &Translate{_pool: true}
 			},
 		},
 	}
@@ -161,6 +161,12 @@ func (a *Language) DetectHeader(r engine.Request) string {
 	return a.Default
 }
 
+func (a *Language) ToTranslator(langCode string) *Translate {
+	tr := a.translatePool.Get().(*Translate)
+	tr.Reset(langCode, a)
+	return tr
+}
+
 func (a *Language) Middleware() echo.MiddlewareFunc {
 	return echo.MiddlewareFunc(func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
@@ -180,9 +186,8 @@ func (a *Language) Middleware() echo.MiddlewareFunc {
 			if !hasCookie {
 				c.SetCookie(LangVarName, lang)
 			}
-			tr := a.translatePool.Get().(*Translate)
-			tr.Reset(lang, a)
-			defer a.translatePool.Put(tr)
+			tr := a.ToTranslator(lang)
+			defer tr.Release()
 			c.SetTranslator(tr)
 			return h.Handle(c)
 		})
