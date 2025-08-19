@@ -70,7 +70,7 @@ func TestEchoMiddleware(t *testing.T) {
 
 	c, b = requestJSON2(echo.GET, "/noperm", e)
 	assert.Equal(t, "0json1", buf.String())
-	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, http.StatusUnauthorized, c)
 	assert.Equal(t, `{"Code":-1,"State":"Unauthenticated","Info":"Unauthenticated","Zone":"","Data":{}}`, b)
 
 	buf.Reset()
