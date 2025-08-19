@@ -935,8 +935,10 @@ func (e *Echo) wrapURI(c Context, uri string, withoutExt bool) string {
 	if e.rewriter != nil {
 		uri = e.rewriter.Rewrite(uri)
 	}
-	if !withoutExt && len(e.defaultExtension) > 0 && !strings.HasSuffix(uri, e.defaultExtension) {
-		uri += e.defaultExtension
+	if !withoutExt {
+		if extension := c.DefaultExtension(); len(extension) > 0 && !strings.HasSuffix(uri, extension) {
+			uri += extension
+		}
 	}
 	uri = e.uriAddLangCode(c, uri)
 	return uri

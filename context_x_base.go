@@ -476,14 +476,19 @@ func (c *XContext) DispatchPath() string {
 //  URLGenerator
 
 func (c *XContext) RelativeURL(uri string) string {
-	return c.echo.uriAddLangCode(c, c.echo.MakeRelativeURL(uri, false))
+	uri = AddExtension(c, uri)
+	return c.echo.wrapURI(c, c.echo.MakeRelativeURL(uri, false), true)
 }
 
 func (c *XContext) URLFor(uri string, relative ...bool) string {
 	if len(relative) > 0 && relative[0] {
 		return c.RelativeURL(uri)
 	}
-	return c.siteRoot() + c.echo.uriAddLangCode(c, c.echo.MakeRelativeURL(uri, false))
+	if len(uri) == 0 {
+		return c.Site()
+	}
+	uri = AddExtension(c, uri)
+	return c.siteRoot() + c.echo.wrapURI(c, c.echo.MakeRelativeURL(uri, false), true)
 }
 
 func (c *XContext) URLByName(name string, args ...interface{}) string {

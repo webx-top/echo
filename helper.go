@@ -362,3 +362,16 @@ func ParseTemplateError(err error, sourceContent string) *PanicError {
 	}
 	return p
 }
+
+// AddExtension adds the default extension to the URI if it does not already have it.
+func AddExtension(c Context, uri string) string {
+	if len(uri) == 0 || strings.HasSuffix(uri, `/`) || len(c.DefaultExtension()) == 0 {
+		return uri
+	}
+	parts := strings.SplitN(uri, `?`, 2)
+	if !strings.HasSuffix(parts[0], c.DefaultExtension()) {
+		parts[0] += c.DefaultExtension()
+		uri = strings.Join(parts, `?`)
+	}
+	return uri
+}
