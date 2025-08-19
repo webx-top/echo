@@ -872,11 +872,11 @@ func (e *Echo) URIWithContext(c Context, handler interface{}, params ...interfac
 	return uri
 }
 
-func (e *Echo) MakeRelativeURL(uri string, uriHasPrefix bool) string {
+func (e *Echo) MakeRelativeURL(uri string, withoutPrefix bool) string {
 	if len(uri) > 0 && !strings.HasPrefix(uri, `/`) {
 		uri = `/` + uri
 	}
-	if !uriHasPrefix {
+	if !withoutPrefix {
 		return e.Prefix() + uri
 	}
 	return uri
