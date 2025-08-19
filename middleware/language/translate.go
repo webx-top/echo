@@ -36,11 +36,12 @@ type Translate struct {
 }
 
 func (t *Translate) Release() {
+	t.code = nil
 	if t._pool {
 		t.lang.translatePool.Put(t)
+	} else {
+		t.lang = nil
 	}
-	t.code = nil
-	t.lang = nil
 }
 
 func (t *Translate) Reset(language string, langObject *Language) *Translate {
