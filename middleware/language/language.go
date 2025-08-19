@@ -161,7 +161,7 @@ func (a *Language) DetectHeader(r engine.Request) string {
 	return a.Default
 }
 
-func (a *Language) ToTranslator(langCode string) *Translate {
+func (a *Language) AcquireTranslator(langCode string) *Translate {
 	tr := a.translatePool.Get().(*Translate)
 	tr.Reset(langCode, a)
 	return tr
@@ -186,7 +186,7 @@ func (a *Language) Middleware() echo.MiddlewareFunc {
 			if !hasCookie {
 				c.SetCookie(LangVarName, lang)
 			}
-			tr := a.ToTranslator(lang)
+			tr := a.AcquireTranslator(lang)
 			defer tr.Release()
 			c.SetTranslator(tr)
 			return h.Handle(c)
