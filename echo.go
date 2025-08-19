@@ -936,7 +936,11 @@ func (e *Echo) wrapURI(c Context, uri string, withoutExt bool) string {
 		uri = e.rewriter.Rewrite(uri)
 	}
 	if !withoutExt {
-		if extension := c.DefaultExtension(); len(extension) > 0 && !strings.HasSuffix(uri, extension) {
+		extension := e.defaultExtension
+		if c != nil {
+			extension = c.DefaultExtension()
+		}
+		if len(extension) > 0 && !strings.HasSuffix(uri, extension) {
 			uri += extension
 		}
 	}
