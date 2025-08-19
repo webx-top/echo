@@ -54,17 +54,17 @@ var (
 		`*`: ContentTypeHTML,
 	}
 	DefaultFormatRenderers = map[string]FormatRender{
-		ContentTypeJSON: func(c Context, data interface{}) error {
-			return c.JSON(c.Data())
+		ContentTypeJSON: func(c Context, data interface{}, code ...int) error {
+			return c.JSON(c.Data(), code...)
 		},
-		ContentTypeJSONP: func(c Context, data interface{}) error {
-			return c.JSONP(c.Query(c.Echo().JSONPVarName), c.Data())
+		ContentTypeJSONP: func(c Context, data interface{}, code ...int) error {
+			return c.JSONP(c.Query(c.Echo().JSONPVarName), c.Data(), code...)
 		},
-		ContentTypeXML: func(c Context, data interface{}) error {
-			return c.XML(c.Data())
+		ContentTypeXML: func(c Context, data interface{}, code ...int) error {
+			return c.XML(c.Data(), code...)
 		},
-		ContentTypeText: func(c Context, data interface{}) error {
-			return c.String(fmt.Sprint(data))
+		ContentTypeText: func(c Context, data interface{}, code ...int) error {
+			return c.String(fmt.Sprint(data), code...)
 		},
 	}
 	DefaultBinderDecoders = map[string]func(interface{}, Context, BinderValueCustomDecoders, ...FormDataFilter) error{

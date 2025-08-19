@@ -14,7 +14,7 @@ import (
 	"github.com/webx-top/echo/param"
 )
 
-type FormatRender func(ctx Context, data interface{}) error
+type FormatRender func(ctx Context, data interface{}, code ...int) error
 type DataWrapper func(Context, interface{}) interface{}
 
 func DefaultRenderDataWrapper(ctx Context, data interface{}) interface{} {

@@ -118,7 +118,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 	}
 	tmplNum := len(opt.ErrorPages)
 	defaultRender := func(c echo.Context, msg string, code int) {
-		if ok, err := c.Echo().AutoDetectRenderFormat(c, nil); ok {
+		if ok, err := c.Echo().AutoDetectRenderFormat(c, nil, code); ok {
 			if err == nil {
 				return
 			}

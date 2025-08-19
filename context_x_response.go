@@ -25,7 +25,7 @@ func (c *XContext) Response() engine.Response {
 // code. Templates can be registered using `Echo.SetRenderer()`.
 func (c *XContext) Render(name string, data interface{}, codes ...int) error {
 	if c.auto {
-		if ok, err := c.echo.AutoDetectRenderFormat(c, data); ok {
+		if ok, err := c.echo.AutoDetectRenderFormat(c, data, codes...); ok {
 			return err
 		}
 	}

@@ -287,7 +287,7 @@ func (e *Echo) SetFormatRenderers(formatRenderers map[string]FormatRender) *Echo
 	return e
 }
 
-func (e *Echo) AddFormatRenderer(format string, renderer func(c Context, data interface{}) error) *Echo {
+func (e *Echo) AddFormatRenderer(format string, renderer FormatRender) *Echo {
 	e.formatRenderers[format] = renderer
 	return e
 }
@@ -299,7 +299,7 @@ func (e *Echo) RemoveFormatRenderer(formats ...string) *Echo {
 	return e
 }
 
-func (e *Echo) AutoDetectRenderFormat(c Context, data interface{}) (bool, error) {
+func (e *Echo) AutoDetectRenderFormat(c Context, data interface{}, code ...int) (bool, error) {
 	format := c.Format()
 	render, ok := e.formatRenderers[format]
 	if !ok || render == nil {
@@ -316,7 +316,7 @@ func (e *Echo) AutoDetectRenderFormat(c Context, data interface{}) (bool, error)
 	default:
 		c.Data().SetData(data, c.Data().GetCode().Int())
 	}
-	return true, render(c, data)
+	return true, render(c, data, code...)
 }
 
 func (e *Echo) SetDefaultExtension(ext string) {
