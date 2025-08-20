@@ -267,6 +267,8 @@ type Context interface {
 	SetPreResponseHook(...func() error) Context
 	OnHostFound(func(Context) (bool, error)) Context
 	FireHostFound() (bool, error)
+	OnRelease(...func(Context)) Context
+	FireRelease()
 }
 
 type eCtxKey struct{}
@@ -294,4 +296,8 @@ func IsContext(t reflect.Type) bool {
 
 type ContextReseter interface {
 	Reset(req engine.Request, res engine.Response)
+}
+
+type Releaseable interface {
+	Release()
 }

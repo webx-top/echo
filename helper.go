@@ -143,14 +143,15 @@ func static(r RouteRegister, prefix, root string) {
 	}
 }
 
-func Clear(old []interface{}, clears ...interface{}) []interface{} {
+// Clear removes the specified items from the slice.
+func Clear[T comparable](old []T, clears ...T) []T {
 	if len(clears) == 0 {
 		return nil
 	}
 	if len(old) == 0 {
 		return old
 	}
-	result := []interface{}{}
+	result := []T{}
 	for _, el := range old {
 		var exists bool
 		for _, d := range clears {

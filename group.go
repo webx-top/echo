@@ -3,7 +3,7 @@ package echo
 type Group struct {
 	host       *host
 	prefix     string
-	middleware []interface{}
+	middleware []Middleware
 	echo       *Echo
 	meta       H
 }
@@ -44,8 +44,7 @@ func (g *Group) SetRenderer(r Renderer) {
 
 func (g *Group) Use(middleware ...interface{}) {
 	for _, m := range middleware {
-		g.echo.ValidMiddleware(m)
-		g.middleware = append(g.middleware, m)
+		g.middleware = append(g.middleware, g.echo.WrapMiddleware(m))
 		if g.echo.MiddlewareDebug {
 			g.echo.logger.Debugf(`Middleware[Use](%p): [%s] -> %s`, m, g.prefix, HandlerName(m))
 		}
@@ -54,10 +53,9 @@ func (g *Group) Use(middleware ...interface{}) {
 
 // Pre adds handler to the middleware chain.
 func (g *Group) Pre(middleware ...interface{}) {
-	var middlewares []interface{}
+	var middlewares []Middleware
 	for _, m := range middleware {
-		g.echo.ValidMiddleware(m)
-		middlewares = append(middlewares, m)
+		middlewares = append(middlewares, g.echo.WrapMiddleware(m))
 		if g.echo.MiddlewareDebug {
 			g.echo.logger.Debugf(`Middleware[Pre](%p): [%s] -> %s`, m, g.prefix, HandlerName(m))
 		}
@@ -122,9 +120,7 @@ func (g *Group) Match(methods []string, path string, h interface{}, middleware .
 }
 
 func (g *Group) Group(prefix string, middleware ...interface{}) *Group {
-	m := []interface{}{}
-	m = append(m, g.middleware...)
-	m = append(m, middleware...)
+	m := g.combineMiddleware(middleware)
 	if g.host != nil {
 		subG, y := g.echo.hosts[g.host.name].groups[prefix]
 		if !y {
@@ -165,13 +161,20 @@ func (g *Group) MetaHandler(m H, handler interface{}, requests ...interface{}) H
 	return g.echo.MetaHandler(m, handler, requests...)
 }
 
+func (g *Group) combineMiddleware(middleware []interface{}) []interface{} {
+	m := make([]interface{}, 0, len(g.middleware)+len(middleware))
+	for _, gm := range g.middleware {
+		m = append(m, gm)
+	}
+	m = append(m, middleware...)
+	return m
+}
+
 func (g *Group) Add(method, path string, h interface{}, middleware ...interface{}) *Route {
 	// Combine into a new slice to avoid accidentally passing the same slice for
 	// multiple routes, which would lead to later add() calls overwriting the
 	// middleware from earlier calls.
-	m := []interface{}{}
-	m = append(m, g.middleware...)
-	m = append(m, middleware...)
+	m := g.combineMiddleware(middleware)
 	var host string
 	if g.host != nil {
 		host = g.host.name

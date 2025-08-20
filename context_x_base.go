@@ -49,8 +49,9 @@ type XContext struct {
 	accept              *Accepts
 	auto                bool
 	onHostFound         func(Context) (bool, error)
+	onRelease           []func(Context)
 	realIP              string
-	dispatchRoute       string
+	dispatchPath        string
 }
 
 var _ context.Context = (*XContext)(nil)
@@ -240,10 +241,11 @@ func (c *XContext) Reset(req engine.Request, res engine.Response) {
 	c.accept = nil
 	c.dataEngine = NewData(c)
 	c.onHostFound = c.echo.onHostFound
+	c.onRelease = nil
 	c.renderDataWrapper = c.echo.renderDataWrapper
 	c.ResetFuncs(c.echo.FuncMap)
 	c.realIP = ""
-	c.dispatchRoute = ""
+	c.dispatchPath = ""
 	// NOTE: Don't reset because it has to have length c.echo.maxParam at all times
 	for i := 0; i < *c.echo.maxParam; i++ {
 		c.pvalues[i] = ""
@@ -437,6 +439,17 @@ func (c *XContext) preResponse() error {
 	return nil
 }
 
+func (c *XContext) OnRelease(onRelease ...func(Context)) Context {
+	c.onRelease = append(c.onRelease, onRelease...)
+	return c
+}
+
+func (c *XContext) FireRelease() {
+	for _, hook := range c.onRelease {
+		hook(c)
+	}
+}
+
 func (c *XContext) PrintFuncs() {
 	for key, fn := range c.Funcs() {
 		fmt.Printf("[Template Func](%p) %-15s -> %s \n", fn, key, HandlerName(fn))
@@ -463,14 +476,14 @@ func (c *XContext) Dispatch(route string) Handler {
 }
 
 func (c *XContext) SetDispatchPath(route string) {
-	c.dispatchRoute = route
+	c.dispatchPath = route
 }
 
 func (c *XContext) DispatchPath() string {
-	if len(c.dispatchRoute) == 0 {
+	if len(c.dispatchPath) == 0 {
 		return c.Request().URL().Path()
 	}
-	return c.dispatchRoute
+	return c.dispatchPath
 }
 
 //  URLGenerator

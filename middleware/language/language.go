@@ -167,6 +167,14 @@ func (a *Language) AcquireTranslator(langCode string) *Translate {
 	return tr
 }
 
+func (a *Language) ReleaseTranslator(tr *Translate) {
+	tr.Release()
+}
+
+func (a *Language) release(c echo.Context) {
+	c.Translator().(*Translate).Release()
+}
+
 func (a *Language) Middleware() echo.MiddlewareFunc {
 	return echo.MiddlewareFunc(func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
@@ -187,7 +195,7 @@ func (a *Language) Middleware() echo.MiddlewareFunc {
 				c.SetCookie(LangVarName, lang)
 			}
 			tr := a.AcquireTranslator(lang)
-			defer tr.Release()
+			c.OnRelease(a.release)
 			c.SetTranslator(tr)
 			return h.Handle(c)
 		})

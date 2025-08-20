@@ -452,7 +452,7 @@ END:
 }
 
 func (r *Route) apply(e *Echo) *Route {
-	handler := e.ValidHandler(r.handler)
+	handler := e.WrapHandler(r.handler)
 	middleware := r.middleware
 	if len(r.Name) == 0 {
 		if hn, ok := handler.(Name); ok {
@@ -475,7 +475,7 @@ func (r *Route) apply(e *Echo) *Route {
 	}
 	for i := len(middleware) - 1; i >= 0; i-- {
 		m := middleware[i]
-		mw := e.ValidMiddleware(m)
+		mw := e.WrapMiddleware(m)
 		handler = mw.Handle(handler)
 	}
 	r.Handler = handler

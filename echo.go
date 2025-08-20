@@ -21,8 +21,8 @@ type (
 	Echo struct {
 		engine              engine.Engine
 		prefix              string
-		premiddleware       []interface{}
-		middleware          []interface{}
+		premiddleware       []Middleware
+		middleware          []Middleware
 		hosts               map[string]*Host
 		hostAlias           map[string]string
 		onHostFound         func(Context) (bool, error)
@@ -175,8 +175,8 @@ func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 func (e *Echo) Reset() *Echo {
 	e.engine = nil
 	e.prefix = ``
-	e.middleware = []interface{}{}
-	e.premiddleware = []interface{}{}
+	e.middleware = []Middleware{}
+	e.premiddleware = []Middleware{}
 	e.hosts = make(map[string]*Host)
 	e.hostAlias = make(map[string]string)
 	e.maxParam = new(int)
@@ -440,8 +440,7 @@ func (e *Echo) Multilingual() bool {
 // Use adds handler to the middleware chain.
 func (e *Echo) Use(middleware ...interface{}) {
 	for _, m := range middleware {
-		e.ValidMiddleware(m)
-		e.middleware = append(e.middleware, m)
+		e.middleware = append(e.middleware, e.WrapMiddleware(m))
 		if e.MiddlewareDebug {
 			e.logger.Debugf(`Middleware[Use](%p): [] -> %s `, m, HandlerName(m))
 		}
@@ -450,10 +449,9 @@ func (e *Echo) Use(middleware ...interface{}) {
 
 // Pre adds handler to the middleware chain.
 func (e *Echo) Pre(middleware ...interface{}) {
-	var middlewares []interface{}
+	var middlewares []Middleware
 	for _, m := range middleware {
-		e.ValidMiddleware(m)
-		middlewares = append(middlewares, m)
+		middlewares = append(middlewares, e.WrapMiddleware(m))
 		if e.MiddlewareDebug {
 			e.logger.Debugf(`Middleware[Pre](%p): [] -> %s`, m, HandlerName(m))
 		}
@@ -463,8 +461,7 @@ func (e *Echo) Pre(middleware ...interface{}) {
 
 func (e *Echo) PreUse(middleware ...interface{}) {
 	for _, m := range middleware {
-		e.ValidMiddleware(m)
-		e.premiddleware = append(e.premiddleware, m)
+		e.premiddleware = append(e.premiddleware, e.WrapMiddleware(m))
 		if e.MiddlewareDebug {
 			e.logger.Debugf(`Middleware[Pre](%p): [] -> %s`, m, HandlerName(m))
 		}
@@ -473,12 +470,20 @@ func (e *Echo) PreUse(middleware ...interface{}) {
 
 // Clear middleware
 func (e *Echo) Clear(middleware ...interface{}) {
-	e.middleware = Clear(e.middleware, middleware...)
+	middlewares := make([]Middleware, len(middleware))
+	for index, m := range middleware {
+		middlewares[index] = e.WrapMiddleware(m)
+	}
+	e.middleware = Clear(e.middleware, middlewares...)
 }
 
 // ClearPre Clear premiddleware
 func (e *Echo) ClearPre(middleware ...interface{}) {
-	e.premiddleware = Clear(e.premiddleware, middleware...)
+	middlewares := make([]Middleware, len(middleware))
+	for index, m := range middleware {
+		middlewares[index] = e.WrapMiddleware(m)
+	}
+	e.premiddleware = Clear(e.premiddleware, middlewares...)
 }
 
 // Connect adds a CONNECT route > handler to the router.
@@ -564,7 +569,7 @@ func (e *Echo) File(path, file string) {
 	})
 }
 
-func (e *Echo) ValidHandler(v interface{}) (h Handler) {
+func (e *Echo) WrapHandler(v interface{}) (h Handler) {
 	if e.handlerWrapper != nil {
 		for _, wrapper := range e.handlerWrapper {
 			h = wrapper(v)
@@ -576,7 +581,7 @@ func (e *Echo) ValidHandler(v interface{}) (h Handler) {
 	return WrapHandler(v)
 }
 
-func (e *Echo) ValidMiddleware(v interface{}) (m Middleware) {
+func (e *Echo) WrapMiddleware(v interface{}) (m Middleware) {
 	if e.middlewareWrapper != nil {
 		for _, wrapper := range e.middlewareWrapper {
 			m = wrapper(v)
@@ -684,7 +689,7 @@ func (e *Echo) MakeHandler(handler interface{}, requests ...interface{}) Handler
 func (e *Echo) MetaHandlerWithRequest(m H, handler interface{}, request interface{}, methods ...string) Handler {
 	h := &MetaHandler{
 		meta:    m,
-		Handler: e.ValidHandler(handler),
+		Handler: e.WrapHandler(handler),
 	}
 	if request != nil {
 		switch r := request.(type) {
@@ -969,9 +974,9 @@ func (e *Echo) NamedRoutes() map[string][]int {
 	return e.router.nroute
 }
 
-func (e *Echo) applyMiddleware(h Handler, middleware ...interface{}) Handler {
-	for i := len(middleware) - 1; i >= 0; i-- {
-		h = e.ValidMiddleware(middleware[i]).Handle(h)
+func (e *Echo) applyMiddleware(h Handler, middlewares []Middleware) Handler {
+	for i := len(middlewares) - 1; i >= 0; i-- {
+		h = middlewares[i].Handle(h)
 	}
 	return h
 }
@@ -986,14 +991,14 @@ func (e *Echo) buildHandler(c Context) Handler {
 		if err != nil {
 			return e.applyMiddleware(HandlerFunc(func(Context) error {
 				return err
-			}), e.middleware...)
+			}), e.middleware)
 		}
 		if !found {
-			return e.applyMiddleware(e.router.Handle(c), e.middleware...)
+			return e.applyMiddleware(e.router.Handle(c), e.middleware)
 		}
-		return e.applyMiddleware(r.Handle(c), e.middleware...)
+		return e.applyMiddleware(r.Handle(c), e.middleware)
 	}
-	return e.applyMiddleware(e.router.Handle(c), e.middleware...)
+	return e.applyMiddleware(e.router.Handle(c), e.middleware)
 }
 
 func (e *Echo) ServeHTTP(req engine.Request, res engine.Response) {
@@ -1004,7 +1009,7 @@ func (e *Echo) ServeHTTP(req engine.Request, res engine.Response) {
 	if len(e.premiddleware) > 0 {
 		h = e.applyMiddleware(HandlerFunc(func(c Context) error {
 			return e.buildHandler(c).Handle(c)
-		}), e.premiddleware...)
+		}), e.premiddleware)
 	} else {
 		h = e.buildHandler(c)
 	}
@@ -1012,6 +1017,7 @@ func (e *Echo) ServeHTTP(req engine.Request, res engine.Response) {
 		c.Error(err)
 	}
 
+	c.FireRelease()
 	e.pool.Put(c)
 }
 
