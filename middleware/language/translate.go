@@ -30,6 +30,7 @@ func NewTranslate(language string, langObject *Language) *Translate {
 }
 
 var _ echo.Translator = (*Translate)(nil)
+var _ echo.Releaseable = (*Translate)(nil)
 
 type Translate struct {
 	code  echo.LangCode
