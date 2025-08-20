@@ -16,10 +16,10 @@ limitations under the License.
 package render
 
 import (
+	_ "embed"
 	"net/http"
 	"time"
 
-	"github.com/admpub/log"
 	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/code"
@@ -102,6 +102,13 @@ func setAndGetErrorMessage(c echo.Context, debugMessage string, prodMessage stri
 	}
 	c.Data().SetInfo(prodMessage, 0)
 	return prodMessage
+}
+
+//go:embed error.tpl.html
+var errorHTML []byte
+
+func ErrorHTMLTemplate(_ string) ([]byte, error) {
+	return errorHTML, nil
 }
 
 func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
@@ -234,13 +241,16 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 		case echo.ContentTypeText:
 			val = msg
 		case echo.ContentTypeHTML:
+			val = data.GetData()
 			if echo.IsEmptyRoute(c.Route()) {
-				if renderErr := c.String(msg, code); renderErr != nil {
-					log.Error(msg + "\n" + renderErr.Error())
+				b, renderErr := c.RenderBy(tmpl, ErrorHTMLTemplate, val, code)
+				if renderErr != nil {
+					c.String(msg+"\n"+renderErr.Error(), code)
+					return
 				}
+				c.Blob(b, code)
 				return
 			}
-			val = data.GetData()
 		default:
 			val = data.GetData()
 		}
