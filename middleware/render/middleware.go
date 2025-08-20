@@ -135,6 +135,25 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 		opt.SetFuncMap = DefaultOptions.SetFuncMap
 	}
 	tmplNum := len(opt.ErrorPages)
+	var getTmpl func(code int) (string, int)
+	if tmplNum > 0 {
+		getTmpl = func(code int) (string, int) {
+			tmpl, ok := opt.ErrorPages[code]
+			if ok {
+				return tmpl, code
+			}
+			if code != 0 {
+				tmpl = opt.ErrorPages[0]
+			} else {
+				code = DefaultOptions.DefaultHTTPErrorCode
+			}
+			return tmpl, code
+		}
+	} else {
+		getTmpl = func(code int) (string, int) {
+			return "", code
+		}
+	}
 	return func(err error, c echo.Context) {
 		if err != nil {
 			defer c.Logger().Debug(err, `: `, c.Request().URL().String())
@@ -198,17 +217,9 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			c.SetCode(opt.DefaultHTTPErrorCode)
 			goto END
 		}
-		if tmplNum > 0 {
-			var ok bool
-			tmpl, ok = opt.ErrorPages[code]
-			if !ok {
-				if code != 0 {
-					tmpl = opt.ErrorPages[0]
-				} else {
-					code = DefaultOptions.DefaultHTTPErrorCode
-				}
-			}
-		}
+
+		// -- Render HTML error page
+		tmpl, code = getTmpl(code)
 		c.SetCode(code)
 		c.SetFunc(`Lang`, c.Lang)
 		for _, setFunc := range opt.SetFuncMap {
