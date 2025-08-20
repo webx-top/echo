@@ -16,8 +16,7 @@ html{font-family:sans-serif;line-height:1.15;-ms-text-size-adjust:100%;-webkit-t
     {{- if $.Data.panic -}}
     Panic:<pre class="panic">{{$.Data.content}}</pre>
     {{- else -}}
-    {{- $.Data.content|$.T -}}
-    {{- if not (HasSuffix $.Data.content ".") -}}.{{- end -}}
+    {{- (TrimSuffix (TrimSuffix $.Data.content ".") "。")|$.T -}}.
     {{- end -}}
   </div>
   <p class="output">
