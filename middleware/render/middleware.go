@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/admpub/log"
 	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/code"
@@ -227,9 +228,24 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			"panic":   panicErr,
 			"links":   links,
 		}, data.GetCode().Int())
-		if renderErr := c.SetAuto(true).Render(tmpl, data.GetData()); renderErr != nil {
-			msg += "\n" + renderErr.Error()
-			c.String(msg, code)
+		var val interface{}
+		c.SetAuto(true)
+		switch c.Format() {
+		case echo.ContentTypeText:
+			val = msg
+		case echo.ContentTypeHTML:
+			if c.Route() == nil {
+				if renderErr := c.String(msg, code); renderErr != nil {
+					log.Error(msg + "\n" + renderErr.Error())
+				}
+				return
+			}
+			val = data.GetData()
+		default:
+			val = data.GetData()
+		}
+		if renderErr := c.Render(tmpl, val); renderErr != nil {
+			c.String(msg+"\n"+renderErr.Error(), code)
 		}
 	}
 }
