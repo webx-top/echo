@@ -24,7 +24,7 @@ html{font-family:sans-serif;line-height:1.15;-ms-text-size-adjust:100%;-webkit-t
     {{- range $li, $lv := $.Data.links -}}
         <a href="{{$lv.V}}">{{$lv.K|$.T}}</a>
     {{- else -}}
-        <a href="javascript:;" onclick="history.back()">go back</a> or <a href="/">return to the homepage</a>
+        <a href="javascript:history.back()">go back</a> or <a href="/">return to the homepage</a>
     {{- end -}}
   .</p>
   {{- end -}}
