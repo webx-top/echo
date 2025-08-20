@@ -234,7 +234,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 		case echo.ContentTypeText:
 			val = msg
 		case echo.ContentTypeHTML:
-			if c.Route() == nil {
+			if echo.IsEmptyRoute(c.Route()) {
 				if renderErr := c.String(msg, code); renderErr != nil {
 					log.Error(msg + "\n" + renderErr.Error())
 				}

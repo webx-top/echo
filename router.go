@@ -17,6 +17,13 @@ var (
 	emptyMeta    = H{}
 )
 
+func IsEmptyRoute(route *Route) bool {
+	if route == nil || route == defaultRoute {
+		return true
+	}
+	return route.IsZero()
+}
+
 type (
 	Router struct {
 		tree   *node
