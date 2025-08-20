@@ -76,24 +76,22 @@ func (opt *Options) SetErrorProcessor(h ...ErrorProcessor) *Options {
 	return opt
 }
 
-func (opt *Options) GenTmplGetter() func(code int) (string, int) {
+func (opt *Options) GenTmplGetter() func(code int) string {
 	tmplNum := len(opt.ErrorPages)
 	if tmplNum == 0 {
-		return func(code int) (string, int) {
-			return "", code
+		return func(code int) string {
+			return ""
 		}
 	}
-	return func(code int) (string, int) {
+	return func(code int) string {
 		tmpl, ok := opt.ErrorPages[code]
 		if ok {
-			return tmpl, code
+			return tmpl
 		}
 		if code != 0 {
 			tmpl = opt.ErrorPages[0]
-		} else {
-			code = DefaultOptions.DefaultHTTPErrorCode
 		}
-		return tmpl, code
+		return tmpl
 	}
 }
 
@@ -215,24 +213,6 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			c.NoContent(code)
 			return
 		}
-		if c.Format() != echo.ContentTypeHTML {
-			c.SetCode(opt.DefaultHTTPErrorCode)
-			goto END
-		}
-
-		// -- Render HTML error page
-		tmpl, code = getTmpl(code)
-		c.SetCode(code)
-		c.SetFunc(`Lang`, c.Lang)
-		for _, setFunc := range opt.SetFuncMap {
-			err = setFunc(c)
-			if err != nil {
-				c.String(err.Error())
-				return
-			}
-		}
-
-	END:
 		data.SetData(echo.H{
 			"title":   title,
 			"content": msg,
@@ -247,6 +227,16 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 		case echo.ContentTypeText:
 			val = msg
 		case echo.ContentTypeHTML:
+			tmpl = getTmpl(code)
+			c.SetCode(code)
+			c.SetFunc(`Lang`, c.Lang)
+			for _, setFunc := range opt.SetFuncMap {
+				err = setFunc(c)
+				if err != nil {
+					c.String(err.Error())
+					return
+				}
+			}
 			val = data.GetData()
 			if len(tmpl) == 0 || echo.IsEmptyRoute(c.Route()) {
 				b, renderErr := c.RenderBy(`error.tpl`, ErrorHTMLTemplate, val, code)
