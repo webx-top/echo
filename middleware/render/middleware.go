@@ -111,6 +111,16 @@ func ErrorHTMLTemplate(_ string) ([]byte, error) {
 	return errorHTML, nil
 }
 
+func defaultRender(c echo.Context, msg string, code int) {
+	if ok, err := c.Echo().AutoDetectRenderFormat(c, nil, code); ok {
+		if err == nil {
+			return
+		}
+		msg += "\n" + err.Error()
+	}
+	c.String(msg, code)
+}
+
 func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 	if opt == nil {
 		opt = DefaultOptions
@@ -125,15 +135,6 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 		opt.SetFuncMap = DefaultOptions.SetFuncMap
 	}
 	tmplNum := len(opt.ErrorPages)
-	defaultRender := func(c echo.Context, msg string, code int) {
-		if ok, err := c.Echo().AutoDetectRenderFormat(c, nil, code); ok {
-			if err == nil {
-				return
-			}
-			msg += "\n" + err.Error()
-		}
-		c.String(msg, code)
-	}
 	return func(err error, c echo.Context) {
 		if err != nil {
 			defer c.Logger().Debug(err, `: `, c.Request().URL().String())
@@ -148,6 +149,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			panicErr  *echo.PanicError
 			msg       string
 			processed bool
+			tmpl      string
 		)
 		for _, processor := range opt.ErrorProcessors {
 			if processor == nil {
@@ -179,11 +181,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			title = com.TextLine(msg)
 			if opt.ErrorCodeLinks != nil {
 				if v, y := opt.ErrorCodeLinks[e.Code]; y {
-					if len(links) > 0 {
-						links = append(links, v...)
-					} else {
-						links = v
-					}
+					links = append(links, v...)
 				}
 			}
 			data.SetError(e)
@@ -196,25 +194,20 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			c.NoContent(code)
 			return
 		}
-		if tmplNum < 1 {
-			defaultRender(c, msg, code)
-			return
-		}
-		tmpl, ok := opt.ErrorPages[code]
-		if !ok {
-			if code != 0 {
-				tmpl, ok = opt.ErrorPages[0]
-			} else {
-				code = DefaultOptions.DefaultHTTPErrorCode
-			}
-			if !ok {
-				defaultRender(c, msg, code)
-				return
-			}
-		}
 		if c.Format() != echo.ContentTypeHTML {
 			c.SetCode(opt.DefaultHTTPErrorCode)
 			goto END
+		}
+		if tmplNum > 0 {
+			var ok bool
+			tmpl, ok = opt.ErrorPages[code]
+			if !ok {
+				if code != 0 {
+					tmpl = opt.ErrorPages[0]
+				} else {
+					code = DefaultOptions.DefaultHTTPErrorCode
+				}
+			}
 		}
 		c.SetCode(code)
 		c.SetFunc(`Lang`, c.Lang)
@@ -242,8 +235,8 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			val = msg
 		case echo.ContentTypeHTML:
 			val = data.GetData()
-			if echo.IsEmptyRoute(c.Route()) {
-				b, renderErr := c.RenderBy(tmpl, ErrorHTMLTemplate, val, code)
+			if len(tmpl) == 0 || echo.IsEmptyRoute(c.Route()) {
+				b, renderErr := c.RenderBy(`error.tpl`, ErrorHTMLTemplate, val, code)
 				if renderErr != nil {
 					c.String(msg+"\n"+renderErr.Error(), code)
 					return
