@@ -16,18 +16,19 @@ html{font-family:sans-serif;line-height:1.15;-ms-text-size-adjust:100%;-webkit-t
     {{- if $.Data.panic -}}
     Panic:<pre class="panic">{{$.Data.content}}</pre>
     {{- else -}}
-    {{- $.Data.content -}}
+    {{- $.Data.content|$.T -}}
+    {{- if not (HasSuffix $.Data.content ".") -}}.{{- end -}}
     {{- end -}}
   </div>
   <p class="output">
-    Please try to&nbsp;
+    {{"Please try to"|$.T}}&nbsp;
     {{- range $li, $lv := $.Data.links -}}
         <a href="{{$lv.V}}">{{$lv.K|$.T}}</a>
     {{- else -}}
-        <a href="javascript:history.back()">go back</a> or <a href="/">return to the homepage</a>
+        <a href="javascript:history.back()">{{"go back"|$.T}}</a> {{"or"|$.T}} <a href="/">{{"return to the homepage"|$.T}}</a>
     {{- end -}}
   .</p>
-  <p class="output">Good luck.</p>
+  <p class="output">{{"Good luck"|$.T}}.</p>
 </div>
 </body>
 </html>
