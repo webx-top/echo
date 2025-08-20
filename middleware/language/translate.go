@@ -29,6 +29,8 @@ func NewTranslate(language string, langObject *Language) *Translate {
 	return tr.Reset(language, langObject)
 }
 
+var _ echo.Translator = (*Translate)(nil)
+
 type Translate struct {
 	code  echo.LangCode
 	lang  *Language
