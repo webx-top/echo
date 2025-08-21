@@ -89,7 +89,7 @@ func (opt *Options) GenTmplGetter() func(code int) string {
 		if ok {
 			return tmpl
 		}
-		if code != 0 {
+		if code > 0 {
 			tmpl = opt.ErrorPages[0]
 		}
 		return tmpl
@@ -268,6 +268,11 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 				}
 				c.Blob(b, code)
 				return
+			}
+			if code > 0 && echo.IsEmptyRoute(c.Route()) {
+				if tmplPre := getTmpl(-1 * code); len(tmplPre) > 0 {
+					tmpl = tmplPre
+				}
 			}
 		}
 		c.SetAuto(true)
