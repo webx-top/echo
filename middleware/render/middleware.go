@@ -18,7 +18,6 @@ package render
 import (
 	_ "embed"
 	"net/http"
-	"time"
 
 	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
@@ -30,15 +29,8 @@ var (
 		Skipper:              echo.DefaultSkipper,
 		ErrorPages:           make(map[int]string),
 		DefaultHTTPErrorCode: http.StatusInternalServerError,
-		SetFuncMap: []echo.HandlerFunc{
-			func(c echo.Context) error {
-				c.SetFunc(`Lang`, c.Lang)
-				c.SetFunc(`Now`, time.Now)
-				c.SetFunc(`T`, c.T)
-				return nil
-			},
-		},
-		DefaultRenderer: defaultRender,
+		SetFuncMap:           []echo.HandlerFunc{},
+		DefaultRenderer:      defaultRender,
 	}
 )
 
@@ -244,7 +236,6 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 		default:
 			tmpl = getTmpl(code)
 			c.SetCode(code)
-			c.SetFunc(`Lang`, c.Lang)
 			for _, setFunc := range opt.SetFuncMap {
 				err = setFunc(c)
 				if err != nil {
