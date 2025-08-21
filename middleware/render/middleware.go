@@ -38,6 +38,7 @@ var (
 				return nil
 			},
 		},
+		DefaultRenderer: defaultRender,
 	}
 )
 
@@ -50,6 +51,7 @@ type Options struct {
 	ErrorCodeLinks       map[code.Code]echo.KVList
 	DefaultHTTPErrorCode int
 	SetFuncMap           []echo.HandlerFunc
+	DefaultRenderer      func(c echo.Context, data echo.H, code int) ([]byte, error)
 }
 
 func (opt *Options) AddFuncSetter(set ...echo.HandlerFunc) *Options {
@@ -73,6 +75,11 @@ func (opt *Options) AddErrorProcessor(h ...ErrorProcessor) *Options {
 
 func (opt *Options) SetErrorProcessor(h ...ErrorProcessor) *Options {
 	opt.ErrorProcessors = h
+	return opt
+}
+
+func (opt *Options) SetDefaultRender(renderer func(c echo.Context, data echo.H, code int) ([]byte, error)) *Options {
+	opt.DefaultRenderer = renderer
 	return opt
 }
 
@@ -130,31 +137,35 @@ func ErrorHTMLTemplate(_ string) ([]byte, error) {
 	return errorHTML, nil
 }
 
-func defaultRender(c echo.Context, msg string, code int) {
-	if ok, err := c.Echo().AutoDetectRenderFormat(c, nil, code); ok {
-		if err == nil {
-			return
-		}
-		msg += "\n" + err.Error()
-	}
-	c.String(msg, code)
+func defaultRender(c echo.Context, data echo.H, code int) ([]byte, error) {
+	return c.RenderBy(`error.tpl`, ErrorHTMLTemplate, data, code)
 }
 
 func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 	if opt == nil {
 		opt = DefaultOptions
-	}
-	if opt.ErrorPages == nil {
-		opt.ErrorPages = DefaultOptions.ErrorPages
-	}
-	if opt.DefaultHTTPErrorCode < 1 {
-		opt.DefaultHTTPErrorCode = DefaultOptions.DefaultHTTPErrorCode
-	}
-	if opt.SetFuncMap == nil {
-		opt.SetFuncMap = DefaultOptions.SetFuncMap
+	} else {
+		if opt.Skipper == nil {
+			opt.Skipper = DefaultOptions.Skipper
+		}
+		if opt.ErrorPages == nil {
+			opt.ErrorPages = DefaultOptions.ErrorPages
+		}
+		if opt.DefaultHTTPErrorCode < 1 {
+			opt.DefaultHTTPErrorCode = DefaultOptions.DefaultHTTPErrorCode
+		}
+		if opt.SetFuncMap == nil {
+			opt.SetFuncMap = DefaultOptions.SetFuncMap
+		}
+		if opt.DefaultRenderer == nil {
+			opt.DefaultRenderer = DefaultOptions.DefaultRenderer
+		}
 	}
 	getTmpl := opt.GenTmplGetter()
 	return func(err error, c echo.Context) {
+		if opt.Skipper(c) {
+			return
+		}
 		if err != nil {
 			defer c.Logger().Debug(err, `: `, c.Request().URL().String())
 		}
@@ -213,20 +224,24 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			c.NoContent(code)
 			return
 		}
-		data.SetData(echo.H{
+		dt := echo.H{
 			"title":   title,
 			"content": msg,
 			"debug":   c.Echo().Debug(),
 			"code":    code,
 			"panic":   panicErr,
 			"links":   links,
-		}, data.GetCode().Int())
+		}
+		data.SetData(dt, data.GetCode().Int())
 		var val interface{}
-		c.SetAuto(true)
 		switch c.Format() {
 		case echo.ContentTypeText:
 			val = msg
+		case echo.ContentTypeJSON, echo.ContentTypeJSONP, echo.ContentTypeXML:
+			val = data.GetData()
 		case echo.ContentTypeHTML:
+			fallthrough
+		default:
 			tmpl = getTmpl(code)
 			c.SetCode(code)
 			c.SetFunc(`Lang`, c.Lang)
@@ -239,7 +254,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			}
 			val = data.GetData()
 			if len(tmpl) == 0 || echo.IsEmptyRoute(c.Route()) {
-				b, renderErr := c.RenderBy(`error.tpl`, ErrorHTMLTemplate, val, code)
+				b, renderErr := opt.DefaultRenderer(c, dt, code)
 				if renderErr != nil {
 					c.String(msg+"\n"+renderErr.Error(), code)
 					return
@@ -247,9 +262,8 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 				c.Blob(b, code)
 				return
 			}
-		default:
-			val = data.GetData()
 		}
+		c.SetAuto(true)
 		if renderErr := c.Render(tmpl, val); renderErr != nil {
 			c.String(msg+"\n"+renderErr.Error(), code)
 		}

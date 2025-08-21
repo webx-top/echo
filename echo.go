@@ -299,9 +299,13 @@ func (e *Echo) RemoveFormatRenderer(formats ...string) *Echo {
 	return e
 }
 
-func (e *Echo) AutoDetectRenderFormat(c Context, data interface{}, code ...int) (bool, error) {
-	format := c.Format()
+func (e *Echo) GetRenderByFormat(format string) (FormatRender, bool) {
 	render, ok := e.formatRenderers[format]
+	return render, ok
+}
+
+func (e *Echo) AutoDetectRenderFormat(c Context, data interface{}, code ...int) (bool, error) {
+	render, ok := e.GetRenderByFormat(c.Format())
 	if !ok || render == nil {
 		return false, nil
 	}
