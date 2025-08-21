@@ -36,3 +36,20 @@ func (c *Config) SetFSFunc(fsFunc func(string) http.FileSystem) *Config {
 func (c *Config) FSFunc() func(string) http.FileSystem {
 	return c.fsFunc
 }
+
+func (c *Config) Clone() Config {
+	cfg := Config{
+		Project:      c.Project,
+		Default:      c.Default,
+		Fallback:     c.Fallback,
+		AllList:      make([]string, len(c.AllList)),
+		RulesPath:    make([]string, len(c.RulesPath)),
+		MessagesPath: make([]string, len(c.MessagesPath)),
+		Reload:       c.Reload,
+		fsFunc:       c.fsFunc,
+	}
+	copy(cfg.AllList, c.AllList)
+	copy(cfg.RulesPath, c.RulesPath)
+	copy(cfg.MessagesPath, c.MessagesPath)
+	return cfg
+}

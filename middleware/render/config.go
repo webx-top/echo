@@ -34,7 +34,7 @@ type Config struct {
 }
 
 var DefaultFuncMapSkipper = func(c echo.Context) bool {
-	return c.Format() != `html` && !c.IsAjax() && !c.IsPjax()
+	return c.Format() != echo.ContentTypeHTML && !c.IsAjax() && !c.IsPjax()
 }
 
 func (t *Config) SetRendererDo(rd ...func(driver.Driver)) *Config {
