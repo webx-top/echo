@@ -212,7 +212,6 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			title = com.TextLine(msg)
 			data.SetError(e)
 		}
-		c.SetCode(code)
 		if c.Request().Method() == echo.HEAD {
 			c.NoContent(code)
 			return
@@ -236,6 +235,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			fallthrough
 		default:
 			tmpl = getTmpl(code)
+			c.SetCode(code)
 			for _, setFunc := range opt.SetFuncMap {
 				err = setFunc(c)
 				if err != nil {
