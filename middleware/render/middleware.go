@@ -165,6 +165,9 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 		if opt.DefaultRenderer == nil {
 			opt.DefaultRenderer = DefaultOptions.DefaultRenderer
 		}
+		if opt.UsingDefaultRenderer == nil {
+			opt.UsingDefaultRenderer = DefaultOptions.UsingDefaultRenderer
+		}
 	}
 	getTmpl := opt.GenTmplGetter()
 	return func(err error, c echo.Context) {
