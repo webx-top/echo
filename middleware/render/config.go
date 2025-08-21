@@ -13,24 +13,42 @@ import (
 )
 
 type Config struct {
-	TmplDir              string
-	Theme                string
-	Engine               string
-	Style                string
-	Reload               bool
-	ParseStrings         map[string]string
-	ParseStringFuncs     map[string]func() string
-	ErrorPages           map[int]string
-	ErrorProcessors      []ErrorProcessor
-	ErrorCodeLinks       map[code.Code]echo.KVList
+	// TmplDir is the directory where templates are stored.
+	TmplDir string
+	// Theme is the name of the theme to be used for rendering templates.
+	Theme string
+	// Engine is the name of the template engine to be used for rendering templates.
+	Engine string
+	// Style is the name of the style to be used for rendering templates.
+	Style string
+	// Reload indicates whether the templates should be reloaded on each modify.
+	Reload bool
+	// ParseStrings is a map of strings to be replaced in the template content.
+	ParseStrings map[string]string
+	// ParseStringFuncs is a map of functions that return strings to be replaced in the template content.
+	ParseStringFuncs map[string]func() string
+	StaticOptions    *middleware.StaticOptions
+	Debug            bool
+	renderer         driver.Driver
+	FuncMapGlobal    map[string]interface{}
+	RendererDo       []func(driver.Driver)
+	CustomParser     func(tmpl string, content []byte) []byte
+
+	// - HTTPErrorHandler -
+
+	// ErrorPages defines the error pages to be used for specific HTTP error codes.
+	ErrorPages map[int]string
+	// DefaultHTTPErrorCode is the default HTTP error code to use when no specific error code is provided.
 	DefaultHTTPErrorCode int
-	StaticOptions        *middleware.StaticOptions
-	Debug                bool
-	renderer             driver.Driver
+	// ErrorProcessors defines a list of error processors that can be used to handle errors.
+	ErrorProcessors []ErrorProcessor
+	// ErrorCodeLinks defines a mapping of error codes to links that can be used to provide additional information about the error.
+	ErrorCodeLinks map[code.Code]echo.KVList
+	// DefaultRenderer is a function that can be used to render the default response for an error.
+	DefaultRenderer func(c echo.Context, data echo.H, code int) ([]byte, error)
+	// UsingDefaultRenderer is a function that can be used to determine if the default renderer should be used.
+	UsingDefaultRenderer func(echo.Context) bool
 	errorPageFuncSetter  []echo.HandlerFunc
-	FuncMapGlobal        map[string]interface{}
-	RendererDo           []func(driver.Driver)
-	CustomParser         func(tmpl string, content []byte) []byte
 }
 
 var DefaultFuncMapSkipper = func(c echo.Context) bool {
@@ -118,6 +136,8 @@ func (t *Config) HTTPErrorHandler() echo.HTTPErrorHandler {
 		ErrorProcessors:      t.ErrorProcessors,
 		ErrorCodeLinks:       t.ErrorCodeLinks,
 		DefaultHTTPErrorCode: t.DefaultHTTPErrorCode,
+		DefaultRenderer:      t.DefaultRenderer,
+		UsingDefaultRenderer: t.UsingDefaultRenderer,
 	}
 	opt.SetFuncSetter(t.errorPageFuncSetter...)
 	return HTTPErrorHandler(opt)
