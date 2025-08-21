@@ -31,6 +31,7 @@ var (
 		DefaultHTTPErrorCode: http.StatusInternalServerError,
 		SetFuncMap:           []echo.HandlerFunc{},
 		DefaultRenderer:      defaultRender,
+		UsingDefaultRenderer: usingDefaultRender,
 	}
 )
 
@@ -44,6 +45,7 @@ type Options struct {
 	DefaultHTTPErrorCode int
 	SetFuncMap           []echo.HandlerFunc
 	DefaultRenderer      func(c echo.Context, data echo.H, code int) ([]byte, error)
+	UsingDefaultRenderer func(echo.Context) bool
 }
 
 func (opt *Options) AddFuncSetter(set ...echo.HandlerFunc) *Options {
@@ -133,6 +135,17 @@ func defaultRender(c echo.Context, data echo.H, code int) ([]byte, error) {
 	return c.RenderBy(`error.tpl`, ErrorHTMLTemplate, data, code)
 }
 
+// usingDefaultRender is a function to determine if the default renderer should be used.
+func usingDefaultRender(c echo.Context) bool {
+	return false
+}
+
+// EmptyRouteUsingDefaultRender checks if the current route is empty and uses the default renderer.
+func EmptyRouteUsingDefaultRender(c echo.Context) bool {
+	return echo.IsEmptyRoute(c.Route())
+}
+
+// HTTPErrorHandler returns a HTTP error handler that renders error pages based on the provided options.
 func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 	if opt == nil {
 		opt = DefaultOptions
@@ -244,7 +257,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 				}
 			}
 			val = data.GetData()
-			if len(tmpl) == 0 || echo.IsEmptyRoute(c.Route()) {
+			if len(tmpl) == 0 || opt.UsingDefaultRenderer(c) {
 				b, renderErr := opt.DefaultRenderer(c, dt, code)
 				if renderErr != nil {
 					c.String(msg+"\n"+renderErr.Error(), code)
