@@ -281,18 +281,18 @@ func GetNextURL(ctx Context, varNames ...string) string {
 		varName = varNames[0]
 	}
 	next := ctx.Form(varName)
-	if next == ctx.Request().URL().Path() {
-		next = ``
+	if strings.HasPrefix(next, `/`) {
+		if next == ctx.Request().URL().Path() {
+			next = ``
+		} else if pos := strings.LastIndex(next, varName+`=`); pos > -1 {
+			next = next[pos+len(varName+`=`):]
+		}
 	}
 	return next
 }
 
 func ReturnToCurrentURL(ctx Context, varNames ...string) string {
-	varName := DefaultNextURLVarName
-	if len(varNames) > 0 && len(varNames[0]) > 0 {
-		varName = varNames[0]
-	}
-	next := ctx.Form(varName)
+	next := GetNextURL(ctx, varNames...)
 	if len(next) == 0 {
 		next = ctx.Request().URI()
 	}
@@ -339,7 +339,7 @@ func GetOtherURL(ctx Context, next string) string {
 		return next
 	}
 	urlInfo, _ := url.Parse(next)
-	if urlInfo == nil || urlInfo.Path == ctx.Request().URL().Path() {
+	if urlInfo == nil || (urlInfo.Hostname() == ctx.Host() && urlInfo.Path == ctx.Request().URL().Path()) {
 		next = ``
 	}
 	return next
