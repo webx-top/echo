@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/admpub/dateparse"
 	"github.com/webx-top/com"
 )
 
@@ -193,7 +194,10 @@ func AsDateTime(val interface{}, layouts ...string) time.Time {
 		if len(layouts) > 0 && len(layouts[0]) > 0 {
 			layout = layouts[0]
 		}
-		t, _ := time.ParseInLocation(layout, p, time.Local)
+		t, err := time.ParseInLocation(layout, p, time.Local)
+		if err != nil {
+			t, _ = dateparse.ParseLocal(p)
+		}
 		return t
 	}
 	return EmptyTime

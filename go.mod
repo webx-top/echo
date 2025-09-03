@@ -5,6 +5,7 @@ go 1.24.5
 retract [v2.0.0+incompatible, v2.42.35+incompatible]
 
 require (
+	github.com/admpub/dateparse v0.0.0-20250903020633-d86d3f2a4cfd
 	github.com/admpub/decimal v1.3.2
 	github.com/admpub/events v1.3.6
 	github.com/admpub/fasthttp v0.0.7

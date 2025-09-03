@@ -396,6 +396,7 @@ func TestStructMapIntKey2(t *testing.T) {
 type TestBinderWithConvertor struct {
 	Options map[string]string `form_decoder:"splitKVRows:=" form_encoder:"joinKVRows"`
 	Env     []string          `form_decoder:"split:\n" form_encoder:"join:\n"`
+	Created uint              `form_decoder:"time2unix" form_encoder:"unix2time"`
 }
 
 type TestBinderWithConvertorParent struct {
@@ -409,7 +410,10 @@ func TestBinderConvertor(t *testing.T) {
 	err := FormToStruct(e, m, map[string][]string{
 		`options`: {"a=1\nb=2"},
 		`env`:     {"A=ONE\nB=TWO"},
+		`created`: {`2025-09-01 09:30:12`},
 	}, ``)
+	assert.NoError(t, err)
+	tim, err := time.ParseInLocation(time.DateTime, `2025-09-01 09:30:12`, time.Local)
 	assert.NoError(t, err)
 	expected := &TestBinderWithConvertor{
 		Options: map[string]string{
@@ -420,6 +424,7 @@ func TestBinderConvertor(t *testing.T) {
 			`A=ONE`,
 			`B=TWO`,
 		},
+		Created: uint(tim.Unix()),
 	}
 	assert.Equal(t, expected, m)
 
@@ -427,6 +432,7 @@ func TestBinderConvertor(t *testing.T) {
 	StructToForm(ctx, expected, ``, LowerCaseFirstLetter)
 	assert.Equal(t, []string{"a=1\nb=2"}, ctx.Forms()[`options`])
 	assert.Equal(t, []string{"A=ONE\nB=TWO"}, ctx.Forms()[`env`])
+	assert.Equal(t, []string{"2025-09-01 09:30:12"}, ctx.Forms()[`created`])
 
 	parent := &TestBinderWithConvertorParent{
 		Item: m,
@@ -454,6 +460,7 @@ func TestBinderConvertor(t *testing.T) {
 			`A:ONE`,
 			`B:TWO`,
 		},
+		Created: uint(tim.Unix()),
 	}
 	expected2 := &TestBinderWithConvertorParent{
 		Item:   expected,
@@ -480,6 +487,7 @@ func TestBinderConvertor(t *testing.T) {
 	assert.Equal(t, map[string][]string{
 		`item[options]`: {"a:1\nb:2"},
 		`item[env]`:     {"A:ONE\nB:TWO"},
+		`item[created]`: {"2025-09-01 09:30:12"},
 		`result`:        {""},
 	}, ctx2.Forms())
 }

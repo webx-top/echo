@@ -337,13 +337,14 @@ func SafeGetFieldByName(value reflect.Value, name string) (v reflect.Value) {
 		for idx := range f.Index[:len(f.Index)-1] {
 			destField := value.FieldByIndex(f.Index[:idx+1])
 
-			if destField.Kind() != reflect.Ptr {
+			if destField.Kind() != reflect.Pointer {
 				continue
 			}
 
 			if !destField.IsNil() {
 				continue
 			}
+
 			if !destField.CanSet() {
 				destFieldNotSet = true
 				break
@@ -403,13 +404,7 @@ func (e *Echo) binderValueDecode(name string, typev reflect.Type, tv reflect.Val
 	if len(decoder) == 0 {
 		return ErrNotImplemented
 	}
-	parts := strings.SplitN(decoder, `:`, 2)
-	decoder = parts[0]
-	var params string
-	if len(parts) == 2 {
-		params = parts[1]
-	}
-	result, err := e.CallBinderValueDecoder(decoder, name, values, params)
+	result, err := e.binderDecodeValue(decoder, name, values)
 	if err != nil { // ErrNotImplemented
 		return err
 	}
@@ -418,7 +413,22 @@ func (e *Echo) binderValueDecode(name string, typev reflect.Type, tv reflect.Val
 		tv.Set(vv)
 		return nil
 	}
+	if v := param.AsType(tv.Kind().String(), result); v != result {
+		vv = reflect.ValueOf(v)
+		tv.Set(vv)
+		return nil
+	}
 	return ErrNotImplemented
+}
+
+func (e *Echo) binderDecodeValue(decoder string, name string, values []string) (interface{}, error) {
+	parts := strings.SplitN(decoder, `:`, 2)
+	decoder = parts[0]
+	var params string
+	if len(parts) == 2 {
+		params = parts[1]
+	}
+	return e.CallBinderValueDecoder(decoder, name, values, params) // ErrNotImplemented
 }
 
 func convertMapKey(typev reflect.Type, key string) reflect.Value {

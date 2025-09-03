@@ -154,14 +154,60 @@ func binderValueEncoderJoinKVRows(field string, value interface{}, seperator str
 	return []string{result}
 }
 
-func binderValueEncoderUnix2time(field string, value interface{}, seperator string) []string {
-	ts := param.AsInt64(value)
-	if ts <= 0 {
+var TimeLayouts = map[string]string{
+	`datetime`:    time.DateTime,
+	`dateonly`:    time.DateOnly,
+	`timeonly`:    time.TimeOnly,
+	`stampnano`:   time.StampNano,
+	`layout`:      time.Layout,
+	`ansic`:       time.ANSIC,
+	`unixdate`:    time.UnixDate,
+	`rubydate`:    time.RubyDate,
+	`rfc822`:      time.RFC822,
+	`rfc822z`:     time.RFC822Z,
+	`rfc850`:      time.RFC850,
+	`rfc1123`:     time.RFC1123,
+	`rfc1123z`:    time.RFC1123Z,
+	`rfc3339`:     time.RFC3339,
+	`rfc3339nano`: time.RFC3339Nano,
+	`kitchen`:     time.Kitchen,
+	`stamp`:       time.Stamp,
+	`stampmilli`:  time.StampMilli,
+	`stampmicro`:  time.StampMicro,
+	// custom
+	`datetimeshort`: param.DateTimeShort,
+	`timeshort`:     param.TimeShort,
+	`dateshort`:     param.DateShort,
+	`monthday`:      param.DateMd,
+	`hourminute`:    param.TimeShort,
+}
+
+func GetTimeLayoutByName(name string) string {
+	v, y := TimeLayouts[strings.ToLower(name)]
+	if y {
+		return v
+	}
+	return name
+}
+
+func binderValueEncoderUnix2time(field string, value interface{}, layout string) []string {
+	t := param.AsTimestamp(value)
+	if t.IsZero() {
 		return []string{}
 	}
-	return []string{param.AsString(time.Unix(ts, 0))}
+	if len(layout) == 0 {
+		layout = param.DateTimeNormal
+	} else {
+		layout = GetTimeLayoutByName(layout)
+	}
+	return []string{t.Format(layout)}
 }
 
 func binderValueDecoderTime2unix(field string, values []string, layout string) (interface{}, error) {
+	if len(layout) == 0 {
+		layout = param.DateTimeNormal
+	} else {
+		layout = GetTimeLayoutByName(layout)
+	}
 	return param.AsDateTime(values[0], layout).Unix(), nil
 }
