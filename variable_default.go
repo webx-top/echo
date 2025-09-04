@@ -283,5 +283,5 @@ func binderValueDecoderTime2unixnano(field string, values []string, layout strin
 	}
 	t := param.AsDateTime(values[0], layout)
 	v := fmt.Sprintf(`%d.%d`, t.Unix(), t.Nanosecond())
-	return param.AsFloat64(v), nil
+	return v, nil
 }
