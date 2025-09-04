@@ -123,14 +123,20 @@ var (
 		return v
 	}
 	DefaultBinderValueEncoders = map[string]BinderValueEncoder{
-		`joinKVRows`: binderValueEncoderJoinKVRows,
-		`join`:       binderValueEncoderJoin,
-		`unix2time`:  binderValueEncoderUnix2time,
+		`joinKVRows`:     binderValueEncoderJoinKVRows,
+		`join`:           binderValueEncoderJoin,
+		`unix2time`:      binderValueEncoderUnix2time,      // int64
+		`unixmilli2time`: binderValueEncoderUnixmilli2time, // int64
+		`unixmicro2time`: binderValueEncoderUnixmicro2time, // int64
+		`unixnano2time`:  binderValueEncoderUnixnano2time,  // float64
 	}
 	DefaultBinderValueDecoders = map[string]BinderValueDecoder{
-		`splitKVRows`: binderValueDecoderSplitKVRows,
-		`split`:       binderValueDecoderSplit,
-		`time2unix`:   binderValueDecoderTime2unix,
+		`splitKVRows`:    binderValueDecoderSplitKVRows,
+		`split`:          binderValueDecoderSplit,
+		`time2unix`:      binderValueDecoderTime2unix,      // int64
+		`time2unixmilli`: binderValueDecoderTime2unixmilli, // int64
+		`time2unixmicro`: binderValueDecoderTime2unixmicro, // int64
+		`time2unixnano`:  binderValueDecoderTime2unixnano,  // float64
 	}
 )
 
@@ -210,4 +216,72 @@ func binderValueDecoderTime2unix(field string, values []string, layout string) (
 		layout = GetTimeLayoutByName(layout)
 	}
 	return param.AsDateTime(values[0], layout).Unix(), nil
+}
+
+func binderValueEncoderUnixmilli2time(field string, value interface{}, layout string) []string {
+	t := time.UnixMilli(param.AsInt64(value))
+	if t.IsZero() {
+		return []string{}
+	}
+	if len(layout) == 0 {
+		layout = param.DateTimeNormal
+	} else {
+		layout = GetTimeLayoutByName(layout)
+	}
+	return []string{t.Format(layout)}
+}
+
+func binderValueDecoderTime2unixmilli(field string, values []string, layout string) (interface{}, error) {
+	if len(layout) == 0 {
+		layout = param.DateTimeNormal
+	} else {
+		layout = GetTimeLayoutByName(layout)
+	}
+	return param.AsDateTime(values[0], layout).UnixMilli(), nil
+}
+
+func binderValueEncoderUnixmicro2time(field string, value interface{}, layout string) []string {
+	t := time.UnixMicro(param.AsInt64(value))
+	if t.IsZero() {
+		return []string{}
+	}
+	if len(layout) == 0 {
+		layout = param.DateTimeNormal
+	} else {
+		layout = GetTimeLayoutByName(layout)
+	}
+	return []string{t.Format(layout)}
+}
+
+func binderValueDecoderTime2unixmicro(field string, values []string, layout string) (interface{}, error) {
+	if len(layout) == 0 {
+		layout = param.DateTimeNormal
+	} else {
+		layout = GetTimeLayoutByName(layout)
+	}
+	return param.AsDateTime(values[0], layout).UnixMicro(), nil
+}
+
+func binderValueEncoderUnixnano2time(field string, value interface{}, layout string) []string {
+	t := param.AsTimestamp(value)
+	if t.IsZero() {
+		return []string{}
+	}
+	if len(layout) == 0 {
+		layout = param.DateTimeNormal
+	} else {
+		layout = GetTimeLayoutByName(layout)
+	}
+	return []string{t.Format(layout)}
+}
+
+func binderValueDecoderTime2unixnano(field string, values []string, layout string) (interface{}, error) {
+	if len(layout) == 0 {
+		layout = param.DateTimeNormal
+	} else {
+		layout = GetTimeLayoutByName(layout)
+	}
+	t := param.AsDateTime(values[0], layout)
+	v := fmt.Sprintf(`%d.%d`, t.Unix(), t.Nanosecond())
+	return param.AsFloat64(v), nil
 }
