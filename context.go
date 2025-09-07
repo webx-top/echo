@@ -80,6 +80,8 @@ type Context interface {
 	Queries() map[string][]string
 	QueryValues(string) []string
 	QueryxValues(string) param.StringSlice
+	QueryAnyValues(name string, other ...string) []string
+	QueryAnyxValues(name string, other ...string) param.StringSlice
 	Query(name string, defaults ...string) string
 	QueryAny(name string, other ...string) string
 	QueryLast(name string, defaults ...string) string
@@ -95,6 +97,8 @@ type Context interface {
 	FormAnyLast(name string, other ...string) string
 	FormValues(string) []string
 	FormxValues(string) param.StringSlice
+	FormAnyValues(name string, other ...string) []string
+	FormAnyxValues(name string, other ...string) param.StringSlice
 	// Forms returns the form parameters as map. It is an alias for `engine.Request#Form().All()`.
 	Forms() map[string][]string
 

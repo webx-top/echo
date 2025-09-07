@@ -212,8 +212,27 @@ func (c *XContext) QueryValues(name string) []string {
 	return c.request.URL().QueryValues(name)
 }
 
+func (c *XContext) QueryAnyValues(name string, other ...string) []string {
+	u := c.request.URL()
+	values := u.QueryValues(name)
+	if len(values) > 0 {
+		return values
+	}
+	for _, name := range other {
+		values = u.QueryValues(name)
+		if len(values) > 0 {
+			return values
+		}
+	}
+	return values
+}
+
 func (c *XContext) QueryxValues(name string) param.StringSlice {
 	return param.StringSlice(c.request.URL().QueryValues(name))
+}
+
+func (c *XContext) QueryAnyxValues(name string, other ...string) param.StringSlice {
+	return param.StringSlice(c.QueryAnyValues(name, other...))
 }
 
 func (c *XContext) Queries() map[string][]string {
@@ -285,8 +304,27 @@ func (c *XContext) FormValues(name string) []string {
 	return c.request.Form().Gets(name)
 }
 
+func (c *XContext) FormAnyValues(name string, other ...string) []string {
+	f := c.request.Form()
+	values := f.Gets(name)
+	if len(values) > 0 {
+		return values
+	}
+	for _, name := range other {
+		values = f.Gets(name)
+		if len(values) > 0 {
+			return values
+		}
+	}
+	return values
+}
+
 func (c *XContext) FormxValues(name string) param.StringSlice {
 	return param.StringSlice(c.request.Form().Gets(name))
+}
+
+func (c *XContext) FormAnyxValues(name string, other ...string) param.StringSlice {
+	return param.StringSlice(c.FormAnyValues(name, other...))
 }
 
 func (c *XContext) Forms() map[string][]string {
