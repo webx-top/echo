@@ -36,6 +36,15 @@ func (u *UrlValue) Get(key string) string {
 	return engine.Bytes2str(u.Args.Peek(key))
 }
 
+func (u *UrlValue) GetLast(key string) string {
+	vs := u.Gets(key)
+	var val string
+	if len(vs) > 0 {
+		val = vs[len(vs)-1]
+	}
+	return val
+}
+
 func (u *UrlValue) Gets(key string) []string {
 	u.init()
 	u.All()
@@ -133,6 +142,15 @@ func (v *Value) Del(key string) {
 func (v *Value) Get(key string) string {
 	v.init()
 	return v.form.Get(key)
+}
+
+func (v *Value) GetLast(key string) string {
+	vs := v.Gets(key)
+	var val string
+	if len(vs) > 0 {
+		val = vs[len(vs)-1]
+	}
+	return val
 }
 
 func (v *Value) Gets(key string) []string {

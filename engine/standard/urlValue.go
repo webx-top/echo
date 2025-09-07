@@ -32,6 +32,15 @@ func (u *UrlValue) Get(key string) string {
 	return u.values.Get(key)
 }
 
+func (v *UrlValue) GetLast(key string) string {
+	vs := v.Gets(key)
+	var val string
+	if len(vs) > 0 {
+		val = vs[len(vs)-1]
+	}
+	return val
+}
+
 func (u *UrlValue) Gets(key string) []string {
 	u.init()
 	if v, ok := (*u.values)[key]; ok {
@@ -121,6 +130,15 @@ func (v *Value) Get(key string) string {
 	v.init()
 	val := v.form.Get(key)
 	v.lock.Unlock()
+	return val
+}
+
+func (v *Value) GetLast(key string) string {
+	vs := v.Gets(key)
+	var val string
+	if len(vs) > 0 {
+		val = vs[len(vs)-1]
+	}
 	return val
 }
 

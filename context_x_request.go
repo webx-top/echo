@@ -154,8 +154,58 @@ func (c *XContext) Query(name string, defaults ...string) (value string) {
 	return
 }
 
+func (c *XContext) QueryAny(name string, other ...string) (value string) {
+	u := c.request.URL()
+	value = u.QueryValue(name)
+	if len(value) > 0 {
+		return
+	}
+	for _, name := range other {
+		value = u.QueryValue(name)
+		if len(value) > 0 {
+			return
+		}
+	}
+	return
+}
+
+func (c *XContext) QueryLast(name string, defaults ...string) (value string) {
+	value = c.request.URL().QueryLastValue(name)
+	if len(value) == 0 && len(defaults) > 0 {
+		return defaults[0]
+	}
+	return
+}
+
+func (c *XContext) QueryAnyLast(name string, other ...string) (value string) {
+	u := c.request.URL()
+	value = u.QueryLastValue(name)
+	if len(value) > 0 {
+		return
+	}
+	for _, name := range other {
+		value = u.QueryLastValue(name)
+		if len(value) > 0 {
+			return
+		}
+	}
+	return
+}
+
 func (c *XContext) Queryx(name string, defaults ...string) param.String {
 	return param.String(c.Query(name, defaults...))
+}
+
+func (c *XContext) QueryLastx(name string, defaults ...string) param.String {
+	return param.String(c.QueryLast(name, defaults...))
+}
+
+func (c *XContext) QueryAnyx(name string, other ...string) param.String {
+	return param.String(c.QueryAny(name, other...))
+}
+
+func (c *XContext) QueryAnyLastx(name string, other ...string) param.String {
+	return param.String(c.QueryAnyLast(name, other...))
 }
 
 func (c *XContext) QueryValues(name string) []string {
@@ -179,8 +229,56 @@ func (c *XContext) Form(name string, defaults ...string) (value string) {
 	return
 }
 
+func (c *XContext) FormAny(name string, other ...string) (value string) {
+	value = c.request.FormValue(name)
+	if len(value) > 0 {
+		return
+	}
+	for _, name := range other {
+		value = c.request.FormValue(name)
+		if len(value) > 0 {
+			return
+		}
+	}
+	return
+}
+
+func (c *XContext) FormLast(name string, defaults ...string) (value string) {
+	value = c.request.FormLastValue(name)
+	if len(value) == 0 && len(defaults) > 0 {
+		return defaults[0]
+	}
+	return
+}
+
+func (c *XContext) FormAnyLast(name string, other ...string) (value string) {
+	value = c.request.FormLastValue(name)
+	if len(value) > 0 {
+		return
+	}
+	for _, name := range other {
+		value = c.request.FormLastValue(name)
+		if len(value) > 0 {
+			return
+		}
+	}
+	return
+}
+
 func (c *XContext) Formx(name string, defaults ...string) param.String {
 	return param.String(c.Form(name, defaults...))
+}
+
+func (c *XContext) FormLastx(name string, defaults ...string) param.String {
+	return param.String(c.FormLast(name, defaults...))
+}
+
+func (c *XContext) FormAnyx(name string, other ...string) param.String {
+	return param.String(c.FormAny(name, other...))
+}
+
+func (c *XContext) FormAnyLastx(name string, other ...string) param.String {
+	return param.String(c.FormAnyLast(name, other...))
 }
 
 func (c *XContext) FormValues(name string) []string {

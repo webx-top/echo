@@ -28,6 +28,15 @@ func (u *URL) QueryValue(name string) string {
 	return u.query.Get(name)
 }
 
+func (u *URL) QueryLastValue(name string) string {
+	vs := u.QueryValues(name)
+	var val string
+	if len(vs) > 0 {
+		val = vs[len(vs)-1]
+	}
+	return val
+}
+
 func (u *URL) QueryValues(name string) []string {
 	u.Query()
 	if v, ok := u.query[name]; ok {

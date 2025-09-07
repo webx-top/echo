@@ -72,8 +72,12 @@ type (
 
 		SetBody(io.Reader)
 
-		// FormValue returns the form field value for the provided name.
+		// FormValue returns the form field first value for the provided name.
 		FormValue(string) string
+
+		// FormValue returns the form field last value for the provided name.
+		FormLastValue(name string) string
+
 		Object() interface{}
 
 		Form() URLValuer
@@ -171,6 +175,7 @@ type (
 		Add(string, string)
 		Del(string)
 		Get(string) string
+		GetLast(string) string
 		Gets(string) []string
 		Set(string, string)
 		Encode() string
@@ -185,6 +190,7 @@ type (
 		RawPath() string
 		Path() string
 		QueryValue(string) string
+		QueryLastValue(string) string
 		QueryValues(string) []string
 		Query() url.Values
 		RawQuery() string

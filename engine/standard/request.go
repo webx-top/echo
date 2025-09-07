@@ -115,6 +115,10 @@ func (r *Request) FormValue(name string) string {
 	return r.value.Get(name)
 }
 
+func (r *Request) FormLastValue(name string) string {
+	return r.value.GetLast(name)
+}
+
 func (r *Request) Form() engine.URLValuer {
 	return r.value
 }
