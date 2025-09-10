@@ -376,3 +376,10 @@ func AddExtension(c Context, uri string) string {
 	}
 	return uri
 }
+
+func CleanPath(ppath string) string {
+	if !strings.HasPrefix(ppath, `/`) {
+		ppath = `/` + ppath
+	}
+	return path.Clean(ppath)
+}

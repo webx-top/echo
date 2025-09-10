@@ -4,7 +4,6 @@ import (
 	"html/template"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -207,6 +206,7 @@ func (s *StaticOptions) Middleware() echo.MiddlewareFunc {
 				return next.Handle(c)
 			}
 			file := c.Request().URL().Path()
+			file = echo.CleanPath(file)
 			sz := len(file)
 			if sz < length {
 				return next.Handle(c)
@@ -221,7 +221,6 @@ func (s *StaticOptions) Middleware() echo.MiddlewareFunc {
 					return next.Handle(c)
 				}
 				file = file[length:]
-				file = path.Clean(file)
 				if len(s.TrimPrefix) > 0 {
 					file = strings.TrimPrefix(file, s.TrimPrefix)
 				}
