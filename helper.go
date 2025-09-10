@@ -386,8 +386,8 @@ func CleanPath(ppath string) string {
 }
 
 func CleanFilePath(ppath string) string {
-	if !strings.HasPrefix(ppath, `/`) {
-		ppath = `/` + ppath
+	if !strings.HasPrefix(ppath, FilePathSeparator) {
+		ppath = FilePathSeparator + ppath
 	}
 	return filepath.Clean(ppath)
 }
@@ -398,17 +398,32 @@ var (
 	ErrPathEscapesBase      = fmt.Errorf("path escapes base")
 )
 
-func FileSafePath(base, reqPath string) (string, error) {
-	cleaned := CleanFilePath(reqPath) // e.g. /a/../b -> /b
-	// Disallow parent dir references after cleaning
+func PathSafely(reqPath string) (string, error) {
+	cleaned := CleanPath(reqPath)
 	if pathWithDots.MatchString(cleaned) {
-		return "", fmt.Errorf(`%w: %s`, ErrInvalidPathTraversal, reqPath)
+		return cleaned, fmt.Errorf(`%w: %s`, ErrInvalidPathTraversal, reqPath)
+	}
+	return cleaned, nil
+}
+
+func FilePathSafely(reqPath string) (string, error) {
+	cleaned := CleanFilePath(reqPath)
+	if pathWithDots.MatchString(cleaned) {
+		return cleaned, fmt.Errorf(`%w: %s`, ErrInvalidPathTraversal, reqPath)
+	}
+	return cleaned, nil
+}
+
+func FilePathJoin(base, reqPath string) (string, error) {
+	cleaned, err := FilePathSafely(reqPath)
+	if err != nil {
+		return ``, err
 	}
 	full := filepath.Join(base, cleaned)
 	cleanedBase := filepath.Clean(base)
 	// Ensure the resolved path is under the base directory
-	if !strings.HasPrefix(full, cleanedBase+string(filepath.Separator)) {
-		return "", fmt.Errorf(`%w(%s): %s`, ErrPathEscapesBase, base, full)
+	if !strings.HasPrefix(full, cleanedBase+FilePathSeparator) {
+		return ``, fmt.Errorf(`%w(%s): %s`, ErrPathEscapesBase, base, full)
 	}
 	return full, nil
 }

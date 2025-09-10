@@ -35,7 +35,7 @@ func TestLogIf(t *testing.T) {
 }
 
 func TestFileSafePath(t *testing.T) {
-	full, err := FileSafePath(`abc`, `../../abc/..`)
+	full, err := FilePathJoin(`abc`, `../../abc/`)
 	assert.NoError(t, err)
 	assert.Equal(t, `abc/abc`, full)
 }
