@@ -642,15 +642,8 @@ func (c *XContext) SaveUploadedFile(fieldName string, saveAbsPath string, saveFi
 		}
 	}
 
-	var root *os.Root
-	root, err = os.OpenRoot(saveAbsPath)
-	if err != nil {
-		return fileHdr, err
-	}
-	defer root.Close()
-
 	var fileDst *os.File
-	fileDst, err = root.Create(fileName)
+	fileDst, err = CreateInRoot(saveAbsPath, fileName)
 	if err != nil {
 		return fileHdr, err
 	}
