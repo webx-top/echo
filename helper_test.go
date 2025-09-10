@@ -2,6 +2,7 @@ package echo
 
 import (
 	"errors"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,6 +32,29 @@ func TestHandlerPath(t *testing.T) {
 
 func TestLogIf(t *testing.T) {
 	LogIf(errors.New(`test`), `debug`)
+}
+
+func TestFileSafePath(t *testing.T) {
+	full, err := FileSafePath(`abc`, `../../abc/..`)
+	assert.NoError(t, err)
+	assert.Equal(t, `abc/abc`, full)
+}
+
+func TestCreateInRoot(t *testing.T) {
+	dir := `./testdata`
+	os.Mkdir(dir, os.ModePerm)
+	defer os.RemoveAll(dir)
+	f, err := CreateInRoot(dir, `abc.txt`)
+	assert.NoError(t, err)
+	f.WriteString(`test`)
+	f.Close()
+
+	err = WriteFileInRoot(dir, `def.txt`, []byte(`test1`), os.ModePerm)
+	assert.NoError(t, err)
+
+	b, err := ReadFileInRoot(dir, `def.txt`)
+	assert.NoError(t, err)
+	assert.Equal(t, `test1`, string(b))
 }
 
 func TestURLEncode(t *testing.T) {

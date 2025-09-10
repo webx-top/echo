@@ -5,7 +5,6 @@ import (
 	"io"
 	"mime/multipart"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -642,7 +641,16 @@ func (c *XContext) SaveUploadedFile(fieldName string, saveAbsPath string, saveFi
 			return fileHdr, err
 		}
 	}
-	fileDst, err := os.Create(filepath.Join(saveAbsPath, fileName))
+
+	var root *os.Root
+	root, err = os.OpenRoot(saveAbsPath)
+	if err != nil {
+		return fileHdr, err
+	}
+	defer root.Close()
+
+	var fileDst *os.File
+	fileDst, err = root.Create(fileName)
 	if err != nil {
 		return fileHdr, err
 	}
