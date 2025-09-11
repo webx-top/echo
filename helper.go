@@ -392,11 +392,15 @@ func CleanFilePath(ppath string) string {
 	return filepath.Clean(ppath)
 }
 
-var pathWithDots = regexp.MustCompile(`(?:..[/\\]|[/\\]..$)`)
+var pathWithDots = regexp.MustCompile(`(?:^\.\.[/\\]|[/\\]\.\.[/\\]|[/\\]\.\.$)`)
 var (
 	ErrInvalidPathTraversal = errors.New("invalid path traversal")
 	ErrPathEscapesBase      = fmt.Errorf("path escapes base")
 )
+
+func PathHasDots(ppath string) bool {
+	return pathWithDots.MatchString(ppath)
+}
 
 func PathSafely(reqPath string) (string, error) {
 	cleaned := CleanPath(reqPath)
