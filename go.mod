@@ -1,6 +1,6 @@
 module github.com/webx-top/echo
 
-go 1.24.5
+go 1.25.1
 
 retract [v2.0.0+incompatible, v2.42.35+incompatible]
 

@@ -477,6 +477,24 @@ func RemoveAllInRoot(dir, name string) error {
 	return r.RemoveAll(name)
 }
 
+func MkdirInRoot(dir, name string, perm os.FileMode) error {
+	r, err := os.OpenRoot(dir)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+	return r.Mkdir(name, perm)
+}
+
+func MkdirAllInRoot(dir, name string, perm os.FileMode) error {
+	r, err := os.OpenRoot(dir)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+	return r.MkdirAll(name, perm)
+}
+
 func StatInRoot(dir, name string) (os.FileInfo, error) {
 	r, err := os.OpenRoot(dir)
 	if err != nil {
@@ -484,4 +502,13 @@ func StatInRoot(dir, name string) (os.FileInfo, error) {
 	}
 	defer r.Close()
 	return r.Stat(name)
+}
+
+func RenameInRoot(dir string, oldName string, newName string) error {
+	r, err := os.OpenRoot(dir)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+	return r.Rename(oldName, newName)
 }
