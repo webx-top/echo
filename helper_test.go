@@ -38,6 +38,18 @@ func TestFileSafePath(t *testing.T) {
 	full, err := FilePathJoin(`abc`, `../../abc/`)
 	assert.NoError(t, err)
 	assert.Equal(t, `abc/abc`, full)
+
+	assert.True(t, PathHasDots(`..`))
+	assert.True(t, PathHasDots(`../`))
+	assert.True(t, PathHasDots(`/../`))
+	assert.True(t, PathHasDots(`/..`))
+	assert.False(t, PathHasDots(`/..adb`))
+	assert.True(t, PathHasDots(`cc/../adb`))
+	assert.True(t, PathHasDots(`..\`))
+	assert.True(t, PathHasDots(`\..\`))
+	assert.True(t, PathHasDots(`\..`))
+	assert.False(t, PathHasDots(`\..adb`))
+	assert.True(t, PathHasDots(`cc\..\adb`))
 }
 
 func TestCreateInRoot(t *testing.T) {
