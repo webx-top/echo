@@ -200,6 +200,8 @@ github.com/openzipkin/zipkin-go v0.1.1/go.mod h1:NtoC/o8u3JlF1lSlyPNswIbeQH9bJTm
 github.com/phuslu/iploc v1.0.20220630/go.mod h1:gsgExGWldwv1AEzZm+Ki9/vGfyjkL33pbSr9HGpt2Xg=
 github.com/phuslu/iploc v1.0.20250901 h1:zI/aYfKpvaL3xaErWp5xIIdLG5UIVAGjBt5dAoT42PM=
 github.com/phuslu/iploc v1.0.20250901/go.mod h1:VZqAWoi2A80YPvfk1AizLGHavNIG9nhBC8d87D/SeVs=
+github.com/phuslu/iploc v1.0.20250915 h1:a6pD3CjykWcNz4kTsJEs5xvshAhU/25FZMRxzcgWvDk=
+github.com/phuslu/iploc v1.0.20250915/go.mod h1:VZqAWoi2A80YPvfk1AizLGHavNIG9nhBC8d87D/SeVs=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
