@@ -111,7 +111,7 @@ var (
 	firstCapture  = []byte(`$1`)
 	preRegex      = regexp.MustCompile(`(?is)<pre( [^>]*)?>.*?<\/pre>`)
 	eolRegex      = regexp.MustCompile("(?s)(\r?\n){2,}")
-	scriptRegex   = regexp.MustCompile(`(?is)([< ]/(?:script|style|)>)[\s]+(<(?:script|style|link)[^>]*>)`)
+	scriptRegex   = regexp.MustCompile(`(?is)([< ]/(?:script|style)?>)[\s]+(<(?:script|style|link)[^>]*>)`)
 )
 
 func ReplaceAllAndCapture1And2(reg *regexp.Regexp, b []byte) []byte {
