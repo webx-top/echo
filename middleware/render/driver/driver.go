@@ -106,11 +106,29 @@ func (n *NopRenderer) ClearCache()                                          {}
 func (n *NopRenderer) Close()                                               {}
 
 var (
-	FE       = []byte(`$1 $2`)
-	First    = []byte(`$1`)
-	preRegex = regexp.MustCompile(`(?is)<pre( [^>]*)?>.*?<\/pre>`)
-	eolRegex = regexp.MustCompile("(?s)(\r?\n){2,}")
+	capture1And2  = []byte(`$1 $2`)
+	capture1With2 = []byte(`$1$2`)
+	firstCapture  = []byte(`$1`)
+	preRegex      = regexp.MustCompile(`(?is)<pre( [^>]*)?>.*?<\/pre>`)
+	eolRegex      = regexp.MustCompile("(?s)(\r?\n){2,}")
+	scriptRegex   = regexp.MustCompile(`(?is)(</(?:script|style)>)[\s]+(<(?:script|style)[^>]*>)`)
 )
+
+func ReplaceAllAndCapture1And2(reg *regexp.Regexp, b []byte) []byte {
+	return reg.ReplaceAll(b, capture1And2)
+}
+
+func ReplaceAllAndCapture1With2(reg *regexp.Regexp, b []byte) []byte {
+	return reg.ReplaceAll(b, capture1With2)
+}
+
+func ReplaceAllAndCaptureFirst(reg *regexp.Regexp, b []byte) []byte {
+	return reg.ReplaceAll(b, firstCapture)
+}
+
+func ReplaceScriptTagSpace(b []byte) []byte {
+	return ReplaceAllAndCapture1With2(scriptRegex, b)
+}
 
 func ReplacePRE(b []byte) ([]byte, [][]byte) {
 	var pres [][]byte
@@ -123,7 +141,7 @@ func ReplacePRE(b []byte) ([]byte, [][]byte) {
 }
 
 func RemoveMultiCRLF(b []byte) []byte {
-	return eolRegex.ReplaceAll(b, First)
+	return ReplaceAllAndCaptureFirst(eolRegex, b)
 }
 
 func RecoveryPRE(b []byte, pres [][]byte) []byte {

@@ -564,13 +564,7 @@ func (a *Standard) strip(src []byte) []byte {
 	src = a.stripTagRegex.ReplaceAllFunc(src, func(b []byte) []byte {
 		b = bytes.TrimPrefix(b, []byte(a.DelimLeft+a.StripTag+a.DelimRight))
 		b = bytes.TrimSuffix(b, []byte(a.DelimLeft+`/`+a.StripTag+a.DelimRight))
-		var pres [][]byte
-		b, pres = driver.ReplacePRE(b)
-		b = a.innerTagBlankRegex.ReplaceAll(b, driver.FE)
-		b = driver.RemoveMultiCRLF(b)
-		b = bytes.TrimSpace(b)
-		b = driver.RecoveryPRE(b, pres)
-		return b
+		return a.stripSpace(b)
 	})
 	return src
 }
@@ -578,7 +572,9 @@ func (a *Standard) strip(src []byte) []byte {
 func (a *Standard) stripSpace(b []byte) []byte {
 	var pres [][]byte
 	b, pres = driver.ReplacePRE(b)
-	b = a.innerTagBlankRegex.ReplaceAll(b, driver.FE)
+	b = driver.ReplaceAllAndCapture1And2(a.innerTagBlankRegex, b)
+	b = driver.RemoveMultiCRLF(b)
+	b = driver.ReplaceScriptTagSpace(b)
 	b = bytes.TrimSpace(b)
 	b = driver.RecoveryPRE(b, pres)
 	return b
