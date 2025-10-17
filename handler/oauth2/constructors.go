@@ -8,6 +8,10 @@ func Register(name string, constructor func(*Account) goth.Provider) {
 	constructors[name] = constructor
 }
 
+func GetConstructor(name string) func(*Account) goth.Provider {
+	return constructors[name]
+}
+
 func ConstructorNames() []string {
 	var names []string
 	for name := range constructors {
