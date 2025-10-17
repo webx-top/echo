@@ -21,6 +21,7 @@ import (
 
 	"github.com/admpub/goth"
 	"github.com/admpub/goth/providers/amazon"
+
 	//"github.com/admpub/goth/providers/apple"
 	"github.com/admpub/goth/providers/bitbucket"
 	"github.com/admpub/goth/providers/gitea"
@@ -175,6 +176,10 @@ func (c *Config) NewProvider(account *Account) goth.Provider {
 	}
 	if account.Constructor != nil {
 		return account.Instance()
+	}
+	create, ok := constructors[account.Name]
+	if ok {
+		return create(account)
 	}
 	switch account.Name {
 	case "gitea":
