@@ -20,18 +20,9 @@ import (
 	"sync"
 
 	"github.com/admpub/goth"
-	"github.com/admpub/goth/providers/amazon"
 
 	//"github.com/admpub/goth/providers/apple"
-	"github.com/admpub/goth/providers/bitbucket"
-	"github.com/admpub/goth/providers/gitea"
-	"github.com/admpub/goth/providers/github"
-	"github.com/admpub/goth/providers/paypal"
-	"github.com/admpub/goth/providers/salesforce"
-	"github.com/admpub/goth/providers/stripe"
-	"github.com/admpub/goth/providers/uber"
-	"github.com/admpub/goth/providers/wechat"
-	"github.com/admpub/goth/providers/yahoo"
+
 	"github.com/webx-top/echo"
 )
 
@@ -180,30 +171,6 @@ func (c *Config) NewProvider(account *Account) goth.Provider {
 	create, ok := constructors[account.Name]
 	if ok {
 		return create(account)
-	}
-	switch account.Name {
-	case "gitea":
-		return gitea.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
-	case "github":
-		return github.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
-	case "bitbucket":
-		return bitbucket.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
-	case "salesforce":
-		return salesforce.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
-	case "amazon":
-		return amazon.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
-	case "yahoo":
-		return yahoo.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
-	case "stripe":
-		return stripe.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
-	case "paypal":
-		return paypal.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
-	//case "apple":
-	//	return apple.New(account.Key, account.Secret, account.CallbackURL, http.DefaultClient, account.Scopes...)
-	case "wechat":
-		return wechat.New(account.Key, account.Secret, account.CallbackURL, wechat.WECHAT_LANG_CN)
-	case "uber":
-		return uber.New(account.Key, account.Secret, account.CallbackURL, account.Scopes...)
 	}
 	return nil
 }
