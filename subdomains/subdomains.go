@@ -47,15 +47,20 @@ func (info *Info) makeURL(s *Subdomains, uri string, uriHasPrefix bool) string {
 	if len(uri) > 0 && !strings.HasPrefix(uri, `/`) {
 		uri = `/` + uri
 	}
-	var prefix string
+	var urlPath string
 	if !uriHasPrefix {
-		prefix = info.Prefix()
+		urlPath = info.Prefix() + uri
+		if info.Rewriter() != nil {
+			urlPath = info.Rewriter().Rewrite(urlPath)
+		}
+	} else {
+		urlPath = uri
 	}
 	if domain := echo.String(`subdomains.` + info.Name + `.url`); len(domain) > 0 {
-		return domain + prefix + uri
+		return domain + urlPath
 	}
 	if len(info.Host) == 0 {
-		return prefix + uri
+		return urlPath
 	}
 	protocol := info.Protocol
 	if len(protocol) == 0 {
@@ -64,10 +69,16 @@ func (info *Info) makeURL(s *Subdomains, uri string, uriHasPrefix bool) string {
 			protocol = `http`
 		}
 	}
-	return protocol + `://` + info.Host + prefix + uri
+	return protocol + `://` + info.Host + urlPath
 }
 
 func (info *Info) RelativeURL(uri string) string {
+	if len(uri) > 0 && !strings.HasPrefix(uri, `/`) {
+		uri = `/` + uri
+	}
+	if info.Rewriter() != nil {
+		uri = info.Rewriter().Rewrite(uri)
+	}
 	return info.makeRelativeURL(uri, false)
 }
 

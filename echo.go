@@ -940,6 +940,13 @@ func (e *Echo) Rewriter() Rewriter {
 	return e.rewriter
 }
 
+func (e *Echo) RewriteURI(uri string) string {
+	if e.rewriter != nil {
+		uri = e.rewriter.Rewrite(uri)
+	}
+	return uri
+}
+
 func (e *Echo) wrapURI(c Context, uri string, withoutExt bool) string {
 	if e.rewriter != nil {
 		uri = e.rewriter.Rewrite(uri)

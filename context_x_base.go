@@ -500,8 +500,7 @@ func (c *XContext) URLFor(uri string, relative ...bool) string {
 	if len(uri) == 0 {
 		return c.Site()
 	}
-	uri = AddExtension(c, uri)
-	return c.siteRoot() + c.echo.wrapURI(c, c.echo.MakeRelativeURL(uri, false), true)
+	return c.siteRoot() + c.RelativeURL(uri)
 }
 
 func (c *XContext) URLByName(name string, args ...interface{}) string {
