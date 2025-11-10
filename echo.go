@@ -960,11 +960,11 @@ func (e *Echo) wrapURI(c Context, uri string, withoutExt bool) string {
 			uri += extension
 		}
 	}
-	uri = e.uriAddLangCode(c, uri)
+	uri = e.URIAddLangCode(c, uri)
 	return uri
 }
 
-func (e *Echo) uriAddLangCode(c Context, uri string) string {
+func (e *Echo) URIAddLangCode(c Context, uri string) string {
 	if c == nil || !e.multilingual {
 		return uri
 	}
