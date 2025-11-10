@@ -8,7 +8,7 @@ type (
 		Router *Router
 	}
 	TypeHost struct {
-		prefix string
+		host   string
 		router *Router
 		echo   *Echo
 	}
@@ -18,18 +18,18 @@ func (t TypeHost) URI(handler interface{}, params ...interface{}) string {
 	if t.router == nil || t.echo == nil {
 		return ``
 	}
-	return t.prefix + t.echo.URI(handler, params...)
+	return t.host + t.echo.URI(handler, params...)
 }
 
 func (t TypeHost) URIWithContext(c Context, handler interface{}, params ...interface{}) string {
 	if t.router == nil || t.echo == nil {
 		return ``
 	}
-	return t.echo.uriAddLangCode(c, t.prefix+t.echo.URI(handler, params...))
+	return t.host + t.echo.URIWithContext(c, handler, params...)
 }
 
 func (t TypeHost) String() string {
-	return t.prefix
+	return t.host
 }
 
 func (h *Host) Host(args ...interface{}) (r TypeHost) {
@@ -39,16 +39,16 @@ func (h *Host) Host(args ...interface{}) (r TypeHost) {
 	r.echo = h.group.echo
 	r.router = h.Router
 	if len(args) != 1 {
-		r.prefix = h.group.host.Format(args...)
+		r.host = h.group.host.Format(args...)
 		return
 	}
 	switch v := args[0].(type) {
 	case map[string]interface{}:
-		r.prefix = h.group.host.FormatMap(v)
+		r.host = h.group.host.FormatMap(v)
 	case H:
-		r.prefix = h.group.host.FormatMap(v)
+		r.host = h.group.host.FormatMap(v)
 	default:
-		r.prefix = h.group.host.Format(args...)
+		r.host = h.group.host.Format(args...)
 	}
 	return
 }
