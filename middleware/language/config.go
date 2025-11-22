@@ -13,19 +13,42 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package language
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/webx-top/echo/param"
+)
 
 type Config struct {
-	Project      string
-	Default      string
-	Fallback     string
-	AllList      []string
+	Project  string
+	Default  string
+	Fallback string
+	AllList  []string
+
+	// key: language, value: map[key]value.
+	//
+	// Example:
+	// {
+	// 	"en":{
+	// 		"label":"English",
+	// 		"flag":"🇺🇸"
+	// 	},
+	// 	"zh-CN":{
+	// 		"label":"简体中文",
+	// 		"flag":"🇨🇳"
+	// 	},
+	// }
+	Extra map[string]param.Store
+
 	RulesPath    []string
 	MessagesPath []string
-	Reload       bool
-	fsFunc       func(string) http.FileSystem
+
+	// Reload indicates whether to reload the language file each time it is modified.
+	Reload bool
+	fsFunc func(string) http.FileSystem
 }
 
 func (c *Config) SetFSFunc(fsFunc func(string) http.FileSystem) *Config {
@@ -33,8 +56,21 @@ func (c *Config) SetFSFunc(fsFunc func(string) http.FileSystem) *Config {
 	return c
 }
 
+// FSFunc returns the configured http.FileSystem function.
 func (c *Config) FSFunc() func(string) http.FileSystem {
 	return c.fsFunc
+}
+
+// ExtraBy returns the extra parameters for the specified language.
+// If no extra parameters exist for the language or Extra is nil, returns an empty Store.
+func (c *Config) ExtraBy(lang string) param.Store {
+	if c.Extra == nil {
+		return param.Store{}
+	}
+	if extra, ok := c.Extra[lang]; ok {
+		return extra
+	}
+	return param.Store{}
 }
 
 func (c *Config) Clone() Config {
@@ -43,6 +79,7 @@ func (c *Config) Clone() Config {
 		Default:      c.Default,
 		Fallback:     c.Fallback,
 		AllList:      make([]string, len(c.AllList)),
+		Extra:        make(map[string]param.Store, len(c.Extra)),
 		RulesPath:    make([]string, len(c.RulesPath)),
 		MessagesPath: make([]string, len(c.MessagesPath)),
 		Reload:       c.Reload,
@@ -51,5 +88,8 @@ func (c *Config) Clone() Config {
 	copy(cfg.AllList, c.AllList)
 	copy(cfg.RulesPath, c.RulesPath)
 	copy(cfg.MessagesPath, c.MessagesPath)
+	for k, v := range c.Extra {
+		cfg.Extra[k] = v.Clone()
+	}
 	return cfg
 }

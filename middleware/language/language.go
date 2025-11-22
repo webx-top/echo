@@ -28,7 +28,7 @@ import (
 
 var (
 	LangVarName        = `lang`
-	DefaultLang        = `zh-cn`
+	DefaultLang        = `zh-CN`
 	headerAcceptRemove = regexp.MustCompile(`;q=[0-9.]+`)
 )
 
