@@ -152,14 +152,15 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"Extension":      path.Ext,
 	"InExt":          InExt,
 
-	"Concat":    Concat,
-	"Replace":   strings.Replace, //strings.Replace(s, old, new, n)
-	"Split":     strings.Split,
-	"Join":      strings.Join,
-	"Substr":    com.Substr,
-	"StripTags": com.StripTags,
-	"Nl2br":     NlToBr, // \n替换为<br>
-	"AddSuffix": AddSuffix,
+	"Concat":       Concat,
+	"Replace":      strings.Replace, //strings.Replace(s, old, new, n)
+	"Split":        strings.Split,
+	"Join":         strings.Join,
+	"Substr":       com.Substr,
+	"StripTags":    com.StripTags,
+	"Nl2br":        NlToBr, // \n替换为<br>
+	"AddSuffix":    AddSuffix,
+	"RandomString": RandomString,
 
 	// ======================
 	// encode & decode
@@ -220,6 +221,13 @@ var (
 	HashClipPositions = []uint{1, 3, 8, 9}
 	NumberFormat      = com.NumberFormat
 )
+
+func RandomString(length ...uint) string {
+	if len(length) > 0 && length[0] > 0 {
+		return com.RandomAlphanumeric(length[0])
+	}
+	return com.RandomAlphanumeric(8)
+}
 
 func Hash(text, salt string, positions ...uint) string {
 	if len(salt) < 1 {
