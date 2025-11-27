@@ -58,12 +58,15 @@ func (a *I18n) Monitor() *I18n {
 			return nil, reload(file)
 		})
 	}
-	callback := &com.MonitorEvent{
+	if a.monitor != nil {
+		a.monitor.Close()
+	}
+	a.monitor = &com.MonitorEvent{
 		Modify: onchange,
 		Delete: onchange,
 		Rename: onchange,
 	}
-	callback.Watch(func(f string) bool {
+	a.monitor.Watch(func(f string) bool {
 		log.Info("changed language: ", f)
 		return strings.HasSuffix(f, `.yaml`)
 	})
@@ -71,7 +74,7 @@ func (a *I18n) Monitor() *I18n {
 		if len(mp) == 0 {
 			continue
 		}
-		if err := callback.AddDir(mp); err != nil {
+		if err := a.monitor.AddDir(mp); err != nil {
 			log.Debugf(`failed to I18n.Monitor.AddDir(%q): %v`, mp, err)
 		}
 	}

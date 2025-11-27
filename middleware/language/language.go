@@ -57,6 +57,12 @@ type Language struct {
 	translatePool sync.Pool
 }
 
+func (a *Language) Close() {
+	if a.I18n != nil {
+		a.I18n.Close()
+	}
+}
+
 func (a *Language) Init(c *Config) {
 	if len(c.Default) > 0 {
 		c.Default = echo.NewLangCode(c.Default).Normalize()

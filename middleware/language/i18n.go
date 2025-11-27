@@ -23,6 +23,7 @@ import (
 	"sync"
 
 	"github.com/admpub/i18n"
+	"github.com/webx-top/com"
 	"github.com/webx-top/echo"
 )
 
@@ -33,6 +34,7 @@ type I18n struct {
 	lock        sync.RWMutex
 	translators map[string]*i18n.Translator
 	config      *Config
+	monitor     *com.MonitorEvent
 }
 
 func fixedPath(ppath string, open func(string) http.FileSystem) string {
@@ -93,6 +95,13 @@ func NewI18n(c *Config) *I18n {
 
 func SetDefault(ins *I18n) {
 	defaultInstance = ins
+}
+
+func (a *I18n) Close() {
+	if a.monitor == nil {
+		return
+	}
+	a.monitor.Close()
 }
 
 func (a *I18n) GetAndCache(langCode string) *i18n.Translator {
