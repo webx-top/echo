@@ -76,6 +76,7 @@ func (a *Language) Init(c *Config) {
 			a.Set(`en`, true)
 		}
 	}
+	c.Init()
 	a.I18n = NewI18n(c)
 	if c.Reload {
 		a.I18n.Monitor()
