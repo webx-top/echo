@@ -24,6 +24,8 @@ import (
 	"github.com/webx-top/echo"
 )
 
+// NewTranslate creates a new Translate instance and initializes it with the given language and language object.
+// Returns a pointer to the initialized Translate struct.
 func NewTranslate(language string, langObject *Language) *Translate {
 	tr := &Translate{}
 	return tr.Reset(language, langObject)
@@ -38,6 +40,8 @@ type Translate struct {
 	_pool bool
 }
 
+// Release releases the Translate instance resources and returns it to the pool if it was created from a pool.
+// It sets both code and lang references to nil and optionally returns the instance to the translatePool.
 func (t *Translate) Release() {
 	t.code = nil
 	if t._pool {
@@ -46,26 +50,35 @@ func (t *Translate) Release() {
 	t.lang = nil
 }
 
+// Reset sets the language code and language object for the translator
+// language: the language code to set
+// langObject: the language object containing translations
+// Returns the modified Translate instance for method chaining
 func (t *Translate) Reset(language string, langObject *Language) *Translate {
 	t.code = echo.NewLangCode(language)
 	t.lang = langObject
 	return t
 }
 
+// T translates the given format string using the current language code and optional arguments.
+// Returns the translated string.
 func (t *Translate) T(format string, args ...interface{}) string {
 	return t.lang.I18n.T(t.code.String(), format, args...)
 }
 
+// E returns a new error with the translated message using the given format string and arguments.
 func (t *Translate) E(format string, args ...interface{}) error {
 	return errors.New(t.T(format, args...))
 }
 
+// Lang returns the language code of the Translate instance
 func (t *Translate) Lang() echo.LangCode {
 	return t.code
 }
 
+// SetLang sets the language code for translation using the specified language string.
 func (t *Translate) SetLang(lang string) {
-	t.code = echo.NewLangCode(lang)
+	t.code.Reset(lang)
 }
 
 // LangDefault default language

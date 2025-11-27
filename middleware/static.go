@@ -24,9 +24,9 @@ var ListDirTemplate = `<!doctype html>
     </head>
     <body>
 		<ul id="fileList">
-		{{range $k, $d := .dirs}}
+		{{- range $k, $d := .dirs -}}
 		<li><a href="{{$d.Name}}{{if $d.IsDir}}/{{end}}" style="color: {{if $d.IsDir}}#e91e63{{else}}#212121{{end}};">{{$d.Name}}{{if $d.IsDir}}/{{end}}</a></li>
-		{{end}}
+		{{- end -}}
 		</ul>
 	</body>
 </html>`

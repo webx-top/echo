@@ -18,12 +18,19 @@ type AJAXConfig struct {
 	OnlyAJAX  bool
 }
 
+// AJAX wraps the given handler with default AJAX configuration and returns a middleware function.
+// The middleware ensures the request is AJAX by checking the X-Requested-With header.
+// Use AJAXWithConfig for custom configuration options.
 func AJAX(handler echo.HandlerFuncs) echo.MiddlewareFunc {
 	config := DefaultAJAXConfig
 	config.Handler = handler
 	return AJAXWithConfig(config)
 }
 
+// AJAXWithConfig returns a middleware function that handles AJAX operations based on the provided config.
+// The middleware checks for AJAX requests and processes operations specified in the form parameter.
+// If Skipper returns true or OnlyAJAX is true and the request is not AJAX, it skips the middleware.
+// Config parameters are merged with defaults if not provided.
 func AJAXWithConfig(config AJAXConfig) echo.MiddlewareFunc {
 	if config.Skipper == nil {
 		config.Skipper = DefaultAJAXConfig.Skipper
