@@ -11,6 +11,10 @@ import (
 	"golang.org/x/sync/singleflight"
 )
 
+// safeReload safely reloads the specified language file with panic recovery.
+// It logs the reload operation and returns any error encountered during reload,
+// including recovered panics converted to errors.
+// The file parameter specifies the path to the language file to reload.
 func (a *I18n) safeReload(file string) error {
 	log.Info("reload language: ", file)
 	var err error
@@ -23,6 +27,9 @@ func (a *I18n) safeReload(file string) error {
 	return err
 }
 
+// Reload reloads the translator for the specified language code.
+// If the langCode ends with ".yaml", it will be trimmed and only the base name will be used.
+// This method also removes the cached translator for the language.
 func (a *I18n) Reload(langCode string) {
 	if strings.HasSuffix(langCode, `.yaml`) {
 		langCode = strings.TrimSuffix(langCode, `.yaml`)
@@ -35,6 +42,10 @@ func (a *I18n) Reload(langCode string) {
 	a.lock.Unlock()
 }
 
+// Monitor starts watching language files for changes and automatically reloads them when modified.
+// It uses a singleflight group to prevent concurrent reloads of the same file.
+// The method watches for modify, delete and rename events on .yaml files in configured MessagesPath directories.
+// Returns the I18n instance for method chaining.
 func (a *I18n) Monitor() *I18n {
 	reload := func(file string) error {
 		err := a.safeReload(file)

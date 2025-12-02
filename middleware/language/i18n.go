@@ -27,8 +27,6 @@ import (
 	"github.com/webx-top/echo"
 )
 
-var defaultInstance *I18n
-
 type I18n struct {
 	*i18n.TranslatorFactory
 	lock        sync.RWMutex
@@ -37,6 +35,11 @@ type I18n struct {
 	monitor     *com.MonitorEvent
 }
 
+// fixedPath resolves a relative path to an absolute path if needed.
+// If ppath is empty or already absolute, returns it unchanged.
+// If the path exists as-is (checked using the provided open function), returns it unchanged.
+// Otherwise, joins the path with the current working directory (echo.Wd()).
+// The open function is used to check path existence, defaulting to http.Dir if nil.
 func fixedPath(ppath string, open func(string) http.FileSystem) string {
 	if len(ppath) == 0 || filepath.IsAbs(ppath) {
 		return ppath
@@ -60,6 +63,10 @@ func fixedPath(ppath string, open func(string) http.FileSystem) string {
 	return filepath.Join(echo.Wd(), ppath)
 }
 
+// NewI18n creates a new I18n instance with the given configuration.
+// It initializes translator paths, creates a translator factory, and caches the default translator.
+// If any errors occur during initialization, it will panic with the aggregated error messages.
+// The first created instance will be set as the default instance if none exists.
 func NewI18n(c *Config) *I18n {
 	for index, value := range c.RulesPath {
 		c.RulesPath[index] = fixedPath(value, c.FSFunc())
@@ -86,17 +93,10 @@ func NewI18n(c *Config) *I18n {
 		config:            c,
 	}
 	ins.GetAndCache(c.Default)
-
-	if defaultInstance == nil {
-		SetDefault(ins)
-	}
 	return ins
 }
 
-func SetDefault(ins *I18n) {
-	defaultInstance = ins
-}
-
+// Close stops the I18n monitor if it exists.
 func (a *I18n) Close() {
 	if a.monitor == nil {
 		return
@@ -104,6 +104,10 @@ func (a *I18n) Close() {
 	a.monitor.Close()
 }
 
+// GetAndCache retrieves a translator for the specified language code and caches it.
+// If the translator for the requested language cannot be loaded, it falls back to the default language.
+// Returns the cached translator instance.
+// Panics if errors occur while loading both the requested and default language translators.
 func (a *I18n) GetAndCache(langCode string) *i18n.Translator {
 	var (
 		t    *i18n.Translator
@@ -133,6 +137,9 @@ func (a *I18n) GetAndCache(langCode string) *i18n.Translator {
 	return t
 }
 
+// Get returns the translator for the specified language code.
+// If the translator is not cached, it will be loaded and cached using GetAndCache.
+// The returned translator is safe for concurrent use.
 func (a *I18n) Get(langCode string) *i18n.Translator {
 	a.lock.RLock()
 	t, ok := a.translators[langCode]
@@ -143,6 +150,12 @@ func (a *I18n) Get(langCode string) *i18n.Translator {
 	return t
 }
 
+// Translate translates the given key for the specified language code, using the provided args for variable substitution.
+// If translation fails, returns the key with any group prefix removed.
+// langCode: target language code
+// key: translation key
+// args: variables to substitute in the translation
+// Returns: translated string or cleaned key if translation fails
 func (a *I18n) Translate(langCode, key string, args map[string]string) string {
 	t := a.Get(langCode)
 	translation, errs := t.Translate(key, args)
@@ -152,6 +165,9 @@ func (a *I18n) Translate(langCode, key string, args map[string]string) string {
 	return translation
 }
 
+// T translates the given key for the specified language code, optionally formatting the result with provided arguments.
+// If args[0] is a map[string]string, it's used as translation variables. Otherwise, args are used for fmt.Sprintf formatting.
+// Returns the translated string, formatted if arguments were provided.
 func (a *I18n) T(langCode, key string, args ...interface{}) (t string) {
 	if len(args) > 0 {
 		if v, ok := args[0].(map[string]string); ok {
@@ -163,18 +179,5 @@ func (a *I18n) T(langCode, key string, args ...interface{}) (t string) {
 		return
 	}
 	t = a.Translate(langCode, key, nil)
-	return
-}
-
-// T 多语言翻译
-func T(langCode, key string, args ...interface{}) (t string) {
-	if defaultInstance == nil {
-		t = i18n.TrimGroupPrefix(key)
-		if len(args) > 0 {
-			t = fmt.Sprintf(t, args...)
-		}
-		return
-	}
-	t = defaultInstance.T(langCode, key, args...)
 	return
 }

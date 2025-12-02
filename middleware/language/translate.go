@@ -26,9 +26,9 @@ import (
 
 // NewTranslate creates a new Translate instance and initializes it with the given language and language object.
 // Returns a pointer to the initialized Translate struct.
-func NewTranslate(language string, langObject *Language) *Translate {
+func NewTranslate(language string, langObject *Language, list map[string]bool) *Translate {
 	tr := &Translate{}
-	return tr.Reset(language, langObject)
+	return tr.Reset(language, langObject, list)
 }
 
 var _ echo.Translator = (*Translate)(nil)
@@ -37,6 +37,7 @@ var _ echo.Releaseable = (*Translate)(nil)
 type Translate struct {
 	code  echo.LangCode
 	lang  *Language
+	list  map[string]bool
 	_pool bool
 }
 
@@ -48,15 +49,17 @@ func (t *Translate) Release() {
 		t.lang.translatePool.Put(t)
 	}
 	t.lang = nil
+	t.lang = nil
 }
 
 // Reset sets the language code and language object for the translator
 // language: the language code to set
 // langObject: the language object containing translations
 // Returns the modified Translate instance for method chaining
-func (t *Translate) Reset(language string, langObject *Language) *Translate {
+func (t *Translate) Reset(language string, langObject *Language, list map[string]bool) *Translate {
 	t.code = echo.NewLangCode(language)
 	t.lang = langObject
+	t.list = list
 	return t
 }
 
@@ -93,5 +96,5 @@ func (t *Translate) LangList() []string {
 
 // LangExists language code exists
 func (t *Translate) LangExists(langCode string) bool {
-	return t.lang.Valid(langCode)
+	return t.lang.Valid(langCode, t.list)
 }

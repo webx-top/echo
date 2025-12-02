@@ -53,7 +53,22 @@ type Config struct {
 	kvList echo.KVList
 }
 
+// Init initializes the language configuration by:
+// - Normalizing default and fallback language codes
+// - Normalizing all language codes in AllList
+// - Creating a KVList with language codes as keys and formatted labels as values
+// - Setting additional metadata (H) for each KV item from Extra data
 func (c *Config) Init() {
+	if len(c.Default) > 0 {
+		c.Default = echo.NewLangCode(c.Default).Normalize()
+	}
+	if len(c.Fallback) > 0 {
+		c.Fallback = echo.NewLangCode(c.Fallback).Normalize()
+	}
+	for index, lang := range c.AllList {
+		lang = echo.NewLangCode(lang).Normalize()
+		c.AllList[index] = lang
+	}
 	c.kvList = make(echo.KVList, len(c.AllList))
 	for index, lang := range c.AllList {
 		extra := c.ExtraBy(lang)
