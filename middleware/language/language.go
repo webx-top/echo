@@ -41,10 +41,10 @@ func New(c ...*Config) *Language {
 		Default: DefaultLang,
 		translatePool: sync.Pool{
 			New: func() interface{} {
-				return &Translate{_pool: true}
+				return TranslatorNew()
 			},
 		},
-		langsMapGetter: LangsMapGetter,
+		langsGetter: LangsGetter,
 	}
 	if len(c) > 0 {
 		lang.Init(c[0])
@@ -53,16 +53,21 @@ func New(c ...*Config) *Language {
 }
 
 type Language struct {
-	List           map[string]bool
-	Default        string //默认语种
-	I18n           *I18n
-	translatePool  sync.Pool
-	langsMapGetter func(echo.Context, *Language) (map[string]bool, error) //语种列表
+	List          map[string]bool                                                                      // 语种列表
+	Default       string                                                                               // 默认语种
+	I18n          *I18n                                                                                // I18n 实例
+	translatePool sync.Pool                                                                            // 翻译实例池
+	langsGetter   func(echo.Context, *Language) (langs map[string]bool, langDefault string, err error) // 获取可用语言列表
 }
 
-var LangsMapGetter = func(c echo.Context, a *Language) (map[string]bool, error) {
-	return a.List, nil
-}
+var (
+	LangsGetter = func(c echo.Context, a *Language) (map[string]bool, string, error) {
+		return a.List, a.Default, nil
+	}
+	TranslatorNew = func() Translator {
+		return &Translate{_pool: true}
+	}
+)
 
 // Close closes the I18n instance if it exists.
 func (a *Language) Close() {
@@ -127,14 +132,14 @@ func (a *Language) DetectURI(c echo.Context, list map[string]bool) string {
 
 // Valid checks if the specified language is valid and enabled in the provided list.
 // Returns true if the language is non-empty and marked as enabled in the list, false otherwise.
-func (a *Language) Valid(lang string, list map[string]bool) bool {
+func (a *Language) Valid(lang string, langs map[string]bool) bool {
 	if len(lang) == 0 {
 		return false
 	}
-	if list == nil {
-		list = a.List
+	if langs == nil {
+		langs = a.List
 	}
-	if on, ok := list[lang]; ok {
+	if on, ok := langs[lang]; ok {
 		return on
 	}
 	return false
@@ -173,36 +178,37 @@ func (a *Language) DetectHeader(r engine.Request, list map[string]bool) string {
 			return lang
 		}
 	}
-	return a.Default
+	return ``
 }
 
 // AcquireTranslator gets a Translate instance from the pool and initializes it with the specified language code.
 // The returned translator is ready to use for translation operations.
-func (a *Language) AcquireTranslator(langCode string, list map[string]bool) *Translate {
-	tr := a.translatePool.Get().(*Translate)
-	tr.Reset(langCode, a, list)
+func (a *Language) AcquireTranslator(langCode string, langs map[string]bool, langDefault string) Translator {
+	tr := a.translatePool.Get().(Translator)
+	tr.Reset(langCode, a, langs, langDefault)
 	return tr
 }
 
 // ReleaseTranslator releases the resources associated with the given translator.
 // It calls the Release method on the provided Translate instance.
-func (a *Language) ReleaseTranslator(tr *Translate) {
+func (a *Language) ReleaseTranslator(tr Translator) {
 	tr.Release()
 }
 
 // release releases the translator resources associated with the context
 func (a *Language) release(c echo.Context) {
-	c.Translator().(*Translate).Release()
+	c.Translator().(Translator).Release()
 }
 
-// GetLangsMap retrieves a map of available languages with their enabled status.
-// It delegates the actual retrieval to the configured langsMapGetter function.
-// Returns the language map or an error if retrieval fails.
-func (a *Language) GetLangsMap(c echo.Context) (map[string]bool, error) {
-	if a.langsMapGetter == nil {
-		return LangsMapGetter(c, a)
+// GetLangs retrieves available languages and the current language from context.
+// Returns a map of available languages (key: language code, value: enabled status),
+// the current language code, and any error encountered.
+// If langsGetter is nil, falls back to default LangsGetter function.
+func (a *Language) GetLangs(c echo.Context) (map[string]bool, string, error) {
+	if a.langsGetter == nil {
+		return LangsGetter(c, a)
 	}
-	return a.langsMapGetter(c, a)
+	return a.langsGetter(c, a)
 }
 
 // Middleware returns an echo middleware function that handles language detection and translation.
@@ -212,27 +218,30 @@ func (a *Language) GetLangsMap(c echo.Context) (map[string]bool, error) {
 func (a *Language) Middleware() echo.MiddlewareFunc {
 	return echo.MiddlewareFunc(func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
-			list, err := a.GetLangsMap(c)
-			if err != nil || len(list) == 0 {
+			langs, langDefault, err := a.GetLangs(c)
+			if err != nil || len(langs) == 0 {
 				return err
 			}
 			lang := c.Query(LangVarName)
 			var hasCookie bool
-			if !a.Valid(lang, list) {
-				lang = a.DetectURI(c, list)
-				if !a.Valid(lang, list) {
+			if !a.Valid(lang, langs) {
+				lang = a.DetectURI(c, langs)
+				if !a.Valid(lang, langs) {
 					lang = c.GetCookie(LangVarName)
-					if !a.Valid(lang, list) {
-						lang = a.DetectHeader(c.Request(), list)
+					if !a.Valid(lang, langs) {
+						lang = a.DetectHeader(c.Request(), langs)
 					} else {
 						hasCookie = true
 					}
 				}
 			}
+			if len(lang) == 0 {
+				lang = langDefault
+			}
 			if !hasCookie {
 				c.SetCookie(LangVarName, lang)
 			}
-			tr := a.AcquireTranslator(lang, list)
+			tr := a.AcquireTranslator(lang, langs, langDefault)
 			c.OnRelease(a.release)
 			c.SetTranslator(tr)
 			return h.Handle(c)
