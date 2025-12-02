@@ -39,7 +39,7 @@ var (
 func New(c ...*Config) *Language {
 	lang := &Language{
 		Default: DefaultLang,
-		translatePool: sync.Pool{
+		translatePool: &sync.Pool{
 			New: func() interface{} {
 				return TranslatorNew()
 			},
@@ -56,7 +56,7 @@ type Language struct {
 	List          map[string]bool                                                                      // 语种列表
 	Default       string                                                                               // 默认语种
 	I18n          *I18n                                                                                // I18n 实例
-	translatePool sync.Pool                                                                            // 翻译实例池
+	translatePool *sync.Pool                                                                           // 翻译实例池
 	langsGetter   func(echo.Context, *Language) (langs map[string]bool, langDefault string, err error) // 获取可用语言列表
 }
 
@@ -74,6 +74,18 @@ func (a *Language) Close() {
 	if a.I18n != nil {
 		a.I18n.Close()
 	}
+}
+
+func (a *Language) SetTranslatePool(pool *sync.Pool) *Language {
+	a.translatePool = pool
+	return a
+}
+
+func (a *Language) SetTranslatePoolNew(newFunc func() Translator) *Language {
+	a.translatePool.New = func() interface{} {
+		return newFunc()
+	}
+	return a
 }
 
 // Init initializes the Language instance with the provided configuration.
@@ -183,9 +195,9 @@ func (a *Language) DetectHeader(r engine.Request, list map[string]bool) string {
 
 // AcquireTranslator gets a Translate instance from the pool and initializes it with the specified language code.
 // The returned translator is ready to use for translation operations.
-func (a *Language) AcquireTranslator(langCode string, langs map[string]bool, langDefault string) Translator {
+func (a *Language) AcquireTranslator(ctx echo.Context, langCode string, langs map[string]bool, langDefault string) Translator {
 	tr := a.translatePool.Get().(Translator)
-	tr.Reset(langCode, a, langs, langDefault)
+	tr.Reset(ctx, langCode, a, langs, langDefault)
 	return tr
 }
 
@@ -241,7 +253,7 @@ func (a *Language) Middleware() echo.MiddlewareFunc {
 			if !hasCookie {
 				c.SetCookie(LangVarName, lang)
 			}
-			tr := a.AcquireTranslator(lang, langs, langDefault)
+			tr := a.AcquireTranslator(c, lang, langs, langDefault)
 			c.OnRelease(a.release)
 			c.SetTranslator(tr)
 			return h.Handle(c)

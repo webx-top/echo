@@ -26,14 +26,14 @@ import (
 
 // NewTranslate creates a new Translate instance and initializes it with the given language and language object.
 // Returns a pointer to the initialized Translate struct.
-func NewTranslate(language string, langObject *Language, langs map[string]bool, langDefault string) *Translate {
+func NewTranslate(ctx echo.Context, language string, langObject *Language, langs map[string]bool, langDefault string) *Translate {
 	tr := &Translate{}
-	tr.Reset(language, langObject, langs, langDefault)
+	tr.Reset(ctx, language, langObject, langs, langDefault)
 	return tr
 }
 
 type Translator interface {
-	Reset(language string, langObject *Language, langs map[string]bool, langDefault string) Translator
+	Reset(ctx echo.Context, language string, langObject *Language, langs map[string]bool, langDefault string) Translator
 	echo.Translator
 	echo.Releaseable
 }
@@ -65,7 +65,7 @@ func (t *Translate) Release() {
 // language: the language code to set
 // langObject: the language object containing translations
 // Returns the modified Translate instance for method chaining
-func (t *Translate) Reset(language string, langObject *Language, langs map[string]bool, langDefault string) Translator {
+func (t *Translate) Reset(_ echo.Context, language string, langObject *Language, langs map[string]bool, langDefault string) Translator {
 	t.code = echo.NewLangCode(language)
 	t.lang = langObject
 	t.langs = langs
