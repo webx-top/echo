@@ -216,7 +216,7 @@ func (e *Echo) parseFormItem(keyNormalizer func(string) string, m interface{}, t
 			if e.FormSliceMaxIndex > 0 && index > e.FormSliceMaxIndex {
 				return fmt.Errorf(`%w, greater than %d`, ErrSliceIndexTooLarge, e.FormSliceMaxIndex)
 			}
-			if value.IsNil() {
+			if NeedRemakeSlice(value, 1) {
 				value.Set(reflect.MakeSlice(value.Type(), 1, 1))
 			}
 			itemT := value.Type()
@@ -693,12 +693,24 @@ func setField(logger logger.Logger, parentT reflect.Type, tv reflect.Value, f re
 	return nil
 }
 
+// NeedRemakeSlice checks if a slice needs to be remade based on its nil status or length mismatch.
+// Returns true if the slice is nil or its length doesn't match the required length.
+func NeedRemakeSlice(tv reflect.Value, length int) bool {
+	if tv.IsNil() {
+		return true
+	}
+	if tv.Len() != length {
+		return true
+	}
+	return false
+}
+
 func setSlice(logger logger.Logger, fieldName string, tv reflect.Value, t []string) {
 
 	tt := tv.Type().Elem()
 	tk := tt.Kind()
 
-	if tv.IsNil() {
+	if NeedRemakeSlice(tv, len(t)) {
 		tv.Set(reflect.MakeSlice(tv.Type(), len(t), len(t)))
 	}
 
