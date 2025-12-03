@@ -95,6 +95,16 @@ func (a *Language) SetTranslatePoolNew(newFunc func() Translator) *Language {
 // It also initializes the I18n instance and starts monitoring for changes if Reload is enabled.
 func (a *Language) Init(c *Config) {
 	c.Init()
+	if len(c.AllList) > 0 {
+		for _, lang := range c.AllList {
+			a.Set(lang, true, lang == c.Default, true)
+		}
+	} else { // 如果没有指定语言列表，则注册默认语言(DefaultLang:zh-CN)和en
+		a.Set(c.Default, true, true, true)
+		if c.Default != `en` {
+			a.Set(`en`, true)
+		}
+	}
 	a.I18n = NewI18n(c)
 	if c.Reload {
 		a.I18n.Monitor()
@@ -212,11 +222,34 @@ func (a *Language) release(c echo.Context) {
 	c.Translator().(Translator).Release()
 }
 
-// GetLangs retrieves available languages and the current language from context.
-// Returns a map of available languages (key: language code, value: enabled status),
-// the current language code, and any error encountered.
-// If langsGetter is nil, falls back to default LangsGetter function.
+// GetLangs retrieves available languages and default language from context.
+// Returns:
+//   - map of available languages (key: language code, value: enabled status)
+//   - default language code
+//   - error if any occurred during retrieval
+//
+// If no languages are found, it creates a default map with the default language and 'en' as fallback.
 func (a *Language) GetLangs(c echo.Context) (map[string]bool, string, error) {
+	langs, langDefault, err := a.getLangs(c)
+	if err != nil {
+		return nil, ``, err
+	}
+	if len(langs) == 0 { // 如果没有指定语言列表，则注册默认语言(DefaultLang:zh-CN)和en
+		if len(langDefault) == 0 {
+			langDefault = DefaultLang
+		}
+		langs = map[string]bool{langDefault: true}
+		if langDefault != `en` {
+			langs[`en`] = true
+		}
+	}
+	return langs, langDefault, err
+}
+
+// getLangs retrieves the available languages and the current language from the context.
+// If langsGetter is nil, it uses the default LangsGetter function.
+// Returns a map of available languages, the current language code, and any error encountered.
+func (a *Language) getLangs(c echo.Context) (map[string]bool, string, error) {
 	if a.langsGetter == nil {
 		return LangsGetter(c, a)
 	}
@@ -231,7 +264,7 @@ func (a *Language) Middleware() echo.MiddlewareFunc {
 	return echo.MiddlewareFunc(func(h echo.Handler) echo.Handler {
 		return echo.HandlerFunc(func(c echo.Context) error {
 			langs, langDefault, err := a.GetLangs(c)
-			if err != nil || len(langs) == 0 {
+			if err != nil {
 				return err
 			}
 			lang := c.Query(LangVarName)
