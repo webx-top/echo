@@ -731,7 +731,7 @@ func (e *Echo) MetaHandlerWithRequest(m H, handler interface{}, request interfac
 		if t.Kind() == reflect.Func && t.NumIn() == 2 {
 			arg1 := t.In(0)
 			arg2 := t.In(1)
-			if arg1.Kind() == reflect.Interface && IsContext(arg1) && arg2.Kind() == reflect.Ptr {
+			if arg1.Kind() == reflect.Interface && IsContext(arg1) && arg2.Kind() == reflect.Pointer {
 				t := arg2.Elem()
 				if t.Kind() == reflect.Struct {
 					var method []string

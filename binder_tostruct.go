@@ -78,7 +78,7 @@ func namedStructMap(e *Echo, m interface{}, data map[string][]string, topName st
 
 	switch tc.Kind() {
 	case reflect.Struct:
-	case reflect.Ptr:
+	case reflect.Pointer:
 		vc = vc.Elem()
 		tc = tc.Elem()
 	default:
@@ -216,11 +216,11 @@ func (e *Echo) parseFormItem(keyNormalizer func(string) string, m interface{}, t
 			if e.FormSliceMaxIndex > 0 && index > e.FormSliceMaxIndex {
 				return fmt.Errorf(`%w, greater than %d`, ErrSliceIndexTooLarge, e.FormSliceMaxIndex)
 			}
-			if NeedRemakeSlice(value, 1) {
+			if value.IsNil() {
 				value.Set(reflect.MakeSlice(value.Type(), 1, 1))
 			}
 			itemT := value.Type()
-			if itemT.Kind() == reflect.Ptr {
+			if itemT.Kind() == reflect.Pointer {
 				itemT = itemT.Elem()
 				value = value.Elem()
 			}
@@ -235,7 +235,7 @@ func (e *Echo) parseFormItem(keyNormalizer func(string) string, m interface{}, t
 			newT := newV.Type()
 			switch newT.Kind() {
 			case reflect.Struct:
-			case reflect.Ptr:
+			case reflect.Pointer:
 				newT = newT.Elem()
 				if newV.IsNil() {
 					newV.Set(reflect.New(newT))
@@ -258,7 +258,7 @@ func (e *Echo) parseFormItem(keyNormalizer func(string) string, m interface{}, t
 				value.Set(reflect.MakeMap(value.Type()))
 			}
 			itemT := value.Type()
-			if itemT.Kind() == reflect.Ptr {
+			if itemT.Kind() == reflect.Pointer {
 				itemT = itemT.Elem()
 				value = value.Elem()
 			}
@@ -272,7 +272,7 @@ func (e *Echo) parseFormItem(keyNormalizer func(string) string, m interface{}, t
 			newT := newV.Type()
 			switch newT.Kind() {
 			case reflect.Struct:
-			case reflect.Ptr:
+			case reflect.Pointer:
 				newT = newT.Elem()
 				if newV.IsNil() {
 					newV = reflect.New(newT)
@@ -302,7 +302,7 @@ func (e *Echo) parseFormItem(keyNormalizer func(string) string, m interface{}, t
 				e.Logger().Warnf(`binder: can not set %T#%v -> %v`, m, propPath, value.Interface())
 				return nil
 			}
-			if value.Kind() == reflect.Ptr {
+			if value.Kind() == reflect.Pointer {
 				if value.IsNil() {
 					value.Set(reflect.New(value.Type().Elem()))
 				}
@@ -379,7 +379,7 @@ func (e *Echo) setStructField(logger logger.Logger,
 	if tagfast.Value(parentT, f, `form_options`) == `-` {
 		return ErrBreak
 	}
-	if tv.Kind() == reflect.Ptr {
+	if tv.Kind() == reflect.Pointer {
 		tv.Set(reflect.New(tv.Type().Elem()))
 		tv = tv.Elem()
 	}
@@ -667,7 +667,7 @@ func setField(logger logger.Logger, parentT reflect.Type, tv reflect.Value, f re
 				}
 			}
 		}
-	case reflect.Ptr:
+	case reflect.Pointer:
 		setField(logger, parentT, tv.Elem(), f, name, values)
 	case reflect.Slice, reflect.Array:
 		seperator := tagfast.Value(parentT, f, `form_seperator`)

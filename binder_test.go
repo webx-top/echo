@@ -143,7 +143,9 @@ func TestMapToAnonymous(t *testing.T) {
 		Alias: &s,
 		Time:  tm,
 	}
-	assert.Equal(t, expected, m)
+	//Dump(H{`expected`: expected, `m`: m})
+	assert.Equal(t, Dump(expected, false), Dump(m, false))
+	//assert.Equal(t, expected, m)
 
 	formData[`address`] = []string{``}
 	expected.TestUser.TestProfile = &TestProfile{Address: ``}

@@ -72,7 +72,7 @@ func HandlerPath(h interface{}) string {
 	switch t.Kind() {
 	case reflect.Func:
 		return runtime.FuncForPC(v.Pointer()).Name()
-	case reflect.Ptr:
+	case reflect.Pointer:
 		t = t.Elem()
 		fallthrough
 	case reflect.Struct:

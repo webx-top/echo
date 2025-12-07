@@ -87,7 +87,7 @@ func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter
 func structToForm(ctx Context, m interface{}, topName string, fieldNameFormatter FieldNameFormatter, valueEncoders BinderValueCustomEncoders) {
 	vc := reflect.ValueOf(m)
 	tc := reflect.TypeOf(m)
-	if tc.Kind() == reflect.Ptr {
+	if tc.Kind() == reflect.Pointer {
 		tc = tc.Elem()
 		if vc.IsNil() {
 			return
@@ -200,7 +200,7 @@ func fieldToForm(ctx Context, parentTyp reflect.Type, fStruct reflect.StructFiel
 		switch fVal.Type().Kind() {
 		case reflect.Struct:
 			structToForm(ctx, fVal.Interface(), fName, fieldNameFormatter, valueEncoders)
-		case reflect.Ptr:
+		case reflect.Pointer:
 			structToForm(ctx, fVal.Interface(), fName, fieldNameFormatter, valueEncoders)
 		case reflect.Slice:
 			switch sl := fVal.Interface().(type) {
