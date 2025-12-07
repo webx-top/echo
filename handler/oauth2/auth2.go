@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package oauth2
 
 import (
@@ -63,11 +64,15 @@ func (p *OAuth) SetFailHandler(handler echo.HTTPErrorHandler) *OAuth {
 	return p
 }
 
+// SetBeginAuthHandler sets the handler for beginning OAuth authentication.
+// Returns the OAuth instance for method chaining.
 func (p *OAuth) SetBeginAuthHandler(handler echo.Handler) *OAuth {
 	p.beginAuthHandler = handler
 	return p
 }
 
+// SetCompleteAuthHandler sets the handler function for completing OAuth authentication.
+// The handler will be called with the echo context and should return the authenticated goth.User or an error.
 func (p *OAuth) SetCompleteAuthHandler(handler func(ctx echo.Context) (goth.User, error)) *OAuth {
 	p.completeAuthHandler = handler
 	return p
@@ -81,6 +86,9 @@ func (p *OAuth) User(ctx echo.Context) (u goth.User) {
 	return u
 }
 
+// MiddlewareVerifyProvider creates a middleware that verifies the OAuth2 provider is valid and configured.
+// It checks if the provider name exists in the request and validates it against the config.
+// Returns HTTP 400 if provider name is missing or invalid, HTTP 404 if provider is not configured.
 func MiddlewareVerifyProvider(config *Config) echo.MiddlewareFuncd {
 	return func(h echo.Handler) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
@@ -97,6 +105,10 @@ func MiddlewareVerifyProvider(config *Config) echo.MiddlewareFuncd {
 	}
 }
 
+// MiddlewareAuth wraps the given handler with OAuth authentication middleware.
+// It completes the OAuth authentication flow and stores the authenticated user in the context.
+// Returns an HTTP 401 Unauthorized error if authentication fails.
+// The authenticated user is stored in the context using the Config.ContextKey.
 func (p *OAuth) MiddlewareAuth(h echo.Handler) echo.Handler {
 	return echo.HandlerFunc(func(ctx echo.Context) error {
 		user, err := p.completeAuthHandler(ctx)

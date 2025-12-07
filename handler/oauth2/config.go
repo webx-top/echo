@@ -13,16 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package oauth2
 
 import (
-	//"net/http"
 	"sync"
 
 	"github.com/admpub/goth"
-
-	//"github.com/admpub/goth/providers/apple"
-
 	"github.com/webx-top/echo"
 )
 
