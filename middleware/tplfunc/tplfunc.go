@@ -33,6 +33,7 @@ import (
 	"time"
 
 	"github.com/admpub/decimal"
+	"github.com/gosimple/slug"
 
 	"github.com/webx-top/captcha"
 	"github.com/webx-top/com"
@@ -154,15 +155,17 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"Extension":      path.Ext,
 	"InExt":          InExt,
 
-	"Concat":       Concat,
-	"Replace":      strings.Replace, //strings.Replace(s, old, new, n)
-	"Split":        strings.Split,
-	"Join":         strings.Join,
-	"Substr":       com.Substr,
-	"StripTags":    com.StripTags,
-	"Nl2br":        NlToBr, // \n替换为<br>
-	"AddSuffix":    AddSuffix,
-	"RandomString": RandomString,
+	"Concat":          Concat,
+	"Replace":         strings.Replace, //strings.Replace(s, old, new, n)
+	"Split":           strings.Split,
+	"Join":            strings.Join,
+	"Substr":          com.Substr,
+	"StripTags":       com.StripTags,
+	"Nl2br":           NlToBr, // \n替换为<br>
+	"AddSuffix":       AddSuffix,
+	"RandomString":    RandomString,
+	"Slugify":         Slugify,
+	"SlugifyMaxWidth": SlugifyMaxWidth,
 
 	// ======================
 	// encode & decode
@@ -231,6 +234,19 @@ func RandomString(length ...uint) string {
 		return com.RandomAlphanumeric(length[0])
 	}
 	return com.RandomAlphanumeric(8)
+}
+
+// Slugify 将字符串转换为URL友好的slug格式
+func Slugify(v string) string {
+	return slug.Make(v)
+}
+
+// SlugifyMaxWidth 将字符串转换为slug格式并限制最大长度
+// v: 需要转换的原始字符串
+// maxWidth: 返回字符串的最大长度限制
+// 返回: 转换后的slug字符串，长度不超过maxWidth
+func SlugifyMaxWidth(v string, maxWidth int) string {
+	return com.Substr(slug.Make(v), ``, maxWidth)
 }
 
 // Hash generates a hashed string from the given text using the provided salt and positions.
