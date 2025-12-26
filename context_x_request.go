@@ -507,15 +507,15 @@ func (c *XContext) Protocol() string {
 
 // Site returns base site url as scheme://domain/ type.
 func (c *XContext) Site() string {
-	return c.siteRoot() + `/`
+	return c.SiteRoot() + `/`
 }
 
-func (c *XContext) siteRoot() string {
+func (c *XContext) SiteRoot() string {
 	return c.Scheme() + `://` + c.Request().Host()
 }
 
 func (c *XContext) FullRequestURI() string {
-	return c.siteRoot() + c.RequestURI()
+	return c.SiteRoot() + c.RequestURI()
 }
 
 func (c *XContext) RequestURI() string {
@@ -527,6 +527,21 @@ func (c *XContext) RequestURI() string {
 		return c.Request().URL().Path() + q
 	}
 	return c.Request().URI()
+}
+
+func (c *XContext) DispatchURI() string {
+	q := c.Request().URL().RawQuery()
+	if len(q) > 0 {
+		q = `?` + q
+	}
+	return c.DispatchPath() + q
+}
+
+func (c *XContext) LangURI(lang string) string {
+	if len(lang) > 0 {
+		lang = `/` + lang
+	}
+	return lang + c.DispatchURI()
 }
 
 // Scheme returns request scheme as `http` or `https`.

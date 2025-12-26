@@ -3,7 +3,6 @@ package echo
 import (
 	"database/sql"
 	"html/template"
-	"strings"
 	"time"
 
 	"github.com/admpub/humanize"
@@ -163,8 +162,16 @@ func (r *RenderData) Site() string {
 	return r.ctx.Site()
 }
 
+func (r *RenderData) SiteRoot() string {
+	return r.ctx.SiteRoot()
+}
+
+func (r *RenderData) LangURI(lang string) string {
+	return r.ctx.LangURI(lang)
+}
+
 func (r *RenderData) SiteURI() string {
-	return r.Site() + strings.TrimPrefix(r.URI(), `/`)
+	return r.SiteRoot() + r.URI()
 }
 
 func (r *RenderData) FullURL(myURL string) string {

@@ -256,6 +256,8 @@ type Context interface {
 	Accept() *Accepts
 	Protocol() string
 	Site() string
+	SiteRoot() string
+	LangURI(lang string) string
 	FullRequestURI() string
 	RequestURI() string
 	Scheme() string

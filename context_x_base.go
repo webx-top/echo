@@ -500,11 +500,11 @@ func (c *XContext) URLFor(uri string, relative ...bool) string {
 	if len(uri) == 0 {
 		return c.Site()
 	}
-	return c.siteRoot() + c.RelativeURL(uri)
+	return c.SiteRoot() + c.RelativeURL(uri)
 }
 
 func (c *XContext) URLByName(name string, args ...interface{}) string {
-	return c.siteRoot() + c.echo.URIWithContext(c, name, args...)
+	return c.SiteRoot() + c.echo.URIWithContext(c, name, args...)
 }
 
 func (c *XContext) RelativeURLByName(name string, args ...interface{}) string {
