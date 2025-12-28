@@ -298,6 +298,7 @@ func (s *Subdomains) FindByDomain(host string, upath string) (*echo.Echo, bool) 
 	}
 	if exists && names != nil {
 		infos := s.Alias.Gets(*names...)
+		upath = FixLocalePath(upath)
 		for _, info := range infos {
 			if upath == info.Prefix() || strings.HasPrefix(upath, info.Prefix()+`/`) {
 				return info.Echo, exists
