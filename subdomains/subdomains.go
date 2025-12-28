@@ -94,6 +94,16 @@ func (info *Info) RelativeURLByName(name string, args ...interface{}) string {
 	return info.makeRelativeURL(info.Echo.URI(name, args...), true)
 }
 
+func (info *Info) MatchPath(upath string, cleaned string, foundLocale bool) bool {
+	if upath == info.Prefix() || strings.HasPrefix(upath, info.Prefix()+`/`) {
+		return true
+	}
+	if !foundLocale {
+		return false
+	}
+	return cleaned == info.Prefix() || strings.HasPrefix(cleaned, info.Prefix()+`/`)
+}
+
 type Dispatcher func(r engine.Request, w engine.Response) (*echo.Echo, bool)
 
 type Subdomains struct {
@@ -298,9 +308,9 @@ func (s *Subdomains) FindByDomain(host string, upath string) (*echo.Echo, bool) 
 	}
 	if exists && names != nil {
 		infos := s.Alias.Gets(*names...)
-		upath = FixLocalePath(upath)
+		cleaned, foundLocale := FixLocalePath(upath)
 		for _, info := range infos {
-			if upath == info.Prefix() || strings.HasPrefix(upath, info.Prefix()+`/`) {
+			if info.MatchPath(upath, cleaned, foundLocale) {
 				return info.Echo, exists
 			}
 		}

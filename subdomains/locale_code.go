@@ -212,14 +212,14 @@ var LocaleCodes = map[string]struct{}{
 	"zu-ZA":      {},
 }
 
-func FixLocalePath(upath string) string {
+func FixLocalePath(upath string) (string, bool) {
 	cleaned := strings.TrimPrefix(upath, `/`) // /en/abc => /abc
 	arr := strings.SplitN(cleaned, `/`, 2)
 	if len(arr) == 2 {
 		locale := arr[0]
 		if _, ok := LocaleCodes[locale]; ok {
-			return `/` + arr[1]
+			return `/` + arr[1], true
 		}
 	}
-	return upath
+	return upath, false
 }
