@@ -213,8 +213,8 @@ var LocaleCodes = map[string]struct{}{
 }
 
 func FixLocalePath(upath string) string {
-	upath = strings.TrimPrefix(upath, `/`) // /en/abc => /abc
-	arr := strings.SplitN(upath, `/`, 2)
+	cleaned := strings.TrimPrefix(upath, `/`) // /en/abc => /abc
+	arr := strings.SplitN(cleaned, `/`, 2)
 	if len(arr) == 2 {
 		locale := arr[0]
 		if _, ok := LocaleCodes[locale]; ok {
