@@ -228,8 +228,8 @@ func (s *Subdomains) RelativeURL(uri string, args ...string) string {
 
 func parseURLName(name string) (string, []string) {
 	var args []string
-	if strings.HasPrefix(name, `#`) {
-		name = strings.TrimPrefix(name, `#`)
+	if after, ok := strings.CutPrefix(name, `#`); ok {
+		name = after
 		arr := strings.SplitN(name, `#`, 2)
 		if len(arr) == 2 {
 			args = append(args, arr[0])
