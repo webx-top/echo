@@ -147,11 +147,10 @@ func (c *cookie) record(stdCookie *http.Cookie) {
 	c.lock.Lock()
 	if idx, ok := c.indexes[stdCookie.Name]; ok {
 		c.cookies[idx] = stdCookie
-		c.lock.Unlock()
-		return
+	} else {
+		c.indexes[stdCookie.Name] = len(c.cookies)
+		c.cookies = append(c.cookies, stdCookie)
 	}
-	c.indexes[stdCookie.Name] = len(c.cookies)
-	c.cookies = append(c.cookies, stdCookie)
 	c.lock.Unlock()
 }
 
