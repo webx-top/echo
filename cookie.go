@@ -181,7 +181,7 @@ func (c *cookie) DecryptGet(key string) string {
 
 func (c *cookie) Add(cookies ...*http.Cookie) Cookier {
 	c.lock.Lock()
-	for _, cookie := range c.cookies {
+	for _, cookie := range cookies {
 		if idx, ok := c.indexes[cookie.Name]; ok {
 			c.cookies[idx] = cookie
 			continue
