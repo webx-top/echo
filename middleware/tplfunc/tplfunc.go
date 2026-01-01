@@ -54,171 +54,187 @@ func New() (r template.FuncMap) {
 	return
 }
 
+// TplFuncMap is a comprehensive template function map that provides a rich set of utility functions
+// for template rendering. It includes functions for time manipulation, type conversion, string processing,
+// encoding/decoding, mathematical operations, and more.
+//
+// TplFuncMap 是一个全面的模板函数映射，提供了丰富的实用函数集合用于模板渲染。它包括时间操作、
+// 类型转换、字符串处理、编码/解码、数学运算等功能。
+//
+// Function Categories / 函数分类:
+// - Time / 时间：Now, UnixTime, FriendlyTime, DateFormat, Ts2time, Ts2date, etc.
+// - Comparison / 比较：Eq, Add, Sub, Div, Mul, IsNil, IsEmpty, NotEmpty, etc.
+// - Type Conversion / 类型转换：Html, Js, Css, Str, Int, Float64, ToFixed, etc.
+// - String / 字符串：Contains, Trim, ToLower, Concat, Split, Join, etc.
+// - Encode & Decode / 编码解码：JSONEncode, Base64Encode, URLEncode, etc.
+// - Map & Slice / 映射和切片：MakeMap, MakeSlice, InSet, Append, etc.
+// - RegExp / 正则表达式：Regexp, RegexpPOSIX
+// - Other / 其他：If, Default, Hash, CaptchaForm, etc.
 var TplFuncMap template.FuncMap = template.FuncMap{
 	// ======================
-	// time
+	// time / 时间相关
 	// ======================
-	"Now":             Now,
-	"UnixTime":        UnixTime,
-	"ElapsedMemory":   com.ElapsedMemory, //内存消耗
-	"TotalRunTime":    com.TotalRunTime,  //运行时长(从启动服务时算起)
-	"CaptchaForm":     CaptchaForm,       //验证码图片
-	"FormatByte":      com.FormatBytes,   //字节转为适合理解的格式
-	"FormatBytes":     com.FormatBytes,   //字节转为适合理解的格式
-	"FriendlyTime":    FriendlyTime,
-	"FormatPastTime":  com.FormatPastTime, //以前距离现在多长时间
-	"DateFormat":      com.DateFormat,
-	"DateFormatShort": com.DateFormatShort,
-	"Ts2time":         TsToTime, // 时间戳数字转time.Time
-	"Ts2date":         TsToDate, // 时间戳数字转日期字符串
+	"Now":             Now,                 // Current time / 当前时间
+	"UnixTime":        UnixTime,            // Unix timestamp / Unix时间戳
+	"ElapsedMemory":   com.ElapsedMemory,   // Memory consumption / 内存消耗
+	"TotalRunTime":    com.TotalRunTime,    // Runtime since service started / 运行时长(从启动服务时算起)
+	"CaptchaForm":     CaptchaForm,         // CAPTCHA image form / 验证码图片表单
+	"FormatByte":      com.FormatBytes,     // Bytes to human-readable format / 字节转为适合理解的格式
+	"FormatBytes":     com.FormatBytes,     // Bytes to human-readable format / 字节转为适合理解的格式
+	"FriendlyTime":    FriendlyTime,        // Human-friendly time format / 友好的时间格式
+	"FormatPastTime":  com.FormatPastTime,  // Time elapsed since past / 以前距离现在多长时间
+	"DateFormat":      com.DateFormat,      // Date format / 日期格式化
+	"DateFormatShort": com.DateFormatShort, // Short date format / 短日期格式
+	"Ts2time":         TsToTime,            // Timestamp to time.Time / 时间戳数字转time.Time
+	"Ts2date":         TsToDate,            // Timestamp to date string / 时间戳数字转日期字符串
 
 	// ======================
-	// compare
+	// compare / 比较
 	// ======================
-	"Eq":       Eq,
-	"Add":      Add,
-	"Sub":      Sub,
-	"Div":      Div,
-	"Mul":      Mul,
-	"IsNil":    IsNil,
-	"IsEmpty":  IsEmpty,
-	"NotEmpty": NotEmpty,
-	"IsNaN":    IsNaN,
-	"IsInf":    IsInf,
+	"Eq":       Eq,       // Equal comparison / 等值比较
+	"Add":      Add,      // Addition / 加法
+	"Sub":      Sub,      // Subtraction / 减法
+	"Div":      Div,      // Division / 除法
+	"Mul":      Mul,      // Multiplication / 乘法
+	"IsNil":    IsNil,    // Check if nil / 检查是否为nil
+	"IsEmpty":  IsEmpty,  // Check if empty / 检查是否为空
+	"NotEmpty": NotEmpty, // Check if not empty / 检查是否不为空
+	"IsNaN":    IsNaN,    // Check if NaN / 检查是否为非数字
+	"IsInf":    IsInf,    // Check if infinity / 检查是否为无穷大
 
 	// ======================
-	// conversion type
+	// conversion type / 类型转换
 	// ======================
-	"Html":           ToHTML,
-	"Js":             ToJS,
-	"Css":            ToCSS,
-	"ToJS":           ToJS,
-	"ToCSS":          ToCSS,
-	"ToURL":          ToURL,
-	"ToHTML":         ToHTML,
-	"ToHTMLAttr":     ToHTMLAttr,
-	"ToHTMLAttrs":    ToHTMLAttrs,
-	"ToStrSlice":     ToStrSlice,
-	"ToDuration":     ToDuration,
-	"Str":            com.Str,
-	"Int":            com.Int,
-	"Int32":          com.Int32,
-	"Int64":          com.Int64,
-	"Uint":           com.Uint,
-	"Uint32":         com.Uint32,
-	"Uint64":         com.Uint64,
-	"Float32":        com.Float32,
-	"Float64":        com.Float64,
-	"Float2int":      com.Float2int,
-	"Float2uint":     com.Float2uint,
-	"Float2int64":    com.Float2int64,
-	"Float2uint64":   com.Float2uint64,
-	"ToFloat64":      ToFloat64,
-	"ToFixed":        ToFixed,
-	"ToDecimal":      ToDecimal,
-	"NumberMore":     NumberMore, // {{ 1000 | NumberMore 99 }} 99+
-	"Math":           Math,
-	"NumberFormat":   NumberFormat,
-	"NumFormat":      com.NumFormat,
-	"NumberTrim":     NumberTrim,
-	"DurationFormat": DurationFormat,
-	"DelimLeft":      DelimLeft,
-	"DelimRight":     DelimRight,
-	"TemplateTag":    TemplateTag,
+	"Html":           ToHTML,           // Convert to HTML / 转换为HTML
+	"Js":             ToJS,             // Convert to JS / 转换为JavaScript
+	"Css":            ToCSS,            // Convert to CSS / 转换为CSS
+	"ToJS":           ToJS,             // Convert to JS / 转换为JavaScript
+	"ToCSS":          ToCSS,            // Convert to CSS / 转换为CSS
+	"ToURL":          ToURL,            // Convert to URL / 转换为URL
+	"ToHTML":         ToHTML,           // Convert to HTML / 转换为HTML
+	"ToHTMLAttr":     ToHTMLAttr,       // Convert to HTML attribute / 转换为HTML属性
+	"ToHTMLAttrs":    ToHTMLAttrs,      // Convert to HTML attributes / 转换为HTML属性集合
+	"ToStrSlice":     ToStrSlice,       // Convert to string slice / 转换为字符串切片
+	"ToDuration":     ToDuration,       // Convert to duration / 转换为时间间隔
+	"Str":            com.Str,          // Convert to string / 转换为字符串
+	"Int":            com.Int,          // Convert to int / 转换为整数
+	"Int32":          com.Int32,        // Convert to int32 / 转换为32位整数
+	"Int64":          com.Int64,        // Convert to int64 / 转换为64位整数
+	"Uint":           com.Uint,         // Convert to uint / 转换为无符号整数
+	"Uint32":         com.Uint32,       // Convert to uint32 / 转换为32位无符号整数
+	"Uint64":         com.Uint64,       // Convert to uint64 / 转换为64位无符号整数
+	"Float32":        com.Float32,      // Convert to float32 / 转换为32位浮点数
+	"Float64":        com.Float64,      // Convert to float64 / 转换为64位浮点数
+	"Float2int":      com.Float2int,    // Float to int / 浮点数转整数
+	"Float2uint":     com.Float2uint,   // Float to uint / 浮点数转无符号整数
+	"Float2int64":    com.Float2int64,  // Float to int64 / 浮点数转64位整数
+	"Float2uint64":   com.Float2uint64, // Float to uint64 / 浮点数转64位无符号整数
+	"ToFloat64":      ToFloat64,        // Convert to float64 / 转换为64位浮点数
+	"ToFixed":        ToFixed,          // Format to fixed decimal / 格式化为固定位小数
+	"ToDecimal":      ToDecimal,        // Convert to decimal / 转换为十进制数
+	"NumberMore":     NumberMore,       // Number format with max (e.g., 99+) / 数字格式化(如：99+)
+	"Math":           Math,             // Math operations / 数学运算
+	"NumberFormat":   NumberFormat,     // Number formatting / 数字格式化
+	"NumFormat":      com.NumFormat,    // Number formatting / 数字格式化
+	"NumberTrim":     NumberTrim,       // Trim number precision / 截断数字精度
+	"DurationFormat": DurationFormat,   // Duration formatting / 时间间隔格式化
+	"DelimLeft":      DelimLeft,        // Template tag left delimiter / 模板标签左分隔符
+	"DelimRight":     DelimRight,       // Template tag right delimiter / 模板标签右分隔符
+	"TemplateTag":    TemplateTag,      // Template tag / 模板标签
 
 	// ======================
-	// string
+	// string / 字符串处理
 	// ======================
-	"Contains":   strings.Contains,
-	"HasPrefix":  strings.HasPrefix,
-	"HasSuffix":  strings.HasSuffix,
-	"Trim":       Trim,
-	"TrimLeft":   strings.TrimLeft,
-	"TrimRight":  strings.TrimRight,
-	"TrimPrefix": strings.TrimPrefix,
-	"TrimSuffix": strings.TrimSuffix,
+	"Contains":   strings.Contains,   // Check substring / 检查子串
+	"HasPrefix":  strings.HasPrefix,  // Check prefix / 检查前缀
+	"HasSuffix":  strings.HasSuffix,  // Check suffix / 检查后缀
+	"Trim":       Trim,               // Trim whitespace / 去除空白
+	"TrimLeft":   strings.TrimLeft,   // Trim left / 去除左侧
+	"TrimRight":  strings.TrimRight,  // Trim right / 去除右侧
+	"TrimPrefix": strings.TrimPrefix, // Trim prefix / 去除前缀
+	"TrimSuffix": strings.TrimSuffix, // Trim suffix / 去除后缀
 
-	"ToLower":        strings.ToLower,
-	"ToUpper":        strings.ToUpper,
-	"Title":          com.Title,
-	"LowerCaseFirst": com.LowerCaseFirst,
-	"UpperCaseFirst": com.UpperCaseFirst,
-	"CamelCase":      com.CamelCase,
-	"PascalCase":     com.PascalCase,
-	"SnakeCase":      com.SnakeCase,
-	"Reverse":        com.Reverse,
-	"Dir":            filepath.Dir,
-	"Base":           filepath.Base,
-	"Ext":            filepath.Ext,
-	"Dirname":        path.Dir,
-	"Basename":       path.Base,
-	"Extension":      path.Ext,
-	"InExt":          InExt,
+	"ToLower":        strings.ToLower,    // To lowercase / 转小写
+	"ToUpper":        strings.ToUpper,    // To uppercase / 转大写
+	"Title":          com.Title,          // To title case / 标题格式
+	"LowerCaseFirst": com.LowerCaseFirst, // Lower first letter / 首字母小写
+	"UpperCaseFirst": com.UpperCaseFirst, // Upper first letter / 首字母大写
+	"CamelCase":      com.CamelCase,      // To camel case / 转驼峰命名
+	"PascalCase":     com.PascalCase,     // To pascal case / 转帕斯卡命名
+	"SnakeCase":      com.SnakeCase,      // To snake case / 转蛇形命名
+	"Reverse":        com.Reverse,        // Reverse string / 反转字符串
+	"Dir":            filepath.Dir,       // Directory path / 目录路径
+	"Base":           filepath.Base,      // Base name / 基础名称
+	"Ext":            filepath.Ext,       // File extension / 文件扩展名
+	"Dirname":        path.Dir,           // Directory name / 目录名
+	"Basename":       path.Base,          // Base name / 基础名称
+	"Extension":      path.Ext,           // Extension / 扩展名
+	"InExt":          InExt,              // Check file extension / 检查文件扩展名
 
-	"Concat":          Concat,
-	"Replace":         strings.Replace, //strings.Replace(s, old, new, n)
-	"Split":           strings.Split,
-	"Join":            strings.Join,
-	"Substr":          com.Substr,
-	"StripTags":       com.StripTags,
-	"Nl2br":           NlToBr, // \n替换为<br>
-	"AddSuffix":       AddSuffix,
-	"RandomString":    RandomString,
-	"Slugify":         Slugify,
-	"SlugifyMaxWidth": SlugifyMaxWidth,
-
-	// ======================
-	// encode & decode
-	// ======================
-	"JSONEncode":       JSONEncode,
-	"JSONDecode":       JSONDecode,
-	"JSONDecodeSlice":  JSONDecodeSlice,
-	"URLEncode":        com.URLEncode,
-	"URLDecode":        URLDecode,
-	"RawURLEncode":     com.RawURLEncode,
-	"RawURLDecode":     URLDecode,
-	"Base64Encode":     com.Base64Encode,
-	"Base64Decode":     Base64Decode,
-	"UnicodeDecode":    UnicodeDecode,
-	"SafeBase64Encode": com.SafeBase64Encode,
-	"SafeBase64Decode": SafeBase64Decode,
-	"Hash":             Hash,
-	"Unquote":          Unquote,
-	"Quote":            strconv.Quote,
+	"Concat":          Concat,          // Concatenate strings / 连接字符串
+	"Replace":         strings.Replace, // Replace substring / 替换子串
+	"Split":           strings.Split,   // Split string / 分割字符串
+	"Join":            strings.Join,    // Join strings / 连接字符串
+	"Substr":          com.Substr,      // Substring / 子字符串
+	"StripTags":       com.StripTags,   // Strip HTML tags / 去除HTML标签
+	"Nl2br":           NlToBr,          // Newline to <br> / 换行转<br>
+	"AddSuffix":       AddSuffix,       // Add suffix / 添加后缀
+	"RandomString":    RandomString,    // Random string / 随机字符串
+	"Slugify":         Slugify,         // To slug / 转URL友好格式
+	"SlugifyMaxWidth": SlugifyMaxWidth, // To slug with max width / 转URL友好格式(限制长度)
 
 	// ======================
-	// map & slice
+	// encode & decode / 编码解码
 	// ======================
-	"MakeMap":        MakeMap,
-	"MakeSlice":      MakeSlice,
-	"InSet":          com.InSet,
-	"InSlice":        com.InSlice,
-	"InSlicex":       com.InSliceIface,
-	"Set":            Set,
-	"Append":         Append,
-	"InStrSlice":     InStrSlice,
-	"SearchStrSlice": SearchStrSlice,
-	"URLValues":      URLValues,
-	"ToSlice":        ToSlice,
-	"StrToSlice":     StrToSlice,
-	"GetByIndex":     param.GetByIndex,
-	"ToParamString":  func(v string) param.String { return param.String(v) },
+	"JSONEncode":       JSONEncode,           // Encode to JSON / JSON编码
+	"JSONDecode":       JSONDecode,           // Decode from JSON / JSON解码
+	"JSONDecodeSlice":  JSONDecodeSlice,      // Decode JSON to slice / JSON解码为切片
+	"URLEncode":        com.URLEncode,        // URL encode / URL编码
+	"URLDecode":        URLDecode,            // URL decode / URL解码
+	"RawURLEncode":     com.RawURLEncode,     // Raw URL encode / 原始URL编码
+	"RawURLDecode":     URLDecode,            // Raw URL decode / 原始URL解码
+	"Base64Encode":     com.Base64Encode,     // Base64 encode / Base64编码
+	"Base64Decode":     Base64Decode,         // Base64 decode / Base64解码
+	"UnicodeDecode":    UnicodeDecode,        // Unicode decode / Unicode解码
+	"SafeBase64Encode": com.SafeBase64Encode, // Safe Base64 encode / 安全Base64编码
+	"SafeBase64Decode": SafeBase64Decode,     // Safe Base64 decode / 安全Base64解码
+	"Hash":             Hash,                 // Hash string / 哈希字符串
+	"Unquote":          Unquote,              // Unquote string / 去除引号
+	"Quote":            strconv.Quote,        // Quote string / 添加引号
 
 	// ======================
-	// regexp
+	// map & slice / 映射和切片
 	// ======================
-	"Regexp":      regexp.MustCompile,
-	"RegexpPOSIX": regexp.MustCompilePOSIX,
+	"MakeMap":        MakeMap,                                                // Create map / 创建映射
+	"MakeSlice":      MakeSlice,                                              // Create slice / 创建切片
+	"InSet":          com.InSet,                                              // Check in set / 检查是否在集合中
+	"InSlice":        com.InSlice,                                            // Check in slice / 检查是否在切片中
+	"InSlicex":       com.InSliceIface,                                       // Check in slice (interface) / 检查是否在切片中(interface)
+	"Set":            Set,                                                    // Set value / 设置值
+	"Append":         Append,                                                 // Append to slice / 追加到切片
+	"InStrSlice":     InStrSlice,                                             // Check in string slice / 检查是否在字符串切片中
+	"SearchStrSlice": SearchStrSlice,                                         // Search in string slice / 在字符串切片中搜索
+	"URLValues":      URLValues,                                              // Create URL values / 创建URL值
+	"ToSlice":        ToSlice,                                                // Convert to slice / 转换为切片
+	"StrToSlice":     StrToSlice,                                             // String to slice / 字符串转切片
+	"GetByIndex":     param.GetByIndex,                                       // Get by index / 按索引获取
+	"ToParamString":  func(v string) param.String { return param.String(v) }, // Convert to param string / 转换为参数字符串
 
 	// ======================
-	// other
+	// regexp / 正则表达式
 	// ======================
-	"Ignore":        Ignore,
-	"Default":       Default,
-	"WithURLParams": com.WithURLParams,
-	"FullURL":       com.FullURL,
-	"IsFullURL":     com.IsFullURL,
-	"If":            If,
+	"Regexp":      regexp.MustCompile,      // Compile regexp / 编译正则表达式
+	"RegexpPOSIX": regexp.MustCompilePOSIX, // Compile POSIX regexp / 编译POSIX正则表达式
+
+	// ======================
+	// other / 其他
+	// ======================
+	"Ignore":        Ignore,            // Ignore value / 忽略值
+	"Default":       Default,           // Default value / 默认值
+	"WithURLParams": com.WithURLParams, // URL with params / 带参数的URL
+	"FullURL":       com.FullURL,       // Full URL / 完整URL
+	"IsFullURL":     com.IsFullURL,     // Check if full URL / 检查是否为完整URL
+	"If":            If,                // Conditional / 条件判断
 }
 
 var (
