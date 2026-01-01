@@ -396,6 +396,8 @@ Sockjs      |github.com/webx-top/echo/handler/sockjs | [Example](https://github.
 Oauth2      |github.com/webx-top/echo/handler/oauth2 | [Example](https://github.com/webx-top/echo/blob/master/handler/oauth2/example/main.go)
 Pprof      |github.com/webx-top/echo/handler/pprof | -
 
+## Template Func docs
+[Template Function Documentation](middleware/tplfunc/TplFuncMap_Documentation.md)
 
 ## Cases
 - [Nging](https://github.com/admpub/nging)
