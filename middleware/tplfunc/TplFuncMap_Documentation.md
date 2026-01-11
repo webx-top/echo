@@ -145,6 +145,7 @@ t.Funcs(tplfunc.New())
 | `Replace` | 替换子串 / Replace substring | `{{ Replace "hello world" "world" "go" }}` |
 | `Split` | 分割字符串 / Split string | `{{ Split "a,b,c" "," }}` |
 | `Join` | 连接字符串 / Join strings | `{{ Join slice "," }}` |
+| `JoinNumbers` | 连接数字 / Join numbers | `{{ JoinNumbers slice "," }}` |
 | `Substr` | 子字符串 / Substring | `{{ Substr "hello" 0 3 }}` |
 | `StripTags` | 去除HTML标签 / Strip HTML tags | `{{ "<p>hello</p>" \| StripTags }}` |
 | `Nl2br` | 换行转<br> / Newline to <br> | `{{ "line1\nline2" \| Nl2br }}` |
@@ -160,7 +161,9 @@ t.Funcs(tplfunc.New())
 |---|---|---|
 | `JSONEncode` | JSON编码 / Encode to JSON | `{{ JSONEncode data "  " }}` |
 | `JSONDecode` | JSON解码 / Decode from JSON | `{{ ``{"A":1}`` \| JSONDecode }}` |
-| `JSONDecodeSlice` | JSON解码为切片 / Decode JSON to slice | `{{ "[1,2,3]" \| JSONDecodeSlice }}` |
+| `JSONDecodeSlice` | JSON解码为切片 / Decode JSON to slice | `{{ "[1,0.2,true]" \| JSONDecodeSlice }}` |
+| `JSONDecodeStringSlice` | JSON解码为字符串切片 / Decode JSON to string slice | `{{ "[\"a\",\"b\",\"c\"]" \| JSONDecodeStringSlice }}` |
+| `JSONDecodeUintSlice` | JSON解码为uint64切片 / Decode JSON to uint64 slice | `{{ "[1,2,3]" \| JSONDecodeUintSlice }}` |
 | `URLEncode` | URL编码 / URL encode | `{{ "hello world" \| URLEncode }}` |
 | `URLDecode` | URL解码 / URL decode | `{{ "hello%20world" \| URLDecode }}` |
 | `RawURLEncode` | 原始URL编码 / Raw URL encode | `{{ "hello world" \| RawURLEncode }}` |

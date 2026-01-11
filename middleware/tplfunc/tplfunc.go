@@ -175,6 +175,7 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	"Replace":         strings.Replace, // Replace substring / 替换子串
 	"Split":           strings.Split,   // Split string / 分割字符串
 	"Join":            strings.Join,    // Join strings / 连接字符串
+	"JoinNumbers":     JoinNumbers,     // Join numbers / 连接数字
 	"Substr":          com.Substr,      // Substring / 子字符串
 	"StripTags":       com.StripTags,   // Strip HTML tags / 去除HTML标签
 	"Nl2br":           NlToBr,          // Newline to <br> / 换行转<br>
@@ -186,21 +187,23 @@ var TplFuncMap template.FuncMap = template.FuncMap{
 	// ======================
 	// encode & decode / 编码解码
 	// ======================
-	"JSONEncode":       JSONEncode,           // Encode to JSON / JSON编码
-	"JSONDecode":       JSONDecode,           // Decode from JSON / JSON解码
-	"JSONDecodeSlice":  JSONDecodeSlice,      // Decode JSON to slice / JSON解码为切片
-	"URLEncode":        com.URLEncode,        // URL encode / URL编码
-	"URLDecode":        URLDecode,            // URL decode / URL解码
-	"RawURLEncode":     com.RawURLEncode,     // Raw URL encode / 原始URL编码
-	"RawURLDecode":     URLDecode,            // Raw URL decode / 原始URL解码
-	"Base64Encode":     com.Base64Encode,     // Base64 encode / Base64编码
-	"Base64Decode":     Base64Decode,         // Base64 decode / Base64解码
-	"UnicodeDecode":    UnicodeDecode,        // Unicode decode / Unicode解码
-	"SafeBase64Encode": com.SafeBase64Encode, // Safe Base64 encode / 安全Base64编码
-	"SafeBase64Decode": SafeBase64Decode,     // Safe Base64 decode / 安全Base64解码
-	"Hash":             Hash,                 // Hash string / 哈希字符串
-	"Unquote":          Unquote,              // Unquote string / 去除引号
-	"Quote":            strconv.Quote,        // Quote string / 添加引号
+	"JSONEncode":            JSONEncode,            // Encode to JSON / JSON编码
+	"JSONDecode":            JSONDecode,            // Decode from JSON / JSON解码
+	"JSONDecodeSlice":       JSONDecodeSlice,       // Decode JSON to slice / JSON解码为切片
+	"JSONDecodeStringSlice": JSONDecodeStringSlice, // Decode JSON to string slice / JSON解码为字符串切片
+	"JSONDecodeUintSlice":   JSONDecodeUintSlice,   // Decode JSON to uint64 slice / JSON解码为uint64切片
+	"URLEncode":             com.URLEncode,         // URL encode / URL编码
+	"URLDecode":             URLDecode,             // URL decode / URL解码
+	"RawURLEncode":          com.RawURLEncode,      // Raw URL encode / 原始URL编码
+	"RawURLDecode":          URLDecode,             // Raw URL decode / 原始URL解码
+	"Base64Encode":          com.Base64Encode,      // Base64 encode / Base64编码
+	"Base64Decode":          Base64Decode,          // Base64 decode / Base64解码
+	"UnicodeDecode":         UnicodeDecode,         // Unicode decode / Unicode解码
+	"SafeBase64Encode":      com.SafeBase64Encode,  // Safe Base64 encode / 安全Base64编码
+	"SafeBase64Decode":      SafeBase64Decode,      // Safe Base64 decode / 安全Base64解码
+	"Hash":                  Hash,                  // Hash string / 哈希字符串
+	"Unquote":               Unquote,               // Unquote string / 去除引号
+	"Quote":                 strconv.Quote,         // Quote string / 添加引号
 
 	// ======================
 	// map & slice / 映射和切片
@@ -364,7 +367,8 @@ func JSONEncode(s interface{}, indents ...string) string {
 // If decoding fails, it logs the error and returns an empty map.
 func JSONDecode(s string) map[string]interface{} {
 	r := map[string]interface{}{}
-	e := com.JSONDecode([]byte(s), &r)
+	b := com.Str2bytes(s)
+	e := com.JSONDecode(b, &r)
 	if e != nil {
 		log.Println(e)
 	}
@@ -375,11 +379,78 @@ func JSONDecode(s string) map[string]interface{} {
 // If decoding fails, logs the error and returns an empty slice.
 func JSONDecodeSlice(s string) []interface{} {
 	r := []interface{}{}
-	e := com.JSONDecode([]byte(s), &r)
+	b := com.Str2bytes(s)
+	e := com.JSONDecode(b, &r)
 	if e != nil {
 		log.Println(e)
 	}
 	return r
+}
+
+// JSONDecodeStringSlice decodes a JSON string into a slice of strings.
+// If decoding fails, logs the error and returns an empty slice.
+func JSONDecodeStringSlice(s string) []string {
+	r := []string{}
+	b := com.Str2bytes(s)
+	e := com.JSONDecode(b, &r)
+	if e != nil {
+		log.Println(e)
+	}
+	return r
+}
+
+// JSONDecodeUintSlice decodes a JSON string into a slice of uint64.
+// If decoding fails, logs the error and returns an empty slice.
+// It is useful for decoding JSON arrays of numbers into a slice of uint64.
+func JSONDecodeUintSlice(s string) []uint64 {
+	r := []uint64{}
+	b := com.Str2bytes(s)
+	e := com.JSONDecode(b, &r)
+	if e != nil {
+		log.Println(e)
+	}
+	return r
+}
+
+// JoinNumbers joins a slice of numbers into a single string with the given separator.
+// It supports the following types: []uint64, []uint32, []uint16, []uint8, []uint, []int64, []int32, []int16, []int8, []int, []float64, []float32 and []interface{}.
+// For []interface{}, it will convert each value to uint64 and then join them.
+// If the type is not supported, it will return an error string.
+func JoinNumbers(s interface{}, sep string) string {
+	switch v := s.(type) {
+	case []uint64:
+		return com.JoinNumbers(v, sep)
+	case []uint32:
+		return com.JoinNumbers(v, sep)
+	case []uint16:
+		return com.JoinNumbers(v, sep)
+	case []uint8:
+		return com.JoinNumbers(v, sep)
+	case []uint:
+		return com.JoinNumbers(v, sep)
+	case []int64:
+		return com.JoinNumbers(v, sep)
+	case []int32:
+		return com.JoinNumbers(v, sep)
+	case []int16:
+		return com.JoinNumbers(v, sep)
+	case []int8:
+		return com.JoinNumbers(v, sep)
+	case []int:
+		return com.JoinNumbers(v, sep)
+	case []float64:
+		return com.JoinNumbers(v, sep)
+	case []float32:
+		return com.JoinNumbers(v, sep)
+	case []interface{}:
+		r := make([]uint64, len(v))
+		for idx, val := range v {
+			r[idx] = com.Uint64(val)
+		}
+		return com.JoinNumbers(r, sep)
+	default:
+		return `[JoinNumbers] ` + fmt.Sprintf(`Unsupported type: %T`, v)
+	}
 }
 
 // URLDecode decodes a URL-encoded string and returns the decoded result.
