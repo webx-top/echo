@@ -19,8 +19,8 @@ t := template.New("example")
 t.Funcs(tplfunc.New())
 
 // Use in template / 在模板中使用
-{{ Now | DateFormat "2006-01-02" }}
-{{ 100 | ToFixed 2 }}
+{{ Now.Format "2006-01-02" }}
+{{ ToFixed 100 2 }}
 {{ "hello world" | ToUpper }}
 ```
 
@@ -33,10 +33,10 @@ t.Funcs(tplfunc.New())
 | `Now` | 当前时间 / Current time | `{{ Now }}` |
 | `UnixTime` | Unix时间戳 / Unix timestamp | `{{ UnixTime }}` |
 | `ElapsedMemory` | 内存消耗 / Memory consumption | `{{ ElapsedMemory }}` |
-| `TotalRunTime` | 运行时长(从启动服务时算起) / Runtime since service started | `{{ TotalRunTime }}` |
+| `TotalRunTime` | 运行时长(从启动服务时算起) / Run time since service started | `{{ TotalRunTime }}` |
 | `CaptchaForm` | 验证码图片表单 / CAPTCHA image form | `{{ CaptchaForm }}` |
-| `FormatByte` | 字节转为适合理解的格式 / Bytes to human-readable format | `{{ 1024 \| FormatByte }}` |
-| `FormatBytes` | 字节转为适合理解的格式 / Bytes to human-readable format | `{{ 1024 \| FormatBytes }}` |
+| `FormatByte` | 字节数转为适合理解的格式 / Bytes to human-readable format | `{{ 1024 \| FormatByte }}` |
+| `FormatBytes` | 字节数转为适合理解的格式 / Bytes to human-readable format | `{{ 1024 \| FormatBytes }}` |
 | `FriendlyTime` | 友好的时间格式 / Human-friendly time format | `{{ 3600 \| FriendlyTime }}` |
 | `FormatPastTime` | 以前距离现在多长时间 / Time elapsed since past | `{{ 1609459200 \| FormatPastTime }}` |
 | `DateFormat` | 日期格式化 / Date format | `{{ 1609459200 \| DateFormat "2006-01-02" }}` |
