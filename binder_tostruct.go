@@ -179,7 +179,7 @@ func (e *Echo) parseFormItem(keyNormalizer func(string) string, m interface{}, t
 		for _, filter := range filters {
 			vk, values = filter(vk, values)
 			if len(vk) == 0 || len(values) == 0 {
-				e.Logger().Debugf(`binder: skip %v%v (%v) => %v`, checkPath, name, propPath, values)
+				e.Logger().Debugf(`binder: skip %T#%v%v (%v) => %v`, m, checkPath, name, propPath, values)
 				return nil
 			}
 		}
