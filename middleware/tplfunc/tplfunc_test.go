@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/webx-top/com"
 )
 
 func TestNumberFormat(t *testing.T) {
@@ -22,4 +23,7 @@ func TestInExt(t *testing.T) {
 	assert.True(t, InExt(`a/b/c/d.jpg`, `.jpg`))
 	assert.False(t, InExt(`a/b/c/d.jpeg`, `.jpg`))
 	assert.True(t, InExt(`a/b/c/d.jpeg`, `.jpeg`))
+	var r []string
+	err := com.JSONDecodeString(`null`, &r)
+	assert.NoError(t, err)
 }
