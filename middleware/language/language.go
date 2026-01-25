@@ -136,12 +136,11 @@ func (a *Language) Set(lang string, on bool, args ...bool) *Language {
 // Returns the detected language code if valid, otherwise returns an empty string.
 // The function also updates the dispatch path by removing the language prefix.
 func (a *Language) DetectURI(c echo.Context, list map[string]bool) string {
+	var lang string
 	dispatchPath := c.DispatchPath()
 	p := strings.TrimPrefix(dispatchPath, `/`)
-	s := strings.Index(p, `/`)
-	var lang string
-	if s != -1 {
-		lang = p[0:s]
+	if before, _, found := strings.Cut(p, `/`); found {
+		lang = before
 	} else {
 		lang = p
 	}
