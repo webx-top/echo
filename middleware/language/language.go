@@ -299,14 +299,31 @@ func (a *Language) Config() *Config {
 	return a.I18n.config
 }
 
-// Handler registers HTTP routes for serving i18n messages in JSON and JavaScript formats.
-// It provides two endpoints:
-// - /i18n.json: returns messages as JSON
-// - /i18n.js: returns messages as JavaScript with optional variable assignment
-// i18nJSVarName specifies the JavaScript variable name to assign the messages to (optional)
-func (a *Language) Handler(e echo.RouteRegister, i18nJSVarName string) {
+// Handler registers routes for i18n language data retrieval.
+// It registers two routes: "/i18n.json" and "/i18n.js".
+// The first route returns the i18n language data as JSON.
+// The second route returns the i18n language data as a JavaScript file.
+// The function takes the following parameters:
+//   - e: the echo.RouteRegister instance.
+//   - i18nJSVarName: the JavaScript variable name for the i18n language data.
+//   - uriLangVarName: the URI query parameter name for retrieving the language code.
+//     If not provided, it defaults to "lng".
+func (a *Language) Handler(e echo.RouteRegister, i18nJSVarName string, uriLangVarName ...string) {
+	var langVarName string
+	if len(uriLangVarName) > 0 && len(uriLangVarName[0]) > 0 {
+		langVarName = uriLangVarName[0]
+	} else {
+		langVarName = `lng`
+	}
+	getLangCode := func(c echo.Context) string {
+		langCode := c.Form(langVarName)
+		if len(langCode) == 0 || !a.Valid(langCode, nil) {
+			langCode = c.Lang().String()
+		}
+		return langCode
+	}
 	e.Get(`/i18n.json`, func(c echo.Context) error {
-		t := a.I18n.Get(c.Lang().String())
+		t := a.I18n.Get(getLangCode(c))
 		if t != nil {
 			messages := t.Messages()
 			return c.JSON(messages)
@@ -314,7 +331,7 @@ func (a *Language) Handler(e echo.RouteRegister, i18nJSVarName string) {
 		return c.JSONBlob([]byte(`{}`))
 	})
 	e.Get(`/i18n.js`, func(c echo.Context) error {
-		t := a.I18n.Get(c.Lang().String())
+		t := a.I18n.Get(getLangCode(c))
 		buf := bytes.NewBuffer(nil)
 		if t != nil {
 			messages := t.Messages()
