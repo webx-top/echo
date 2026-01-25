@@ -315,7 +315,7 @@ func (a *Language) Handler(e echo.RouteRegister, i18nJSVarName string, uriLangVa
 		langVarName = `lng`
 	}
 	getLangCode := func(c echo.Context) string {
-		langCode := c.Form(langVarName)
+		langCode := c.Query(langVarName)
 		if len(langCode) == 0 || !a.Valid(langCode, nil) {
 			langCode = c.Lang().String()
 		}
