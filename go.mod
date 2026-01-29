@@ -18,7 +18,7 @@ require (
 	github.com/admpub/i18n v0.5.3
 	github.com/admpub/ipfilter v1.0.6
 	github.com/admpub/jet/v6 v6.0.2
-	github.com/admpub/log v1.4.0
+	github.com/admpub/log v1.5.2
 	github.com/admpub/realip v0.2.7
 	github.com/admpub/securecookie v1.3.0
 	github.com/admpub/sessions v0.3.0
@@ -29,7 +29,7 @@ require (
 	github.com/admpub/xencoding v0.0.3
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/dustin/go-broadcast v0.0.0-20211018055107-71439988bd91
-	github.com/golang-jwt/jwt/v5 v5.3.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gosimple/slug v1.15.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/opentracing/opentracing-go v1.2.0
