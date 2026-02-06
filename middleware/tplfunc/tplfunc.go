@@ -390,6 +390,9 @@ func JSONDecodeSlice(s string) []interface{} {
 // JSONDecodeStringSlice decodes a JSON string into a slice of strings.
 // If decoding fails, logs the error and returns an empty slice.
 func JSONDecodeStringSlice(s string) []string {
+	if len(s) == 0 {
+		return []string{}
+	}
 	r := []string{}
 	b := com.Str2bytes(s)
 	e := com.JSONDecode(b, &r)
@@ -403,6 +406,9 @@ func JSONDecodeStringSlice(s string) []string {
 // If decoding fails, logs the error and returns an empty slice.
 // It is useful for decoding JSON arrays of numbers into a slice of uint64.
 func JSONDecodeUintSlice(s string) []uint64 {
+	if len(s) == 0 {
+		return []uint64{}
+	}
 	r := []uint64{}
 	b := com.Str2bytes(s)
 	e := com.JSONDecode(b, &r)
