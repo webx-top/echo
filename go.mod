@@ -23,7 +23,7 @@ require (
 	github.com/admpub/securecookie v1.3.0
 	github.com/admpub/sessions v0.3.0
 	github.com/admpub/sockjs-go/v3 v3.0.1
-	github.com/admpub/sse v0.0.0-20160126180136-ee05b128a739
+	github.com/admpub/sse v0.0.1
 	github.com/admpub/timeago v1.3.0
 	github.com/admpub/websocket v1.0.4
 	github.com/admpub/xencoding v0.0.3
@@ -75,7 +75,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/phuslu/iploc v1.0.20260115 // indirect
+	github.com/phuslu/iploc v1.0.20260201 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

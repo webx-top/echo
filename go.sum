@@ -52,8 +52,8 @@ github.com/admpub/sessions v0.3.0 h1:IlxkNCDZyg89sXJHl3q/nqpSk81hIz1Q1vVOiqhwi4w
 github.com/admpub/sessions v0.3.0/go.mod h1:qZCCMxkYS5Uk12RmxvvIpXr7ZdgS2B59iX0XLoQYG0Q=
 github.com/admpub/sockjs-go/v3 v3.0.1 h1:vQTjPb8+yWLliAGOQztqudq5LU0QTGTVeoPEr+cbgkI=
 github.com/admpub/sockjs-go/v3 v3.0.1/go.mod h1:cygzjxumP+U/XSEK0H2MRanxdChuz8YtqPJMVqzjia0=
-github.com/admpub/sse v0.0.0-20160126180136-ee05b128a739 h1:vcNlstbRWkjZlyYBK9LUDSzTuaD29CwPdKhHl0/YDok=
-github.com/admpub/sse v0.0.0-20160126180136-ee05b128a739/go.mod h1:oNYi77yjU4GPJfuHg894uT7EGy1EmJzYFwZ+BQBptK8=
+github.com/admpub/sse v0.0.1 h1:cT2gabX0Hbcm4+2g/vnBz1ZQPK3nIsgBAoUXlgU/iqg=
+github.com/admpub/sse v0.0.1/go.mod h1:4MeFjCjSVZt/kM4IhHRpgZsSexsu8c3Fml75h8gvP5Y=
 github.com/admpub/timeago v1.3.0 h1:uFRJ5LZUS1gjNTRGgTRf10wbBycSJmxrqMm1x/JkN1w=
 github.com/admpub/timeago v1.3.0/go.mod h1:5iFnUFGqk2dnVZ2LpOoUserdh2rfTlTfhqB8OIMYZos=
 github.com/admpub/websocket v1.0.4 h1:OWBoXpczBzFGx8ukD71OWcc2G0O+Y5aO+NAMJMeMTHI=
@@ -220,8 +220,8 @@ github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/openzipkin/zipkin-go v0.1.1/go.mod h1:NtoC/o8u3JlF1lSlyPNswIbeQH9bJTmOf0Erfk+hxe8=
 github.com/phuslu/iploc v1.0.20220630/go.mod h1:gsgExGWldwv1AEzZm+Ki9/vGfyjkL33pbSr9HGpt2Xg=
-github.com/phuslu/iploc v1.0.20260115 h1:DSo9u0GSVkNUXq1ZRYpe50kEjmyyWTkcNcSnUbeT1TU=
-github.com/phuslu/iploc v1.0.20260115/go.mod h1:VZqAWoi2A80YPvfk1AizLGHavNIG9nhBC8d87D/SeVs=
+github.com/phuslu/iploc v1.0.20260201 h1:RpZUm0Rk81KX1uiIsjIHAmANeEgHWf1t0euc6LPywzA=
+github.com/phuslu/iploc v1.0.20260201/go.mod h1:VZqAWoi2A80YPvfk1AizLGHavNIG9nhBC8d87D/SeVs=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
