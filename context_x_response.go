@@ -2,6 +2,7 @@ package echo
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"os"
@@ -181,7 +182,7 @@ func (c *XContext) XMLBlob(b []byte, codes ...int) (err error) {
 	return
 }
 
-func (c *XContext) Stream(step func(w io.Writer) (bool, error)) error {
+func (c *XContext) Stream(step func(context.Context, io.Writer) (bool, error)) error {
 	return c.response.Stream(step)
 }
 
@@ -197,16 +198,20 @@ func (c *XContext) SSEvent(event string, data chan interface{}) error {
 		}
 		c.renderer = c.echo.renderer
 	}
-	return c.Stream(func(w io.Writer) (bool, error) {
-		recv, ok := <-data
-		if !ok {
-			return ok, nil
+	return c.Stream(func(ctx context.Context, w io.Writer) (bool, error) {
+		select {
+		case <-ctx.Done():
+			return false, context.Canceled
+		case recv, ok := <-data:
+			if !ok {
+				return ok, nil
+			}
+			err := c.renderer.Render(w, event, recv, c)
+			if err != nil {
+				return false, err
+			}
+			return true, err
 		}
-		err := c.renderer.Render(w, event, recv, c)
-		if err != nil {
-			return false, err
-		}
-		return true, err
 	})
 }
 

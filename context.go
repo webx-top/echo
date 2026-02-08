@@ -157,7 +157,7 @@ type Context interface {
 	JSONP(string, interface{}, ...int) error
 	XML(interface{}, ...int) error
 	XMLBlob([]byte, ...int) error
-	Stream(func(io.Writer) (bool, error)) error
+	Stream(func(context.Context, io.Writer) (bool, error)) error
 	SSEvent(string, chan interface{}) error
 	File(string, ...http.FileSystem) error
 	CacheableFile(string, time.Duration, ...http.FileSystem) error

@@ -2,6 +2,7 @@ package standard
 
 import (
 	"bufio"
+	"context"
 	"io"
 	"net"
 	"net/http"
@@ -170,17 +171,18 @@ func (r *Response) ServeContent(content io.ReadSeeker, name string, modtime time
 	r.committed = true
 }
 
-func (r *Response) Stream(step func(io.Writer) (bool, error)) (err error) {
+func (r *Response) Stream(step func(context.Context, io.Writer) (bool, error)) error {
 	for {
-		select {
-		case <-r.request.Context().Done():
-			return nil
-		default:
-			keepOpen, err := step(r)
-			r.Flush()
-			if !keepOpen || err != nil {
-				return err
+		keepOpen, err := step(r.request.Context(), r)
+		if err != nil {
+			if err == context.Canceled {
+				return nil
 			}
+			return err
+		}
+		r.Flush()
+		if !keepOpen {
+			return err
 		}
 	}
 }

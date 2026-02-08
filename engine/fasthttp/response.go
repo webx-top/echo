@@ -5,6 +5,7 @@ package fasthttp
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"net"
@@ -159,22 +160,18 @@ func (r *Response) ServeContent(content io.ReadSeeker, name string, modtime time
 	r.committed = true
 }
 
-func (r *Response) Stream(step func(io.Writer) (bool, error)) (err error) {
+var ssePingBytes = []byte(": ping\n\n")
+
+func (r *Response) Stream(step func(context.Context, io.Writer) (bool, error)) error {
 	f := func(w *bufio.Writer) {
-		done := make(chan struct{}, 1)
-		done <- struct{}{}
-		defer close(done)
-		for {
-			select {
-			case <-r.fasthttpCtx().Done():
-				r.logger.Debug(`Context Cancelled`)
-				return
-			case _, ok := <-done:
-				if !ok {
-					return
-				}
-				var keepOpen bool
-				keepOpen, err = step(w)
+		ctx, cancel := context.WithCancel(r.fasthttpCtx())
+		go func() {
+			tick := time.NewTicker(time.Second * 2)
+			defer tick.Stop()
+			defer cancel()
+			for {
+				<-tick.C
+				_, err := w.Write(ssePingBytes)
 				if err != nil {
 					r.logger.Debug(`SSE: `, err)
 					return
@@ -184,11 +181,26 @@ func (r *Response) Stream(step func(io.Writer) (bool, error)) (err error) {
 					r.logger.Debug(`Push: `, err)
 					return
 				}
-				if !keepOpen {
-					r.logger.Debug(`keepOpen: closed`)
+			}
+		}()
+		for {
+			keepOpen, err := step(ctx, w)
+			if err != nil {
+				if err == context.Canceled {
+					r.logger.Debug(`SSE: Context Cancelled`)
 					return
 				}
-				done <- struct{}{}
+				r.logger.Debug(`SSE: `, err)
+				return
+			}
+			err = w.Flush()
+			if err != nil {
+				r.logger.Debug(`Push: `, err)
+				return
+			}
+			if !keepOpen {
+				r.logger.Debug(`keepOpen: closed`)
+				return
 			}
 		}
 	}

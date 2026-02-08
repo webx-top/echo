@@ -35,12 +35,33 @@ func (s *ServerSentEvents) Render(w io.Writer, name string, data interface{}, c 
 	})
 }
 
+type SSEComment []byte
+
+var (
+	sseCommentStartBytes            = []byte(": ")
+	sseCommentEndBytes              = []byte("\n\n")
+	SSEPing              SSEComment = []byte("ping")
+)
+
 func (s *ServerSentEvents) RenderBy(w io.Writer, name string, _ func(string) ([]byte, error), data interface{}, c echo.Context) error {
-	if v, y := data.(sse.Event); y {
-		return sse.Encode(w, v)
+	switch raw := data.(type) {
+	case SSEComment:
+		_, err := w.Write(sseCommentStartBytes)
+		if err != nil {
+			return err
+		}
+		_, err = w.Write([]byte(raw))
+		if err != nil {
+			return err
+		}
+		_, err = w.Write(sseCommentEndBytes)
+		return err
+	case sse.Event:
+		return sse.Encode(w, raw)
+	default:
+		return sse.Encode(w, sse.Event{
+			Event: name,
+			Data:  data,
+		})
 	}
-	return sse.Encode(w, sse.Event{
-		Event: name,
-		Data:  data,
-	})
 }

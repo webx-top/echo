@@ -3,6 +3,7 @@ package mock
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"io"
 	"net"
 	"net/http"
@@ -204,7 +205,7 @@ func (r *Response) ServeContent(content io.ReadSeeker, name string, modtime time
 	r.mutex.Unlock()
 }
 
-func (r *Response) Stream(step func(io.Writer) (bool, error)) error {
+func (r *Response) Stream(step func(context.Context, io.Writer) (bool, error)) error {
 	r.mutex.RLock()
 	ctx := r.request.Context()
 	r.mutex.RUnlock()
@@ -213,11 +214,11 @@ func (r *Response) Stream(step func(io.Writer) (bool, error)) error {
 		case <-ctx.Done():
 			return nil
 		default:
-			keepOpen, err := step(r)
-			r.Flush()
+			keepOpen, err := step(ctx, r)
 			if !keepOpen || err != nil {
 				return err
 			}
+			r.Flush()
 		}
 	}
 }

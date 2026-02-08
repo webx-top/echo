@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	engine := `fast`
+	engine := ``
 	e := echo.New()
 	e.SetDebug(true)
 	e.Use(mw.Log(), mw.Recover())
@@ -34,6 +34,16 @@ func stream(c echo.Context) error {
 	roomid := c.Param("roomid")
 	listener := openListener(roomid)
 	defer closeListener(roomid, listener)
+	// go func() {
+	// 	tick := time.NewTicker(time.Second)
+	// 	defer tick.Stop()
+	// 	for range tick.C {
+	// 		room(roomid).Submit(sse.Event{
+	// 			Event: "tick",
+	// 			Data:  time.Now().Format(time.RFC3339),
+	// 		})
+	// 	}
+	// }()
 	return c.SSEvent("message", listener)
 }
 

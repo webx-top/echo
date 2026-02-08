@@ -6,12 +6,14 @@ var roomChannels = make(map[string]broadcast.Broadcaster)
 
 func openListener(roomid string) chan interface{} {
 	listener := make(chan interface{})
+	println("room", roomid, "opened")
 	room(roomid).Register(listener)
 	return listener
 }
 
 func closeListener(roomid string, listener chan interface{}) {
 	room(roomid).Unregister(listener)
+	println("room", roomid, "closed")
 	close(listener)
 }
 
