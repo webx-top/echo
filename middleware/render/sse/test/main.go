@@ -7,6 +7,7 @@ import (
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine/fasthttp"
 	"github.com/webx-top/echo/engine/standard"
+	"github.com/webx-top/echo/handler/pprof"
 	mw "github.com/webx-top/echo/middleware"
 	"github.com/webx-top/echo/middleware/render"
 	_ "github.com/webx-top/echo/middleware/render/sse"
@@ -16,8 +17,11 @@ func main() {
 	engine := ``
 	e := echo.New()
 	e.SetDebug(true)
+
 	e.Use(mw.Log(), mw.Recover())
 	e.Use(render.Middleware(render.New(`sse`, ``)))
+
+	pprof.Wrapper(e) // go tool pprof http://127.0.0.1:8181/debug/pprof/profile
 
 	e.Get("/room/:roomid", roomGET)
 	e.Post("/room/:roomid", roomPOST)

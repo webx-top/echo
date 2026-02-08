@@ -50,6 +50,8 @@ table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
+p a{font-size:18px;line-height:24px;display:block;height:24px;padding:5px 10px}
+p a:hover{background-color:#f0f0f0}
 </style>
     <script src="https://www.coscms.com/public/assets/backend/js/jquery3.6.min.js?t=20250313215353"></script>
     <script>
@@ -63,9 +65,9 @@ table {
                     $('#message_form').focus();
                 });
             });
-
+//return
             if (!!window.EventSource) {
-                var source = new EventSource('/stream/{{.roomid}}');
+                var source = new EventSource('/stream/{{.roomid}}?sse');
                 source.addEventListener('message', function(e) {
                     $('#messages').append(e.data + "</br>");
                     $('html, body').animate({scrollTop:$(document).height()}, 'slow');
@@ -85,6 +87,15 @@ table {
     Message: <input id="message_form" name="message"></input>
     <input type="submit" value="Submit" />
     </form>
+    <p>
+    <a href="/room/{{.roomid}}?r=1">Refresh-1</a>
+<a href="/room/{{.roomid}}?r=2">Refresh-2</a>
+<a href="/room/{{.roomid}}?r=3">Refresh-3</a>
+<a href="/room/{{.roomid}}?r=4">Refresh-4</a>
+<a href="/room/{{.roomid}}?r=5">Refresh-5</a>
+<a href="/room/{{.roomid}}?r=6">Refresh-6</a>
+<a href="/room/{{.roomid}}?r=7">Refresh-7</a>
+<a href="/room/{{.roomid}}?r=8">Refresh-8</a></p>
 </body>
 </html>
 `))
