@@ -25,16 +25,6 @@ type ServerSentEvents struct {
 	*driver.NopRenderer
 }
 
-func (s *ServerSentEvents) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
-	if v, y := data.(sse.Event); y {
-		return sse.Encode(w, v)
-	}
-	return sse.Encode(w, sse.Event{
-		Event: name,
-		Data:  data,
-	})
-}
-
 type SSEComment []byte
 
 var (
@@ -43,7 +33,7 @@ var (
 	SSEPing              SSEComment = []byte("ping")
 )
 
-func (s *ServerSentEvents) RenderBy(w io.Writer, name string, _ func(string) ([]byte, error), data interface{}, c echo.Context) error {
+func (s *ServerSentEvents) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
 	switch raw := data.(type) {
 	case SSEComment:
 		_, err := w.Write(sseCommentStartBytes)
@@ -64,4 +54,8 @@ func (s *ServerSentEvents) RenderBy(w io.Writer, name string, _ func(string) ([]
 			Data:  data,
 		})
 	}
+}
+
+func (s *ServerSentEvents) RenderBy(w io.Writer, name string, _ func(string) ([]byte, error), data interface{}, c echo.Context) error {
+	return s.Render(w, name, data, c)
 }

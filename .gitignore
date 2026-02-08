@@ -23,3 +23,4 @@ node_modules
 middleware/render/sse/test/test
 tower-app-*
 /vendor
+profile*.pdf

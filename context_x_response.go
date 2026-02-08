@@ -183,6 +183,9 @@ func (c *XContext) XMLBlob(b []byte, codes ...int) (err error) {
 }
 
 func (c *XContext) Stream(step func(context.Context, io.Writer) (bool, error)) error {
+	if !c.response.Committed() {
+		c.response.WriteHeader(http.StatusOK)
+	}
 	return c.response.Stream(step)
 }
 
@@ -197,6 +200,9 @@ func (c *XContext) SSEvent(event string, data chan interface{}) error {
 			return ErrRendererNotRegistered
 		}
 		c.renderer = c.echo.renderer
+	}
+	if !c.response.Committed() {
+		c.response.WriteHeader(http.StatusOK)
 	}
 	return c.Stream(func(ctx context.Context, w io.Writer) (bool, error) {
 		select {

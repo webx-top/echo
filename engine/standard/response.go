@@ -53,7 +53,7 @@ func (r *Response) requestURI() string {
 
 func (r *Response) WriteHeader(code int) {
 	if r.committed {
-		r.logger.Warnf("%v [%s]", engine.ErrAlreadyCommitted, r.requestURI())
+		r.logger.Warnf("%v [%d][%s]", engine.ErrAlreadyCommitted, r.status, r.requestURI())
 		return
 	}
 	r.status = code
@@ -172,6 +172,7 @@ func (r *Response) ServeContent(content io.ReadSeeker, name string, modtime time
 }
 
 func (r *Response) Stream(step func(context.Context, io.Writer) (bool, error)) error {
+	r.Flush()
 	for {
 		keepOpen, err := step(r.request.Context(), r)
 		if err != nil {

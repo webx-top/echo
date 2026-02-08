@@ -63,7 +63,7 @@ func (r *Response) requestURI() string {
 
 func (r *Response) WriteHeader(code int) {
 	if r.committed {
-		r.logger.Warnf(`%v [%v]`, engine.ErrAlreadyCommitted, r.requestURI())
+		r.logger.Warnf(`%v [%d][%v]`, engine.ErrAlreadyCommitted, r.status, r.requestURI())
 		return
 	}
 	r.status = code
@@ -164,6 +164,16 @@ var ssePingBytes = []byte(": ping\n\n")
 
 func (r *Response) Stream(step func(context.Context, io.Writer) (bool, error)) error {
 	f := func(w *bufio.Writer) {
+		_, err := w.Write(ssePingBytes)
+		if err != nil {
+			r.logger.Debug(`SSE: `, err)
+			return
+		}
+		err = w.Flush()
+		if err != nil {
+			r.logger.Debug(`Flush: `, err)
+			return
+		}
 		ctx, cancel := context.WithCancel(r.fasthttpCtx())
 		go func() {
 			tick := time.NewTicker(time.Second * 2)
@@ -178,7 +188,7 @@ func (r *Response) Stream(step func(context.Context, io.Writer) (bool, error)) e
 				}
 				err = w.Flush()
 				if err != nil {
-					r.logger.Debug(`Push: `, err)
+					r.logger.Debug(`Flush: `, err)
 					return
 				}
 			}
@@ -195,7 +205,7 @@ func (r *Response) Stream(step func(context.Context, io.Writer) (bool, error)) e
 			}
 			err = w.Flush()
 			if err != nil {
-				r.logger.Debug(`Push: `, err)
+				r.logger.Debug(`Flush: `, err)
 				return
 			}
 			if !keepOpen {
