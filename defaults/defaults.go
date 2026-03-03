@@ -43,6 +43,18 @@ func SetFormatRenderers(formatRenderers map[string]echo.FormatRender) *echo.Echo
 	return Default.SetFormatRenderers(formatRenderers)
 }
 
+func SetUploadURLGenerator(fn func(echo.Context, string, ...interface{}) string) *echo.Echo {
+	return Default.SetUploadURLGenerator(fn)
+}
+
+func UploadURL(ctx echo.Context, subdir string, values ...interface{}) string {
+	return Default.UploadURL(ctx, subdir, values...)
+}
+
+func UploadURLGenerator(fn func(echo.Context, string, ...interface{}) string) func(echo.Context, string, ...interface{}) string {
+	return Default.UploadURLGenerator(fn)
+}
+
 func AddFormatRenderer(format string, renderer echo.FormatRender) *echo.Echo {
 	return Default.AddFormatRenderer(format, renderer)
 }

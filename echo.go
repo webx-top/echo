@@ -49,6 +49,7 @@ type (
 		FormSliceMaxIndex   int
 		binderValueDecoders map[string]BinderValueDecoder
 		binderValueEncoders map[string]BinderValueEncoder
+		uploadURLGenerator  func(Context, string, ...interface{}) string
 		parseHeaderAccept   bool
 		defaultExtension    string
 		rewriter            Rewriter
@@ -200,6 +201,7 @@ func (e *Echo) Reset() *Echo {
 	e.FormSliceMaxIndex = 100
 	e.binderValueEncoders = DefaultBinderValueEncoders
 	e.binderValueDecoders = DefaultBinderValueDecoders
+	e.uploadURLGenerator = DefaultUploadURLGenerator
 	e.parseHeaderAccept = false
 	e.defaultExtension = ``
 	e.maxRequestBodySize = 0
@@ -228,6 +230,22 @@ func (e *Echo) SetValidator(validator Validator) *Echo {
 func (e *Echo) SetFormSliceMaxIndex(max int) *Echo {
 	e.FormSliceMaxIndex = max
 	return e
+}
+
+func (e *Echo) SetUploadURLGenerator(fn func(Context, string, ...interface{}) string) *Echo {
+	e.uploadURLGenerator = fn
+	return e
+}
+
+func (e *Echo) UploadURLGenerator(fn func(Context, string, ...interface{}) string) func(Context, string, ...interface{}) string {
+	return e.uploadURLGenerator
+}
+
+func (e *Echo) UploadURL(ctx Context, subdir string, values ...interface{}) string {
+	if e.uploadURLGenerator == nil {
+		return ``
+	}
+	return e.uploadURLGenerator(ctx, subdir, values...)
 }
 
 func (e *Echo) AddBinderValueDecoder(name string, decoder BinderValueDecoder) *Echo {

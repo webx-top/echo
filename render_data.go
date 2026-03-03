@@ -251,6 +251,10 @@ func (r *RenderData) RootPrefix() string {
 	return r.ctx.Echo().Prefix()
 }
 
+func (r *RenderData) UploadURL(subdir string, values ...interface{}) string {
+	return r.ctx.Echo().UploadURL(r.ctx, subdir, values...)
+}
+
 func (r *RenderData) Prefix() string {
 	return r.ctx.Route().Prefix
 }

@@ -138,6 +138,9 @@ var (
 		`time2unixmicro`: binderValueDecoderTime2unixmicro, // int64
 		`time2unixnano`:  binderValueDecoderTime2unixnano,  // float64
 	}
+	DefaultUploadURLGenerator = func(ctx Context, subdir string, values ...interface{}) string {
+		return subdir
+	}
 )
 
 func binderValueDecoderSplitKVRows(field string, values []string, seperator string) (interface{}, error) {
