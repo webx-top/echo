@@ -243,7 +243,7 @@ func (e *Echo) UploadURLGenerator(fn func(Context, string, ...interface{}) strin
 
 func (e *Echo) UploadURL(ctx Context, subdir string, values ...interface{}) string {
 	if e.uploadURLGenerator == nil {
-		return ``
+		return subdir
 	}
 	return e.uploadURLGenerator(ctx, subdir, values...)
 }
