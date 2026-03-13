@@ -123,6 +123,7 @@ type Context interface {
 	//----------------
 
 	Set(string, interface{})
+	SetMore(keyVal ...interface{})
 	Get(string, ...interface{}) interface{}
 	Incr(key string, n interface{}, defaults ...interface{}) int64
 	Decr(key string, n interface{}, defaults ...interface{}) int64

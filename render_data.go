@@ -94,6 +94,28 @@ func (r *RenderData) Set(key string, value interface{}) string {
 	return ``
 }
 
+func (r *RenderData) SetMore(keyValue ...interface{}) string {
+	r.ctx.SetMore(keyValue...)
+	return ``
+}
+
+func (r *RenderData) SetMapItem(key string, mapKey string, mapValue interface{}, mapKeyValue ...interface{}) string {
+	switch v := r.ctx.Get(key).(type) {
+	case param.Store:
+		v.Set(mapKey, mapValue)
+		v.SetMore(mapKeyValue...)
+	case map[string]interface{}:
+		v[mapKey] = mapKeyValue
+		param.SetMapItems(v, mapKeyValue...)
+	default:
+		m := param.Store{}
+		r.ctx.Set(key, m)
+		m.Set(mapKey, mapValue)
+		m.SetMore(mapKeyValue...)
+	}
+	return ``
+}
+
 func (r *RenderData) Incr(key string, n interface{}, defaults ...interface{}) int64 {
 	return r.ctx.Incr(key, n, defaults...)
 }

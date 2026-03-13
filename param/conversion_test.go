@@ -73,3 +73,9 @@ func TestConverts(t *testing.T) {
 	excepted4 := excepted3
 	assert.Equal(t, excepted4, v4)
 }
+
+func TestStore(t *testing.T) {
+	s := Store{}
+	s.SetMore(`key`, true)
+	assert.Equal(t, true, s.Get(`key`))
+}

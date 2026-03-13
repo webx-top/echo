@@ -38,6 +38,12 @@ func (s *SafeStore) Set(key string, val interface{}) {
 	s.storeLock.Unlock()
 }
 
+func (s *SafeStore) SetMore(keyVal ...interface{}) {
+	s.storeLock.Lock()
+	s.store.SetMore(keyVal...)
+	s.storeLock.Unlock()
+}
+
 // Delete saves data
 func (c *SafeStore) Delete(keys ...string) {
 	c.storeLock.Lock()

@@ -218,6 +218,14 @@ func AsDuration(val interface{}, defaults ...time.Duration) time.Duration {
 }
 
 func AsStore(val interface{}) Store {
+	v := AsStoreOrNil(val)
+	if v == nil {
+		v = emptyStore
+	}
+	return v
+}
+
+func AsStoreOrNil(val interface{}) Store {
 	switch v := val.(type) {
 	case Store:
 		return v
@@ -278,7 +286,7 @@ func AsStore(val interface{}) Store {
 		}
 		return r
 	default:
-		return emptyStore
+		return nil
 	}
 }
 
@@ -401,4 +409,32 @@ func AsInterfaces[T any](p []T, converter ...func(s T) any) []any {
 		result[i] = convert(s)
 	}
 	return result
+}
+
+func SetMapItems[T ~map[string]interface{}](mapData T, keyValue ...interface{}) {
+	length := len(keyValue)
+	if length == 0 {
+		return
+	}
+	if length == 1 {
+		if vals, ok := keyValue[0].([]interface{}); ok {
+			length = len(vals)
+			if length == 0 {
+				return
+			}
+			keyValue = vals
+		}
+	}
+	var k string
+	for i, j := 0, length; i < j; i++ {
+		if i%2 == 0 {
+			k = com.String(keyValue[i])
+			continue
+		}
+		mapData[k] = keyValue[i]
+		k = ``
+	}
+	if len(k) > 0 {
+		mapData[k] = nil
+	}
 }

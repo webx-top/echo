@@ -24,6 +24,11 @@ func (s Store) Set(key string, value interface{}) Store {
 	return s
 }
 
+func (s Store) SetMore(keyValue ...interface{}) Store {
+	SetMapItems(s, keyValue...)
+	return s
+}
+
 func (s Store) Get(key string, defaults ...interface{}) interface{} {
 	value, ok := s[key]
 	if (!ok || value == nil) && len(defaults) > 0 {

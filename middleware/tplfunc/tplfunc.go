@@ -617,8 +617,22 @@ func Default(defaultV interface{}, v interface{}) interface{} {
 }
 
 // Set adds or updates a key-value pair in the renderArgs map and returns an empty string.
-func Set(renderArgs map[string]interface{}, key string, value interface{}) string {
+func Set(renderArgs map[string]interface{}, key string, value interface{}, otherKeyValue ...interface{}) string {
 	renderArgs[key] = value
+	if len(otherKeyValue) > 0 {
+		key = ``
+		for i, j := 0, len(otherKeyValue); i < j; i++ {
+			if i%2 == 0 {
+				key = com.String(otherKeyValue[i])
+				continue
+			}
+			renderArgs[key] = otherKeyValue[i]
+			key = ``
+		}
+		if len(key) > 0 {
+			renderArgs[key] = nil
+		}
+	}
 	return EmptyString
 }
 
@@ -1331,31 +1345,7 @@ func NumberTrim(number interface{}, precision int, separator ...string) string {
 // is provided, the last key will be set with a nil value.
 func MakeMap(values ...interface{}) param.Store {
 	h := param.Store{}
-	length := len(values)
-	if length == 0 {
-		return h
-	}
-	if length == 1 {
-		if vals, ok := values[0].([]interface{}); ok {
-			length = len(vals)
-			if length == 0 {
-				return h
-			}
-			values = vals
-		}
-	}
-	var k string
-	for i, j := 0, length; i < j; i++ {
-		if i%2 == 0 {
-			k = fmt.Sprint(values[i])
-			continue
-		}
-		h.Set(k, values[i])
-		k = ``
-	}
-	if len(k) > 0 {
-		h.Set(k, nil)
-	}
+	h.SetMore(values...)
 	return h
 }
 

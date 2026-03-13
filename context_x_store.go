@@ -12,6 +12,10 @@ func (c *XContext) Set(key string, val interface{}) {
 	c.store.Set(key, val)
 }
 
+func (c *XContext) SetMore(keyVal ...interface{}) {
+	c.store.SetMore(keyVal...)
+}
+
 // Incr Increment the value and return the new value
 func (c *XContext) Incr(key string, n interface{}, defaults ...interface{}) int64 {
 	return c.store.Incr(key, param.AsInt64(n), defaults...)
