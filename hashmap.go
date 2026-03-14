@@ -63,9 +63,7 @@ func (m *Mapx) Clone() *Mapx {
 	for idx, mapx := range m.Slice {
 		mCopy.Slice[idx] = mapx.Clone()
 	}
-	for idx, val := range m.Val {
-		mCopy.Val[idx] = val
-	}
+	copy(mCopy.Val, m.Val)
 	return mCopy
 }
 

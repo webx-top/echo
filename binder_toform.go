@@ -14,18 +14,18 @@ import (
 
 func SetFormValue(f engine.URLValuer, fName string, index int, value interface{}) {
 	if index == 0 {
-		f.Set(fName, fmt.Sprint(value))
+		f.Set(fName, param.AsString(value))
 	} else {
-		f.Add(fName, fmt.Sprint(value))
+		f.Add(fName, param.AsString(value))
 	}
 }
 
 func SetFormValues(f engine.URLValuer, fName string, values []string) {
 	for index, value := range values {
 		if index == 0 {
-			f.Set(fName, fmt.Sprint(value))
+			f.Set(fName, value)
 		} else {
-			f.Add(fName, fmt.Sprint(value))
+			f.Add(fName, value)
 		}
 	}
 }
