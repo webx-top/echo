@@ -107,6 +107,22 @@ func (list *KVList) Reset() {
 	*list = (*list)[0:0]
 }
 
+func (list KVList) ToCustomKV(kField string, vField string, emptyText string) []H {
+	source := make([]H, len(list))
+	for i, v := range list {
+		text := v.V
+		if len(text) == 0 {
+			text = emptyText
+		}
+		source[i] = H{kField: v.K, vField: text}
+	}
+	return source
+}
+
+func KVListToEditableSource(ctx Context, tck ToCustomKV) []H {
+	return tck.ToCustomKV(`value`, `text`, `<`+ctx.T(`空`)+`>`)
+}
+
 // NewKVData 键值对数据
 func NewKVData() *KVData {
 	return &KVData{

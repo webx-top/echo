@@ -107,6 +107,22 @@ func (list *KVxList[X, Y]) Reset() {
 	*list = (*list)[0:0]
 }
 
+func (list KVxList[X, Y]) ToCustomKV(kField string, vField string, emptyText string) []H {
+	source := make([]H, len(list))
+	for i, v := range list {
+		text := v.V
+		if len(text) == 0 {
+			text = emptyText
+		}
+		source[i] = H{kField: v.K, vField: text}
+	}
+	return source
+}
+
+type ToCustomKV interface {
+	ToCustomKV(kField string, vField string, emptyText string) []H
+}
+
 // NewKVxData 键值对数据
 func NewKVxData[X any, Y any]() *KVxData[X, Y] {
 	return &KVxData[X, Y]{
