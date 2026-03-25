@@ -1,6 +1,7 @@
 package echo
 
 type Group struct {
+	parent     *Group
 	host       *host
 	prefix     string
 	middleware []Middleware
@@ -119,23 +120,33 @@ func (g *Group) Match(methods []string, path string, h interface{}, middleware .
 	return routes
 }
 
+func (g *Group) getMiddlewares() []Middleware {
+	middlewares := []Middleware{}
+	if g.parent != nil {
+		middlewares = append(middlewares, g.parent.getMiddlewares()...)
+		middlewares = append(middlewares, g.middleware...)
+	} else {
+		middlewares = g.middleware
+	}
+	return middlewares
+}
+
 func (g *Group) Group(prefix string, middleware ...interface{}) *Group {
-	m := g.combineMiddleware(middleware)
 	if g.host != nil {
 		subG, y := g.echo.hosts[g.host.name].groups[prefix]
 		if !y {
-			subG = &Group{host: g.host, prefix: prefix, echo: g.echo, meta: H{}}
+			subG = &Group{parent: g, host: g.host, prefix: prefix, echo: g.echo, meta: H{}}
 			g.echo.hosts[g.host.name].groups[prefix] = subG
 			if len(g.meta) > 0 {
 				subG.meta.DeepMerge(g.meta)
 			}
 		}
-		if len(m) > 0 {
-			subG.Use(m...)
+		if len(middleware) > 0 {
+			subG.Use(middleware...)
 		}
 		return subG
 	}
-	return g.echo.subgroup(g, prefix, m...)
+	return g.echo.subgroup(g, prefix, middleware...)
 }
 
 // Static implements `Echo#Static()` for sub-routes within the Group.
@@ -161,25 +172,15 @@ func (g *Group) MetaHandler(m H, handler interface{}, requests ...interface{}) H
 	return g.echo.MetaHandler(m, handler, requests...)
 }
 
-func (g *Group) combineMiddleware(middleware []interface{}) []interface{} {
-	m := make([]interface{}, 0, len(g.middleware)+len(middleware))
-	for _, gm := range g.middleware {
-		m = append(m, gm)
-	}
-	m = append(m, middleware...)
-	return m
-}
-
 func (g *Group) Add(method, path string, h interface{}, middleware ...interface{}) *Route {
 	// Combine into a new slice to avoid accidentally passing the same slice for
 	// multiple routes, which would lead to later add() calls overwriting the
 	// middleware from earlier calls.
-	m := g.combineMiddleware(middleware)
 	var host string
 	if g.host != nil {
 		host = g.host.name
 	}
-	r := g.echo.add(host, method, g.prefix, g.prefix+path, h, m...)
+	r := g.echo.addWithGroup(g, host, method, g.prefix, g.prefix+path, h, middleware...)
 	if len(g.meta) > 0 {
 		r.Meta = H{}
 		r.Meta.DeepMerge(g.meta)

@@ -648,6 +648,10 @@ func (e *Echo) SetPrefix(prefix string) *Echo {
 }
 
 func (e *Echo) add(host, method, prefix string, path string, h interface{}, middleware ...interface{}) *Route {
+	return e.addWithGroup(nil, host, method, prefix, path, h, middleware...)
+}
+
+func (e *Echo) addWithGroup(group *Group, host, method, prefix string, path string, h interface{}, middleware ...interface{}) *Route {
 	r := &Route{
 		Host:       host,
 		Method:     method,
@@ -655,6 +659,7 @@ func (e *Echo) add(host, method, prefix string, path string, h interface{}, midd
 		Prefix:     prefix,
 		handler:    h,
 		middleware: middleware,
+		group:      group,
 	}
 	e.router.routes = append(e.router.routes, r)
 	return r
@@ -866,7 +871,7 @@ func (e *Echo) subgroup(parent *Group, prefix string, m ...interface{}) *Group {
 	prefix = parent.prefix + prefix
 	g, y := e.groups[prefix]
 	if !y {
-		g = &Group{prefix: prefix, echo: e, meta: H{}}
+		g = &Group{parent: parent, prefix: prefix, echo: e, meta: H{}}
 		e.groups[prefix] = g
 		if len(parent.meta) > 0 {
 			g.meta.DeepMerge(parent.meta)

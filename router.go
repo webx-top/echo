@@ -49,6 +49,7 @@ type (
 		Meta       H
 		handler    interface{}   //原始handler
 		middleware []interface{} //中间件
+		group      *Group
 	}
 
 	Routes []*Route
@@ -458,9 +459,19 @@ END:
 	return
 }
 
+func (r *Route) getMiddlewares() []interface{} {
+	middlewares := []interface{}{}
+	if r.group != nil {
+		for _, m := range r.group.getMiddlewares() {
+			middlewares = append(middlewares, m)
+		}
+	}
+	middlewares = append(middlewares, r.middleware...)
+	return middlewares
+}
+
 func (r *Route) apply(e *Echo) *Route {
 	handler := e.WrapHandler(r.handler)
-	middleware := r.middleware
 	if len(r.Name) == 0 {
 		if hn, ok := handler.(Name); ok {
 			r.Name = hn.Name()
@@ -480,6 +491,7 @@ func (r *Route) apply(e *Echo) *Route {
 			r.Meta.DeepMerge(meta)
 		}
 	}
+	middleware := r.getMiddlewares()
 	for i := len(middleware) - 1; i >= 0; i-- {
 		m := middleware[i]
 		mw := e.WrapMiddleware(m)

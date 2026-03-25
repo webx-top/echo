@@ -344,3 +344,49 @@ func TestHandlerFuncWithArg(t *testing.T) {
 		return testResponse{Author: r.Name}, nil
 	})
 }
+
+func TestMultilevelGroupMiddleware(t *testing.T) {
+	e := New()
+	buf := new(bytes.Buffer)
+	g := e.Group(`/1`)
+	g.Get("/index", func(c Context) error {
+		return c.String(`1`)
+	}, func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			buf.WriteString("m2")
+			return next.Handle(c)
+		}
+	})
+	g2 := e.Group(`/1`).Group(`/2`, func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			buf.WriteString("-")
+			return next.Handle(c)
+		}
+	})
+	g2.Get("/index", func(c Context) error {
+		return c.String(`2`)
+	}, func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			buf.WriteString("m3")
+			return next.Handle(c)
+		}
+	})
+	e.Group(`/1`, func(next HandlerFunc) HandlerFunc {
+		return func(c Context) error {
+			buf.WriteString("m1")
+			return next.Handle(c)
+		}
+	})
+	e.RebuildRouter()
+	c, b := request(GET, "/1/index", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `1`, b)
+	assert.Equal(t, `m1m2`, buf.String())
+
+	buf.Reset()
+
+	c, b = request(GET, "/1/2/index", e)
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `2`, b)
+	assert.Equal(t, `m1-m3`, buf.String())
+}
