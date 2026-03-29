@@ -15,7 +15,7 @@ require (
 	github.com/admpub/go-reuseport v0.5.0
 	github.com/admpub/goth v0.0.4
 	github.com/admpub/humanize v0.0.0-20190501023926-5f826e92c8ca
-	github.com/admpub/i18n v0.5.3
+	github.com/admpub/i18n v0.5.5
 	github.com/admpub/ipfilter v1.0.6
 	github.com/admpub/jet/v6 v6.0.2
 	github.com/admpub/log v1.5.2
@@ -33,12 +33,12 @@ require (
 	github.com/gosimple/slug v1.15.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/opentracing/opentracing-go v1.2.0
-	github.com/rs/zerolog v1.34.0
+	github.com/rs/zerolog v1.35.0
 	github.com/russross/blackfriday v1.6.0
 	github.com/stretchr/testify v1.11.1
 	github.com/webx-top/captcha v0.1.0
 	github.com/webx-top/codec v0.3.0
-	github.com/webx-top/com v1.4.1
+	github.com/webx-top/com v1.5.0
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380
 	github.com/webx-top/tagfast v0.0.1
 	github.com/webx-top/validation v0.0.3
@@ -64,7 +64,7 @@ require (
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/hashicorp/go-version v1.8.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.18.4 // indirect
+	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/lestrrat-go/backoff/v2 v2.0.8 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect

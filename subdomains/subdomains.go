@@ -257,7 +257,7 @@ func (s *Subdomains) URLByName(name string, params ...interface{}) string {
 	return s.URLByNamex(domainAlias, handerName, params...)
 }
 
-// RelativeURLByName 根据路由别名生成网址
+// RelativeURLByName 根据路由别名生成相对网址
 // 可以在名称中采用 #backend#name 的方式来获取子域名别名为bakcend的网址
 func (s *Subdomains) RelativeURLByName(name string, params ...interface{}) string {
 	domainAlias, handerName := parseURLName(name)
