@@ -236,39 +236,54 @@ func (s *Subdomains) RelativeURL(uri string, args ...string) string {
 	return info.RelativeURL(uri)
 }
 
-func parseURLName(name string) (string, []string) {
-	var args []string
+func parseURLName(name string) (domainAlias string, handerName string) {
 	if after, ok := strings.CutPrefix(name, `#`); ok {
-		name = after
-		arr := strings.SplitN(name, `#`, 2)
+		handerName = after
+		arr := strings.SplitN(handerName, `#`, 2)
 		if len(arr) == 2 {
-			args = append(args, arr[0])
-			name = arr[1]
+			domainAlias = arr[0]
+			handerName = arr[1]
 		}
+	} else {
+		handerName = name
 	}
-	return name, args
+	return
 }
 
 // URLByName 根据路由别名生成网址
 // 可以在名称中采用 #backend#name 的方式来获取子域名别名为bakcend的网址
 func (s *Subdomains) URLByName(name string, params ...interface{}) string {
-	var args []string
-	name, args = parseURLName(name)
-	info := s.Get(args...)
-	if info == nil {
-		return `/not-found:` + name
-	}
-	return info.URLByName(s, name, params...)
+	domainAlias, handerName := parseURLName(name)
+	return s.URLByNamex(domainAlias, handerName, params...)
 }
 
+// RelativeURLByName 根据路由别名生成网址
+// 可以在名称中采用 #backend#name 的方式来获取子域名别名为bakcend的网址
 func (s *Subdomains) RelativeURLByName(name string, params ...interface{}) string {
-	var args []string
-	name, args = parseURLName(name)
-	info := s.Get(args...)
-	if info == nil {
-		return `/not-found:` + name
+	domainAlias, handerName := parseURLName(name)
+	return s.RelativeURLByNamex(domainAlias, handerName, params...)
+}
+
+func (s *Subdomains) URLByNamex(domainAlias string, handlerName string, params ...interface{}) string {
+	if len(domainAlias) == 0 {
+		domainAlias = s.Default
 	}
-	return info.RelativeURLByName(name, params...)
+	info, ok := s.Alias.GetOk(domainAlias)
+	if !ok || info == nil {
+		return `/not-found:` + handlerName
+	}
+	return info.URLByName(s, handlerName, params...)
+}
+
+func (s *Subdomains) RelativeURLByNamex(domainAlias string, handlerName string, params ...interface{}) string {
+	if len(domainAlias) == 0 {
+		domainAlias = s.Default
+	}
+	info, ok := s.Alias.GetOk(domainAlias)
+	if !ok || info == nil {
+		return `/not-found:` + handlerName
+	}
+	return info.RelativeURLByName(handlerName, params...)
 }
 
 func (s *Subdomains) sort(names []string) []string {
