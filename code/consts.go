@@ -22,6 +22,7 @@ const (
 	InvalidToken Code = -151 //令牌错误
 	InvalidAppID Code = -150 //AppID不正确
 
+	ExceedLimitQuantity Code = -120 //超过限制数量
 	DataNotChanged      Code = -111 //数据没有改变
 	DataSizeTooBig      Code = -110 //数据尺寸太大
 	DataAlreadyExists   Code = -109 //数据已经存在
