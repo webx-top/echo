@@ -232,15 +232,6 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			c.NoContent(code)
 			return
 		}
-		dt := echo.H{
-			"title":   title,
-			"content": msg,
-			"debug":   c.Echo().Debug(),
-			"code":    code,
-			"panic":   panicErr,
-			"links":   links,
-		}
-		data.SetData(dt, data.GetCode().Int())
 		var val interface{}
 		switch c.Format() {
 		case echo.ContentTypeText:
@@ -259,7 +250,15 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 					return
 				}
 			}
-			val = data.GetData()
+			dt := echo.H{
+				"title":   title,
+				"content": msg,
+				"debug":   c.Echo().Debug(),
+				"code":    code,
+				"panic":   panicErr,
+				"links":   links,
+			}
+			val = dt
 			if len(tmpl) == 0 || opt.UsingDefaultRenderer(c) {
 				b, renderErr := opt.DefaultRenderer(c, dt, code)
 				if renderErr != nil {
