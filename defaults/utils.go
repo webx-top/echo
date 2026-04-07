@@ -2,6 +2,7 @@ package defaults
 
 import (
 	"context"
+	"net/http"
 	"sync"
 
 	"github.com/webx-top/echo"
@@ -32,6 +33,17 @@ func NewMockContext(args ...*echo.Echo) echo.Context {
 		e = Default
 	}
 	return echo.NewContext(mock.NewRequest(), mock.NewResponse(), e)
+}
+
+func NewMockContextWithContext(ctx context.Context, args ...*echo.Echo) echo.Context {
+	var e *echo.Echo
+	if len(args) > 0 {
+		e = args[0]
+	} else {
+		e = Default
+	}
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, `/`, nil)
+	return echo.NewContext(mock.NewRequest(req), mock.NewResponse(), e)
 }
 
 func IsMockContext(c echo.Context) bool {
