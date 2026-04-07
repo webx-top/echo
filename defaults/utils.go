@@ -25,6 +25,8 @@ func MustGetContext(ctx context.Context, args ...*echo.Echo) echo.Context {
 	return eCtx
 }
 
+var DefaultTransaction echo.Transaction
+
 func NewMockContext(args ...*echo.Echo) echo.Context {
 	var e *echo.Echo
 	if len(args) > 0 {
@@ -32,7 +34,11 @@ func NewMockContext(args ...*echo.Echo) echo.Context {
 	} else {
 		e = Default
 	}
-	return echo.NewContext(mock.NewRequest(), mock.NewResponse(), e)
+	c := echo.NewContext(mock.NewRequest(), mock.NewResponse(), e)
+	if DefaultTransaction != nil {
+		c.SetTransaction(DefaultTransaction)
+	}
+	return c
 }
 
 func NewMockContextWithContext(ctx context.Context, args ...*echo.Echo) echo.Context {
@@ -43,7 +49,11 @@ func NewMockContextWithContext(ctx context.Context, args ...*echo.Echo) echo.Con
 		e = Default
 	}
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, `/`, nil)
-	return echo.NewContext(mock.NewRequest(req), mock.NewResponse(), e)
+	c := echo.NewContext(mock.NewRequest(req), mock.NewResponse(), e)
+	if DefaultTransaction != nil {
+		c.SetTransaction(DefaultTransaction)
+	}
+	return c
 }
 
 func IsMockContext(c echo.Context) bool {
