@@ -9,7 +9,7 @@ type Group struct {
 	meta       H
 }
 
-func (g *Group) URL(h interface{}, params ...interface{}) string {
+func (g *Group) URL(h any, params ...any) string {
 	return g.echo.URL(h, params...)
 }
 
@@ -43,7 +43,7 @@ func (g *Group) SetRenderer(r Renderer) {
 	g.echo.renderer = r
 }
 
-func (g *Group) Use(middleware ...interface{}) {
+func (g *Group) Use(middleware ...any) {
 	for _, m := range middleware {
 		g.middleware = append(g.middleware, g.echo.WrapMiddleware(m))
 		if g.echo.MiddlewareDebug {
@@ -53,7 +53,7 @@ func (g *Group) Use(middleware ...interface{}) {
 }
 
 // Pre adds handler to the middleware chain.
-func (g *Group) Pre(middleware ...interface{}) {
+func (g *Group) Pre(middleware ...any) {
 	var middlewares []Middleware
 	for _, m := range middleware {
 		middlewares = append(middlewares, g.echo.WrapMiddleware(m))
@@ -64,43 +64,43 @@ func (g *Group) Pre(middleware ...interface{}) {
 	g.middleware = append(middlewares, g.middleware...)
 }
 
-func (g *Group) Connect(path string, h interface{}, m ...interface{}) IRouter {
+func (g *Group) Connect(path string, h any, m ...any) IRouter {
 	return g.Add(CONNECT, path, h, m...)
 }
 
-func (g *Group) Delete(path string, h interface{}, m ...interface{}) IRouter {
+func (g *Group) Delete(path string, h any, m ...any) IRouter {
 	return g.Add(DELETE, path, h, m...)
 }
 
-func (g *Group) Get(path string, h interface{}, m ...interface{}) IRouter {
+func (g *Group) Get(path string, h any, m ...any) IRouter {
 	return g.Add(GET, path, h, m...)
 }
 
-func (g *Group) Head(path string, h interface{}, m ...interface{}) IRouter {
+func (g *Group) Head(path string, h any, m ...any) IRouter {
 	return g.Add(HEAD, path, h, m...)
 }
 
-func (g *Group) Options(path string, h interface{}, m ...interface{}) IRouter {
+func (g *Group) Options(path string, h any, m ...any) IRouter {
 	return g.Add(OPTIONS, path, h, m...)
 }
 
-func (g *Group) Patch(path string, h interface{}, m ...interface{}) IRouter {
+func (g *Group) Patch(path string, h any, m ...any) IRouter {
 	return g.Add(PATCH, path, h, m...)
 }
 
-func (g *Group) Post(path string, h interface{}, m ...interface{}) IRouter {
+func (g *Group) Post(path string, h any, m ...any) IRouter {
 	return g.Add(POST, path, h, m...)
 }
 
-func (g *Group) Put(path string, h interface{}, m ...interface{}) IRouter {
+func (g *Group) Put(path string, h any, m ...any) IRouter {
 	return g.Add(PUT, path, h, m...)
 }
 
-func (g *Group) Trace(path string, h interface{}, m ...interface{}) IRouter {
+func (g *Group) Trace(path string, h any, m ...any) IRouter {
 	return g.Add(TRACE, path, h, m...)
 }
 
-func (g *Group) Any(path string, h interface{}, middleware ...interface{}) IRouter {
+func (g *Group) Any(path string, h any, middleware ...any) IRouter {
 	routes := Routes{}
 	for _, m := range methods {
 		routes = append(routes, g.Add(m, path, h, middleware...))
@@ -108,11 +108,11 @@ func (g *Group) Any(path string, h interface{}, middleware ...interface{}) IRout
 	return routes
 }
 
-func (g *Group) Route(methods string, path string, h interface{}, middleware ...interface{}) IRouter {
+func (g *Group) Route(methods string, path string, h any, middleware ...any) IRouter {
 	return g.Match(splitHTTPMethod.Split(methods, -1), path, h, middleware...)
 }
 
-func (g *Group) Match(methods []string, path string, h interface{}, middleware ...interface{}) IRouter {
+func (g *Group) Match(methods []string, path string, h any, middleware ...any) IRouter {
 	routes := Routes{}
 	for _, m := range methods {
 		routes = append(routes, g.Add(m, path, h, middleware...))
@@ -131,7 +131,7 @@ func (g *Group) getMiddlewares() []Middleware {
 	return middlewares
 }
 
-func (g *Group) Group(prefix string, middleware ...interface{}) *Group {
+func (g *Group) Group(prefix string, middleware ...any) *Group {
 	if g.host != nil {
 		subG, y := g.echo.hosts[g.host.name].groups[prefix]
 		if !y {
@@ -168,11 +168,11 @@ func (g *Group) Echo() *Echo {
 }
 
 // MetaHandler Add meta information about endpoint
-func (g *Group) MetaHandler(m H, handler interface{}, requests ...interface{}) Handler {
+func (g *Group) MetaHandler(m H, handler any, requests ...any) Handler {
 	return g.echo.MetaHandler(m, handler, requests...)
 }
 
-func (g *Group) Add(method, path string, h interface{}, middleware ...interface{}) *Route {
+func (g *Group) Add(method, path string, h any, middleware ...any) *Route {
 	// Combine into a new slice to avoid accidentally passing the same slice for
 	// multiple routes, which would lead to later add() calls overwriting the
 	// middleware from earlier calls.
@@ -193,7 +193,7 @@ func (g *Group) SetMeta(meta H) *Group {
 	return g
 }
 
-func (g *Group) SetMetaKV(key string, value interface{}) *Group {
+func (g *Group) SetMetaKV(key string, value any) *Group {
 	if g.meta == nil {
 		g.meta = H{}
 	}

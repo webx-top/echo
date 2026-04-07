@@ -36,7 +36,7 @@ func RemoveListener(listener events.Listener) events.Emitterer {
 	return events.Default
 }
 
-func Fire(e interface{}) error {
+func Fire(e any) error {
 	return events.Default.Fire(e)
 }
 
@@ -56,7 +56,7 @@ func EventNames() []string {
 	return events.Default.EventNames()
 }
 
-func NewEvent(data interface{}, options ...events.EventOption) events.Event {
+func NewEvent(data any, options ...events.EventOption) events.Event {
 	return events.New(data, options...)
 }
 

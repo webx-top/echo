@@ -38,11 +38,11 @@ func (s *Session) SetPreSaveHook(hooks ...func(echo.Context) error) {
 	s.preSave = hooks
 }
 
-func (s *Session) Get(key string) interface{} {
+func (s *Session) Get(key string) any {
 	return s.Session().Values[key]
 }
 
-func (s *Session) Set(key string, val interface{}) echo.Sessioner {
+func (s *Session) Set(key string, val any) echo.Sessioner {
 	s.Session().Values[key] = val
 	s.setWritten()
 	return s
@@ -64,13 +64,13 @@ func (s *Session) Clear() echo.Sessioner {
 	return s
 }
 
-func (s *Session) AddFlash(value interface{}, vars ...string) echo.Sessioner {
+func (s *Session) AddFlash(value any, vars ...string) echo.Sessioner {
 	s.Session().AddFlash(value, vars...)
 	s.setWritten()
 	return s
 }
 
-func (s *Session) Flashes(vars ...string) []interface{} {
+func (s *Session) Flashes(vars ...string) []any {
 	flashes := s.Session().Flashes(vars...)
 	if len(flashes) > 0 {
 		s.setWritten()

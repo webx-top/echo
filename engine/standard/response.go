@@ -102,7 +102,7 @@ func (r *Response) Writer() io.Writer {
 	return r.writer
 }
 
-func (r *Response) Object() interface{} {
+func (r *Response) Object() any {
 	return r.ResponseWriter
 }
 

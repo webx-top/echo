@@ -34,7 +34,7 @@ type MethodGetter interface {
 
 type RequestValidator func() MetaValidator
 
-func NewBaseRequestValidator(data interface{}, method ...string) *BaseRequestValidator {
+func NewBaseRequestValidator(data any, method ...string) *BaseRequestValidator {
 	if len(method) == 0 {
 		if mt, ok := data.(MethodGetter); ok {
 			method = mt.Methods()
@@ -45,10 +45,10 @@ func NewBaseRequestValidator(data interface{}, method ...string) *BaseRequestVal
 
 type BaseRequestValidator struct {
 	methods []string
-	data    interface{}
+	data    any
 }
 
-func (b *BaseRequestValidator) SetStruct(data interface{}) *BaseRequestValidator {
+func (b *BaseRequestValidator) SetStruct(data any) *BaseRequestValidator {
 	b.data = data
 	return b
 }
@@ -94,7 +94,7 @@ func (m *MetaHandler) Handle(c Context) error {
 	}
 	recv := m.request()
 	methods := recv.Methods()
-	var data interface{}
+	var data any
 	if bs, ok := recv.(*BaseRequestValidator); ok {
 		data = bs.data
 	} else {
@@ -110,7 +110,7 @@ func (m *MetaHandler) Handle(c Context) error {
 	return m.Handler.Handle(c)
 }
 
-func GetValidated(c Context, defaults ...interface{}) interface{} {
+func GetValidated(c Context, defaults ...any) any {
 	return c.Internal().Get(`validated`, defaults...)
 }
 
@@ -127,7 +127,7 @@ func MustGetValidated[T any](c Context) (*T, error) {
 func MustValidated[T any](c Context, v T) error {
 	var valueDecoders BinderValueCustomDecoders
 	var filters []FormDataFilter
-	data := interface{}(v)
+	data := any(v)
 	if it, ok := data.(FiltersGetter); ok {
 		filters = it.Filters(c)
 	}

@@ -4,12 +4,12 @@ import "time"
 
 type (
 	Stringer interface {
-		String(v interface{}) string
+		String(v any) string
 	}
 	Ignorer interface {
 		Ignore() bool
 	}
-	StringerFunc   func(interface{}) string
+	StringerFunc   func(any) string
 	StringerMap    map[string]Stringer
 	StringerList   []Stringer
 	StringerIgnore struct{}
@@ -21,7 +21,7 @@ func StringerMapStart() StringerMap {
 
 var Ignored = &StringerIgnore{}
 
-func (f StringerFunc) String(v interface{}) string {
+func (f StringerFunc) String(v any) string {
 	return f(v)
 }
 
@@ -29,7 +29,7 @@ func (s *StringerIgnore) Ignore() bool {
 	return true
 }
 
-func (s *StringerIgnore) String(_ interface{}) string {
+func (s *StringerIgnore) String(_ any) string {
 	return ``
 }
 
@@ -44,7 +44,7 @@ func (s StringerList) Ignore() bool {
 	return false
 }
 
-func (s StringerList) String(v interface{}) string {
+func (s StringerList) String(v any) string {
 	for _, f := range s {
 		v = f.String(v)
 	}
@@ -60,7 +60,7 @@ func (s StringerMap) Set(key string, value Stringer) StringerMap {
 	return s
 }
 
-func (s StringerMap) SetFunc(key string, value func(interface{}) string) StringerMap {
+func (s StringerMap) SetFunc(key string, value func(any) string) StringerMap {
 	s[key] = StringerFunc(value)
 	return s
 }
@@ -89,7 +89,7 @@ func (s StringerMap) Add(key string, value Stringer) StringerMap {
 	return s
 }
 
-func (s StringerMap) AddFunc(key string, value func(interface{}) string) StringerMap {
+func (s StringerMap) AddFunc(key string, value func(any) string) StringerMap {
 	return s.Add(key, StringerFunc(value))
 }
 
@@ -106,7 +106,7 @@ func (s StringerMap) Get(key string, defaults ...Stringer) Stringer {
 	return value
 }
 
-func (s StringerMap) String(key string, value interface{}) (result string, found bool, ignore bool) {
+func (s StringerMap) String(key string, value any) (result string, found bool, ignore bool) {
 	formatter := s.Get(key)
 	if formatter == nil {
 		return
@@ -139,7 +139,7 @@ func TimestampStringer(layouts ...string) Stringer {
 	if len(layouts) > 0 {
 		layout = layouts[0]
 	}
-	return StringerFunc(func(v interface{}) string {
+	return StringerFunc(func(v any) string {
 		t := AsTimestamp(v)
 		if t.IsZero() {
 			return ``
@@ -149,7 +149,7 @@ func TimestampStringer(layouts ...string) Stringer {
 }
 
 func WhitespaceStringer() Stringer {
-	return StringerFunc(func(_ interface{}) string {
+	return StringerFunc(func(_ any) string {
 		return ``
 	})
 }
@@ -159,7 +159,7 @@ func DateTimeStringer(layouts ...string) Stringer {
 	if len(layouts) > 0 {
 		layout = layouts[0]
 	}
-	return StringerFunc(func(v interface{}) string {
+	return StringerFunc(func(v any) string {
 		switch t := v.(type) {
 		case time.Time:
 			if t.IsZero() {

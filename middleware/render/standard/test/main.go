@@ -39,7 +39,7 @@ func main() {
 	tpl := render.New("standard2", "./template/")
 	tpl.SetDebug(true)
 	tpl.Init()
-	tpl.SetFuncMap(func() map[string]interface{} {
+	tpl.SetFuncMap(func() map[string]any {
 		funcs := tplfunc.New()
 		funcs[`HeapInuse`] = func() string {
 			runtime.ReadMemStats(memStat)
@@ -53,7 +53,7 @@ func main() {
 		return `{{"function result for tmpl: ` + tmpl + ` arg: ` + arg + `"}}`
 	}
 	ctx.SetFunc(`function`, clipFunc)
-	demo := map[string]interface{}{
+	demo := map[string]any{
 		"test": "one---",
 		"r":    []string{"one", "two", "three"},
 		"nested": []*Nested{

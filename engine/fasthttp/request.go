@@ -54,7 +54,7 @@ func (r *Request) WithContext(ctx context.Context) *http.Request {
 	return r.StdRequest().WithContext(ctx)
 }
 
-func (r *Request) SetValue(key string, value interface{}) {
+func (r *Request) SetValue(key string, value any) {
 	r.requestMu.Lock()
 	r.context.SetUserValue(key, value)
 	r.requestMu.Unlock()
@@ -169,7 +169,7 @@ func (r *Request) UserAgent() string {
 	return engine.Bytes2str(r.context.UserAgent())
 }
 
-func (r *Request) Object() interface{} {
+func (r *Request) Object() any {
 	return r.context
 }
 

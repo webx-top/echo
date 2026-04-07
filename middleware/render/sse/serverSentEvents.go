@@ -33,7 +33,7 @@ var (
 	SSEPing              SSEComment = []byte("ping")
 )
 
-func (s *ServerSentEvents) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+func (s *ServerSentEvents) Render(w io.Writer, name string, data any, c echo.Context) error {
 	switch raw := data.(type) {
 	case SSEComment:
 		_, err := w.Write(sseCommentStartBytes)
@@ -56,6 +56,6 @@ func (s *ServerSentEvents) Render(w io.Writer, name string, data interface{}, c 
 	}
 }
 
-func (s *ServerSentEvents) RenderBy(w io.Writer, name string, _ func(string) ([]byte, error), data interface{}, c echo.Context) error {
+func (s *ServerSentEvents) RenderBy(w io.Writer, name string, _ func(string) ([]byte, error), data any, c echo.Context) error {
 	return s.Render(w, name, data, c)
 }

@@ -82,7 +82,7 @@ var (
 	}
 )
 
-func StdHanderWrapper(v interface{}) echo.Handler {
+func StdHanderWrapper(v any) echo.Handler {
 	if h, ok := v.(func(*websocket.Conn, echo.Context) error); ok {
 		return StdWebsocket(h, nil)
 	}

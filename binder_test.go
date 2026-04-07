@@ -25,7 +25,7 @@ type TestForm struct {
 type TestData struct {
 	File     *TestFile
 	Extra    H
-	List     []interface{}
+	List     []any
 	Strings  param.StringSlice
 	SStrings []param.String
 	String   param.String
@@ -209,7 +209,7 @@ func TestMapToStruct2(t *testing.T) {
 				`key`:  `v1`,
 				`key2`: []string{`v1`, `v2`},
 			},
-			List: []interface{}{`v1`, `v2`},
+			List: []any{`v1`, `v2`},
 		},
 		IDs:      `1,2,3`,
 		Interval: 5 * time.Minute,
@@ -445,10 +445,10 @@ func TestBinderConvertor(t *testing.T) {
 		`item[env]`:     {"A:ONE\nB:TWO"},
 		`result`:        {"A", "B"},
 	}, ``, BinderValueCustomDecoders{
-		`Item.Options`: func(values []string) (interface{}, error) {
+		`Item.Options`: func(values []string) (any, error) {
 			return com.SplitKVRows(values[0], `:`), nil
 		},
-		`Result`: func(values []string) (interface{}, error) {
+		`Result`: func(values []string) (any, error) {
 			return strings.Join(values, `/`), nil
 		},
 	})
@@ -472,7 +472,7 @@ func TestBinderConvertor(t *testing.T) {
 
 	ctx2 := e.NewContext(mock.NewRequest(), mock.NewResponse())
 	StructToForm(ctx2, expected2, ``, MakeArrayFieldNameFormatter(com.LowerCaseFirst), param.StringerMap{
-		`item[options]`: param.StringerFunc(func(value interface{}) string {
+		`item[options]`: param.StringerFunc(func(value any) string {
 			m, y := value.(map[string]string)
 			if !y {
 				return ``

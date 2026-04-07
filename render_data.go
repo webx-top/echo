@@ -13,14 +13,14 @@ import (
 	"github.com/webx-top/echo/param"
 )
 
-type FormatRender func(ctx Context, data interface{}, code ...int) error
-type DataWrapper func(Context, interface{}) interface{}
+type FormatRender func(ctx Context, data any, code ...int) error
+type DataWrapper func(Context, any) any
 
-func DefaultRenderDataWrapper(ctx Context, data interface{}) interface{} {
+func DefaultRenderDataWrapper(ctx Context, data any) any {
 	return NewRenderData(ctx, data)
 }
 
-func NewRenderData(ctx Context, data interface{}) *RenderData {
+func NewRenderData(ctx Context, data any) *RenderData {
 	if v, ok := data.(*RenderData); ok {
 		return v
 	}
@@ -38,7 +38,7 @@ type RenderData struct {
 	now        *com.Time
 	themeColor sql.NullString
 	Func       template.FuncMap
-	Data       interface{}
+	Data       any
 	Stored     param.MapReadonly
 }
 
@@ -51,18 +51,18 @@ func (r *RenderData) UnixTime() int64 {
 }
 
 // RawT 文本译文原始功能
-func (r *RenderData) RawT(format string, args ...interface{}) string {
+func (r *RenderData) RawT(format string, args ...any) string {
 	return r.ctx.T(format, args...)
 }
 
 // T 文本译文
 // 可以重写 T 函数，重写的 T 函数功能应该是 RawT + ExtT 的组合效果
-func (r *RenderData) T(format string, args ...interface{}) string {
+func (r *RenderData) T(format string, args ...any) string {
 	return r.ctx.T(format, args...)
 }
 
 // ExtT 获取到文本译文后的附加功能
-func (r *RenderData) ExtT(v string, _ ...interface{}) string {
+func (r *RenderData) ExtT(v string, _ ...any) string {
 	return v
 }
 
@@ -85,26 +85,26 @@ func (r *RenderData) ThemeColor() string {
 	return r.themeColor.String
 }
 
-func (r *RenderData) Get(key string, defaults ...interface{}) interface{} {
+func (r *RenderData) Get(key string, defaults ...any) any {
 	return r.ctx.Get(key, defaults...)
 }
 
-func (r *RenderData) Set(key string, value interface{}) string {
+func (r *RenderData) Set(key string, value any) string {
 	r.ctx.Set(key, value)
 	return ``
 }
 
-func (r *RenderData) SetMore(keyValue ...interface{}) string {
+func (r *RenderData) SetMore(keyValue ...any) string {
 	r.ctx.SetMore(keyValue...)
 	return ``
 }
 
-func (r *RenderData) SetMapItem(key string, mapKey string, mapValue interface{}, mapKeyValue ...interface{}) string {
+func (r *RenderData) SetMapItem(key string, mapKey string, mapValue any, mapKeyValue ...any) string {
 	switch v := r.ctx.Get(key).(type) {
 	case param.Store:
 		v.Set(mapKey, mapValue)
 		v.SetMore(mapKeyValue...)
-	case map[string]interface{}:
+	case map[string]any:
 		v[mapKey] = mapKeyValue
 		param.SetMapItems(v, mapKeyValue...)
 	default:
@@ -116,11 +116,11 @@ func (r *RenderData) SetMapItem(key string, mapKey string, mapValue interface{},
 	return ``
 }
 
-func (r *RenderData) Incr(key string, n interface{}, defaults ...interface{}) int64 {
+func (r *RenderData) Incr(key string, n any, defaults ...any) int64 {
 	return r.ctx.Incr(key, n, defaults...)
 }
 
-func (r *RenderData) Decr(key string, n interface{}, defaults ...interface{}) int64 {
+func (r *RenderData) Decr(key string, n any, defaults ...any) int64 {
 	return r.ctx.Decr(key, n, defaults...)
 }
 
@@ -208,7 +208,7 @@ func (r *RenderData) Header() engine.Header {
 	return r.ctx.Request().Header()
 }
 
-func (r *RenderData) Flash(keys ...string) interface{} {
+func (r *RenderData) Flash(keys ...string) any {
 	return r.ctx.Flash(keys...)
 }
 
@@ -216,11 +216,11 @@ func (r *RenderData) HasAnyRequest() bool {
 	return r.ctx.HasAnyRequest()
 }
 
-func (r *RenderData) DurationFormat(t interface{}, args ...string) *com.Durafmt {
+func (r *RenderData) DurationFormat(t any, args ...string) *com.Durafmt {
 	return tplfunc.DurationFormat(r.Lang().String(), t, args...)
 }
 
-func (r *RenderData) TsHumanize(startTime interface{}, endTime ...interface{}) string {
+func (r *RenderData) TsHumanize(startTime any, endTime ...any) string {
 	humanizer, err := humanize.New(r.Lang().String())
 	if err != nil {
 		return err.Error()
@@ -238,11 +238,11 @@ func (r *RenderData) TsHumanize(startTime interface{}, endTime ...interface{}) s
 	return humanizer.TimeDiff(endDate, startDate, 0)
 }
 
-func (r *RenderData) CaptchaForm(args ...interface{}) template.HTML {
+func (r *RenderData) CaptchaForm(args ...any) template.HTML {
 	return tplfunc.CaptchaFormWithURLPrefix(r.ctx.Echo().Prefix(), args...)
 }
 
-func (r *RenderData) MakeURL(h interface{}, args ...interface{}) string {
+func (r *RenderData) MakeURL(h any, args ...any) string {
 	return r.ctx.Echo().URL(h, args...)
 }
 
@@ -250,7 +250,7 @@ func (r *RenderData) Ext() string {
 	return r.ctx.DefaultExtension()
 }
 
-func (r *RenderData) Fetch(tmpl string, data interface{}) template.HTML {
+func (r *RenderData) Fetch(tmpl string, data any) template.HTML {
 	b, e := r.ctx.Fetch(tmpl, data)
 	if e != nil {
 		return template.HTML(e.Error())
@@ -258,7 +258,7 @@ func (r *RenderData) Fetch(tmpl string, data interface{}) template.HTML {
 	return template.HTML(string(b))
 }
 
-func (r *RenderData) TimeAgo(v interface{}, options ...string) string {
+func (r *RenderData) TimeAgo(v any, options ...string) string {
 	if datetime, ok := v.(string); ok {
 		return timeago.Take(datetime, r.Lang().Normalize())
 	}
@@ -273,7 +273,7 @@ func (r *RenderData) RootPrefix() string {
 	return r.ctx.Echo().Prefix()
 }
 
-func (r *RenderData) UploadURL(subdir string, values ...interface{}) string {
+func (r *RenderData) UploadURL(subdir string, values ...any) string {
 	return r.ctx.Echo().UploadURL(r.ctx, subdir, values...)
 }
 
@@ -335,11 +335,11 @@ func (r *RenderData) URLFor(uri string, relative ...bool) string {
 	return r.ctx.URLFor(uri, relative...)
 }
 
-func (r *RenderData) URLByName(name string, args ...interface{}) string {
+func (r *RenderData) URLByName(name string, args ...any) string {
 	return r.ctx.URLByName(name, args...)
 }
 
-func (r *RenderData) RelativeURLByName(name string, args ...interface{}) string {
+func (r *RenderData) RelativeURLByName(name string, args ...any) string {
 	return r.ctx.RelativeURLByName(name, args...)
 }
 
@@ -366,7 +366,7 @@ func (r *RenderData) Render(a RenderContext) template.HTML {
 	return a.Render(r.ctx)
 }
 
-func (r *RenderData) RenderWithData(a RenderContextWithData, data interface{}) template.HTML {
+func (r *RenderData) RenderWithData(a RenderContextWithData, data any) template.HTML {
 	if a == nil {
 		return template.HTML(``)
 	}
@@ -387,6 +387,6 @@ type (
 		Render(Context) template.HTML
 	}
 	RenderContextWithData interface {
-		RenderWithData(Context, interface{}) template.HTML
+		RenderWithData(Context, any) template.HTML
 	}
 )

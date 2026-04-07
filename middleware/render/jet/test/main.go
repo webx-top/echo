@@ -30,7 +30,7 @@ func main() {
 	for i := 0; i < 5000; i++ {
 		ts := time.Now()
 		fmt.Printf("==========%v: %v========\\\n", i, ts)
-		str := t.Fetch("test", map[string]interface{}{
+		str := t.Fetch("test", map[string]any{
 			`name`: `webx`,
 			"test": "times---" + fmt.Sprintf("%v", i),
 			"r":    []string{"one", "two", "three"},

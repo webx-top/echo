@@ -70,7 +70,7 @@ func (u *URL) String() string {
 	return u.url.String()
 }
 
-func (u *URL) Object() interface{} {
+func (u *URL) Object() any {
 	return u.url
 }
 

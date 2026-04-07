@@ -2,43 +2,43 @@ package logzero
 
 import "io"
 
-func Debug(s ...interface{}) {
+func Debug(s ...any) {
 	Default().Debug(s...)
 }
 
-func Debugf(t string, s ...interface{}) {
+func Debugf(t string, s ...any) {
 	Default().Debugf(t, s...)
 }
 
-func Info(s ...interface{}) {
+func Info(s ...any) {
 	Default().Info(s...)
 }
 
-func Infof(t string, s ...interface{}) {
+func Infof(t string, s ...any) {
 	Default().Infof(t, s...)
 }
 
-func Warn(s ...interface{}) {
+func Warn(s ...any) {
 	Default().Warn(s...)
 }
 
-func Warnf(t string, s ...interface{}) {
+func Warnf(t string, s ...any) {
 	Default().Warnf(t, s...)
 }
 
-func Error(s ...interface{}) {
+func Error(s ...any) {
 	Default().Error(s...)
 }
 
-func Errorf(t string, s ...interface{}) {
+func Errorf(t string, s ...any) {
 	Default().Errorf(t, s...)
 }
 
-func Fatal(s ...interface{}) {
+func Fatal(s ...any) {
 	Default().Fatal(s...)
 }
 
-func Fatalf(t string, s ...interface{}) {
+func Fatalf(t string, s ...any) {
 	Default().Fatalf(t, s...)
 }
 

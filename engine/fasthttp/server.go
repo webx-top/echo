@@ -63,27 +63,27 @@ func NewWithConfig(c *engine.Config) (s *Server) {
 		config: c,
 		pool: &pool{
 			request: sync.Pool{
-				New: func() interface{} {
+				New: func() any {
 					return &Request{}
 				},
 			},
 			response: sync.Pool{
-				New: func() interface{} {
+				New: func() any {
 					return &Response{logger: s.logger}
 				},
 			},
 			requestHeader: sync.Pool{
-				New: func() interface{} {
+				New: func() any {
 					return &RequestHeader{}
 				},
 			},
 			responseHeader: sync.Pool{
-				New: func() interface{} {
+				New: func() any {
 					return &ResponseHeader{}
 				},
 			},
 			url: sync.Pool{
-				New: func() interface{} {
+				New: func() any {
 					return &URL{}
 				},
 			},

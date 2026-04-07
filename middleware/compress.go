@@ -148,7 +148,7 @@ func GzipWithConfig(config *GzipConfig) echo.MiddlewareFunc {
 
 func gzipCompressPool(config *GzipConfig) sync.Pool {
 	return sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			w, err := gzip.NewWriterLevel(io.Discard, config.Level)
 			if err != nil {
 				return err

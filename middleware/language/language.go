@@ -40,7 +40,7 @@ func New(c ...*Config) *Language {
 	lang := &Language{
 		Default: DefaultLang,
 		translatePool: &sync.Pool{
-			New: func() interface{} {
+			New: func() any {
 				return TranslatorNew()
 			},
 		},
@@ -82,7 +82,7 @@ func (a *Language) SetTranslatePool(pool *sync.Pool) *Language {
 }
 
 func (a *Language) SetTranslatePoolNew(newFunc func() Translator) *Language {
-	a.translatePool.New = func() interface{} {
+	a.translatePool.New = func() any {
 		return newFunc()
 	}
 	return a

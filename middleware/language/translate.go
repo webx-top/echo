@@ -75,12 +75,12 @@ func (t *Translate) Reset(_ echo.Context, language string, langObject *Language,
 
 // T translates the given format string using the current language code and optional arguments.
 // Returns the translated string.
-func (t *Translate) T(format string, args ...interface{}) string {
+func (t *Translate) T(format string, args ...any) string {
 	return t.lang.I18n.T(t.code.String(), format, args...)
 }
 
 // E returns a new error with the translated message using the given format string and arguments.
-func (t *Translate) E(format string, args ...interface{}) error {
+func (t *Translate) E(format string, args ...any) error {
 	return errors.New(t.T(format, args...))
 }
 

@@ -27,19 +27,19 @@ var (
 
 type RouteRegister interface {
 	MiddlewareRegister
-	Group(prefix string, middleware ...interface{}) *Group
-	Any(path string, h interface{}, middleware ...interface{}) IRouter
-	Route(methods string, path string, h interface{}, middleware ...interface{}) IRouter
-	Match(methods []string, path string, h interface{}, middleware ...interface{}) IRouter
-	Connect(path string, h interface{}, m ...interface{}) IRouter
-	Delete(path string, h interface{}, m ...interface{}) IRouter
-	Get(path string, h interface{}, m ...interface{}) IRouter
-	Head(path string, h interface{}, m ...interface{}) IRouter
-	Options(path string, h interface{}, m ...interface{}) IRouter
-	Patch(path string, h interface{}, m ...interface{}) IRouter
-	Post(path string, h interface{}, m ...interface{}) IRouter
-	Put(path string, h interface{}, m ...interface{}) IRouter
-	Trace(path string, h interface{}, m ...interface{}) IRouter
+	Group(prefix string, middleware ...any) *Group
+	Any(path string, h any, middleware ...any) IRouter
+	Route(methods string, path string, h any, middleware ...any) IRouter
+	Match(methods []string, path string, h any, middleware ...any) IRouter
+	Connect(path string, h any, m ...any) IRouter
+	Delete(path string, h any, m ...any) IRouter
+	Get(path string, h any, m ...any) IRouter
+	Head(path string, h any, m ...any) IRouter
+	Options(path string, h any, m ...any) IRouter
+	Patch(path string, h any, m ...any) IRouter
+	Post(path string, h any, m ...any) IRouter
+	Put(path string, h any, m ...any) IRouter
+	Trace(path string, h any, m ...any) IRouter
 	Static(prefix, root string)
 	File(path, file string)
 	Prefix() string
@@ -54,12 +54,12 @@ type RendererRegister interface {
 }
 
 type MiddlewareRegister interface {
-	Use(middleware ...interface{})
-	Pre(middleware ...interface{})
+	Use(middleware ...any)
+	Pre(middleware ...any)
 }
 
 type URLBuilder interface {
-	URL(interface{}, ...interface{}) string
+	URL(any, ...any) string
 }
 
 type ICore interface {
@@ -73,7 +73,7 @@ type IRouter interface {
 	SetName(string) IRouter
 	GetName() string
 	SetMeta(param.Store) IRouter
-	SetMetaKV(string, interface{}) IRouter
+	SetMetaKV(string, any) IRouter
 	GetMeta() param.Store
 	SetEncodingConfig(ef EncodingConfig) IRouter
 	SetEncodingOmitFields(names ...string) IRouter
@@ -91,8 +91,8 @@ type Prefixer interface {
 type URLGenerator interface {
 	RelativeURL(uri string) string
 	URLFor(uri string, relative ...bool) string
-	URLByName(name string, args ...interface{}) string
-	RelativeURLByName(name string, args ...interface{}) string
+	URLByName(name string, args ...any) string
+	RelativeURLByName(name string, args ...any) string
 }
 
 type IRouteDispatchPath interface {

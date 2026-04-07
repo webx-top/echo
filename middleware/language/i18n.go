@@ -168,7 +168,7 @@ func (a *I18n) Translate(langCode, key string, args map[string]string) string {
 // T translates the given key for the specified language code, optionally formatting the result with provided arguments.
 // If args[0] is a map[string]string, it's used as translation variables. Otherwise, args are used for fmt.Sprintf formatting.
 // Returns the translated string, formatted if arguments were provided.
-func (a *I18n) T(langCode, key string, args ...interface{}) (t string) {
+func (a *I18n) T(langCode, key string, args ...any) (t string) {
 	if len(args) > 0 {
 		if v, ok := args[0].(map[string]string); ok {
 			t = a.Translate(langCode, key, v)

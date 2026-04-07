@@ -52,7 +52,7 @@ func (h *Header) reset(hdr http.Header) {
 	h.lock.Unlock()
 }
 
-func (h *Header) Object() interface{} {
+func (h *Header) Object() any {
 	h.lock.RLock()
 	v := h.header
 	h.lock.RUnlock()

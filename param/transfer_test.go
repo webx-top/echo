@@ -17,7 +17,7 @@ func TestTransferTo(t *testing.T) {
 	res := raw.Transform(map[string]Transfer{
 		`Name`: &Transform{
 			Key: "name",
-			Func: func(value interface{}, row Store) interface{} {
+			Func: func(value any, row Store) any {
 				return strings.ToUpper(value.(string))
 			},
 		},
@@ -42,7 +42,7 @@ func TestTransferFrom(t *testing.T) {
 
 	// define transfers
 	transefers := NewTransfers()
-	transefers.AddFunc(`Name`, func(value interface{}, row Store) interface{} {
+	transefers.AddFunc(`Name`, func(value any, row Store) any {
 		return strings.ToUpper(value.(string))
 	}, `name`)
 	transefers.AddFunc(`Age`, nil, `age`)
@@ -75,15 +75,15 @@ func TestTransferMutilLevel(t *testing.T) {
 
 	// define transfers
 	transefers := NewTransfers()
-	transefers.AddFunc(`Name`, func(value interface{}, row Store) interface{} {
+	transefers.AddFunc(`Name`, func(value any, row Store) any {
 		return strings.ToUpper(value.(string))
 	}, `name`)
 	transefers.AddFunc(`Info.Age`, nil, `age`)
 	transefers.Add(`Info.Gender`, nil)
-	transefers.AddFunc(`Info.Email`, func(value interface{}, row Store) interface{} {
+	transefers.AddFunc(`Info.Email`, func(value any, row Store) any {
 		return strings.ToUpper(value.(string))
 	}, `info.email`)
-	transefers.AddFunc(`List.Item1`, func(value interface{}, row Store) interface{} {
+	transefers.AddFunc(`List.Item1`, func(value any, row Store) any {
 		if value == nil {
 			return ``
 		}

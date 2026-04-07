@@ -29,7 +29,7 @@ import (
 
 // Validator is the interface that wraps the Validate method.
 type Validator interface {
-	Validate(i interface{}, args ...interface{}) ValidateResult
+	Validate(i any, args ...any) ValidateResult
 }
 
 type BeforeValidate interface {
@@ -45,12 +45,12 @@ type ValidateResult interface {
 	Error() string
 	Unwrap() error
 	Field() string
-	Raw() interface{}
+	Raw() any
 
 	//setter
 	SetError(error) ValidateResult
 	SetField(string) ValidateResult
-	SetRaw(interface{}) ValidateResult
+	SetRaw(any) ValidateResult
 	AsError() error
 }
 
@@ -61,7 +61,7 @@ func NewValidateResult() ValidateResult {
 type ValidatorResult struct {
 	error
 	field string
-	raw   interface{}
+	raw   any
 }
 
 func (v *ValidatorResult) Ok() bool {
@@ -83,7 +83,7 @@ func (v *ValidatorResult) Field() string {
 	return v.field
 }
 
-func (v *ValidatorResult) Raw() interface{} {
+func (v *ValidatorResult) Raw() any {
 	return v.raw
 }
 
@@ -97,7 +97,7 @@ func (v *ValidatorResult) SetField(field string) ValidateResult {
 	return v
 }
 
-func (v *ValidatorResult) SetRaw(raw interface{}) ValidateResult {
+func (v *ValidatorResult) SetRaw(raw any) ValidateResult {
 	v.raw = raw
 	return v
 }
@@ -111,7 +111,7 @@ var (
 type NopValidation struct {
 }
 
-func (v *NopValidation) Validate(_ interface{}, _ ...interface{}) ValidateResult {
+func (v *NopValidation) Validate(_ any, _ ...any) ValidateResult {
 	return defaultValidatorResult
 }
 
@@ -129,13 +129,13 @@ type Validation struct {
 // 1. Validate(表单字段名, 表单值, 验证规则名)
 // 2. Validate(结构体实例, 要验证的结构体字段1，要验证的结构体字段2)
 // Validate(结构体实例) 代表验证所有带“valid”标签的字段
-func (v *Validation) Validate(i interface{}, args ...interface{}) ValidateResult {
+func (v *Validation) Validate(i any, args ...any) ValidateResult {
 	e := NewValidateResult()
 	var err error
 	switch m := i.(type) {
 	case string:
 		field := m
-		var value interface{}
+		var value any
 		var rule string
 		switch len(args) {
 		case 2:
@@ -164,7 +164,7 @@ func (v *Validation) Validate(i interface{}, args ...interface{}) ValidateResult
 	return e
 }
 
-func InterfacesToStrings(args []interface{}) []string {
+func InterfacesToStrings(args []any) []string {
 	var fields []string
 	for _, v := range args {
 		switch vRaw := v.(type) {
@@ -181,7 +181,7 @@ func InterfacesToStrings(args []interface{}) []string {
 	return fields
 }
 
-func Validate(c Context, item interface{}, args ...interface{}) error {
+func Validate(c Context, item any, args ...any) error {
 	isStruct := reflect.Indirect(reflect.ValueOf(item)).Kind() == reflect.Struct
 	if isStruct {
 		return ValidateStruct(c, item, args...)
@@ -193,7 +193,7 @@ func Validate(c Context, item interface{}, args ...interface{}) error {
 	return nil
 }
 
-func ValidateStruct(c Context, item interface{}, args ...interface{}) error {
+func ValidateStruct(c Context, item any, args ...any) error {
 	if before, ok := item.(BeforeValidate); ok {
 		if err := before.BeforeValidate(c); err != nil {
 			return err

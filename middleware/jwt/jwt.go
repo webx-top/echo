@@ -33,7 +33,7 @@ type (
 
 		// Signing key to validate token.
 		// Required.
-		SigningKey interface{} `json:"signing_key"`
+		SigningKey any `json:"signing_key"`
 
 		// Signing method, used to check token signing method.
 		// Optional. Default value HS256.
@@ -159,7 +159,7 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 	if config.tokenPreprocessor == nil {
 		config.tokenPreprocessor = DefaultJWTConfig.tokenPreprocessor
 	}
-	config.keyFunc = func(t *jwt.Token) (interface{}, error) {
+	config.keyFunc = func(t *jwt.Token) (any, error) {
 		// Check the signing method
 		if t.Method.Alg() != config.SigningMethod {
 			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
@@ -294,17 +294,17 @@ func jwtFromCookie(name string) jwtExtractor {
 }
 
 // BuildSignedString example: github.com/golang-jwt/jwt/example_test.go
-func BuildSignedString(claims jwt.Claims, mySigningKey interface{}) (string, error) {
+func BuildSignedString(claims jwt.Claims, mySigningKey any) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(mySigningKey)
 }
 
 // BuildRegisteredSignedString example: github.com/golang-jwt/jwt/example_test.go
-func BuildRegisteredSignedString(claims *jwt.RegisteredClaims, mySigningKey interface{}) (string, error) {
+func BuildRegisteredSignedString(claims *jwt.RegisteredClaims, mySigningKey any) (string, error) {
 	return BuildSignedString(claims, mySigningKey)
 }
 
 // BuildMapSignedString example: github.com/golang-jwt/jwt/example_test.go
-func BuildMapSignedString(claims jwt.MapClaims, mySigningKey interface{}) (string, error) {
+func BuildMapSignedString(claims jwt.MapClaims, mySigningKey any) (string, error) {
 	return BuildSignedString(claims, mySigningKey)
 }

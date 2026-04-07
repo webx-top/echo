@@ -24,7 +24,7 @@ func (c *XContext) Response() engine.Response {
 
 // Render renders a template with data and sends a text/html response with status
 // code. Templates can be registered using `Echo.SetRenderer()`.
-func (c *XContext) Render(name string, data interface{}, codes ...int) error {
+func (c *XContext) Render(name string, data any, codes ...int) error {
 	if c.auto {
 		if ok, err := c.echo.AutoDetectRenderFormat(c, data, codes...); ok {
 			return err
@@ -40,7 +40,7 @@ func (c *XContext) Render(name string, data interface{}, codes ...int) error {
 	return c.Blob(b, codes...)
 }
 
-func (c *XContext) RenderBy(name string, content func(string) ([]byte, error), data interface{}, codes ...int) (b []byte, err error) {
+func (c *XContext) RenderBy(name string, content func(string) ([]byte, error), data any, codes ...int) (b []byte, err error) {
 	name, err = c.echo.Template(c, name, data)
 	if err != nil {
 		return
@@ -92,7 +92,7 @@ func (c *XContext) Blob(b []byte, codes ...int) (err error) {
 }
 
 // JSON sends a JSON response with status code.
-func (c *XContext) JSON(i interface{}, codes ...int) (err error) {
+func (c *XContext) JSON(i any, codes ...int) (err error) {
 	if m, y := i.(JSONModifer); y {
 		i, err = m.JSON(c)
 		if err != nil {
@@ -124,7 +124,7 @@ func (c *XContext) JSONBlob(b []byte, codes ...int) (err error) {
 
 // JSONP sends a JSONP response with status code. It uses `callback` to construct
 // the JSONP payload.
-func (c *XContext) JSONP(callback string, i interface{}, codes ...int) (err error) {
+func (c *XContext) JSONP(callback string, i any, codes ...int) (err error) {
 	if m, y := i.(JSONModifer); y {
 		i, err = m.JSON(c)
 		if err != nil {
@@ -151,7 +151,7 @@ func (c *XContext) JSONP(callback string, i interface{}, codes ...int) (err erro
 }
 
 // XML sends an XML response with status code.
-func (c *XContext) XML(i interface{}, codes ...int) (err error) {
+func (c *XContext) XML(i any, codes ...int) (err error) {
 	if m, y := i.(XMLModifer); y {
 		i, err = m.XML(c)
 		if err != nil {
@@ -189,7 +189,7 @@ func (c *XContext) Stream(step func(context.Context, io.Writer) (bool, error)) e
 	return c.response.Stream(step)
 }
 
-func (c *XContext) SSEvent(event string, data chan interface{}) error {
+func (c *XContext) SSEvent(event string, data chan any) error {
 	hdr := c.response.Header()
 	hdr.Set(HeaderContentType, MIMEEventStream)
 	hdr.Set(HeaderCacheControl, `no-cache`)

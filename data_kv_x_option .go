@@ -28,7 +28,7 @@ func KVxOptH[X any, Y any](h H) KVxOption[X, Y] {
 	}
 }
 
-func KVxOptHKV[X any, Y any](k string, v interface{}) KVxOption[X, Y] {
+func KVxOptHKV[X any, Y any](k string, v any) KVxOption[X, Y] {
 	return func(a *KVx[X, Y]) {
 		if a.H == nil {
 			a.H = H{}

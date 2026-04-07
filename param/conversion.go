@@ -10,6 +10,7 @@ import (
 
 	"github.com/admpub/dateparse"
 	"github.com/webx-top/com"
+	"github.com/webx-top/com/formatter"
 )
 
 const (
@@ -26,19 +27,23 @@ const (
 	TimeShort      = `15:04`
 )
 
-func AsType(typ string, val interface{}) interface{} {
+func AsStringer(v any, encoder ...formatter.Encoder) fmt.Stringer {
+	return formatter.AsStringer(v, encoder...)
+}
+
+func AsType(typ string, val any) any {
 	return com.AsType(typ, val)
 }
 
-func AsString(val interface{}) string {
+func AsString(val any) string {
 	return com.ToStr(val)
 }
 
-func AsBytes(val interface{}) []byte {
+func AsBytes(val any) []byte {
 	return com.Bytes(val)
 }
 
-func Split(val interface{}, sep string, limit ...int) StringSlice {
+func Split(val any, sep string, limit ...int) StringSlice {
 	str := AsString(val)
 	if len(str) == 0 {
 		return StringSlice{}
@@ -49,11 +54,11 @@ func Split(val interface{}, sep string, limit ...int) StringSlice {
 	return strings.Split(str, sep)
 }
 
-func Trim(val interface{}) String {
+func Trim(val any) String {
 	return String(strings.TrimSpace(AsString(val)))
 }
 
-func AsHTML(val interface{}) template.HTML {
+func AsHTML(val any) template.HTML {
 	switch v := val.(type) {
 	case template.HTML:
 		return v
@@ -66,7 +71,7 @@ func AsHTML(val interface{}) template.HTML {
 	}
 }
 
-func AsHTMLAttr(val interface{}) template.HTMLAttr {
+func AsHTMLAttr(val any) template.HTMLAttr {
 	switch v := val.(type) {
 	case template.HTMLAttr:
 		return v
@@ -79,7 +84,7 @@ func AsHTMLAttr(val interface{}) template.HTMLAttr {
 	}
 }
 
-func AsJS(val interface{}) template.JS {
+func AsJS(val any) template.JS {
 	switch v := val.(type) {
 	case template.JS:
 		return v
@@ -92,7 +97,7 @@ func AsJS(val interface{}) template.JS {
 	}
 }
 
-func AsCSS(val interface{}) template.CSS {
+func AsCSS(val any) template.CSS {
 	switch v := val.(type) {
 	case template.CSS:
 		return v
@@ -105,71 +110,71 @@ func AsCSS(val interface{}) template.CSS {
 	}
 }
 
-func AsBool(val interface{}) bool {
+func AsBool(val any) bool {
 	return com.Bool(val)
 }
 
-func AsFloat64(val interface{}) float64 {
+func AsFloat64(val any) float64 {
 	return com.Float64(val)
 }
 
-func AsFloat32(val interface{}) float32 {
+func AsFloat32(val any) float32 {
 	return com.Float32(val)
 }
 
-func AsInt8(val interface{}) int8 {
+func AsInt8(val any) int8 {
 	return com.Int8(val)
 }
 
-func AsInt16(val interface{}) int16 {
+func AsInt16(val any) int16 {
 	return com.Int16(val)
 }
 
-func AsInt(val interface{}) int {
+func AsInt(val any) int {
 	return com.Int(val)
 }
 
-func AsInt32(val interface{}) int32 {
+func AsInt32(val any) int32 {
 	return com.Int32(val)
 }
 
-func AsInt64(val interface{}) int64 {
+func AsInt64(val any) int64 {
 	return com.Int64(val)
 }
 
-func Decr(val interface{}, n int64) int64 {
+func Decr(val any, n int64) int64 {
 	v := AsInt64(val)
 	v -= n
 	return v
 }
 
-func Incr(val interface{}, n int64) int64 {
+func Incr(val any, n int64) int64 {
 	v := AsInt64(val)
 	v += n
 	return v
 }
 
-func AsUint8(val interface{}) uint8 {
+func AsUint8(val any) uint8 {
 	return com.Uint8(val)
 }
 
-func AsUint16(val interface{}) uint16 {
+func AsUint16(val any) uint16 {
 	return com.Uint16(val)
 }
 
-func AsUint(val interface{}) uint {
+func AsUint(val any) uint {
 	return com.Uint(val)
 }
 
-func AsUint32(val interface{}) uint32 {
+func AsUint32(val any) uint32 {
 	return com.Uint32(val)
 }
 
-func AsUint64(val interface{}) uint64 {
+func AsUint64(val any) uint64 {
 	return com.Uint64(val)
 }
 
-func AsTimestamp(val interface{}) time.Time {
+func AsTimestamp(val any) time.Time {
 	p := AsString(val)
 	if len(p) > 0 {
 		s := strings.SplitN(p, `.`, 2)
@@ -187,7 +192,7 @@ func AsTimestamp(val interface{}) time.Time {
 	return EmptyTime
 }
 
-func AsDateTime(val interface{}, layouts ...string) time.Time {
+func AsDateTime(val any, layouts ...string) time.Time {
 	p := AsString(val)
 	if len(p) > 0 {
 		layout := DateTimeNormal
@@ -203,7 +208,7 @@ func AsDateTime(val interface{}, layouts ...string) time.Time {
 	return EmptyTime
 }
 
-func AsDuration(val interface{}, defaults ...time.Duration) time.Duration {
+func AsDuration(val any, defaults ...time.Duration) time.Duration {
 	p := AsString(val)
 	if len(p) > 0 {
 		t, err := time.ParseDuration(p)
@@ -217,7 +222,7 @@ func AsDuration(val interface{}, defaults ...time.Duration) time.Duration {
 	return 0
 }
 
-func AsStore(val interface{}) Store {
+func AsStore(val any) Store {
 	v := AsStoreOrNil(val)
 	if v == nil {
 		v = emptyStore
@@ -225,64 +230,64 @@ func AsStore(val interface{}) Store {
 	return v
 }
 
-func AsStoreOrNil(val interface{}) Store {
+func AsStoreOrNil(val any) Store {
 	switch v := val.(type) {
 	case Store:
 		return v
-	case map[string]interface{}:
+	case map[string]any:
 		return Store(v)
 	case map[string]uint64:
 		r := Store{}
 		for k, a := range v {
-			r[k] = interface{}(a)
+			r[k] = any(a)
 		}
 		return r
 	case map[string]int64:
 		r := Store{}
 		for k, a := range v {
-			r[k] = interface{}(a)
+			r[k] = any(a)
 		}
 		return r
 	case map[string]uint:
 		r := Store{}
 		for k, a := range v {
-			r[k] = interface{}(a)
+			r[k] = any(a)
 		}
 		return r
 	case map[string]int:
 		r := Store{}
 		for k, a := range v {
-			r[k] = interface{}(a)
+			r[k] = any(a)
 		}
 		return r
 	case map[string]uint32:
 		r := Store{}
 		for k, a := range v {
-			r[k] = interface{}(a)
+			r[k] = any(a)
 		}
 		return r
 	case map[string]int32:
 		r := Store{}
 		for k, a := range v {
-			r[k] = interface{}(a)
+			r[k] = any(a)
 		}
 		return r
 	case map[string]float32:
 		r := Store{}
 		for k, a := range v {
-			r[k] = interface{}(a)
+			r[k] = any(a)
 		}
 		return r
 	case map[string]float64:
 		r := Store{}
 		for k, a := range v {
-			r[k] = interface{}(a)
+			r[k] = any(a)
 		}
 		return r
 	case map[string]string:
 		r := Store{}
 		for k, a := range v {
-			r[k] = interface{}(a)
+			r[k] = any(a)
 		}
 		return r
 	default:
@@ -291,7 +296,7 @@ func AsStoreOrNil(val interface{}) Store {
 }
 
 // AsStdStringSlice p must be slice
-func AsStdStringSlice(p interface{}) []string {
+func AsStdStringSlice(p any) []string {
 	var r []string
 	switch v := p.(type) {
 	case []uint64:
@@ -411,13 +416,13 @@ func AsInterfaces[T any](p []T, converter ...func(s T) any) []any {
 	return result
 }
 
-func SetMapItems[T ~map[string]interface{}](mapData T, keyValue ...interface{}) {
+func SetMapItems[T ~map[string]any](mapData T, keyValue ...any) {
 	length := len(keyValue)
 	if length == 0 {
 		return
 	}
 	if length == 1 {
-		if vals, ok := keyValue[0].([]interface{}); ok {
+		if vals, ok := keyValue[0].([]any); ok {
 			length = len(vals)
 			if length == 0 {
 				return

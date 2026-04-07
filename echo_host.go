@@ -14,14 +14,14 @@ type (
 	}
 )
 
-func (t TypeHost) URI(handler interface{}, params ...interface{}) string {
+func (t TypeHost) URI(handler any, params ...any) string {
 	if t.router == nil || t.echo == nil {
 		return ``
 	}
 	return t.host + t.echo.URI(handler, params...)
 }
 
-func (t TypeHost) URIWithContext(c Context, handler interface{}, params ...interface{}) string {
+func (t TypeHost) URIWithContext(c Context, handler any, params ...any) string {
 	if t.router == nil || t.echo == nil {
 		return ``
 	}
@@ -32,7 +32,7 @@ func (t TypeHost) String() string {
 	return t.host
 }
 
-func (h *Host) Host(args ...interface{}) (r TypeHost) {
+func (h *Host) Host(args ...any) (r TypeHost) {
 	if h.group == nil || h.group.host == nil {
 		return
 	}
@@ -43,7 +43,7 @@ func (h *Host) Host(args ...interface{}) (r TypeHost) {
 		return
 	}
 	switch v := args[0].(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		r.host = h.group.host.FormatMap(v)
 	case H:
 		r.host = h.group.host.FormatMap(v)

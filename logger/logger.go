@@ -12,20 +12,20 @@ var _ Logger = &Base{}
 type (
 	// Logger is the interface that declares Echo's logging system.
 	Logger interface {
-		Debug(...interface{})
-		Debugf(string, ...interface{})
+		Debug(...any)
+		Debugf(string, ...any)
 
-		Info(...interface{})
-		Infof(string, ...interface{})
+		Info(...any)
+		Infof(string, ...any)
 
-		Warn(...interface{})
-		Warnf(string, ...interface{})
+		Warn(...any)
+		Warnf(string, ...any)
 
-		Error(...interface{})
-		Errorf(string, ...interface{})
+		Error(...any)
+		Errorf(string, ...any)
 
-		Fatal(...interface{})
-		Fatalf(string, ...interface{})
+		Fatal(...any)
+		Fatalf(string, ...any)
 	}
 
 	LevelSetter interface {
@@ -36,34 +36,34 @@ type (
 	}
 )
 
-func (b *Base) Debug(...interface{}) {
+func (b *Base) Debug(...any) {
 }
 
-func (b *Base) Debugf(string, ...interface{}) {
+func (b *Base) Debugf(string, ...any) {
 }
 
-func (b *Base) Info(...interface{}) {
+func (b *Base) Info(...any) {
 }
 
-func (b *Base) Infof(string, ...interface{}) {
+func (b *Base) Infof(string, ...any) {
 }
 
-func (b *Base) Warn(...interface{}) {
+func (b *Base) Warn(...any) {
 }
 
-func (b *Base) Warnf(string, ...interface{}) {
+func (b *Base) Warnf(string, ...any) {
 }
 
-func (b *Base) Error(...interface{}) {
+func (b *Base) Error(...any) {
 }
 
-func (b *Base) Errorf(string, ...interface{}) {
+func (b *Base) Errorf(string, ...any) {
 }
 
-func (b *Base) Fatal(...interface{}) {
+func (b *Base) Fatal(...any) {
 }
 
-func (b *Base) Fatalf(string, ...interface{}) {
+func (b *Base) Fatalf(string, ...any) {
 }
 
 func (b *Base) SetLevel(string) {

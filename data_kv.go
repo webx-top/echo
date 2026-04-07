@@ -15,9 +15,9 @@ func NewKV(k, v string) *KV {
 type KV struct {
 	K        string
 	V        string
-	H        H           `json:",omitempty" xml:",omitempty"`
-	X        interface{} `json:",omitempty" xml:",omitempty"`
-	fn       func(context.Context) interface{}
+	H        H   `json:",omitempty" xml:",omitempty"`
+	X        any `json:",omitempty" xml:",omitempty"`
+	fn       func(context.Context) any
 	priority int
 }
 
@@ -58,7 +58,7 @@ func (a *KV) SetH(h H) *KV {
 	return a
 }
 
-func (a *KV) SetHKV(k string, v interface{}) *KV {
+func (a *KV) SetHKV(k string, v any) *KV {
 	if a.H == nil {
 		a.H = H{}
 	}
@@ -66,17 +66,17 @@ func (a *KV) SetHKV(k string, v interface{}) *KV {
 	return a
 }
 
-func (a *KV) SetX(x interface{}) *KV {
+func (a *KV) SetX(x any) *KV {
 	a.X = x
 	return a
 }
 
-func (a *KV) SetFn(fn func(context.Context) interface{}) *KV {
+func (a *KV) SetFn(fn func(context.Context) any) *KV {
 	a.fn = fn
 	return a
 }
 
-func (a *KV) Fn() func(context.Context) interface{} {
+func (a *KV) Fn() func(context.Context) any {
 	return a.fn
 }
 

@@ -17,7 +17,7 @@ import (
 // Mock opentracing.Span
 type mockSpan struct {
 	tracer   opentracing.Tracer
-	tags     map[string]interface{}
+	tags     map[string]any
 	opName   string
 	finished bool
 }
@@ -25,7 +25,7 @@ type mockSpan struct {
 func createSpan(tracer opentracing.Tracer) *mockSpan {
 	return &mockSpan{
 		tracer: tracer,
-		tags:   make(map[string]interface{}),
+		tags:   make(map[string]any),
 	}
 }
 
@@ -37,7 +37,7 @@ func (sp *mockSpan) getOpName() string {
 	return sp.opName
 }
 
-func (sp *mockSpan) getTag(key string) interface{} {
+func (sp *mockSpan) getTag(key string) any {
 	return sp.tags[key]
 }
 
@@ -53,13 +53,13 @@ func (sp *mockSpan) SetOperationName(operationName string) opentracing.Span {
 	sp.opName = operationName
 	return sp
 }
-func (sp *mockSpan) SetTag(key string, value interface{}) opentracing.Span {
+func (sp *mockSpan) SetTag(key string, value any) opentracing.Span {
 	sp.tags[key] = value
 	return sp
 }
 func (sp *mockSpan) LogFields(fields ...log.Field) {
 }
-func (sp *mockSpan) LogKV(alternatingKeyValues ...interface{}) {
+func (sp *mockSpan) LogKV(alternatingKeyValues ...any) {
 }
 func (sp *mockSpan) SetBaggageItem(restrictedKey, value string) opentracing.Span {
 	return sp
@@ -72,7 +72,7 @@ func (sp *mockSpan) Tracer() opentracing.Tracer {
 }
 func (sp *mockSpan) LogEvent(event string) {
 }
-func (sp *mockSpan) LogEventWithPayload(event string, payload interface{}) {
+func (sp *mockSpan) LogEventWithPayload(event string, payload any) {
 }
 func (sp *mockSpan) Log(data opentracing.LogData) {
 }
@@ -95,11 +95,11 @@ func (tr *mockTracer) StartSpan(operationName string, opts ...opentracing.StartS
 	return createSpan(tr)
 }
 
-func (tr *mockTracer) Inject(sm opentracing.SpanContext, format interface{}, carrier interface{}) error {
+func (tr *mockTracer) Inject(sm opentracing.SpanContext, format any, carrier any) error {
 	return nil
 }
 
-func (tr *mockTracer) Extract(format interface{}, carrier interface{}) (opentracing.SpanContext, error) {
+func (tr *mockTracer) Extract(format any, carrier any) (opentracing.SpanContext, error) {
 	if tr.span != nil {
 		return nil, nil
 	}

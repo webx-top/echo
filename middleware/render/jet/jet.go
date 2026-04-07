@@ -98,13 +98,13 @@ func (a *Jet) TmplPath(c echo.Context, tmpl string) string {
 	return tmpl
 }
 
-func (a *Jet) SetFuncMap(fn func() map[string]interface{}) {
+func (a *Jet) SetFuncMap(fn func() map[string]any) {
 	for name, fn := range fn() {
 		a.set.AddGlobal(name, fn)
 	}
 }
 
-func (a *Jet) Render(w io.Writer, tmpl string, data interface{}, c echo.Context) error {
+func (a *Jet) Render(w io.Writer, tmpl string, data any, c echo.Context) error {
 	tmpl = a.TmplPath(c, tmpl)
 	t, err := a.set.GetTemplate(tmpl)
 	if err != nil {
@@ -118,7 +118,7 @@ func (a *Jet) Render(w io.Writer, tmpl string, data interface{}, c echo.Context)
 }
 
 // RenderBy render by content
-func (a *Jet) RenderBy(w io.Writer, tmplName string, tmplContent func(string) ([]byte, error), values interface{}, c echo.Context) error {
+func (a *Jet) RenderBy(w io.Writer, tmplName string, tmplContent func(string) ([]byte, error), values any, c echo.Context) error {
 	b, err := tmplContent(tmplName)
 	if err != nil {
 		return err
@@ -134,7 +134,7 @@ func (a *Jet) RenderBy(w io.Writer, tmplName string, tmplContent func(string) ([
 	return tmpl.Execute(w, vars, values)
 }
 
-func (a *Jet) Fetch(tmpl string, data interface{}, c echo.Context) string {
+func (a *Jet) Fetch(tmpl string, data any, c echo.Context) string {
 	tmpl = a.TmplPath(c, tmpl)
 	w := bufferpool.Get()
 	defer bufferpool.Release(w)

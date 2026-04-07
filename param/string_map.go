@@ -46,14 +46,14 @@ func (p StringMap) SplitAny(key string, sep string, limit ...int) StringSlice {
 	return p[key].SplitAny(sep, limit...)
 }
 
-func (p StringMap) Interface(key string) interface{} {
+func (p StringMap) Interface(key string) any {
 	return p[key].Interface()
 }
 
-func (p StringMap) Interfaces() map[string]interface{} {
-	r := map[string]interface{}{}
+func (p StringMap) Interfaces() map[string]any {
+	r := map[string]any{}
 	for k, v := range p {
-		r[k] = interface{}(v)
+		r[k] = any(v)
 	}
 	return r
 }

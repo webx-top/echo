@@ -57,7 +57,7 @@ func (h *RequestHeader) Set(key, val string) {
 	h.lock.Unlock()
 }
 
-func (h *RequestHeader) Object() interface{} {
+func (h *RequestHeader) Object() any {
 	h.lock.RLock()
 	v := h.header
 	h.lock.RUnlock()
@@ -117,7 +117,7 @@ func (h *ResponseHeader) Set(key, val string) {
 	h.lock.Unlock()
 }
 
-func (h *ResponseHeader) Object() interface{} {
+func (h *ResponseHeader) Object() any {
 	h.lock.RLock()
 	v := h.header
 	h.lock.RUnlock()

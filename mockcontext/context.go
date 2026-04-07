@@ -39,19 +39,19 @@ func ReleaseResponse(c engine.Response) {
 
 var (
 	poolMockContext = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return echo.NewContext(mock.NewRequest(), mock.NewResponse(), defaults.Default)
 		},
 	}
 
 	poolMockRequest = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return mock.NewRequest()
 		},
 	}
 
 	poolMockResponse = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return mock.NewResponse()
 		},
 	}

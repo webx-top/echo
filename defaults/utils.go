@@ -53,7 +53,7 @@ func ResetPoolMockContextIniter(init func(echo.Context)) {
 }
 
 var poolMockContext = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return echo.NewContext(mock.NewRequest(), mock.NewResponse(), Default)
 	},
 }

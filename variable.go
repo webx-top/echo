@@ -116,15 +116,15 @@ var (
 	globalVars = param.NewMap()
 )
 
-func Set(key, value interface{}) {
+func Set(key, value any) {
 	globalVars.Set(key, value)
 }
 
-func Get(key interface{}, defaults ...interface{}) interface{} {
+func Get(key any, defaults ...any) any {
 	return globalVars.Get(key, defaults...)
 }
 
-func GetStoreByKeys(key interface{}, keys ...string) H {
+func GetStoreByKeys(key any, keys ...string) H {
 	st, ok := Get(key).(H)
 	if !ok {
 		if st == nil {
@@ -135,123 +135,123 @@ func GetStoreByKeys(key interface{}, keys ...string) H {
 	return st.GetStoreByKeys(keys...)
 }
 
-func GetOk(key interface{}) (interface{}, bool) {
+func GetOk(key any) (any, bool) {
 	return globalVars.GetOk(key)
 }
 
-func Has(key interface{}) bool {
+func Has(key any) bool {
 	return globalVars.Has(key)
 }
 
-func Delete(key interface{}) {
+func Delete(key any) {
 	globalVars.Delete(key)
 }
 
-func Range(f func(key, value interface{}) bool) {
+func Range(f func(key, value any) bool) {
 	globalVars.Range(f)
 }
 
-func GetOrSet(key, value interface{}) (actual interface{}, loaded bool) {
+func GetOrSet(key, value any) (actual any, loaded bool) {
 	return globalVars.GetOrSet(key, value)
 }
 
-func String(key interface{}, defaults ...interface{}) string {
+func String(key any, defaults ...any) string {
 	return globalVars.String(key, defaults...)
 }
 
-func Split(key interface{}, sep string, limit ...int) param.StringSlice {
+func Split(key any, sep string, limit ...int) param.StringSlice {
 	return globalVars.Split(key, sep, limit...)
 }
 
-func Trim(key interface{}, defaults ...interface{}) param.String {
+func Trim(key any, defaults ...any) param.String {
 	return globalVars.Trim(key, defaults...)
 }
 
-func HTML(key interface{}, defaults ...interface{}) template.HTML {
+func HTML(key any, defaults ...any) template.HTML {
 	return globalVars.HTML(key, defaults...)
 }
 
-func HTMLAttr(key interface{}, defaults ...interface{}) template.HTMLAttr {
+func HTMLAttr(key any, defaults ...any) template.HTMLAttr {
 	return globalVars.HTMLAttr(key, defaults...)
 }
 
-func JS(key interface{}, defaults ...interface{}) template.JS {
+func JS(key any, defaults ...any) template.JS {
 	return globalVars.JS(key, defaults...)
 }
 
-func CSS(key interface{}, defaults ...interface{}) template.CSS {
+func CSS(key any, defaults ...any) template.CSS {
 	return globalVars.CSS(key, defaults...)
 }
 
-func Bool(key interface{}, defaults ...interface{}) bool {
+func Bool(key any, defaults ...any) bool {
 	return globalVars.Bool(key, defaults...)
 }
 
-func Float64(key interface{}, defaults ...interface{}) float64 {
+func Float64(key any, defaults ...any) float64 {
 	return globalVars.Float64(key, defaults...)
 }
 
-func Float32(key interface{}, defaults ...interface{}) float32 {
+func Float32(key any, defaults ...any) float32 {
 	return globalVars.Float32(key, defaults...)
 }
 
-func Int8(key interface{}, defaults ...interface{}) int8 {
+func Int8(key any, defaults ...any) int8 {
 	return globalVars.Int8(key, defaults...)
 }
 
-func Int16(key interface{}, defaults ...interface{}) int16 {
+func Int16(key any, defaults ...any) int16 {
 	return globalVars.Int16(key, defaults...)
 }
 
-func Int(key interface{}, defaults ...interface{}) int {
+func Int(key any, defaults ...any) int {
 	return globalVars.Int(key, defaults...)
 }
 
-func Int32(key interface{}, defaults ...interface{}) int32 {
+func Int32(key any, defaults ...any) int32 {
 	return globalVars.Int32(key, defaults...)
 }
 
-func Int64(key interface{}, defaults ...interface{}) int64 {
+func Int64(key any, defaults ...any) int64 {
 	return globalVars.Int64(key, defaults...)
 }
 
-func Decr(key interface{}, n int64, defaults ...interface{}) int64 {
+func Decr(key any, n int64, defaults ...any) int64 {
 	return globalVars.Decr(key, n, defaults...)
 }
 
-func Incr(key interface{}, n int64, defaults ...interface{}) int64 {
+func Incr(key any, n int64, defaults ...any) int64 {
 	return globalVars.Incr(key, n, defaults...)
 }
 
-func Uint8(key interface{}, defaults ...interface{}) uint8 {
+func Uint8(key any, defaults ...any) uint8 {
 	return globalVars.Uint8(key, defaults...)
 }
 
-func Uint16(key interface{}, defaults ...interface{}) uint16 {
+func Uint16(key any, defaults ...any) uint16 {
 	return globalVars.Uint16(key, defaults...)
 }
 
-func Uint(key interface{}, defaults ...interface{}) uint {
+func Uint(key any, defaults ...any) uint {
 	return globalVars.Uint(key, defaults...)
 }
 
-func Uint32(key interface{}, defaults ...interface{}) uint32 {
+func Uint32(key any, defaults ...any) uint32 {
 	return globalVars.Uint32(key, defaults...)
 }
 
-func Uint64(key interface{}, defaults ...interface{}) uint64 {
+func Uint64(key any, defaults ...any) uint64 {
 	return globalVars.Uint64(key, defaults...)
 }
 
-func Timestamp(key interface{}, defaults ...interface{}) time.Time {
+func Timestamp(key any, defaults ...any) time.Time {
 	return globalVars.Timestamp(key, defaults...)
 }
 
-func DateTime(key interface{}, layouts ...string) time.Time {
+func DateTime(key any, layouts ...string) time.Time {
 	return globalVars.DateTime(key, layouts...)
 }
 
-func Children(key interface{}, keys ...interface{}) Store {
+func Children(key any, keys ...any) Store {
 	r := GetStore(key)
 	for _, key := range keys {
 		r = GetStore(key)
@@ -259,6 +259,6 @@ func Children(key interface{}, keys ...interface{}) Store {
 	return r
 }
 
-func GetStore(key interface{}, defaults ...interface{}) Store {
+func GetStore(key any, defaults ...any) Store {
 	return AsStore(globalVars.Get(key, defaults...))
 }

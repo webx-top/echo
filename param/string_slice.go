@@ -99,7 +99,7 @@ func (p StringSlice) Filter(filterFuncs ...func(s *string) bool) StringSlice {
 	return result
 }
 
-func (p StringSlice) HasValue(v interface{}) bool {
+func (p StringSlice) HasValue(v any) bool {
 	expected := AsString(v)
 	for _, val := range p {
 		if val == expected {
@@ -117,15 +117,15 @@ func (p StringSlice) Join(sep string) string {
 	return strings.Join([]string(p), sep)
 }
 
-func (p StringSlice) Interface(filters ...func(int, string) bool) []interface{} {
+func (p StringSlice) Interface(filters ...func(int, string) bool) []any {
 	var filter func(int, string) bool
 	if len(filters) > 0 {
 		filter = filters[0]
 	}
-	var ids []interface{}
+	var ids []any
 	for idx, id := range p {
 		if filter == nil || filter(idx, id) {
-			ids = append(ids, interface{}(id))
+			ids = append(ids, any(id))
 		}
 	}
 	return ids
@@ -337,7 +337,7 @@ func (p StringSlice) Bool(filters ...func(int, bool) bool) []bool {
 	return values
 }
 
-func GetByIndex(v interface{}, i int, defaults ...interface{}) interface{} {
+func GetByIndex(v any, i int, defaults ...any) any {
 	switch p := v.(type) {
 	case []string:
 		if len(p) > i {
@@ -347,7 +347,7 @@ func GetByIndex(v interface{}, i int, defaults ...interface{}) interface{} {
 			return defaults[0]
 		}
 		return ``
-	case []interface{}:
+	case []any:
 		if len(p) > i {
 			return p[i]
 		}

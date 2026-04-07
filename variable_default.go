@@ -54,21 +54,21 @@ var (
 		`*`: ContentTypeHTML,
 	}
 	DefaultFormatRenderers = map[string]FormatRender{
-		ContentTypeJSON: func(c Context, data interface{}, code ...int) error {
+		ContentTypeJSON: func(c Context, data any, code ...int) error {
 			return c.JSON(c.Data(), code...)
 		},
-		ContentTypeJSONP: func(c Context, data interface{}, code ...int) error {
+		ContentTypeJSONP: func(c Context, data any, code ...int) error {
 			return c.JSONP(c.Query(c.Echo().JSONPVarName), c.Data(), code...)
 		},
-		ContentTypeXML: func(c Context, data interface{}, code ...int) error {
+		ContentTypeXML: func(c Context, data any, code ...int) error {
 			return c.XML(c.Data(), code...)
 		},
-		ContentTypeText: func(c Context, data interface{}, code ...int) error {
+		ContentTypeText: func(c Context, data any, code ...int) error {
 			return c.String(fmt.Sprint(data), code...)
 		},
 	}
-	DefaultBinderDecoders = map[string]func(interface{}, Context, BinderValueCustomDecoders, ...FormDataFilter) error{
-		MIMEApplicationJSON: func(i interface{}, ctx Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+	DefaultBinderDecoders = map[string]func(any, Context, BinderValueCustomDecoders, ...FormDataFilter) error{
+		MIMEApplicationJSON: func(i any, ctx Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 			body := ctx.Request().Body()
 			if body == nil {
 				return NewHTTPError(http.StatusBadRequest, "Request body can't be nil")
@@ -86,7 +86,7 @@ var (
 			}
 			return err
 		},
-		MIMEApplicationXML: func(i interface{}, ctx Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+		MIMEApplicationXML: func(i any, ctx Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 			body := ctx.Request().Body()
 			if body == nil {
 				return NewHTTPError(http.StatusBadRequest, "Request body can't be nil")
@@ -104,17 +104,17 @@ var (
 			}
 			return err
 		},
-		MIMEApplicationForm: func(i interface{}, ctx Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+		MIMEApplicationForm: func(i any, ctx Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 			return FormToStructWithDecoder(ctx.Echo(), i, ctx.Request().PostForm().All(), ``, valueDecoders, filter...)
 		},
-		MIMEMultipartForm: func(i interface{}, ctx Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+		MIMEMultipartForm: func(i any, ctx Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 			_, err := ctx.Request().MultipartForm()
 			if err != nil && !errors.Is(err, http.ErrMissingBoundary) {
 				return err
 			}
 			return FormToStructWithDecoder(ctx.Echo(), i, ctx.Request().Form().All(), ``, valueDecoders, filter...)
 		},
-		`*`: func(i interface{}, ctx Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+		`*`: func(i any, ctx Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 			return FormToStructWithDecoder(ctx.Echo(), i, ctx.Request().Form().All(), ``, valueDecoders, filter...)
 		},
 	}
@@ -138,24 +138,24 @@ var (
 		`time2unixmicro`: binderValueDecoderTime2unixmicro, // int64
 		`time2unixnano`:  binderValueDecoderTime2unixnano,  // float64
 	}
-	DefaultUploadURLGenerator = func(ctx Context, subdir string, values ...interface{}) string {
+	DefaultUploadURLGenerator = func(ctx Context, subdir string, values ...any) string {
 		return subdir
 	}
 )
 
-func binderValueDecoderSplitKVRows(field string, values []string, seperator string) (interface{}, error) {
+func binderValueDecoderSplitKVRows(field string, values []string, seperator string) (any, error) {
 	return com.SplitKVRows(values[0], seperator), nil
 }
 
-func binderValueDecoderSplit(field string, values []string, seperator string) (interface{}, error) {
+func binderValueDecoderSplit(field string, values []string, seperator string) (any, error) {
 	return strings.Split(values[0], seperator), nil
 }
 
-func binderValueEncoderJoin(field string, value interface{}, seperator string) []string {
+func binderValueEncoderJoin(field string, value any, seperator string) []string {
 	return []string{strings.Join(param.AsStdStringSlice(value), seperator)}
 }
 
-func binderValueEncoderJoinKVRows(field string, value interface{}, seperator string) []string {
+func binderValueEncoderJoinKVRows(field string, value any, seperator string) []string {
 	result := com.JoinKVRows(value, seperator)
 	if len(result) == 0 {
 		return nil
@@ -199,7 +199,7 @@ func GetTimeLayoutByName(name string) string {
 	return name
 }
 
-func binderValueEncoderUnix2time(field string, value interface{}, layout string) []string {
+func binderValueEncoderUnix2time(field string, value any, layout string) []string {
 	t := param.AsTimestamp(value)
 	if t.IsZero() {
 		return []string{}
@@ -212,7 +212,7 @@ func binderValueEncoderUnix2time(field string, value interface{}, layout string)
 	return []string{t.Format(layout)}
 }
 
-func binderValueDecoderTime2unix(field string, values []string, layout string) (interface{}, error) {
+func binderValueDecoderTime2unix(field string, values []string, layout string) (any, error) {
 	if len(layout) == 0 {
 		layout = param.DateTimeNormal
 	} else {
@@ -221,7 +221,7 @@ func binderValueDecoderTime2unix(field string, values []string, layout string) (
 	return param.AsDateTime(values[0], layout).Unix(), nil
 }
 
-func binderValueEncoderUnixmilli2time(field string, value interface{}, layout string) []string {
+func binderValueEncoderUnixmilli2time(field string, value any, layout string) []string {
 	t := time.UnixMilli(param.AsInt64(value))
 	if t.IsZero() {
 		return []string{}
@@ -234,7 +234,7 @@ func binderValueEncoderUnixmilli2time(field string, value interface{}, layout st
 	return []string{t.Format(layout)}
 }
 
-func binderValueDecoderTime2unixmilli(field string, values []string, layout string) (interface{}, error) {
+func binderValueDecoderTime2unixmilli(field string, values []string, layout string) (any, error) {
 	if len(layout) == 0 {
 		layout = param.DateTimeNormal
 	} else {
@@ -243,7 +243,7 @@ func binderValueDecoderTime2unixmilli(field string, values []string, layout stri
 	return param.AsDateTime(values[0], layout).UnixMilli(), nil
 }
 
-func binderValueEncoderUnixmicro2time(field string, value interface{}, layout string) []string {
+func binderValueEncoderUnixmicro2time(field string, value any, layout string) []string {
 	t := time.UnixMicro(param.AsInt64(value))
 	if t.IsZero() {
 		return []string{}
@@ -256,7 +256,7 @@ func binderValueEncoderUnixmicro2time(field string, value interface{}, layout st
 	return []string{t.Format(layout)}
 }
 
-func binderValueDecoderTime2unixmicro(field string, values []string, layout string) (interface{}, error) {
+func binderValueDecoderTime2unixmicro(field string, values []string, layout string) (any, error) {
 	if len(layout) == 0 {
 		layout = param.DateTimeNormal
 	} else {
@@ -265,7 +265,7 @@ func binderValueDecoderTime2unixmicro(field string, values []string, layout stri
 	return param.AsDateTime(values[0], layout).UnixMicro(), nil
 }
 
-func binderValueEncoderUnixnano2time(field string, value interface{}, layout string) []string {
+func binderValueEncoderUnixnano2time(field string, value any, layout string) []string {
 	t := param.AsTimestamp(value)
 	if t.IsZero() {
 		return []string{}
@@ -278,7 +278,7 @@ func binderValueEncoderUnixnano2time(field string, value interface{}, layout str
 	return []string{t.Format(layout)}
 }
 
-func binderValueDecoderTime2unixnano(field string, values []string, layout string) (interface{}, error) {
+func binderValueDecoderTime2unixnano(field string, values []string, layout string) (any, error) {
 	if len(layout) == 0 {
 		layout = param.DateTimeNormal
 	} else {

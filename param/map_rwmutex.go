@@ -24,7 +24,7 @@ type SafeStore struct {
 }
 
 // Get retrieves data
-func (s *SafeStore) Get(key string, defaults ...interface{}) interface{} {
+func (s *SafeStore) Get(key string, defaults ...any) any {
 	s.storeLock.RLock()
 	v := s.store.Get(key, defaults...)
 	s.storeLock.RUnlock()
@@ -32,13 +32,13 @@ func (s *SafeStore) Get(key string, defaults ...interface{}) interface{} {
 }
 
 // Set saves data
-func (s *SafeStore) Set(key string, val interface{}) {
+func (s *SafeStore) Set(key string, val any) {
 	s.storeLock.Lock()
 	s.store.Set(key, val)
 	s.storeLock.Unlock()
 }
 
-func (s *SafeStore) SetMore(keyVal ...interface{}) {
+func (s *SafeStore) SetMore(keyVal ...any) {
 	s.storeLock.Lock()
 	s.store.SetMore(keyVal...)
 	s.storeLock.Unlock()
@@ -65,7 +65,7 @@ func (s *SafeStore) Has(key string) bool {
 	return has
 }
 
-func (s *SafeStore) String(key string, defaults ...interface{}) string {
+func (s *SafeStore) String(key string, defaults ...any) string {
 	s.storeLock.RLock()
 	str := s.store.String(key, defaults...)
 	s.storeLock.RUnlock()
@@ -79,147 +79,147 @@ func (s *SafeStore) Split(key string, sep string, limit ...int) StringSlice {
 	return val
 }
 
-func (s *SafeStore) Trim(key string, defaults ...interface{}) String {
+func (s *SafeStore) Trim(key string, defaults ...any) String {
 	s.storeLock.RLock()
 	val := s.store.Trim(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) HTML(key string, defaults ...interface{}) template.HTML {
+func (s *SafeStore) HTML(key string, defaults ...any) template.HTML {
 	s.storeLock.RLock()
 	val := s.store.HTML(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) HTMLAttr(key string, defaults ...interface{}) template.HTMLAttr {
+func (s *SafeStore) HTMLAttr(key string, defaults ...any) template.HTMLAttr {
 	s.storeLock.RLock()
 	val := s.store.HTMLAttr(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) JS(key string, defaults ...interface{}) template.JS {
+func (s *SafeStore) JS(key string, defaults ...any) template.JS {
 	s.storeLock.RLock()
 	val := s.store.JS(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) CSS(key string, defaults ...interface{}) template.CSS {
+func (s *SafeStore) CSS(key string, defaults ...any) template.CSS {
 	s.storeLock.RLock()
 	val := s.store.CSS(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Bool(key string, defaults ...interface{}) bool {
+func (s *SafeStore) Bool(key string, defaults ...any) bool {
 	s.storeLock.RLock()
 	val := s.store.Bool(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Float64(key string, defaults ...interface{}) float64 {
+func (s *SafeStore) Float64(key string, defaults ...any) float64 {
 	s.storeLock.RLock()
 	val := s.store.Float64(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Float32(key string, defaults ...interface{}) float32 {
+func (s *SafeStore) Float32(key string, defaults ...any) float32 {
 	s.storeLock.RLock()
 	val := s.store.Float32(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Int8(key string, defaults ...interface{}) int8 {
+func (s *SafeStore) Int8(key string, defaults ...any) int8 {
 	s.storeLock.RLock()
 	val := s.store.Int8(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Int16(key string, defaults ...interface{}) int16 {
+func (s *SafeStore) Int16(key string, defaults ...any) int16 {
 	s.storeLock.RLock()
 	val := s.store.Int16(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Int(key string, defaults ...interface{}) int {
+func (s *SafeStore) Int(key string, defaults ...any) int {
 	s.storeLock.RLock()
 	val := s.store.Int(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Int32(key string, defaults ...interface{}) int32 {
+func (s *SafeStore) Int32(key string, defaults ...any) int32 {
 	s.storeLock.RLock()
 	val := s.store.Int32(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Int64(key string, defaults ...interface{}) int64 {
+func (s *SafeStore) Int64(key string, defaults ...any) int64 {
 	s.storeLock.RLock()
 	val := s.store.Int64(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Decr(key string, n int64, defaults ...interface{}) int64 {
+func (s *SafeStore) Decr(key string, n int64, defaults ...any) int64 {
 	s.storeLock.Lock()
 	val := s.store.Decr(key, n, defaults...)
 	s.storeLock.Unlock()
 	return val
 }
 
-func (s *SafeStore) Incr(key string, n int64, defaults ...interface{}) int64 {
+func (s *SafeStore) Incr(key string, n int64, defaults ...any) int64 {
 	s.storeLock.Lock()
 	val := s.store.Incr(key, n, defaults...)
 	s.storeLock.Unlock()
 	return val
 }
 
-func (s *SafeStore) Uint8(key string, defaults ...interface{}) uint8 {
+func (s *SafeStore) Uint8(key string, defaults ...any) uint8 {
 	s.storeLock.RLock()
 	val := s.store.Uint8(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Uint16(key string, defaults ...interface{}) uint16 {
+func (s *SafeStore) Uint16(key string, defaults ...any) uint16 {
 	s.storeLock.RLock()
 	val := s.store.Uint16(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Uint(key string, defaults ...interface{}) uint {
+func (s *SafeStore) Uint(key string, defaults ...any) uint {
 	s.storeLock.RLock()
 	val := s.store.Uint(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Uint32(key string, defaults ...interface{}) uint32 {
+func (s *SafeStore) Uint32(key string, defaults ...any) uint32 {
 	s.storeLock.RLock()
 	val := s.store.Uint32(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Uint64(key string, defaults ...interface{}) uint64 {
+func (s *SafeStore) Uint64(key string, defaults ...any) uint64 {
 	s.storeLock.RLock()
 	val := s.store.Uint64(key, defaults...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) Timestamp(key string, defaults ...interface{}) time.Time {
+func (s *SafeStore) Timestamp(key string, defaults ...any) time.Time {
 	s.storeLock.RLock()
 	val := s.store.Timestamp(key, defaults...)
 	s.storeLock.RUnlock()
@@ -240,14 +240,14 @@ func (s *SafeStore) DateTime(key string, layouts ...string) time.Time {
 	return val
 }
 
-func (s *SafeStore) Children(keys ...interface{}) Store {
+func (s *SafeStore) Children(keys ...any) Store {
 	s.storeLock.RLock()
 	val := s.store.Children(keys...)
 	s.storeLock.RUnlock()
 	return val
 }
 
-func (s *SafeStore) GetStore(key string, defaults ...interface{}) Store {
+func (s *SafeStore) GetStore(key string, defaults ...any) Store {
 	s.storeLock.RLock()
 	val := s.store.GetStore(key, defaults...)
 	s.storeLock.RUnlock()
@@ -300,14 +300,14 @@ func (s *SafeStore) Transform(transfers map[string]Transfer) Store {
 	return val
 }
 
-func (s *SafeStore) SetMKey(key string, value interface{}) *SafeStore {
+func (s *SafeStore) SetMKey(key string, value any) *SafeStore {
 	s.storeLock.Lock()
 	s.store.SetMKey(key, value)
 	s.storeLock.Unlock()
 	return s
 }
 
-func (s *SafeStore) SetMKeys(keys []string, value interface{}) *SafeStore {
+func (s *SafeStore) SetMKeys(keys []string, value any) *SafeStore {
 	s.storeLock.Lock()
 	s.store.SetMKeys(keys, value)
 	s.storeLock.Unlock()
@@ -321,7 +321,7 @@ func (s *SafeStore) Clear() *SafeStore {
 	return s
 }
 
-func (s *SafeStore) Range(fn func(key string, val interface{}) error) (err error) {
+func (s *SafeStore) Range(fn func(key string, val any) error) (err error) {
 	s.storeLock.Lock()
 	for key, val := range s.store {
 		if err = fn(key, val); err != nil {

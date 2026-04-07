@@ -61,9 +61,9 @@ func (s *SessionOptions) Clone() *SessionOptions {
 // Session stores the values and optional configuration for a session.
 type Sessioner interface {
 	// Get returns the session value associated to the given key.
-	Get(key string) interface{}
+	Get(key string) any
 	// Set sets the session value associated to the given key.
-	Set(key string, val interface{}) Sessioner
+	Set(key string, val any) Sessioner
 	SetID(id string, notReload ...bool) error
 	ID() string
 	MustID() string
@@ -75,11 +75,11 @@ type Sessioner interface {
 	// AddFlash adds a flash message to the session.
 	// A single variadic argument is accepted, and it is optional: it defines the flash key.
 	// If not defined "_flash" is used by default.
-	AddFlash(value interface{}, vars ...string) Sessioner
+	AddFlash(value any, vars ...string) Sessioner
 	// Flashes returns a slice of flash messages from the session.
 	// A single variadic argument is accepted, and it is optional: it defines the flash key.
 	// If not defined "_flash" is used by default.
-	Flashes(vars ...string) []interface{}
+	Flashes(vars ...string) []any
 	// Save saves all sessions used during the current request.
 	Save() error
 	AddPreSaveHook(func(Context) error)
@@ -89,11 +89,11 @@ type Sessioner interface {
 type NopSession struct {
 }
 
-func (n *NopSession) Get(name string) interface{} {
+func (n *NopSession) Get(name string) any {
 	return nil
 }
 
-func (n *NopSession) Set(name string, value interface{}) Sessioner {
+func (n *NopSession) Set(name string, value any) Sessioner {
 	return n
 }
 
@@ -121,12 +121,12 @@ func (n *NopSession) Clear() Sessioner {
 	return n
 }
 
-func (n *NopSession) AddFlash(_ interface{}, _ ...string) Sessioner {
+func (n *NopSession) AddFlash(_ any, _ ...string) Sessioner {
 	return n
 }
 
-func (n *NopSession) Flashes(_ ...string) []interface{} {
-	return []interface{}{}
+func (n *NopSession) Flashes(_ ...string) []any {
+	return []any{}
 }
 
 func (n *NopSession) Options(_ SessionOptions) Sessioner {
@@ -146,12 +146,12 @@ func (n *NopSession) SetPreSaveHook(_ ...func(Context) error) {
 type DebugSession struct {
 }
 
-func (n *DebugSession) Get(name string) interface{} {
+func (n *DebugSession) Get(name string) any {
 	log.Println(`DebugSession.Get`, name)
 	return nil
 }
 
-func (n *DebugSession) Set(name string, value interface{}) Sessioner {
+func (n *DebugSession) Set(name string, value any) Sessioner {
 	log.Println(`DebugSession.Set`, name, value)
 	return n
 }
@@ -186,14 +186,14 @@ func (n *DebugSession) Clear() Sessioner {
 	return n
 }
 
-func (n *DebugSession) AddFlash(value interface{}, args ...string) Sessioner {
+func (n *DebugSession) AddFlash(value any, args ...string) Sessioner {
 	log.Println(`DebugSession.AddFlash`, value, args)
 	return n
 }
 
-func (n *DebugSession) Flashes(args ...string) []interface{} {
+func (n *DebugSession) Flashes(args ...string) []any {
 	log.Println(`DebugSession.Flashes`, args)
-	return []interface{}{}
+	return []any{}
 }
 
 func (n *DebugSession) Options(options SessionOptions) Sessioner {

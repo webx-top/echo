@@ -24,7 +24,7 @@ func (c *redisClient) DeleteKey(key string) error {
 	return c.Del(key).Err()
 }
 
-func (c *redisClient) EvalulateSha(sha1 string, keys []string, args ...interface{}) (interface{}, error) {
+func (c *redisClient) EvalulateSha(sha1 string, keys []string, args ...any) (any, error) {
 	return c.EvalSha(sha1, keys, args...).Result()
 }
 
@@ -41,7 +41,7 @@ func (c *failedClient) DeleteKey(key string) error {
 	return c.Del(key).Err()
 }
 
-func (c *failedClient) EvalulateSha(sha1 string, keys []string, args ...interface{}) (interface{}, error) {
+func (c *failedClient) EvalulateSha(sha1 string, keys []string, args ...any) (any, error) {
 	return nil, errors.New("noscript mock error")
 }
 

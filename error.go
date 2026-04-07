@@ -110,7 +110,7 @@ func (e *Error) Clone() *Error {
 	}
 }
 
-func (e *Error) Set(key string, value interface{}) *Error {
+func (e *Error) Set(key string, value any) *Error {
 	if !e.cloned {
 		e2 := e.Clone()
 		e2.Extra.Set(key, value)
@@ -217,7 +217,7 @@ func (e *HTTPError) Unwrap() error {
 // PanicError
 // ==========================================
 
-func NewPanicError(recovered interface{}, err error, debugAndDisableStackAll ...bool) *PanicError {
+func NewPanicError(recovered any, err error, debugAndDisableStackAll ...bool) *PanicError {
 	var debug, disableStackAll bool
 	switch len(debugAndDisableStackAll) {
 	case 2:
@@ -239,7 +239,7 @@ func NewPanicError(recovered interface{}, err error, debugAndDisableStackAll ...
 
 type PanicError struct {
 	error
-	Raw             interface{}
+	Raw             any
 	Traces          []*Trace
 	Snippets        []*SnippetGroup
 	debug           bool

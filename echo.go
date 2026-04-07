@@ -37,11 +37,11 @@ type (
 		router              *Router
 		logger              logger.Logger
 		groups              map[string]*Group
-		handlerWrapper      []func(interface{}) Handler
-		middlewareWrapper   []func(interface{}) Middleware
+		handlerWrapper      []func(any) Handler
+		middlewareWrapper   []func(any) Middleware
 		acceptFormats       map[string]string //mime=>format
 		formatRenderers     map[string]FormatRender
-		FuncMap             map[string]interface{}
+		FuncMap             map[string]any
 		RouteDebug          bool
 		MiddlewareDebug     bool
 		JSONPVarName        string
@@ -49,7 +49,7 @@ type (
 		FormSliceMaxIndex   int
 		binderValueDecoders map[string]BinderValueDecoder
 		binderValueEncoders map[string]BinderValueEncoder
-		uploadURLGenerator  func(Context, string, ...interface{}) string
+		uploadURLGenerator  func(Context, string, ...any) string
 		parseHeaderAccept   bool
 		defaultExtension    string
 		rewriter            Rewriter
@@ -89,16 +89,16 @@ type (
 
 	// Renderer is the interface that wraps the Render method.
 	Renderer interface {
-		Render(w io.Writer, name string, data interface{}, c Context) error
-		RenderBy(w io.Writer, name string, content func(string) ([]byte, error), data interface{}, c Context) error
+		Render(w io.Writer, name string, data any, c Context) error
+		RenderBy(w io.Writer, name string, content func(string) ([]byte, error), data any, c Context) error
 	}
 
 	JSONModifer interface {
-		JSON(Context) (interface{}, error)
+		JSON(Context) (any, error)
 	}
 
 	XMLModifer interface {
-		XML(Context) (interface{}, error)
+		XML(Context) (any, error)
 	}
 	Template interface {
 		Template(Context) (string, error)
@@ -167,7 +167,7 @@ func New() (e *Echo) {
 
 func NewWithContext(fn func(*Echo) Context) (e *Echo) {
 	e = &Echo{}
-	e.pool.New = func() interface{} {
+	e.pool.New = func() any {
 		return fn(e)
 	}
 	return e.Reset()
@@ -189,11 +189,11 @@ func (e *Echo) Reset() *Echo {
 	e.router = NewRouter(e)
 	e.logger = log.GetLogger("echo")
 	e.groups = make(map[string]*Group)
-	e.handlerWrapper = []func(interface{}) Handler{}
-	e.middlewareWrapper = []func(interface{}) Middleware{}
+	e.handlerWrapper = []func(any) Handler{}
+	e.middlewareWrapper = []func(any) Middleware{}
 	e.acceptFormats = DefaultAcceptFormats
 	e.formatRenderers = DefaultFormatRenderers
-	e.FuncMap = make(map[string]interface{})
+	e.FuncMap = make(map[string]any)
 	e.RouteDebug = false
 	e.MiddlewareDebug = false
 	e.JSONPVarName = `callback`
@@ -232,16 +232,16 @@ func (e *Echo) SetFormSliceMaxIndex(max int) *Echo {
 	return e
 }
 
-func (e *Echo) SetUploadURLGenerator(fn func(Context, string, ...interface{}) string) *Echo {
+func (e *Echo) SetUploadURLGenerator(fn func(Context, string, ...any) string) *Echo {
 	e.uploadURLGenerator = fn
 	return e
 }
 
-func (e *Echo) UploadURLGenerator(fn func(Context, string, ...interface{}) string) func(Context, string, ...interface{}) string {
+func (e *Echo) UploadURLGenerator(fn func(Context, string, ...any) string) func(Context, string, ...any) string {
 	return e.uploadURLGenerator
 }
 
-func (e *Echo) UploadURL(ctx Context, subdir string, values ...interface{}) string {
+func (e *Echo) UploadURL(ctx Context, subdir string, values ...any) string {
 	if e.uploadURLGenerator == nil {
 		return subdir
 	}
@@ -256,7 +256,7 @@ func (e *Echo) AddBinderValueDecoder(name string, decoder BinderValueDecoder) *E
 	return e
 }
 
-func (e *Echo) CallBinderValueDecoder(name string, field string, values []string, params string) (interface{}, error) {
+func (e *Echo) CallBinderValueDecoder(name string, field string, values []string, params string) (any, error) {
 	if fn, ok := e.binderValueDecoders[name]; ok {
 		return fn(field, values, params)
 	}
@@ -271,7 +271,7 @@ func (e *Echo) AddBinderValueEncoder(name string, encoder BinderValueEncoder) *E
 	return e
 }
 
-func (e *Echo) CallBinderValueEncoder(name string, field string, value interface{}, params string) ([]string, error) {
+func (e *Echo) CallBinderValueEncoder(name string, field string, value any, params string) ([]string, error) {
 	if fn, ok := e.binderValueEncoders[name]; ok {
 		return fn(field, value, params), nil
 	}
@@ -322,7 +322,7 @@ func (e *Echo) GetRenderByFormat(format string) (FormatRender, bool) {
 	return render, ok
 }
 
-func (e *Echo) AutoDetectRenderFormat(c Context, data interface{}, code ...int) (bool, error) {
+func (e *Echo) AutoDetectRenderFormat(c Context, data any, code ...int) (bool, error) {
 	render, ok := e.GetRenderByFormat(c.Format())
 	if !ok || render == nil {
 		return false, nil
@@ -460,7 +460,7 @@ func (e *Echo) Multilingual() bool {
 }
 
 // Use adds handler to the middleware chain.
-func (e *Echo) Use(middleware ...interface{}) {
+func (e *Echo) Use(middleware ...any) {
 	for _, m := range middleware {
 		e.middleware = append(e.middleware, e.WrapMiddleware(m))
 		if e.MiddlewareDebug {
@@ -470,7 +470,7 @@ func (e *Echo) Use(middleware ...interface{}) {
 }
 
 // Pre adds handler to the middleware chain.
-func (e *Echo) Pre(middleware ...interface{}) {
+func (e *Echo) Pre(middleware ...any) {
 	var middlewares []Middleware
 	for _, m := range middleware {
 		middlewares = append(middlewares, e.WrapMiddleware(m))
@@ -481,7 +481,7 @@ func (e *Echo) Pre(middleware ...interface{}) {
 	e.premiddleware = append(middlewares, e.premiddleware...)
 }
 
-func (e *Echo) PreUse(middleware ...interface{}) {
+func (e *Echo) PreUse(middleware ...any) {
 	for _, m := range middleware {
 		e.premiddleware = append(e.premiddleware, e.WrapMiddleware(m))
 		if e.MiddlewareDebug {
@@ -491,7 +491,7 @@ func (e *Echo) PreUse(middleware ...interface{}) {
 }
 
 // Clear middleware
-func (e *Echo) Clear(middleware ...interface{}) {
+func (e *Echo) Clear(middleware ...any) {
 	middlewares := make([]Middleware, len(middleware))
 	for index, m := range middleware {
 		middlewares[index] = e.WrapMiddleware(m)
@@ -500,7 +500,7 @@ func (e *Echo) Clear(middleware ...interface{}) {
 }
 
 // ClearPre Clear premiddleware
-func (e *Echo) ClearPre(middleware ...interface{}) {
+func (e *Echo) ClearPre(middleware ...any) {
 	middlewares := make([]Middleware, len(middleware))
 	for index, m := range middleware {
 		middlewares[index] = e.WrapMiddleware(m)
@@ -509,52 +509,52 @@ func (e *Echo) ClearPre(middleware ...interface{}) {
 }
 
 // Connect adds a CONNECT route > handler to the router.
-func (e *Echo) Connect(path string, h interface{}, m ...interface{}) IRouter {
+func (e *Echo) Connect(path string, h any, m ...any) IRouter {
 	return e.Add(CONNECT, path, h, m...)
 }
 
 // Delete adds a DELETE route > handler to the router.
-func (e *Echo) Delete(path string, h interface{}, m ...interface{}) IRouter {
+func (e *Echo) Delete(path string, h any, m ...any) IRouter {
 	return e.Add(DELETE, path, h, m...)
 }
 
 // Get adds a GET route > handler to the router.
-func (e *Echo) Get(path string, h interface{}, m ...interface{}) IRouter {
+func (e *Echo) Get(path string, h any, m ...any) IRouter {
 	return e.Add(GET, path, h, m...)
 }
 
 // Head adds a HEAD route > handler to the router.
-func (e *Echo) Head(path string, h interface{}, m ...interface{}) IRouter {
+func (e *Echo) Head(path string, h any, m ...any) IRouter {
 	return e.Add(HEAD, path, h, m...)
 }
 
 // Options adds an OPTIONS route > handler to the router.
-func (e *Echo) Options(path string, h interface{}, m ...interface{}) IRouter {
+func (e *Echo) Options(path string, h any, m ...any) IRouter {
 	return e.Add(OPTIONS, path, h, m...)
 }
 
 // Patch adds a PATCH route > handler to the router.
-func (e *Echo) Patch(path string, h interface{}, m ...interface{}) IRouter {
+func (e *Echo) Patch(path string, h any, m ...any) IRouter {
 	return e.Add(PATCH, path, h, m...)
 }
 
 // Post adds a POST route > handler to the router.
-func (e *Echo) Post(path string, h interface{}, m ...interface{}) IRouter {
+func (e *Echo) Post(path string, h any, m ...any) IRouter {
 	return e.Add(POST, path, h, m...)
 }
 
 // Put adds a PUT route > handler to the router.
-func (e *Echo) Put(path string, h interface{}, m ...interface{}) IRouter {
+func (e *Echo) Put(path string, h any, m ...any) IRouter {
 	return e.Add(PUT, path, h, m...)
 }
 
 // Trace adds a TRACE route > handler to the router.
-func (e *Echo) Trace(path string, h interface{}, m ...interface{}) IRouter {
+func (e *Echo) Trace(path string, h any, m ...any) IRouter {
 	return e.Add(TRACE, path, h, m...)
 }
 
 // Any adds a route > handler to the router for all HTTP methods.
-func (e *Echo) Any(path string, h interface{}, middleware ...interface{}) IRouter {
+func (e *Echo) Any(path string, h any, middleware ...any) IRouter {
 	routes := Routes{}
 	for _, m := range methods {
 		routes = append(routes, e.Add(m, path, h, middleware...))
@@ -562,12 +562,12 @@ func (e *Echo) Any(path string, h interface{}, middleware ...interface{}) IRoute
 	return routes
 }
 
-func (e *Echo) Route(methods string, path string, h interface{}, middleware ...interface{}) IRouter {
+func (e *Echo) Route(methods string, path string, h any, middleware ...any) IRouter {
 	return e.Match(splitHTTPMethod.Split(methods, -1), path, h, middleware...)
 }
 
 // Match adds a route > handler to the router for multiple HTTP methods provided.
-func (e *Echo) Match(methods []string, path string, h interface{}, middleware ...interface{}) IRouter {
+func (e *Echo) Match(methods []string, path string, h any, middleware ...any) IRouter {
 	routes := Routes{}
 	for _, m := range methods {
 		routes = append(routes, e.Add(m, path, h, middleware...))
@@ -591,7 +591,7 @@ func (e *Echo) File(path, file string) {
 	})
 }
 
-func (e *Echo) WrapHandler(v interface{}) (h Handler) {
+func (e *Echo) WrapHandler(v any) (h Handler) {
 	if e.handlerWrapper != nil {
 		for _, wrapper := range e.handlerWrapper {
 			h = wrapper(v)
@@ -603,7 +603,7 @@ func (e *Echo) WrapHandler(v interface{}) (h Handler) {
 	return WrapHandler(v)
 }
 
-func (e *Echo) WrapMiddleware(v interface{}) (m Middleware) {
+func (e *Echo) WrapMiddleware(v any) (m Middleware) {
 	if e.middlewareWrapper != nil {
 		for _, wrapper := range e.middlewareWrapper {
 			m = wrapper(v)
@@ -615,19 +615,19 @@ func (e *Echo) WrapMiddleware(v interface{}) (m Middleware) {
 	return WrapMiddleware(v)
 }
 
-func (e *Echo) SetHandlerWrapper(funcs ...func(interface{}) Handler) {
+func (e *Echo) SetHandlerWrapper(funcs ...func(any) Handler) {
 	e.handlerWrapper = funcs
 }
 
-func (e *Echo) SetMiddlewareWrapper(funcs ...func(interface{}) Middleware) {
+func (e *Echo) SetMiddlewareWrapper(funcs ...func(any) Middleware) {
 	e.middlewareWrapper = funcs
 }
 
-func (e *Echo) AddHandlerWrapper(funcs ...func(interface{}) Handler) {
+func (e *Echo) AddHandlerWrapper(funcs ...func(any) Handler) {
 	e.handlerWrapper = append(e.handlerWrapper, funcs...)
 }
 
-func (e *Echo) AddMiddlewareWrapper(funcs ...func(interface{}) Middleware) {
+func (e *Echo) AddMiddlewareWrapper(funcs ...func(any) Middleware) {
 	e.middlewareWrapper = append(e.middlewareWrapper, funcs...)
 }
 
@@ -647,11 +647,11 @@ func (e *Echo) SetPrefix(prefix string) *Echo {
 	return e
 }
 
-func (e *Echo) add(host, method, prefix string, path string, h interface{}, middleware ...interface{}) *Route {
+func (e *Echo) add(host, method, prefix string, path string, h any, middleware ...any) *Route {
 	return e.addWithGroup(nil, host, method, prefix, path, h, middleware...)
 }
 
-func (e *Echo) addWithGroup(group *Group, host, method, prefix string, path string, h interface{}, middleware ...interface{}) *Route {
+func (e *Echo) addWithGroup(group *Group, host, method, prefix string, path string, h any, middleware ...any) *Route {
 	r := &Route{
 		Host:       host,
 		Method:     method,
@@ -671,14 +671,14 @@ func (e *Echo) buildRouter() *Echo {
 
 // Add registers a new route for an HTTP method and path with matching handler
 // in the router with optional route-level middleware.
-func (e *Echo) Add(method, path string, handler interface{}, middleware ...interface{}) *Route {
+func (e *Echo) Add(method, path string, handler any, middleware ...any) *Route {
 	return e.add("", method, "", path, handler, middleware...)
 }
 
 // MetaHandler Add meta information about endpoint
-// requests = []interface{}{"POST", H{"k":"v"}} or []interface{}{&myRequestData{},"POST", H{"k":"v"}}
-func (e *Echo) MetaHandler(m H, handler interface{}, requests ...interface{}) Handler {
-	var request interface{}
+// requests = []any{"POST", H{"k":"v"}} or []any{&myRequestData{},"POST", H{"k":"v"}}
+func (e *Echo) MetaHandler(m H, handler any, requests ...any) Handler {
+	var request any
 	var methods []string
 	for k, v := range requests {
 		switch vv := v.(type) {
@@ -706,14 +706,14 @@ func (e *Echo) MetaHandler(m H, handler interface{}, requests ...interface{}) Ha
 }
 
 // Handler Add validateable hanlder about endpoint
-// requests = []interface{}{"POST", H{"k":"v"}} or []interface{}{&myRequestData{},"POST", H{"k":"v"}}
-func (e *Echo) MakeHandler(handler interface{}, requests ...interface{}) Handler {
+// requests = []any{"POST", H{"k":"v"}} or []any{&myRequestData{},"POST", H{"k":"v"}}
+func (e *Echo) MakeHandler(handler any, requests ...any) Handler {
 	return e.MetaHandler(nil, handler, requests...)
 }
 
 // MetaHandlerWithRequest Add meta information about endpoint
 // methods = []string{"POST", "GET"} or []string{"POST,GET"}
-func (e *Echo) MetaHandlerWithRequest(m H, handler interface{}, request interface{}, methods ...string) Handler {
+func (e *Echo) MetaHandlerWithRequest(m H, handler any, request any, methods ...string) Handler {
 	h := &MetaHandler{
 		meta:    m,
 		Handler: e.WrapHandler(handler),
@@ -724,7 +724,7 @@ func (e *Echo) MetaHandlerWithRequest(m H, handler interface{}, request interfac
 			h.request = r
 		case func() MetaValidator:
 			h.request = r
-		case func() interface{}:
+		case func() any:
 			h.request = func() MetaValidator {
 				return NewBaseRequestValidator(r())
 			}
@@ -821,7 +821,7 @@ func parseHostConfig(name string) *host {
 }
 
 // Host creates a new router group for the provided host and optional host-level middleware.
-func (e *Echo) Host(name string, m ...interface{}) *Group {
+func (e *Echo) Host(name string, m ...any) *Group {
 	h, y := e.hosts[name]
 	if !y {
 		h = &Host{
@@ -838,7 +838,7 @@ func (e *Echo) Host(name string, m ...interface{}) *Group {
 }
 
 // TypeHost TypeHost(`blog`).URI(`login`)
-func (e *Echo) TypeHost(alias string, args ...interface{}) (r TypeHost) {
+func (e *Echo) TypeHost(alias string, args ...any) (r TypeHost) {
 	if name, ok := e.hostAlias[alias]; ok {
 		hs, ok := e.hosts[name]
 		if !ok || hs == nil {
@@ -855,7 +855,7 @@ func (e *Echo) OnHostFound(onHostFound func(Context) (bool, error)) *Echo {
 }
 
 // Group creates a new sub-router with prefix.
-func (e *Echo) Group(prefix string, m ...interface{}) *Group {
+func (e *Echo) Group(prefix string, m ...any) *Group {
 	g, y := e.groups[prefix]
 	if !y {
 		g = &Group{prefix: prefix, echo: e, meta: H{}}
@@ -867,7 +867,7 @@ func (e *Echo) Group(prefix string, m ...interface{}) *Group {
 	return g
 }
 
-func (e *Echo) subgroup(parent *Group, prefix string, m ...interface{}) *Group {
+func (e *Echo) subgroup(parent *Group, prefix string, m ...any) *Group {
 	prefix = parent.prefix + prefix
 	g, y := e.groups[prefix]
 	if !y {
@@ -884,7 +884,7 @@ func (e *Echo) subgroup(parent *Group, prefix string, m ...interface{}) *Group {
 }
 
 // URI generates a URI from handler.
-func (e *Echo) URI(handler interface{}, params ...interface{}) string {
+func (e *Echo) URI(handler any, params ...any) string {
 	var uri string
 	r := e.findRouteBy(handler)
 	if r == nil {
@@ -894,7 +894,7 @@ func (e *Echo) URI(handler interface{}, params ...interface{}) string {
 	return uri
 }
 
-func (e *Echo) URIWithContext(c Context, handler interface{}, params ...interface{}) string {
+func (e *Echo) URIWithContext(c Context, handler any, params ...any) string {
 	var uri string
 	r := e.findRouteBy(handler)
 	if r == nil {
@@ -914,7 +914,7 @@ func (e *Echo) MakeRelativeURL(uri string, withoutPrefix bool) string {
 	return uri
 }
 
-func (e *Echo) findRouteBy(handler interface{}) *Route {
+func (e *Echo) findRouteBy(handler any) *Route {
 	var name string
 	switch h := handler.(type) {
 	case Handler:
@@ -951,7 +951,7 @@ func (e *Echo) GetRouteByName(name string) *Route {
 }
 
 // URL is an alias for `URI` function.
-func (e *Echo) URL(h interface{}, params ...interface{}) string {
+func (e *Echo) URL(h any, params ...any) string {
 	return e.URI(h, params...)
 }
 
@@ -1145,7 +1145,7 @@ func (e *Echo) RealIPConfig() *realip.Config {
 	return e.realIPConfig
 }
 
-func (e *Echo) Template(c Context, name string, data interface{}) (string, error) {
+func (e *Echo) Template(c Context, name string, data any) (string, error) {
 	if len(name) > 0 {
 		return name, nil
 	}

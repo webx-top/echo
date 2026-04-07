@@ -116,7 +116,7 @@ func (r *Response) Writer() io.Writer {
 	return r.ResponseWriter
 }
 
-func (r *Response) Object() interface{} {
+func (r *Response) Object() any {
 	return r.ResponseWriter
 }
 
@@ -276,7 +276,7 @@ func (w *ResponseWriter) String() string {
 	return r
 }
 
-func NewResponse(args ...interface{}) *Response {
+func NewResponse(args ...any) *Response {
 	var w http.ResponseWriter
 	var r *http.Request
 	var l logger.Logger

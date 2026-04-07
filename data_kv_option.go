@@ -28,7 +28,7 @@ func KVOptH(h H) KVOption {
 	}
 }
 
-func KVOptHKV(k string, v interface{}) KVOption {
+func KVOptHKV(k string, v any) KVOption {
 	return func(a *KV) {
 		if a.H == nil {
 			a.H = H{}
@@ -37,13 +37,13 @@ func KVOptHKV(k string, v interface{}) KVOption {
 	}
 }
 
-func KVOptX(x interface{}) KVOption {
+func KVOptX(x any) KVOption {
 	return func(a *KV) {
 		a.X = x
 	}
 }
 
-func KVOptFn(fn func(context.Context) interface{}) KVOption {
+func KVOptFn(fn func(context.Context) any) KVOption {
 	return func(a *KV) {
 		a.fn = fn
 	}

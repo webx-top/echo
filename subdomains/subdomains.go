@@ -86,11 +86,11 @@ func (info *Info) makeRelativeURL(uri string, withoutPrefix bool) string {
 	return info.MakeRelativeURL(uri, withoutPrefix)
 }
 
-func (info *Info) URLByName(s *Subdomains, name string, args ...interface{}) string {
+func (info *Info) URLByName(s *Subdomains, name string, args ...any) string {
 	return info.makeURL(s, info.Echo.URI(name, args...), true)
 }
 
-func (info *Info) RelativeURLByName(name string, args ...interface{}) string {
+func (info *Info) RelativeURLByName(name string, args ...any) string {
 	return info.makeRelativeURL(info.Echo.URI(name, args...), true)
 }
 
@@ -252,19 +252,19 @@ func parseURLName(name string) (domainAlias string, handerName string) {
 
 // URLByName 根据路由别名生成网址
 // 可以在名称中采用 #backend#name 的方式来获取子域名别名为bakcend的网址
-func (s *Subdomains) URLByName(name string, params ...interface{}) string {
+func (s *Subdomains) URLByName(name string, params ...any) string {
 	domainAlias, handerName := parseURLName(name)
 	return s.URLByNamex(domainAlias, handerName, params...)
 }
 
 // RelativeURLByName 根据路由别名生成相对网址
 // 可以在名称中采用 #backend#name 的方式来获取子域名别名为bakcend的网址
-func (s *Subdomains) RelativeURLByName(name string, params ...interface{}) string {
+func (s *Subdomains) RelativeURLByName(name string, params ...any) string {
 	domainAlias, handerName := parseURLName(name)
 	return s.RelativeURLByNamex(domainAlias, handerName, params...)
 }
 
-func (s *Subdomains) URLByNamex(domainAlias string, handlerName string, params ...interface{}) string {
+func (s *Subdomains) URLByNamex(domainAlias string, handlerName string, params ...any) string {
 	if len(domainAlias) == 0 {
 		domainAlias = s.Default
 	}
@@ -275,7 +275,7 @@ func (s *Subdomains) URLByNamex(domainAlias string, handlerName string, params .
 	return info.URLByName(s, handlerName, params...)
 }
 
-func (s *Subdomains) RelativeURLByNamex(domainAlias string, handlerName string, params ...interface{}) string {
+func (s *Subdomains) RelativeURLByNamex(domainAlias string, handlerName string, params ...any) string {
 	if len(domainAlias) == 0 {
 		domainAlias = s.Default
 	}
@@ -374,9 +374,9 @@ func (s *Subdomains) Ready() *Info {
 	return e
 }
 
-func (s *Subdomains) Run(args ...interface{}) {
+func (s *Subdomains) Run(args ...any) {
 	var eng engine.Engine
-	var arg interface{}
+	var arg any
 	size := len(args)
 	if size > 0 {
 		arg = args[0]

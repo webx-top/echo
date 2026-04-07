@@ -30,7 +30,7 @@ func main() {
 	e.Get("/", func(c echo.Context) error {
 
 		// It uses template file ./template/index.html
-		return c.Render(`index`, map[string]interface{}{
+		return c.Render(`index`, map[string]any{
 			"Name": "Webx",
 		})
 	})
@@ -39,7 +39,7 @@ func main() {
 		var values []int
 		values[1] = 2
 		// It uses template file ./template/index.html
-		return c.Render(`index`, map[string]interface{}{
+		return c.Render(`index`, map[string]any{
 			"Name": "Webx",
 		})
 	})

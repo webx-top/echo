@@ -58,7 +58,7 @@ func (a *KVx[X, Y]) SetH(h H) *KVx[X, Y] {
 	return a
 }
 
-func (a *KVx[X, Y]) SetHKV(k string, v interface{}) *KVx[X, Y] {
+func (a *KVx[X, Y]) SetHKV(k string, v any) *KVx[X, Y] {
 	if a.H == nil {
 		a.H = H{}
 	}

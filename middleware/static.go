@@ -48,7 +48,7 @@ type (
 		TrimPrefix string          `json:"trimPrefix"`
 
 		open   func(string) (http.File, error)
-		render func(echo.Context, interface{}) error
+		render func(echo.Context, any) error
 	}
 )
 
@@ -129,7 +129,7 @@ func (s *StaticOptions) getOpener() func(file string) (http.File, error) {
 	return s.open
 }
 
-func (s *StaticOptions) getRender() func(c echo.Context, data interface{}) error {
+func (s *StaticOptions) getRender() func(c echo.Context, data any) error {
 	if s.render != nil {
 		return s.render
 	}
@@ -137,7 +137,7 @@ func (s *StaticOptions) getRender() func(c echo.Context, data interface{}) error
 		return nil
 	}
 	if len(s.Template) > 0 {
-		s.render = func(c echo.Context, data interface{}) error {
+		s.render = func(c echo.Context, data any) error {
 			return c.Render(s.Template, data)
 		}
 	} else {
@@ -146,7 +146,7 @@ func (s *StaticOptions) getRender() func(c echo.Context, data interface{}) error
 		if err != nil {
 			panic(err)
 		}
-		s.render = func(c echo.Context, data interface{}) error {
+		s.render = func(c echo.Context, data any) error {
 			w := c.Response()
 			w.Header().Set(echo.HeaderContentType, echo.MIMETextHTMLCharsetUTF8)
 			return t.Execute(w, data)
@@ -155,7 +155,7 @@ func (s *StaticOptions) getRender() func(c echo.Context, data interface{}) error
 	return s.render
 }
 
-func (s *StaticOptions) findFile(c echo.Context, root string, hasIndex bool, file string, render func(echo.Context, interface{}) error, opener func(string) (http.File, error)) error {
+func (s *StaticOptions) findFile(c echo.Context, root string, hasIndex bool, file string, render func(echo.Context, any) error, opener func(string) (http.File, error)) error {
 	absFile := root
 	if len(file) > 0 {
 		absFile = filepath.Join(root, file)
@@ -252,7 +252,7 @@ func (s *StaticOptions) Middleware() echo.MiddlewareFunc {
 	}
 }
 
-func listDirByCustomFS(absFile string, file string, c echo.Context, render func(echo.Context, interface{}) error, opener func(string) (http.File, error)) error {
+func listDirByCustomFS(absFile string, file string, c echo.Context, render func(echo.Context, any) error, opener func(string) (http.File, error)) error {
 	d, err := opener(absFile)
 	if err != nil {
 		return echo.ErrNotFound
@@ -263,7 +263,7 @@ func listDirByCustomFS(absFile string, file string, c echo.Context, render func(
 		return echo.ErrNotFound
 	}
 
-	return render(c, map[string]interface{}{
+	return render(c, map[string]any{
 		`file`: file,
 		`dirs`: dirs,
 	})

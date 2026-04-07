@@ -59,8 +59,8 @@ func (p String) Trim() String {
 	return String(strings.TrimSpace(string(p)))
 }
 
-func (p String) Interface() interface{} {
-	return interface{}(p)
+func (p String) Interface() any {
+	return any(p)
 }
 
 func (p String) Int() int {

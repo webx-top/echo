@@ -23,8 +23,8 @@ import (
 	"net/http"
 )
 
-// WrapHandler wrap `interface{}` into `echo.Handler`.
-func WrapHandler(h interface{}) Handler {
+// WrapHandler wrap `any` into `echo.Handler`.
+func WrapHandler(h any) Handler {
 	switch v := h.(type) {
 	case HandlerFunc:
 		return v
@@ -67,8 +67,8 @@ func WrapHandler(h interface{}) Handler {
 	}
 }
 
-// WrapMiddleware wrap `interface{}` into `echo.Middleware`.
-func WrapMiddleware(m interface{}) Middleware {
+// WrapMiddleware wrap `any` into `echo.Middleware`.
+func WrapMiddleware(m any) Middleware {
 	switch h := m.(type) {
 	case MiddlewareFunc:
 		return h

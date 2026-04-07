@@ -9,13 +9,13 @@ var (
 	Ignored            = param.Ignored
 )
 
-func TranslateStringer(t Translator, args ...interface{}) param.Stringer {
-	return param.StringerFunc(func(v interface{}) string {
+func TranslateStringer(t Translator, args ...any) param.Stringer {
+	return param.StringerFunc(func(v any) string {
 		return t.T(param.AsString(v), args...)
 	})
 }
 
-func ignoreValues(v interface{}) []string {
+func ignoreValues(v any) []string {
 	return nil
 }
 
@@ -25,7 +25,7 @@ func FormStringer(s param.Stringer) BinderValueCustomEncoder {
 			return ignoreValues
 		}
 	}
-	return func(v interface{}) []string {
+	return func(v any) []string {
 		return []string{s.String(v)}
 	}
 }

@@ -68,7 +68,7 @@ var (
 	DefaultUpgrader = &websocket.EchoUpgrader{}
 )
 
-func HanderWrapper(v interface{}) echo.Handler {
+func HanderWrapper(v any) echo.Handler {
 	if h, ok := v.(func(*websocket.Conn, echo.Context) error); ok {
 		return Websocket(h, nil)
 	}

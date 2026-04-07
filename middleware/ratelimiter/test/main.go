@@ -22,7 +22,7 @@ func (c *RedisClient) DeleteKey(key string) error {
 	return c.Del(key).Err()
 }
 
-func (c *RedisClient) EvalulateSha(sha1 string, keys []string, args ...interface{}) (interface{}, error) {
+func (c *RedisClient) EvalulateSha(sha1 string, keys []string, args ...any) (any, error) {
 	return c.EvalSha(sha1, keys, args...).Result()
 }
 

@@ -8,7 +8,7 @@ import (
 type Hoster interface {
 	Name() string
 	Alias() string
-	Format(args ...interface{}) string
+	Format(args ...any) string
 	FormatMap(params H) string
 	RegExp() *regexp.Regexp
 	Match(host string) (r []string, hasExpr bool)
@@ -37,7 +37,7 @@ func (h *host) Alias() string {
 	return h.alias
 }
 
-func (h *host) Format(args ...interface{}) string {
+func (h *host) Format(args ...any) string {
 	if len(args) > 0 {
 		return fmt.Sprintf(h.format, args...)
 	}
@@ -46,7 +46,7 @@ func (h *host) Format(args ...interface{}) string {
 
 func (h *host) FormatMap(params H) string {
 	if len(params) > 0 {
-		args := make([]interface{}, len(h.names))
+		args := make([]any, len(h.names))
 		for index, name := range h.names {
 			v, y := params[name]
 			if y {

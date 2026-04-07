@@ -6,7 +6,7 @@ func (c *XContext) Session() Sessioner {
 	return c.sessioner
 }
 
-func (c *XContext) Flash(names ...string) (r interface{}) {
+func (c *XContext) Flash(names ...string) (r any) {
 	if v := c.sessioner.Flashes(names...); len(v) > 0 {
 		r = v[len(v)-1]
 	}
@@ -44,6 +44,6 @@ func (c *XContext) GetCookie(key string) string {
 	return c.cookier.Get(key)
 }
 
-func (c *XContext) SetCookie(key string, val string, args ...interface{}) {
+func (c *XContext) SetCookie(key string, val string, args ...any) {
 	c.cookier.Set(key, val, args...)
 }

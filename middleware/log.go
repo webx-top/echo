@@ -60,7 +60,7 @@ func (v *VisitorInfo) SetFromContext(c echo.Context) {
 
 var DefaultLogWriter = GetDefaultLogWriter()
 var visitorInfoPool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &VisitorInfo{}
 	},
 }

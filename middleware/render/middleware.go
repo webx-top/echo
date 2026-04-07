@@ -232,7 +232,7 @@ func HTTPErrorHandler(opt *Options) echo.HTTPErrorHandler {
 			c.NoContent(code)
 			return
 		}
-		var val interface{}
+		var val any
 		switch c.Format() {
 		case echo.ContentTypeText:
 			val = msg

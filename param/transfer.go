@@ -3,7 +3,7 @@ package param
 import "strings"
 
 type Transfer interface {
-	Transform(value interface{}, row Store) interface{}
+	Transform(value any, row Store) any
 	Destination() string
 }
 
@@ -19,7 +19,7 @@ func (t *Transfers) Add(name string, transfer Transfer) *Transfers {
 	return t
 }
 
-func (t *Transfers) AddFunc(oldField string, fn func(value interface{}, row Store) interface{}, newField ...string) *Transfers {
+func (t *Transfers) AddFunc(oldField string, fn func(value any, row Store) any, newField ...string) *Transfers {
 	tr := NewTransform().SetFunc(fn)
 	if len(newField) > 0 {
 		tr.SetKey(newField[0])
@@ -56,7 +56,7 @@ func NewTransform() *Transform {
 	return &Transform{}
 }
 
-func Tf(key string, fn func(value interface{}, row Store) interface{}) *Transform {
+func Tf(key string, fn func(value any, row Store) any) *Transform {
 	return &Transform{
 		Key:  key,
 		Func: fn,
@@ -64,11 +64,11 @@ func Tf(key string, fn func(value interface{}, row Store) interface{}) *Transfor
 }
 
 type Transform struct {
-	Key  string                                         // new field
-	Func func(value interface{}, row Store) interface{} `json:"-" xml:"-"`
+	Key  string                         // new field
+	Func func(value any, row Store) any `json:"-" xml:"-"`
 }
 
-func (t *Transform) Transform(value interface{}, row Store) interface{} {
+func (t *Transform) Transform(value any, row Store) any {
 	if t.Func == nil {
 		return value
 	}
@@ -79,7 +79,7 @@ func (t *Transform) Destination() string {
 	return t.Key
 }
 
-func (t *Transform) Set(key string, fn func(value interface{}, row Store) interface{}) *Transform {
+func (t *Transform) Set(key string, fn func(value any, row Store) any) *Transform {
 	t.SetKey(key)
 	t.SetFunc(fn)
 	return t
@@ -90,7 +90,7 @@ func (t *Transform) SetKey(key string) *Transform {
 	return t
 }
 
-func (t *Transform) SetFunc(fn func(value interface{}, row Store) interface{}) *Transform {
+func (t *Transform) SetFunc(fn func(value any, row Store) any) *Transform {
 	t.Func = fn
 	return t
 }

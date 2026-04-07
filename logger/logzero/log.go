@@ -34,16 +34,16 @@ func NewConsoleOutput() zerolog.ConsoleWriter {
 		TimeFormat: `2006-01-02T15:04:05`,
 		NoColor:    !logger.Colorable(os.Stdout),
 	}
-	// output.FormatLevel = func(i interface{}) string {
+	// output.FormatLevel = func(i any) string {
 	// 	return fmt.Sprintf("| %-6s|", i)
 	// }
-	output.FormatMessage = func(i interface{}) string {
+	output.FormatMessage = func(i any) string {
 		return fmt.Sprintf("%s", i)
 	}
-	output.FormatFieldName = func(i interface{}) string {
+	output.FormatFieldName = func(i any) string {
 		return fmt.Sprintf("%s:", i)
 	}
-	output.FormatFieldValue = func(i interface{}) string {
+	output.FormatFieldValue = func(i any) string {
 		return fmt.Sprintf("%s", i)
 	}
 	return output
@@ -98,43 +98,43 @@ type Logger struct {
 	mutex                  *sync.RWMutex
 }
 
-func (a *Logger) Debug(s ...interface{}) {
+func (a *Logger) Debug(s ...any) {
 	a.Logger.Debug().Msg(fmt.Sprint(s...))
 }
 
-func (a *Logger) Debugf(t string, s ...interface{}) {
+func (a *Logger) Debugf(t string, s ...any) {
 	a.Logger.Debug().Msgf(t, s...)
 }
 
-func (a *Logger) Info(s ...interface{}) {
+func (a *Logger) Info(s ...any) {
 	a.Logger.Info().Msg(fmt.Sprint(s...))
 }
 
-func (a *Logger) Infof(t string, s ...interface{}) {
+func (a *Logger) Infof(t string, s ...any) {
 	a.Logger.Info().Msgf(t, s...)
 }
 
-func (a *Logger) Warn(s ...interface{}) {
+func (a *Logger) Warn(s ...any) {
 	a.Logger.Warn().Msg(fmt.Sprint(s...))
 }
 
-func (a *Logger) Warnf(t string, s ...interface{}) {
+func (a *Logger) Warnf(t string, s ...any) {
 	a.Logger.Warn().Msgf(t, s...)
 }
 
-func (a *Logger) Error(s ...interface{}) {
+func (a *Logger) Error(s ...any) {
 	a.Logger.Error().Msg(fmt.Sprint(s...))
 }
 
-func (a *Logger) Errorf(t string, s ...interface{}) {
+func (a *Logger) Errorf(t string, s ...any) {
 	a.Logger.Error().Msgf(t, s...)
 }
 
-func (a *Logger) Fatal(s ...interface{}) {
+func (a *Logger) Fatal(s ...any) {
 	a.Logger.Fatal().Msg(fmt.Sprint(s...))
 }
 
-func (a *Logger) Fatalf(t string, s ...interface{}) {
+func (a *Logger) Fatalf(t string, s ...any) {
 	a.Logger.Fatal().Msgf(t, s...)
 }
 

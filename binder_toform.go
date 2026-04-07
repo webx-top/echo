@@ -12,7 +12,7 @@ import (
 	"github.com/webx-top/tagfast"
 )
 
-func SetFormValue(f engine.URLValuer, fName string, index int, value interface{}) {
+func SetFormValue(f engine.URLValuer, fName string, index int, value any) {
 	if index == 0 {
 		f.Set(fName, param.AsString(value))
 	} else {
@@ -31,7 +31,7 @@ func SetFormValues(f engine.URLValuer, fName string, values []string) {
 }
 
 // FlatStructToForm 映射struct到form
-func FlatStructToForm(ctx Context, m interface{}, fieldNameFormatter FieldNameFormatter, formatters ...param.StringerMap) {
+func FlatStructToForm(ctx Context, m any, fieldNameFormatter FieldNameFormatter, formatters ...param.StringerMap) {
 	StructToForm(ctx, m, ``, fieldNameFormatter, formatters...)
 }
 
@@ -53,7 +53,7 @@ func (e *Echo) binderValueEncode(name string, typev reflect.Type, tv reflect.Val
 
 // StructToForm 映射struct到form
 
-func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter FieldNameFormatter, formatters ...param.StringerMap) {
+func StructToForm(ctx Context, m any, topName string, fieldNameFormatter FieldNameFormatter, formatters ...param.StringerMap) {
 	var stringers param.StringerMap // 这里的 key 为表单字段 name 属性值
 	if len(formatters) > 0 {
 		stringers = formatters[0]
@@ -84,7 +84,7 @@ func StructToForm(ctx Context, m interface{}, topName string, fieldNameFormatter
 	structToForm(ctx, m, topName, fieldNameFormatter, valueEncoders)
 }
 
-func structToForm(ctx Context, m interface{}, topName string, fieldNameFormatter FieldNameFormatter, valueEncoders BinderValueCustomEncoders) {
+func structToForm(ctx Context, m any, topName string, fieldNameFormatter FieldNameFormatter, valueEncoders BinderValueCustomEncoders) {
 	vc := reflect.ValueOf(m)
 	tc := reflect.TypeOf(m)
 	if tc.Kind() == reflect.Pointer {
@@ -248,7 +248,7 @@ func fieldToForm(ctx Context, parentTyp reflect.Type, fStruct reflect.StructFiel
 				for k, v := range sl {
 					SetFormValue(f, fName, k, v)
 				}
-			case []interface{}:
+			case []any:
 				for k, v := range sl {
 					SetFormValue(f, fName, k, v)
 				}

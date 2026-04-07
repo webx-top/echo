@@ -300,7 +300,7 @@ func Unquote(s string) string {
 
 // NumberMore compares the input number n with max value and returns max+"+" if n is greater than max,
 // otherwise returns n. Supports uint, uint32, uint64, int, int32, int64, float32 and float64 types.
-func NumberMore(max interface{}, n interface{}) interface{} {
+func NumberMore(max any, n any) any {
 	var more bool
 	switch v := n.(type) {
 	case uint:
@@ -358,15 +358,15 @@ func UnicodeDecode(str string) string {
 // JSONEncode encodes the given value to a JSON string with optional indentation.
 // It returns the JSON string representation of the value.
 // The indents parameter specifies the indentation string to use (e.g., "  " for two spaces).
-func JSONEncode(s interface{}, indents ...string) string {
+func JSONEncode(s any, indents ...string) string {
 	r, _ := com.JSONEncode(s, indents...)
 	return string(r)
 }
 
-// JSONDecode decodes a JSON string into a map[string]interface{}.
+// JSONDecode decodes a JSON string into a map[string]any.
 // If decoding fails, it logs the error and returns an empty map.
-func JSONDecode(s string) map[string]interface{} {
-	r := map[string]interface{}{}
+func JSONDecode(s string) map[string]any {
+	r := map[string]any{}
 	b := com.Str2bytes(s)
 	e := com.JSONDecode(b, &r)
 	if e != nil {
@@ -377,8 +377,8 @@ func JSONDecode(s string) map[string]interface{} {
 
 // JSONDecodeSlice decodes a JSON string into a slice of interfaces.
 // If decoding fails, logs the error and returns an empty slice.
-func JSONDecodeSlice(s string) []interface{} {
-	r := []interface{}{}
+func JSONDecodeSlice(s string) []any {
+	r := []any{}
 	b := com.Str2bytes(s)
 	e := com.JSONDecode(b, &r)
 	if e != nil {
@@ -419,10 +419,10 @@ func JSONDecodeUintSlice(s string) []uint64 {
 }
 
 // JoinNumbers joins a slice of numbers into a single string with the given separator.
-// It supports the following types: []uint64, []uint32, []uint16, []uint8, []uint, []int64, []int32, []int16, []int8, []int, []float64, []float32 and []interface{}.
-// For []interface{}, it will convert each value to uint64 and then join them.
+// It supports the following types: []uint64, []uint32, []uint16, []uint8, []uint, []int64, []int32, []int16, []int8, []int, []float64, []float32 and []any.
+// For []any, it will convert each value to uint64 and then join them.
 // If the type is not supported, it will return an error string.
-func JoinNumbers(s interface{}, sep string) string {
+func JoinNumbers(s any, sep string) string {
 	switch v := s.(type) {
 	case []uint64:
 		return com.JoinNumbers(v, sep)
@@ -448,7 +448,7 @@ func JoinNumbers(s interface{}, sep string) string {
 		return com.JoinNumbers(v, sep)
 	case []float32:
 		return com.JoinNumbers(v, sep)
-	case []interface{}:
+	case []any:
 		r := make([]uint64, len(v))
 		for idx, val := range v {
 			r[idx] = com.Uint64(val)
@@ -490,14 +490,14 @@ func SafeBase64Decode(s string) string {
 }
 
 // Ignore returns nil for any input value, effectively ignoring it.
-func Ignore(_ interface{}) interface{} {
+func Ignore(_ any) any {
 	return nil
 }
 
 // URLValues creates new url.Values and adds the provided values to it.
 // It accepts variadic arguments of key-value pairs or maps to populate the values.
 // Returns the populated url.Values.
-func URLValues(values ...interface{}) url.Values {
+func URLValues(values ...any) url.Values {
 	v := url.Values{}
 	return AddURLValues(v, values...)
 }
@@ -506,7 +506,7 @@ func URLValues(values ...interface{}) url.Values {
 // The values slice should contain alternating keys and values (key1, value1, key2, value2, ...).
 // If an odd number of arguments is provided, the last key will be added with an empty value.
 // Returns the modified url.Values.
-func AddURLValues(v url.Values, values ...interface{}) url.Values {
+func AddURLValues(v url.Values, values ...any) url.Values {
 	var k string
 	for i, j := 0, len(values); i < j; i++ {
 		if i%2 == 0 {
@@ -529,15 +529,15 @@ func ToStrSlice(s ...string) []string {
 }
 
 // ToSlice converts variadic arguments into a slice of interfaces.
-func ToSlice(s ...interface{}) []interface{} {
+func ToSlice(s ...any) []any {
 	return s
 }
 
 // StrToSlice converts a string into a slice of interfaces by splitting it with the specified separator.
 // Each substring becomes an element in the returned slice.
-func StrToSlice(s string, sep string) []interface{} {
+func StrToSlice(s string, sep string) []any {
 	ss := strings.Split(s, sep)
-	r := make([]interface{}, len(ss))
+	r := make([]any, len(ss))
 	for i, s := range ss {
 		r[i] = s
 	}
@@ -551,7 +551,7 @@ func Concat(s ...string) string {
 }
 
 // If returns yesValue if condition is true, otherwise returns noValue.
-func If(condition bool, yesValue interface{}, noValue interface{}) interface{} {
+func If(condition bool, yesValue any, noValue any) any {
 	if condition {
 		return yesValue
 	}
@@ -592,7 +592,7 @@ func InExt(fileName string, exts ...string) bool {
 // Default returns defaultV if v is nil, empty, zero or converts to an empty string.
 // Otherwise, it returns v. It handles various primitive types including strings,
 // numeric types (int, float), and converts other types to string for empty check.
-func Default(defaultV interface{}, v interface{}) interface{} {
+func Default(defaultV any, v any) any {
 	switch val := v.(type) {
 	case nil:
 		return defaultV
@@ -617,7 +617,7 @@ func Default(defaultV interface{}, v interface{}) interface{} {
 }
 
 // Set adds or updates a key-value pair in the renderArgs map and returns an empty string.
-func Set(renderArgs map[string]interface{}, key string, value interface{}, otherKeyValue ...interface{}) string {
+func Set(renderArgs map[string]any, key string, value any, otherKeyValue ...any) string {
 	renderArgs[key] = value
 	if len(otherKeyValue) > 0 {
 		key = ``
@@ -639,11 +639,11 @@ func Set(renderArgs map[string]interface{}, key string, value interface{}, other
 // Append adds a value to a slice in the renderArgs map under the specified key.
 // If the key doesn't exist, it creates a new slice with the value.
 // Returns EmptyString as a placeholder (no meaningful return value).
-func Append(renderArgs map[string]interface{}, key string, value interface{}) string {
+func Append(renderArgs map[string]any, key string, value any) string {
 	if renderArgs[key] == nil {
-		renderArgs[key] = []interface{}{value}
+		renderArgs[key] = []any{value}
 	} else {
-		renderArgs[key] = append(renderArgs[key].([]interface{}), value)
+		renderArgs[key] = append(renderArgs[key].([]any), value)
 	}
 	return EmptyString
 }
@@ -654,12 +654,12 @@ func NlToBr(text string) template.HTML {
 }
 
 // CaptchaForm 验证码表单域
-func CaptchaForm(args ...interface{}) template.HTML {
+func CaptchaForm(args ...any) template.HTML {
 	return CaptchaFormWithURLPrefix(``, args...)
 }
 
 // CaptchaFormWithURLPrefix 验证码表单域
-func CaptchaFormWithURLPrefix(urlPrefix string, args ...interface{}) template.HTML {
+func CaptchaFormWithURLPrefix(urlPrefix string, args ...any) template.HTML {
 	id := "captcha"
 	msg := "页面验证码已经失效，必须重新请求当前页面。确定要刷新本页面吗？"
 	onErr := "if(this.src.indexOf('?reload=')!=-1 && confirm('%s')) window.location.reload();"
@@ -704,7 +704,7 @@ func CaptchaFormWithURLPrefix(urlPrefix string, args ...interface{}) template.HT
 			if v.Has(`id`) {
 				id = v.String(`id`)
 			}
-		case map[string]interface{}:
+		case map[string]any:
 			h := param.Store(v)
 			cid = h.String(`captchaId`)
 			if h.Has(`onErr`) {
@@ -740,7 +740,7 @@ func Nl2br(text string) string {
 }
 
 // IsNil checks if the given interface value is nil. Returns true if the value is nil, false otherwise.
-func IsNil(a interface{}) bool {
+func IsNil(a any) bool {
 	switch a.(type) {
 	case nil:
 		return true
@@ -750,7 +750,7 @@ func IsNil(a interface{}) bool {
 	return false
 }
 
-func interface2Int64(value interface{}) (int64, bool) {
+func interface2Int64(value any) (int64, bool) {
 	switch v := value.(type) {
 	case uint:
 		return int64(v), true
@@ -777,7 +777,7 @@ func interface2Int64(value interface{}) (int64, bool) {
 	}
 }
 
-func interface2Float64(value interface{}) (float64, bool) {
+func interface2Float64(value any) (float64, bool) {
 	switch v := value.(type) {
 	case float32:
 		return float64(v), true
@@ -790,7 +790,7 @@ func interface2Float64(value interface{}) (float64, bool) {
 
 // ToFloat64 converts the given value to float64. It first attempts to convert to int64,
 // then to float64, and finally falls back to a general conversion if the previous attempts fail.
-func ToFloat64(value interface{}) float64 {
+func ToFloat64(value any) float64 {
 	if v, ok := interface2Int64(value); ok {
 		return float64(v)
 	}
@@ -805,7 +805,7 @@ func ToFloat64(value interface{}) float64 {
 // left: first value to add (int64 or float64)
 // right: second value to add (int64 or float64)
 // Returns: sum of left and right as int64 if both are integers, otherwise float64
-func Add(left interface{}, right interface{}) interface{} {
+func Add(left any, right any) any {
 	var rleft, rright int64
 	var fleft, fright float64
 	var isInt bool
@@ -826,14 +826,14 @@ func Add(left interface{}, right interface{}) interface{} {
 }
 
 // Div returns the division result of left divided by right after converting both to float64.
-func Div(left interface{}, right interface{}) interface{} {
+func Div(left any, right any) any {
 	return ToFloat64(left) / ToFloat64(right)
 }
 
 // Mul returns the product of two values after converting them to float64.
 // left: the first value to multiply
 // right: the second value to multiply
-func Mul(left interface{}, right interface{}) interface{} {
+func Mul(left any, right any) any {
 	return ToFloat64(left) * ToFloat64(right)
 }
 
@@ -841,9 +841,9 @@ func Mul(left interface{}, right interface{}) interface{} {
 // Supported operations: mod, abs, acos, acosh, asin, asinh, atan, atan2, atanh, cbrt,
 // ceil, copysign, cos, cosh, dim, erf, erfc, exp, exp2, floor, max, min, pow, sqrt,
 // sin, log, log2, log10, tan, tanh, add, sub, mul, div.
-// Returns the result as interface{} which can be converted to appropriate numeric type.
+// Returns the result as any which can be converted to appropriate numeric type.
 // Returns 0 if insufficient arguments are provided for the operation.
-func Math(op string, args ...interface{}) interface{} {
+func Math(op string, args ...any) any {
 	length := len(args)
 	if length < 1 {
 		return float64(0)
@@ -955,14 +955,14 @@ func Math(op string, args ...interface{}) interface{} {
 }
 
 // IsNaN reports whether v is a NaN (Not a Number) value after converting it to float64.
-func IsNaN(v interface{}) bool {
+func IsNaN(v any) bool {
 	return math.IsNaN(ToFloat64(v))
 }
 
 // IsInf reports whether v is an infinity according to s.
 // v is converted to float64 and s is converted to int before comparison.
 // Returns true if v is positive or negative infinity.
-func IsInf(v interface{}, s interface{}) bool {
+func IsInf(v any, s any) bool {
 	return math.IsInf(ToFloat64(v), com.Int(s))
 }
 
@@ -970,7 +970,7 @@ func IsInf(v interface{}, s interface{}) bool {
 // and floating-point numbers by automatically converting the inputs to the
 // appropriate numeric type. If either operand is a float, the result will be
 // a float; otherwise, it returns an integer result.
-func Sub(left interface{}, right interface{}) interface{} {
+func Sub(left any, right any) any {
 	var rleft, rright int64
 	var fleft, fright float64
 	var isInt bool
@@ -991,7 +991,7 @@ func Sub(left interface{}, right interface{}) interface{} {
 // ToFixed converts a value to a fixed-point string representation with specified precision.
 // value: the input value to convert (can be any numeric type or string representation of a number)
 // precision: the number of decimal places to round to (must be convertible to int)
-func ToFixed(value interface{}, precision interface{}) string {
+func ToFixed(value any, precision any) string {
 	return fmt.Sprintf("%.*f", com.Int(precision), ToFloat64(value))
 }
 
@@ -1007,7 +1007,7 @@ func UnixTime() int64 {
 
 // Eq compares two values for equality, handling nil cases properly.
 // Returns true if both values are nil or their string representations are equal.
-func Eq(left interface{}, right interface{}) bool {
+func Eq(left any, right any) bool {
 	leftIsNil := (left == nil)
 	rightIsNil := (right == nil)
 	if leftIsNil || rightIsNil {
@@ -1023,7 +1023,7 @@ func Eq(left interface{}, right interface{}) bool {
 // If input is already template.HTML, returns it directly.
 // For strings, converts to template.HTML without escaping.
 // For other types, converts to string first using com.String.
-func ToHTML(raw interface{}) template.HTML {
+func ToHTML(raw any) template.HTML {
 	switch v := raw.(type) {
 	case template.HTML:
 		return v
@@ -1037,7 +1037,7 @@ func ToHTML(raw interface{}) template.HTML {
 // ToHTMLAttr converts various input types to template.HTMLAttr.
 // It accepts template.HTML, template.HTMLAttr, string, or any type that can be converted to string.
 // Returns the input as template.HTMLAttr, converting non-string types using com.String.
-func ToHTMLAttr(raw interface{}) template.HTMLAttr {
+func ToHTMLAttr(raw any) template.HTMLAttr {
 	switch v := raw.(type) {
 	case template.HTML:
 		return template.HTMLAttr(string(v))
@@ -1052,8 +1052,8 @@ func ToHTMLAttr(raw interface{}) template.HTMLAttr {
 
 // ToHTMLAttrs converts a map of string keys to interface values into a map of HTMLAttr keys.
 // The keys are converted using ToHTMLAttr function while preserving the original values.
-func ToHTMLAttrs(raw map[string]interface{}) (r map[template.HTMLAttr]interface{}) {
-	r = make(map[template.HTMLAttr]interface{})
+func ToHTMLAttrs(raw map[string]any) (r map[template.HTMLAttr]any) {
+	r = make(map[template.HTMLAttr]any)
 	for k, v := range raw {
 		r[ToHTMLAttr(k)] = v
 	}
@@ -1063,7 +1063,7 @@ func ToHTMLAttrs(raw map[string]interface{}) (r map[template.HTMLAttr]interface{
 // ToJS converts various input types to template.JS type for safe JavaScript embedding.
 // It handles template.HTML, template.JS, string, and other types (converted via com.String).
 // The conversion ensures the output is properly escaped for JavaScript contexts.
-func ToJS(raw interface{}) template.JS {
+func ToJS(raw any) template.JS {
 	switch v := raw.(type) {
 	case template.HTML:
 		return template.JS(string(v))
@@ -1079,7 +1079,7 @@ func ToJS(raw interface{}) template.JS {
 // ToCSS converts various input types to template.CSS type. It handles conversion from
 // template.HTML, template.CSS, string, and other types (using com.String for conversion).
 // The function ensures the output is always of type template.CSS for safe HTML/CSS rendering.
-func ToCSS(raw interface{}) template.CSS {
+func ToCSS(raw any) template.CSS {
 	switch v := raw.(type) {
 	case template.HTML:
 		return template.CSS(string(v))
@@ -1095,7 +1095,7 @@ func ToCSS(raw interface{}) template.CSS {
 // ToURL converts various input types to template.URL type.
 // It handles conversion from template.HTML, template.URL, string, and other types (using com.String).
 // Returns the converted template.URL value.
-func ToURL(raw interface{}) template.URL {
+func ToURL(raw any) template.URL {
 	switch v := raw.(type) {
 	case template.HTML:
 		return template.URL(string(v))
@@ -1129,13 +1129,13 @@ func AddSuffix(s string, suffix string, args ...string) string {
 
 // IsEmpty checks if the given interface value is empty.
 // It returns true for nil, empty string, empty slice, or when the string representation is "<nil>", "", or "[]".
-func IsEmpty(a interface{}) bool {
+func IsEmpty(a any) bool {
 	switch v := a.(type) {
 	case nil:
 		return true
 	case string:
 		return len(v) == 0
-	case []interface{}:
+	case []any:
 		return len(v) < 1
 	default:
 		switch fmt.Sprintf(`%v`, a) {
@@ -1148,7 +1148,7 @@ func IsEmpty(a interface{}) bool {
 
 // NotEmpty reports whether the given value is not empty.
 // It returns the inverse of IsEmpty(a).
-func NotEmpty(a interface{}) bool {
+func NotEmpty(a any) bool {
 	return !IsEmpty(a)
 }
 
@@ -1179,7 +1179,7 @@ func SearchStrSlice(values []string, value string) int {
 // The 'lang' parameter specifies the language for formatting (e.g., "en" for English).
 // Optional 'args' can provide additional formatting parameters.
 // Returns a pointer to com.Durafmt containing the formatted duration.
-func DurationFormat(lang interface{}, t interface{}, args ...string) *com.Durafmt {
+func DurationFormat(lang any, t any, args ...string) *com.Durafmt {
 	duration := ToDuration(t, args...)
 	return com.ParseDuration(duration, lang)
 }
@@ -1187,7 +1187,7 @@ func DurationFormat(lang interface{}, t interface{}, args ...string) *com.Durafm
 // ToTime converts various input types to time.Time.
 // Supports time.Time, string (format: "2006-01-02 15:04:05"), and other types via TsToTime.
 // Panics if string parsing fails.
-func ToTime(t interface{}) time.Time {
+func ToTime(t any) time.Time {
 	switch v := t.(type) {
 	case time.Time:
 		return v
@@ -1206,7 +1206,7 @@ func ToTime(t interface{}) time.Time {
 // Accepts numeric types (int, int64, uint, etc.) and time.Duration as input.
 // Optional args[0] specifies the unit: "ns", "us", "ms", "s", "m", "h" (default: "s").
 // Returns the converted duration value.
-func ToDuration(t interface{}, args ...string) time.Duration {
+func ToDuration(t any, args ...string) time.Duration {
 	td := time.Second
 	if len(args) > 0 {
 		switch args[0] {
@@ -1249,7 +1249,7 @@ func ToDuration(t interface{}, args ...string) time.Duration {
 // It accepts time.Duration, int, int64, uint, int32, uint32, uint64, or any type that can be converted to int64.
 // The optional args parameter allows for customizing the output format.
 // Returns a formatted string representation of the duration.
-func FriendlyTime(t interface{}, args ...interface{}) string {
+func FriendlyTime(t any, args ...any) string {
 	var td time.Duration
 	switch v := t.(type) {
 	case time.Duration:
@@ -1273,14 +1273,14 @@ func FriendlyTime(t interface{}, args ...interface{}) string {
 }
 
 // TsToTime converts a timestamp of various types to time.Time by delegating to TimestampToTime.
-func TsToTime(timestamp interface{}) time.Time {
+func TsToTime(timestamp any) time.Time {
 	return TimestampToTime(timestamp)
 }
 
 // TsToDate converts a timestamp to a formatted date string.
 // The format parameter follows the standard Go time format layout.
 // If the timestamp is invalid or zero, returns an empty string.
-func TsToDate(format string, timestamp interface{}) string {
+func TsToDate(format string, timestamp any) string {
 	t := TimestampToTime(timestamp)
 	if t.IsZero() {
 		return EmptyString
@@ -1292,7 +1292,7 @@ func TsToDate(format string, timestamp interface{}) string {
 // It accepts int, uint, int64, uint64, int32, uint32 or string representations of timestamps.
 // For string inputs, it attempts to parse them as base-10 integers.
 // Returns the corresponding time.Time value or zero time if parsing fails.
-func TimestampToTime(timestamp interface{}) time.Time {
+func TimestampToTime(timestamp any) time.Time {
 	var ts int64
 	switch v := timestamp.(type) {
 	case int64:
@@ -1319,7 +1319,7 @@ func TimestampToTime(timestamp interface{}) time.Time {
 
 // ToDecimal converts any numeric type to a decimal.Decimal.
 // It first converts the input to float64 using ToFloat64, then creates a decimal from the float value.
-func ToDecimal(number interface{}) decimal.Decimal {
+func ToDecimal(number any) decimal.Decimal {
 	money := ToFloat64(number)
 	return decimal.NewFromFloat(money)
 }
@@ -1333,7 +1333,7 @@ func ToDecimal(number interface{}) decimal.Decimal {
 //   - separator: optional thousand separator (default is none)
 //
 // Returns: formatted string representation of the number
-func NumberTrim(number interface{}, precision int, separator ...string) string {
+func NumberTrim(number any, precision int, separator ...string) string {
 	money := ToFloat64(number)
 	s := decimal.NewFromFloat(money).Truncate(int32(precision)).String()
 	return com.NumberTrim(s, precision, separator...)
@@ -1343,22 +1343,22 @@ func NumberTrim(number interface{}, precision int, separator ...string) string {
 // It accepts either a flat list of arguments or a single slice of values.
 // Keys are converted to strings using fmt.Sprint. If an odd number of arguments
 // is provided, the last key will be set with a nil value.
-func MakeMap(values ...interface{}) param.Store {
+func MakeMap(values ...any) param.Store {
 	h := param.Store{}
 	h.SetMore(values...)
 	return h
 }
 
-type iSlice []interface{}
+type iSlice []any
 
 // Add appends the given elements to the slice and returns an empty string.
-func (i *iSlice) Add(sl ...interface{}) string {
+func (i *iSlice) Add(sl ...any) string {
 	*i = append(*i, sl...)
 	return EmptyString
 }
 
 // MakeSlice converts variadic arguments into an iSlice type.
-func MakeSlice(values ...interface{}) iSlice {
+func MakeSlice(values ...any) iSlice {
 	return iSlice(values)
 }
 

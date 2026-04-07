@@ -27,7 +27,7 @@ type (
 	Request interface {
 		Context() context.Context
 		WithContext(ctx context.Context) *http.Request
-		SetValue(key string, value interface{})
+		SetValue(key string, value any)
 		SetMaxSize(maxSize int)
 		MaxSize() int
 
@@ -78,7 +78,7 @@ type (
 		// FormValue returns the form field last value for the provided name.
 		FormLastValue(name string) string
 
-		Object() interface{}
+		Object() any
 
 		Form() URLValuer
 		PostForm() URLValuer
@@ -132,7 +132,7 @@ type (
 
 		// Write returns the HTTP response writer.
 		Writer() io.Writer
-		Object() interface{}
+		Object() any
 
 		Hijacker(func(net.Conn)) error
 		Body() []byte
@@ -165,7 +165,7 @@ type (
 		// It replaces any existing values associated with key.
 		Set(string, string)
 
-		Object() interface{}
+		Object() any
 
 		Std() http.Header
 	}
@@ -196,7 +196,7 @@ type (
 		RawQuery() string
 		SetRawQuery(string)
 		String() string
-		Object() interface{}
+		Object() any
 	}
 
 	// Handler defines an interface to server HTTP requests via `ServeHTTP(Request, Response)`

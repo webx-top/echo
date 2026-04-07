@@ -65,7 +65,7 @@ func (a *I18n) Monitor() *I18n {
 	sg := singleflight.Group{}
 
 	onchange := func(file string) {
-		sg.Do(file, func() (interface{}, error) {
+		sg.Do(file, func() (any, error) {
 			return nil, reload(file)
 		})
 	}

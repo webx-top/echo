@@ -332,35 +332,35 @@ func (c *XContext) Forms() map[string][]string {
 
 // Bind binds the request body into specified type `i`. The default binder does
 // it based on Content-Type header.
-func (c *XContext) Bind(i interface{}, filter ...FormDataFilter) error {
+func (c *XContext) Bind(i any, filter ...FormDataFilter) error {
 	return c.echo.binder.Bind(i, c, filter...)
 }
 
-func (c *XContext) BindAndValidate(i interface{}, filter ...FormDataFilter) error {
+func (c *XContext) BindAndValidate(i any, filter ...FormDataFilter) error {
 	return c.echo.binder.BindAndValidate(i, c, filter...)
 }
 
-func (c *XContext) MustBind(i interface{}, filter ...FormDataFilter) error {
+func (c *XContext) MustBind(i any, filter ...FormDataFilter) error {
 	return c.echo.binder.MustBind(i, c, filter...)
 }
 
-func (c *XContext) MustBindAndValidate(i interface{}, filter ...FormDataFilter) error {
+func (c *XContext) MustBindAndValidate(i any, filter ...FormDataFilter) error {
 	return c.echo.binder.MustBindAndValidate(i, c, filter...)
 }
 
-func (c *XContext) BindWithDecoder(i interface{}, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+func (c *XContext) BindWithDecoder(i any, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 	return c.echo.binder.BindWithDecoder(i, c, valueDecoders, filter...)
 }
 
-func (c *XContext) BindAndValidateWithDecoder(i interface{}, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+func (c *XContext) BindAndValidateWithDecoder(i any, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 	return c.echo.binder.BindAndValidateWithDecoder(i, c, valueDecoders, filter...)
 }
 
-func (c *XContext) MustBindWithDecoder(i interface{}, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+func (c *XContext) MustBindWithDecoder(i any, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 	return c.echo.binder.MustBindWithDecoder(i, c, valueDecoders, filter...)
 }
 
-func (c *XContext) MustBindAndValidateWithDecoder(i interface{}, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+func (c *XContext) MustBindAndValidateWithDecoder(i any, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 	return c.echo.binder.MustBindAndValidateWithDecoder(i, c, valueDecoders, filter...)
 }
 
@@ -637,7 +637,7 @@ func (c *XContext) Port() int {
 //
 //	var user User
 //	err := c.MapForm(&user,`user`)
-func (c *XContext) MapForm(i interface{}, names ...string) error {
+func (c *XContext) MapForm(i any, names ...string) error {
 	return c.MapData(i, c.Request().Form().All(), names...)
 }
 

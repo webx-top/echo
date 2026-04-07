@@ -6,9 +6,9 @@ import (
 	"github.com/webx-top/com"
 )
 
-var DefaultTransferFuncs = map[string]func(value interface{}, row Store) interface{}{}
+var DefaultTransferFuncs = map[string]func(value any, row Store) any{}
 
-func RegisterTransferFunc(name string, fn func(value interface{}, row Store) interface{}) {
+func RegisterTransferFunc(name string, fn func(value any, row Store) any) {
 	DefaultTransferFuncs[name] = fn
 }
 

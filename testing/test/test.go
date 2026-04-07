@@ -28,7 +28,7 @@ func hit(e *echo.Echo, t *testing.T, configs []*Config, middelwares ...Middlewar
 		e.Use(h(buf))
 	}
 	for _, cfg := range configs {
-		ms := make([]interface{}, len(cfg.Middlewares))
+		ms := make([]any, len(cfg.Middlewares))
 		for k, m := range cfg.Middlewares {
 			ms[k] = m(buf)
 		}

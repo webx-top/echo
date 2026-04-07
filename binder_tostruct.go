@@ -48,31 +48,31 @@ func FormNames(s string) []string {
 }
 
 // NamedStructMap 自动将map值映射到结构体
-func NamedStructMap(e *Echo, m interface{}, data map[string][]string, topName string, filters ...FormDataFilter) error {
+func NamedStructMap(e *Echo, m any, data map[string][]string, topName string, filters ...FormDataFilter) error {
 	return namedStructMap(e, m, data, topName, nil, filters)
 }
 
-func NamedStructMapWithDecoder(e *Echo, m interface{}, data map[string][]string, topName string, valueDecoders BinderValueCustomDecoders, filters ...FormDataFilter) error {
+func NamedStructMapWithDecoder(e *Echo, m any, data map[string][]string, topName string, valueDecoders BinderValueCustomDecoders, filters ...FormDataFilter) error {
 	return namedStructMap(e, m, data, topName, valueDecoders, filters)
 }
 
-func FormToStruct(e *Echo, m interface{}, data map[string][]string, topName string, filters ...FormDataFilter) error {
+func FormToStruct(e *Echo, m any, data map[string][]string, topName string, filters ...FormDataFilter) error {
 	return namedStructMap(e, m, data, topName, nil, filters)
 }
 
-func FormToStructWithDecoder(e *Echo, m interface{}, data map[string][]string, topName string, valueDecoders BinderValueCustomDecoders, filters ...FormDataFilter) error {
+func FormToStructWithDecoder(e *Echo, m any, data map[string][]string, topName string, valueDecoders BinderValueCustomDecoders, filters ...FormDataFilter) error {
 	return namedStructMap(e, m, data, topName, valueDecoders, filters)
 }
 
-func FormToMap(e *Echo, m interface{}, data map[string][]string, topName string, filters ...FormDataFilter) error {
+func FormToMap(e *Echo, m any, data map[string][]string, topName string, filters ...FormDataFilter) error {
 	return namedStructMap(e, m, data, topName, nil, filters)
 }
 
-func FormToMapWithDecoder(e *Echo, m interface{}, data map[string][]string, topName string, valueDecoders BinderValueCustomDecoders, filters ...FormDataFilter) error {
+func FormToMapWithDecoder(e *Echo, m any, data map[string][]string, topName string, valueDecoders BinderValueCustomDecoders, filters ...FormDataFilter) error {
 	return namedStructMap(e, m, data, topName, valueDecoders, filters)
 }
 
-func namedStructMap(e *Echo, m interface{}, data map[string][]string, topName string, valueDecoders BinderValueCustomDecoders, filters []FormDataFilter) error {
+func namedStructMap(e *Echo, m any, data map[string][]string, topName string, valueDecoders BinderValueCustomDecoders, filters []FormDataFilter) error {
 	vc := reflect.ValueOf(m)
 	tc := reflect.TypeOf(m)
 
@@ -159,7 +159,7 @@ func (e *Echo) valueDecode(valueDecoders BinderValueCustomDecoders, propPath str
 	return nil
 }
 
-func (e *Echo) parseFormItem(keyNormalizer func(string) string, m interface{}, typev reflect.Type, value reflect.Value, names []string, propPath string, checkPath string, values []string, valueDecoders BinderValueCustomDecoders, filters []FormDataFilter) error {
+func (e *Echo) parseFormItem(keyNormalizer func(string) string, m any, typev reflect.Type, value reflect.Value, names []string, propPath string, checkPath string, values []string, valueDecoders BinderValueCustomDecoders, filters []FormDataFilter) error {
 	length := len(names)
 	vc := value
 	tc := typev
@@ -421,7 +421,7 @@ func (e *Echo) binderValueDecode(name string, typev reflect.Type, tv reflect.Val
 	return ErrNotImplemented
 }
 
-func (e *Echo) binderDecodeValue(decoder string, name string, values []string) (interface{}, error) {
+func (e *Echo) binderDecodeValue(decoder string, name string, values []string) (any, error) {
 	parts := strings.SplitN(decoder, `:`, 2)
 	decoder = parts[0]
 	var params string
@@ -509,7 +509,7 @@ func (e *Echo) setMap(logger logger.Logger,
 	return err
 }
 
-func SetReflectValue(source interface{}, dest reflect.Value) bool {
+func SetReflectValue(source any, dest reflect.Value) bool {
 	fv := reflect.ValueOf(source)
 	destT := dest.Type()
 	if destT.Name() == fv.Type().Name() {
@@ -545,7 +545,7 @@ func setField(logger logger.Logger, parentT reflect.Type, tv reflect.Value, f re
 		ok, _ := strconv.ParseBool(v)
 		SetReflectValue(ok, tv)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
-		var l interface{}
+		var l any
 		dateformat := tagfast.Value(parentT, f, `form_format`)
 		if len(dateformat) > 0 {
 			t, err := time.ParseInLocation(dateformat, v, time.Local)
@@ -566,7 +566,7 @@ func setField(logger logger.Logger, parentT reflect.Type, tv reflect.Value, f re
 		}
 		SetReflectValue(l, tv)
 	case reflect.Int64:
-		var l interface{}
+		var l any
 		switch tv.Interface().(type) {
 		case time.Duration:
 			l, _ = time.ParseDuration(v)
@@ -628,7 +628,7 @@ func setField(logger logger.Logger, parentT reflect.Type, tv reflect.Value, f re
 				logger.Warnf(`binder: arg %q as uint: %v`, v, err)
 			}
 		}
-		var l interface{}
+		var l any
 		switch kind {
 		case reflect.Uint:
 			l = uint(x)

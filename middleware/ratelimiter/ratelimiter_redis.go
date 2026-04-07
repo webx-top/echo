@@ -33,7 +33,7 @@ func (r *redisLimiter) removeLimit(key string) error {
 	return r.rc.DeleteKey(key)
 }
 
-func (r *redisLimiter) getLimit(key string, policy ...int) ([]interface{}, error) {
+func (r *redisLimiter) getLimit(key string, policy ...int) ([]any, error) {
 	keys := []string{key, fmt.Sprintf("{%s}:S", key)}
 	capacity := 3
 	length := len(policy)
@@ -42,7 +42,7 @@ func (r *redisLimiter) getLimit(key string, policy ...int) ([]interface{}, error
 	}
 
 	//fmt.Printf("redis max limit (%s) for (%s)",r.max,key)
-	args := make([]interface{}, capacity, capacity)
+	args := make([]any, capacity, capacity)
 	args[0] = genTimestamp()
 	if length == 0 {
 		args[1] = r.max
@@ -66,7 +66,7 @@ func (r *redisLimiter) getLimit(key string, policy ...int) ([]interface{}, error
 	}
 
 	if err == nil {
-		arr, ok := res.([]interface{})
+		arr, ok := res.([]any)
 		if ok && len(arr) == 4 {
 			return arr, nil
 		}
@@ -83,9 +83,9 @@ func isNoScriptErr(err error) bool {
 	return strings.HasPrefix(err.Error(), "NOSCRIPT ")
 }
 
-//LuaScriptForRedis script loading for cluster client and ring client for nodes changing. based on links below
-//https://github.com/thunks/thunk-ratelimiter
-//https://github.com/thunks/thunk-ratelimiter/blob/master/ratelimiter.lua
+// LuaScriptForRedis script loading for cluster client and ring client for nodes changing. based on links below
+// https://github.com/thunks/thunk-ratelimiter
+// https://github.com/thunks/thunk-ratelimiter/blob/master/ratelimiter.lua
 const LuaScriptForRedis string = `
 -- KEYS[1] target hash key
 -- KEYS[2] target hash key

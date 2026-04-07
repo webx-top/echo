@@ -163,6 +163,6 @@ func TestRouterMakeURI(t *testing.T) {
 	uri = r.MakeURI(New(), param.Store{`id`: `2001`})
 	assert.Equal(t, `/2001`, uri)
 
-	uri = r.MakeURI(New(), map[string]interface{}{`id`: 2002})
+	uri = r.MakeURI(New(), map[string]any{`id`: 2002})
 	assert.Equal(t, `/2002`, uri)
 }

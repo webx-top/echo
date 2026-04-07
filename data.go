@@ -35,25 +35,25 @@ func AsError(code pkgCode.Code) *Error {
 	return NewError(pkgCode.CodeDict.Get(code).Text, code)
 }
 
-//Data 响应数据
+// Data 响应数据
 type Data interface {
 	SetTmplFuncs()
 	SetContext(ctx Context) Data
 	String() string
-	Set(code int, args ...interface{}) Data
+	Set(code int, args ...any) Data
 	Reset() Data
 	SetByMap(Store) Data
 	SetError(err error, args ...int) Data
 	SetCode(code int) Data
 	SetURL(url string, args ...int) Data
-	SetInfo(info interface{}, args ...int) Data
-	SetZone(zone interface{}) Data
-	SetData(data interface{}, args ...int) Data
-	Gets() (code pkgCode.Code, info interface{}, zone interface{}, data interface{})
+	SetInfo(info any, args ...int) Data
+	SetZone(zone any) Data
+	SetData(data any, args ...int) Data
+	Gets() (code pkgCode.Code, info any, zone any, data any)
 	GetCode() pkgCode.Code
-	GetInfo() interface{}
-	GetZone() interface{}
-	GetData() interface{}
+	GetInfo() any
+	GetZone() any
+	GetData() any
 	GetURL() string
 	JSONP(callback string, codes ...int) error
 	JSON(codes ...int) error
@@ -64,10 +64,10 @@ type RawData struct {
 	context Context
 	Code    pkgCode.Code
 	State   string `json:",omitempty" xml:",omitempty"`
-	Info    interface{}
-	URL     string      `json:",omitempty" xml:",omitempty"`
-	Zone    interface{} `json:",omitempty" xml:",omitempty"`
-	Data    interface{} `json:",omitempty" xml:",omitempty"`
+	Info    any
+	URL     string `json:",omitempty" xml:",omitempty"`
+	Zone    any    `json:",omitempty" xml:",omitempty"`
+	Data    any    `json:",omitempty" xml:",omitempty"`
 }
 
 func (d *RawData) Error() string {
@@ -103,8 +103,8 @@ func (d *RawData) String() string {
 	return fmt.Sprintf(`%v`, d.Info)
 }
 
-//Gets 获取全部数据
-func (d *RawData) Gets() (pkgCode.Code, interface{}, interface{}, interface{}) {
+// Gets 获取全部数据
+func (d *RawData) Gets() (pkgCode.Code, any, any, any) {
 	return d.Code, d.Info, d.Zone, d.Data
 }
 
@@ -112,11 +112,11 @@ func (d *RawData) GetCode() pkgCode.Code {
 	return d.Code
 }
 
-func (d *RawData) GetInfo() interface{} {
+func (d *RawData) GetInfo() any {
 	return d.Info
 }
 
-func (d *RawData) GetZone() interface{} {
+func (d *RawData) GetZone() any {
 	return d.Zone
 }
 
@@ -124,8 +124,8 @@ func (d *RawData) GetURL() string {
 	return d.URL
 }
 
-//GetData 获取数据
-func (d *RawData) GetData() interface{} {
+// GetData 获取数据
+func (d *RawData) GetData() any {
 	return d.Data
 }
 
@@ -133,7 +133,7 @@ type ErrUnwrap interface {
 	Unwrap() error
 }
 
-//SetError 设置错误
+// SetError 设置错误
 func (d *RawData) SetError(err error, args ...int) Data {
 	if err == nil {
 		return d.SetCode(pkgCode.Success.Int())
@@ -163,14 +163,14 @@ func (d *RawData) SetError(err error, args ...int) Data {
 	return d
 }
 
-//SetCode 设置状态码
+// SetCode 设置状态码
 func (d *RawData) SetCode(code int) Data {
 	d.Code = pkgCode.Code(code)
 	d.State = d.Code.String()
 	return d
 }
 
-//SetURL 设置跳转网址
+// SetURL 设置跳转网址
 func (d *RawData) SetURL(url string, args ...int) Data {
 	d.URL = url
 	if len(args) > 0 {
@@ -179,8 +179,8 @@ func (d *RawData) SetURL(url string, args ...int) Data {
 	return d
 }
 
-//SetInfo 设置提示信息
-func (d *RawData) SetInfo(info interface{}, args ...int) Data {
+// SetInfo 设置提示信息
+func (d *RawData) SetInfo(info any, args ...int) Data {
 	d.Info = info
 	if len(args) > 0 {
 		d.SetCode(args[0])
@@ -188,7 +188,7 @@ func (d *RawData) SetInfo(info interface{}, args ...int) Data {
 	return d
 }
 
-//SetByMap 批量设置属性
+// SetByMap 批量设置属性
 func (d *RawData) SetByMap(s Store) Data {
 	if len(s) == 0 {
 		return d
@@ -225,14 +225,14 @@ func (d *RawData) SetByMap(s Store) Data {
 	return d
 }
 
-//SetZone 设置提示区域
-func (d *RawData) SetZone(zone interface{}) Data {
+// SetZone 设置提示区域
+func (d *RawData) SetZone(zone any) Data {
 	d.Zone = zone
 	return d
 }
 
-//SetData 设置正常数据
-func (d *RawData) SetData(data interface{}, args ...int) Data {
+// SetData 设置正常数据
+func (d *RawData) SetData(data any, args ...int) Data {
 	d.Data = data
 	if len(args) > 0 {
 		d.SetCode(args[0])
@@ -242,7 +242,7 @@ func (d *RawData) SetData(data interface{}, args ...int) Data {
 	return d
 }
 
-//SetContext 设置Context
+// SetContext 设置Context
 func (d *RawData) SetContext(ctx Context) Data {
 	d.context = ctx
 	return d
@@ -260,7 +260,7 @@ func (d *RawData) XML(codes ...int) error {
 	return d.context.XML(d, codes...)
 }
 
-//SetTmplFuncs 设置模板函数
+// SetTmplFuncs 设置模板函数
 func (d *RawData) SetTmplFuncs() {
 	flash, ok := d.context.Flash().(*RawData)
 	if ok {
@@ -271,19 +271,19 @@ func (d *RawData) SetTmplFuncs() {
 	d.context.SetFunc(`Code`, func() pkgCode.Code {
 		return flash.Code
 	})
-	d.context.SetFunc(`Info`, func() interface{} {
+	d.context.SetFunc(`Info`, func() any {
 		return flash.Info
 	})
-	d.context.SetFunc(`Zone`, func() interface{} {
+	d.context.SetFunc(`Zone`, func() any {
 		return flash.Zone
 	})
-	d.context.SetFunc(`FURL`, func() interface{} {
+	d.context.SetFunc(`FURL`, func() any {
 		return flash.URL
 	})
 }
 
 // Set 设置输出(code,info,zone,RawData)
-func (d *RawData) Set(code int, args ...interface{}) Data {
+func (d *RawData) Set(code int, args ...any) Data {
 	d.SetCode(code)
 	var hasData bool
 	switch len(args) {

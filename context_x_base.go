@@ -36,7 +36,7 @@ type XContext struct {
 	route               *Route
 	rid                 int
 	echo                *Echo
-	funcs               map[string]interface{}
+	funcs               map[string]any
 	renderer            Renderer
 	renderDataWrapper   DataWrapper
 	sessionOptions      *SessionOptions
@@ -89,7 +89,7 @@ func (c *XContext) WithContext(ctx context.Context) *http.Request {
 	return c.request.WithContext(ctx)
 }
 
-func (c *XContext) SetValue(key string, value interface{}) {
+func (c *XContext) SetValue(key string, value any) {
 	c.request.SetValue(key, value)
 }
 
@@ -121,7 +121,7 @@ func (c *XContext) Err() error {
 	return c.StdContext().Err()
 }
 
-func (c *XContext) Value(key interface{}) interface{} {
+func (c *XContext) Value(key any) any {
 	return c.StdContext().Value(key)
 }
 
@@ -150,14 +150,14 @@ func (c *XContext) Error(err error) {
 	c.echo.httpErrorHandler(err, c)
 }
 
-func (c *XContext) NewError(code pkgCode.Code, msg string, args ...interface{}) *Error {
+func (c *XContext) NewError(code pkgCode.Code, msg string, args ...any) *Error {
 	if len(msg) > 0 {
 		msg = c.T(msg, args...)
 	}
 	return NewError(msg, code).NoClone()
 }
 
-func (c *XContext) NewErrorWith(err error, code pkgCode.Code, args ...interface{}) *Error {
+func (c *XContext) NewErrorWith(err error, code pkgCode.Code, args ...any) *Error {
 	var msg string
 	if len(args) > 0 {
 		msg = param.AsString(args[0])
@@ -252,25 +252,25 @@ func (c *XContext) Reset(req engine.Request, res engine.Response) {
 	}
 }
 
-func (c *XContext) GetFunc(key string) interface{} {
+func (c *XContext) GetFunc(key string) any {
 	return c.funcs[key]
 }
 
-func (c *XContext) SetFunc(key string, val interface{}) {
-	if ctxFunc, ok := val.(func(Context) interface{}); ok {
+func (c *XContext) SetFunc(key string, val any) {
+	if ctxFunc, ok := val.(func(Context) any); ok {
 		val = ctxFunc(c)
 	}
 	c.funcs[key] = val
 }
 
-func (c *XContext) ResetFuncs(funcs map[string]interface{}) {
-	c.funcs = map[string]interface{}{}
+func (c *XContext) ResetFuncs(funcs map[string]any) {
+	c.funcs = map[string]any{}
 	for name, fn := range funcs {
 		c.SetFunc(name, fn)
 	}
 }
 
-func (c *XContext) Funcs() map[string]interface{} {
+func (c *XContext) Funcs() map[string]any {
 	return c.funcs
 }
 
@@ -281,7 +281,7 @@ func (c *XContext) Renderer() Renderer {
 	return c.echo.renderer
 }
 
-func (c *XContext) getRenderData(data interface{}) interface{} {
+func (c *XContext) getRenderData(data any) any {
 	if data == nil {
 		data = c.dataEngine.GetData()
 		if c.renderDataWrapper == nil {
@@ -301,7 +301,7 @@ func (c *XContext) getRenderData(data interface{}) interface{} {
 	return data
 }
 
-func (c *XContext) Fetch(name string, data interface{}) (b []byte, err error) {
+func (c *XContext) Fetch(name string, data any) (b []byte, err error) {
 	name, err = c.echo.Template(c, name, data)
 	if err != nil {
 		return
@@ -323,7 +323,7 @@ func (c *XContext) Fetch(name string, data interface{}) (b []byte, err error) {
 	return
 }
 
-func (c *XContext) Validate(item interface{}, args ...interface{}) error {
+func (c *XContext) Validate(item any, args ...any) error {
 	return Validate(c, item, args...)
 }
 
@@ -391,7 +391,7 @@ func (c *XContext) Data() Data {
 }
 
 // MapData 映射数据到结构体
-func (c *XContext) MapData(i interface{}, data map[string][]string, names ...string) error {
+func (c *XContext) MapData(i any, data map[string][]string, names ...string) error {
 	var name string
 	if len(names) > 0 {
 		name = names[0]
@@ -503,10 +503,10 @@ func (c *XContext) URLFor(uri string, relative ...bool) string {
 	return c.SiteRoot() + c.RelativeURL(uri)
 }
 
-func (c *XContext) URLByName(name string, args ...interface{}) string {
+func (c *XContext) URLByName(name string, args ...any) string {
 	return c.SiteRoot() + c.echo.URIWithContext(c, name, args...)
 }
 
-func (c *XContext) RelativeURLByName(name string, args ...interface{}) string {
+func (c *XContext) RelativeURLByName(name string, args ...any) string {
 	return c.echo.URIWithContext(c, name, args...)
 }

@@ -101,7 +101,7 @@ type Standard struct {
 	Ext                string
 	tmplPathFixer      func(echo.Context, string) string
 	debug              bool
-	getFuncs           func() map[string]interface{}
+	getFuncs           func() map[string]any
 	logger             logger.Logger
 	fileEvents         []func(string)
 	quotedLeft         string
@@ -146,7 +146,7 @@ func (a *Standard) SetContentProcessor(fn func(tmpl string, content []byte) []by
 	a.contentProcessors = append(a.contentProcessors, fn)
 }
 
-func (a *Standard) SetFuncMap(fn func() map[string]interface{}) {
+func (a *Standard) SetFuncMap(fn func() map[string]any) {
 	a.getFuncs = fn
 }
 
@@ -231,12 +231,12 @@ func (a *Standard) InitRegexp() {
 }
 
 // Render HTML
-func (a *Standard) Render(w io.Writer, tmplName string, values interface{}, c echo.Context) error {
+func (a *Standard) Render(w io.Writer, tmplName string, values any, c echo.Context) error {
 	return a.RenderBy(w, tmplName, a.RawContent, values, c)
 }
 
 // RenderBy render by content
-func (a *Standard) RenderBy(w io.Writer, tmplName string, tmplContent func(string) ([]byte, error), values interface{}, c echo.Context) error {
+func (a *Standard) RenderBy(w io.Writer, tmplName string, tmplContent func(string) ([]byte, error), values any, c echo.Context) error {
 	tmpl, err := a.parse(c, tmplName, tmplContent)
 	if err != nil {
 		return err
@@ -254,8 +254,8 @@ func (a *Standard) parse(c echo.Context, tmplName string, tmplContent func(strin
 		tmpl = cachedData.template
 		return
 	}
-	var v interface{}
-	v, err, _ = a.sg.Do(cachedKey, func() (interface{}, error) {
+	var v any
+	v, err, _ = a.sg.Do(cachedKey, func() (any, error) {
 		var funcMap template.FuncMap
 		if a.getFuncs != nil {
 			funcMap = template.FuncMap(a.getFuncs())
@@ -355,7 +355,7 @@ func (a *Standard) find(c echo.Context,
 	return
 }
 
-func (a *Standard) Fetch(tmplName string, data interface{}, c echo.Context) string {
+func (a *Standard) Fetch(tmplName string, data any, c echo.Context) string {
 	content, err := a.parse(c, tmplName, a.RawContent)
 	if err != nil {
 		return err.Error()
@@ -363,7 +363,7 @@ func (a *Standard) Fetch(tmplName string, data interface{}, c echo.Context) stri
 	return a.execute(content, data)
 }
 
-func (a *Standard) execute(tmpl *template.Template, data interface{}) string {
+func (a *Standard) execute(tmpl *template.Template, data any) string {
 	buf := bufferpool.Get()
 	defer bufferpool.Release(buf)
 	err := tmpl.ExecuteTemplate(buf, tmpl.Name(), data)

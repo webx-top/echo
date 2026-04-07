@@ -43,15 +43,15 @@ func SetFormatRenderers(formatRenderers map[string]echo.FormatRender) *echo.Echo
 	return Default.SetFormatRenderers(formatRenderers)
 }
 
-func SetUploadURLGenerator(fn func(echo.Context, string, ...interface{}) string) *echo.Echo {
+func SetUploadURLGenerator(fn func(echo.Context, string, ...any) string) *echo.Echo {
 	return Default.SetUploadURLGenerator(fn)
 }
 
-func UploadURL(ctx echo.Context, subdir string, values ...interface{}) string {
+func UploadURL(ctx echo.Context, subdir string, values ...any) string {
 	return Default.UploadURL(ctx, subdir, values...)
 }
 
-func UploadURLGenerator(fn func(echo.Context, string, ...interface{}) string) func(echo.Context, string, ...interface{}) string {
+func UploadURLGenerator(fn func(echo.Context, string, ...any) string) func(echo.Context, string, ...any) string {
 	return Default.UploadURLGenerator(fn)
 }
 
@@ -166,96 +166,96 @@ func Multilingual() bool {
 }
 
 // Use adds handler to the middleware chain.
-func Use(middleware ...interface{}) {
+func Use(middleware ...any) {
 	Default.Use(middleware...)
 }
 
 // Pre is alias
-func Pre(middleware ...interface{}) {
+func Pre(middleware ...any) {
 	Default.Pre(middleware...)
 }
 
-func PreUse(middleware ...interface{}) {
+func PreUse(middleware ...any) {
 	Default.PreUse(middleware...)
 }
 
 // Clear middleware
-func Clear(middleware ...interface{}) {
+func Clear(middleware ...any) {
 	Default.Clear(middleware...)
 }
 
 // Connect adds a CONNECT route > handler to the router.
-func Connect(path string, h interface{}, m ...interface{}) echo.IRouter {
+func Connect(path string, h any, m ...any) echo.IRouter {
 	return Default.Connect(path, h, m...)
 }
 
 // Delete adds a DELETE route > handler to the router.
-func Delete(path string, h interface{}, m ...interface{}) echo.IRouter {
+func Delete(path string, h any, m ...any) echo.IRouter {
 	return Default.Delete(path, h, m...)
 }
 
 // Get adds a GET route > handler to the router.
-func Get(path string, h interface{}, m ...interface{}) echo.IRouter {
+func Get(path string, h any, m ...any) echo.IRouter {
 	return Default.Get(path, h, m...)
 }
 
 // Head adds a HEAD route > handler to the router.
-func Head(path string, h interface{}, m ...interface{}) echo.IRouter {
+func Head(path string, h any, m ...any) echo.IRouter {
 	return Default.Head(path, h, m...)
 }
 
 // Options adds an OPTIONS route > handler to the router.
-func Options(path string, h interface{}, m ...interface{}) echo.IRouter {
+func Options(path string, h any, m ...any) echo.IRouter {
 	return Default.Options(path, h, m...)
 }
 
 // Patch adds a PATCH route > handler to the router.
-func Patch(path string, h interface{}, m ...interface{}) echo.IRouter {
+func Patch(path string, h any, m ...any) echo.IRouter {
 	return Default.Patch(path, h, m...)
 }
 
 // Post adds a POST route > handler to the router.
-func Post(path string, h interface{}, m ...interface{}) echo.IRouter {
+func Post(path string, h any, m ...any) echo.IRouter {
 	return Default.Post(path, h, m...)
 }
 
 // Put adds a PUT route > handler to the router.
-func Put(path string, h interface{}, m ...interface{}) echo.IRouter {
+func Put(path string, h any, m ...any) echo.IRouter {
 	return Default.Put(path, h, m...)
 }
 
 // Trace adds a TRACE route > handler to the router.
-func Trace(path string, h interface{}, m ...interface{}) echo.IRouter {
+func Trace(path string, h any, m ...any) echo.IRouter {
 	return Default.Trace(path, h, m...)
 }
 
 // Any adds a route > handler to the router for all HTTP methods.
-func Any(path string, h interface{}, m ...interface{}) echo.IRouter {
+func Any(path string, h any, m ...any) echo.IRouter {
 	return Default.Any(path, h, m...)
 }
 
-func Route(methods string, path string, h interface{}, m ...interface{}) echo.IRouter {
+func Route(methods string, path string, h any, m ...any) echo.IRouter {
 	return Default.Route(methods, path, h, m...)
 }
 
 // Match adds a route > handler to the router for multiple HTTP methods provided.
-func Match(methods []string, path string, h interface{}, m ...interface{}) echo.IRouter {
+func Match(methods []string, path string, h any, m ...any) echo.IRouter {
 	return Default.Match(methods, path, h, m...)
 }
 
-func SetHandlerWrapper(funcs ...func(interface{}) echo.Handler) {
+func SetHandlerWrapper(funcs ...func(any) echo.Handler) {
 	Default.SetHandlerWrapper(funcs...)
 }
 
-func SetMiddlewareWrapper(funcs ...func(interface{}) echo.Middleware) {
+func SetMiddlewareWrapper(funcs ...func(any) echo.Middleware) {
 	Default.SetMiddlewareWrapper(funcs...)
 }
 
-func AddHandlerWrapper(funcs ...func(interface{}) echo.Handler) {
+func AddHandlerWrapper(funcs ...func(any) echo.Handler) {
 	Default.AddHandlerWrapper(funcs...)
 }
 
-func AddMiddlewareWrapper(funcs ...func(interface{}) echo.Middleware) {
+func AddMiddlewareWrapper(funcs ...func(any) echo.Middleware) {
 	Default.AddMiddlewareWrapper(funcs...)
 }
 
@@ -268,17 +268,17 @@ func SetPrefix(prefix string) *echo.Echo {
 }
 
 // MetaHandler Add meta information about endpoint
-func MetaHandler(m echo.H, handler interface{}, requests ...interface{}) echo.Handler {
+func MetaHandler(m echo.H, handler any, requests ...any) echo.Handler {
 	return Default.MetaHandler(m, handler, requests...)
 }
 
 // MakeHandler make validateable hanlder
-func MakeHandler(handler interface{}, requests ...interface{}) echo.Handler {
+func MakeHandler(handler any, requests ...any) echo.Handler {
 	return Default.MakeHandler(handler, requests...)
 }
 
 // MetaHandlerWithRequest Add meta information about endpoint
-func MetaHandlerWithRequest(m echo.H, handler interface{}, request interface{}, methods ...string) echo.Handler {
+func MetaHandlerWithRequest(m echo.H, handler any, request any, methods ...string) echo.Handler {
 	return Default.MetaHandlerWithRequest(m, handler, request, methods...)
 }
 
@@ -287,11 +287,11 @@ func RebuildRouter(args ...[]*echo.Route) *echo.Echo {
 	return Default.RebuildRouter(args...)
 }
 
-func Host(name string, m ...interface{}) *echo.Group {
+func Host(name string, m ...any) *echo.Group {
 	return Default.Host(name, m...)
 }
 
-func TypeHost(alias string, args ...interface{}) echo.TypeHost {
+func TypeHost(alias string, args ...any) echo.TypeHost {
 	return Default.TypeHost(alias, args...)
 }
 
@@ -300,17 +300,17 @@ func OnHostFound(onHostFound func(echo.Context) (bool, error)) *echo.Echo {
 }
 
 // Group creates a new sub-router with prefix.
-func Group(prefix string, m ...interface{}) *echo.Group {
+func Group(prefix string, m ...any) *echo.Group {
 	return Default.Group(prefix, m...)
 }
 
 // URI generates a URI from handler.
-func URI(handler interface{}, params ...interface{}) string {
+func URI(handler any, params ...any) string {
 	return Default.URI(handler, params...)
 }
 
 // URL is an alias for `URI` function.
-func URL(h interface{}, params ...interface{}) string {
+func URL(h any, params ...any) string {
 	return Default.URL(h, params...)
 }
 

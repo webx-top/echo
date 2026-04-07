@@ -82,7 +82,7 @@ var DefaultExecuter = func(session sockjs.Session) error {
 	}
 }
 
-func HanderWrapper(v interface{}) echo.Handler {
+func HanderWrapper(v any) echo.Handler {
 	if h, ok := v.(func(sockjs.Session) error); ok {
 		return Websocket(``, h, nil)
 	}

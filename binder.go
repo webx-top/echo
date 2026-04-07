@@ -9,18 +9,18 @@ import (
 type (
 	// Binder is the interface that wraps the Bind method.
 	Binder interface {
-		Bind(interface{}, Context, ...FormDataFilter) error
-		BindAndValidate(interface{}, Context, ...FormDataFilter) error
-		MustBind(interface{}, Context, ...FormDataFilter) error
-		MustBindAndValidate(interface{}, Context, ...FormDataFilter) error
+		Bind(any, Context, ...FormDataFilter) error
+		BindAndValidate(any, Context, ...FormDataFilter) error
+		MustBind(any, Context, ...FormDataFilter) error
+		MustBindAndValidate(any, Context, ...FormDataFilter) error
 
-		BindWithDecoder(interface{}, Context, BinderValueCustomDecoders, ...FormDataFilter) error
-		BindAndValidateWithDecoder(interface{}, Context, BinderValueCustomDecoders, ...FormDataFilter) error
-		MustBindWithDecoder(interface{}, Context, BinderValueCustomDecoders, ...FormDataFilter) error
-		MustBindAndValidateWithDecoder(interface{}, Context, BinderValueCustomDecoders, ...FormDataFilter) error
+		BindWithDecoder(any, Context, BinderValueCustomDecoders, ...FormDataFilter) error
+		BindAndValidateWithDecoder(any, Context, BinderValueCustomDecoders, ...FormDataFilter) error
+		MustBindWithDecoder(any, Context, BinderValueCustomDecoders, ...FormDataFilter) error
+		MustBindAndValidateWithDecoder(any, Context, BinderValueCustomDecoders, ...FormDataFilter) error
 	}
 	binder struct {
-		decoders map[string]func(interface{}, Context, BinderValueCustomDecoders, ...FormDataFilter) error
+		decoders map[string]func(any, Context, BinderValueCustomDecoders, ...FormDataFilter) error
 	}
 
 	BeforeBind interface {
@@ -29,14 +29,14 @@ type (
 
 	// for tag
 
-	BinderValueDecoder func(field string, values []string, params string) (interface{}, error)
-	BinderValueEncoder func(field string, value interface{}, params string) []string
+	BinderValueDecoder func(field string, values []string, params string) (any, error)
+	BinderValueEncoder func(field string, value any, params string) []string
 
 	// for function argument
 
-	BinderValueCustomDecoder  func(values []string) (interface{}, error)
+	BinderValueCustomDecoder  func(values []string) (any, error)
 	BinderValueCustomDecoders map[string]BinderValueCustomDecoder // 这里的 key 为结构体字段或map的key层级路径
-	BinderValueCustomEncoder  func(interface{}) []string
+	BinderValueCustomEncoder  func(any) []string
 	BinderValueCustomEncoders map[string]BinderValueCustomEncoder // 这里的 key 为表单字段层级路径
 
 	ValueDecodersGetter interface {
@@ -81,23 +81,23 @@ func NewBinder(e *Echo) Binder {
 	}
 }
 
-func (b *binder) MustBind(i interface{}, c Context, filter ...FormDataFilter) error {
+func (b *binder) MustBind(i any, c Context, filter ...FormDataFilter) error {
 	return b.MustBindWithDecoder(i, c, nil, filter...)
 }
 
-func (b *binder) MustBindAndValidate(i interface{}, c Context, filter ...FormDataFilter) error {
+func (b *binder) MustBindAndValidate(i any, c Context, filter ...FormDataFilter) error {
 	return b.MustBindAndValidateWithDecoder(i, c, nil, filter...)
 }
 
-func (b *binder) Bind(i interface{}, c Context, filter ...FormDataFilter) (err error) {
+func (b *binder) Bind(i any, c Context, filter ...FormDataFilter) (err error) {
 	return b.BindWithDecoder(i, c, nil, filter...)
 }
 
-func (b *binder) BindAndValidate(i interface{}, c Context, filter ...FormDataFilter) error {
+func (b *binder) BindAndValidate(i any, c Context, filter ...FormDataFilter) error {
 	return b.BindAndValidateWithDecoder(i, c, nil, filter...)
 }
 
-func (b *binder) MustBindWithDecoder(i interface{}, c Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+func (b *binder) MustBindWithDecoder(i any, c Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 	if f, y := i.(BeforeBind); y {
 		if err := f.BeforeBind(c); err != nil {
 			return err
@@ -114,14 +114,14 @@ func (b *binder) MustBindWithDecoder(i interface{}, c Context, valueDecoders Bin
 	return ErrUnsupportedMediaType
 }
 
-func (b *binder) MustBindAndValidateWithDecoder(i interface{}, c Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+func (b *binder) MustBindAndValidateWithDecoder(i any, c Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 	if err := b.MustBindWithDecoder(i, c, valueDecoders, filter...); err != nil {
 		return err
 	}
 	return ValidateStruct(c, i)
 }
 
-func (b *binder) BindWithDecoder(i interface{}, c Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) (err error) {
+func (b *binder) BindWithDecoder(i any, c Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) (err error) {
 	err = b.MustBindWithDecoder(i, c, valueDecoders, filter...)
 	if err == ErrUnsupportedMediaType {
 		err = nil
@@ -129,7 +129,7 @@ func (b *binder) BindWithDecoder(i interface{}, c Context, valueDecoders BinderV
 	return
 }
 
-func (b *binder) BindAndValidateWithDecoder(i interface{}, c Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
+func (b *binder) BindAndValidateWithDecoder(i any, c Context, valueDecoders BinderValueCustomDecoders, filter ...FormDataFilter) error {
 	if err := b.MustBindWithDecoder(i, c, valueDecoders, filter...); err != nil {
 		if err != ErrUnsupportedMediaType {
 			return err
@@ -138,10 +138,10 @@ func (b *binder) BindAndValidateWithDecoder(i interface{}, c Context, valueDecod
 	return ValidateStruct(c, i)
 }
 
-func (b *binder) SetDecoders(decoders map[string]func(interface{}, Context, BinderValueCustomDecoders, ...FormDataFilter) error) {
+func (b *binder) SetDecoders(decoders map[string]func(any, Context, BinderValueCustomDecoders, ...FormDataFilter) error) {
 	b.decoders = decoders
 }
 
-func (b *binder) AddDecoder(mime string, decoder func(interface{}, Context, BinderValueCustomDecoders, ...FormDataFilter) error) {
+func (b *binder) AddDecoder(mime string, decoder func(any, Context, BinderValueCustomDecoders, ...FormDataFilter) error) {
 	b.decoders[mime] = decoder
 }

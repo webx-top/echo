@@ -53,7 +53,7 @@ func Wd() string {
 }
 
 // HandlerName returns the handler name
-func HandlerName(h interface{}) string {
+func HandlerName(h any) string {
 	if h == nil {
 		return `<nil>`
 	}
@@ -66,7 +66,7 @@ func HandlerName(h interface{}) string {
 }
 
 // HandlerPath returns the handler path
-func HandlerPath(h interface{}) string {
+func HandlerPath(h any) string {
 	v := reflect.ValueOf(h)
 	t := v.Type()
 	switch t.Kind() {
@@ -169,7 +169,7 @@ func Clear[T comparable](old []T, clears ...T) []T {
 }
 
 // Dump 输出对象和数组的结构信息
-func Dump(m interface{}, printOrNot ...bool) (r string) {
+func Dump(m any, printOrNot ...bool) (r string) {
 	v, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
 		fmt.Printf("%v\n", err)

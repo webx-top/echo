@@ -114,8 +114,8 @@ type Cookier interface {
 	Get(key string) string
 	DecryptGet(key string) string
 	Add(cookies ...*http.Cookie) Cookier
-	Set(key string, val string, args ...interface{}) Cookier
-	EncryptSet(key string, val string, args ...interface{}) Cookier
+	Set(key string, val string, args ...any) Cookier
+	EncryptSet(key string, val string, args ...any) Cookier
 	Send()
 }
 
@@ -201,7 +201,7 @@ func (c *cookie) Add(cookies ...*http.Cookie) Cookier {
 // @param bool args[3]:secure
 // @param bool args[4]:httpOnly
 // @param string args[5]:sameSite (lax/strict/default)
-func (c *cookie) Set(key string, val string, args ...interface{}) Cookier {
+func (c *cookie) Set(key string, val string, args ...any) Cookier {
 	cookie := NewCookie(key, val, c.context.CookieOptions())
 	switch len(args) {
 	case 6:
@@ -256,7 +256,7 @@ func (c *cookie) Set(key string, val string, args ...interface{}) Cookier {
 	return c
 }
 
-func (c *cookie) EncryptSet(key string, val string, args ...interface{}) Cookier {
+func (c *cookie) EncryptSet(key string, val string, args ...any) Cookier {
 	if len(val) > 0 && c.context.CookieOptions().Cryptor != nil {
 		encrypted, err := c.context.CookieOptions().Cryptor.EncryptString(val)
 		if err == nil {

@@ -46,7 +46,7 @@ func newMemoryLimiter(opts *RateLimiterConfig) *limiter {
 }
 
 // abstractLimiter interface
-func (m *memoryLimiter) getLimit(key string, policy ...int) ([]interface{}, error) {
+func (m *memoryLimiter) getLimit(key string, policy ...int) ([]any, error) {
 	length := len(policy)
 	var args []int
 	if length == 0 {
@@ -64,7 +64,7 @@ func (m *memoryLimiter) getLimit(key string, policy ...int) ([]interface{}, erro
 	res := m.getItem(key, args...)
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	return []interface{}{res.remaining, res.total, res.duration, res.expire}, nil
+	return []any{res.remaining, res.total, res.duration, res.expire}, nil
 }
 
 // abstractLimiter interface

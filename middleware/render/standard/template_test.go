@@ -21,7 +21,7 @@ import (
 func TestTemplate(t *testing.T) {
 	tmpl := template.New(`test`)
 	var now string
-	funcMap := map[string]interface{}{
+	funcMap := map[string]any{
 		`now`: func() template.HTML {
 			now = time.Now().Format(time.RFC3339Nano)
 			fmt.Println(now)
@@ -84,7 +84,7 @@ func TestSlotRender(t *testing.T) {
 	a := New(`test`)
 	a.SetManager(&testTemplateMgr{})
 	a.Init()
-	a.SetFuncMap(func() map[string]interface{} {
+	a.SetFuncMap(func() map[string]any {
 		return tplfunc.New()
 	})
 	ctx := defaults.NewMockContext()
@@ -111,7 +111,7 @@ func BenchmarkXxx(b *testing.B) {
 	a := New(`test`)
 	a.SetManager(&testTemplateMgr{})
 	a.Init()
-	a.SetFuncMap(func() map[string]interface{} {
+	a.SetFuncMap(func() map[string]any {
 		return tplfunc.New()
 	})
 	b.Run("fetch", func(b *testing.B) {

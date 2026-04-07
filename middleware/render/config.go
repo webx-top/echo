@@ -30,7 +30,7 @@ type Config struct {
 	StaticOptions    *middleware.StaticOptions
 	Debug            bool
 	renderer         driver.Driver
-	FuncMapGlobal    map[string]interface{}
+	FuncMapGlobal    map[string]any
 	RendererDo       []func(driver.Driver)
 	CustomParser     func(tmpl string, content []byte) []byte
 
@@ -143,7 +143,7 @@ func (t *Config) HTTPErrorHandler() echo.HTTPErrorHandler {
 	return HTTPErrorHandler(opt)
 }
 
-func (t *Config) StaticMiddleware() interface{} {
+func (t *Config) StaticMiddleware() any {
 	if t.StaticOptions != nil {
 		return middleware.Static(t.StaticOptions)
 	}
@@ -164,7 +164,7 @@ func (t *Config) ApplyTo(e *echo.Echo, manager ...driver.Manager) *Config {
 	return t
 }
 
-func defaultTplFuncMap() map[string]interface{} {
+func defaultTplFuncMap() map[string]any {
 	return tplfunc.TplFuncMap
 }
 
@@ -173,7 +173,7 @@ func (t *Config) MakeRenderer(manager ...driver.Manager) driver.Driver {
 	if t.FuncMapGlobal == nil {
 		renderer.SetFuncMap(defaultTplFuncMap)
 	} else {
-		renderer.SetFuncMap(func() map[string]interface{} { return t.FuncMapGlobal })
+		renderer.SetFuncMap(func() map[string]any { return t.FuncMapGlobal })
 	}
 	t.renderer = renderer
 	return renderer

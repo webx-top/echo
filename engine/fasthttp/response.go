@@ -43,7 +43,7 @@ func NewResponse(r *Request) *Response {
 	}
 }
 
-func (r *Response) Object() interface{} {
+func (r *Response) Object() any {
 	return r.fasthttpCtx()
 }
 

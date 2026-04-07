@@ -27,14 +27,14 @@ import (
 )
 
 // T 标记为多语言文本(fake)
-func T(format string, _ ...interface{}) string {
+func T(format string, _ ...any) string {
 	return format
 }
 
 // E creates a new error using the given format string and optional arguments.
 // If arguments are provided, it uses fmt.Errorf to format the error message.
 // If no arguments are provided, it creates a new error with the format string as-is.
-func E(format string, args ...interface{}) error {
+func E(format string, args ...any) error {
 	if len(args) > 0 {
 		return fmt.Errorf(format, args...)
 	}
@@ -47,8 +47,8 @@ type (
 )
 
 type Translator interface {
-	T(format string, args ...interface{}) string
-	E(format string, args ...interface{}) error
+	T(format string, args ...any) string
+	E(format string, args ...any) error
 	Lang() LangCode
 	Multilingual
 }
@@ -180,7 +180,7 @@ func trimTranslatorGroupPrefix(format string) string {
 // T translates the given format string after removing translator group prefix.
 // If args are provided, it uses fmt.Sprintf to format the string with the arguments.
 // Returns the translated or formatted string.
-func (n *NopTranslate) T(format string, args ...interface{}) string {
+func (n *NopTranslate) T(format string, args ...any) string {
 	format = trimTranslatorGroupPrefix(format)
 	if len(args) > 0 {
 		return fmt.Sprintf(format, args...)
@@ -191,7 +191,7 @@ func (n *NopTranslate) T(format string, args ...interface{}) string {
 // E wraps the E function to return an error with formatted message
 // format: the error message format string
 // args: arguments to format into the message
-func (n *NopTranslate) E(format string, args ...interface{}) error {
+func (n *NopTranslate) E(format string, args ...any) error {
 	return E(format, args...)
 }
 

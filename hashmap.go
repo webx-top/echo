@@ -75,8 +75,8 @@ func (m *Mapx) IsSlice() bool {
 	return len(m.Slice) > 0
 }
 
-func (m *Mapx) AsMap() map[string]interface{} {
-	r := map[string]interface{}{}
+func (m *Mapx) AsMap() map[string]any {
+	r := map[string]any{}
 	for key, mapx := range m.Map {
 		if mapx == nil {
 			continue
@@ -121,8 +121,8 @@ func (m *Mapx) AsStore() Store {
 	return r
 }
 
-func (m *Mapx) AsSlice() []interface{} {
-	r := make([]interface{}, len(m.Slice))
+func (m *Mapx) AsSlice() []any {
+	r := make([]any, len(m.Slice))
 	for key, mapx := range m.Slice {
 		if mapx == nil {
 			continue

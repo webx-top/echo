@@ -50,14 +50,14 @@ type Driver interface {
 	Manager() Manager
 
 	//设置模板函数
-	SetFuncMap(func() map[string]interface{})
+	SetFuncMap(func() map[string]any)
 
 	//渲染模板
-	Render(io.Writer, string, interface{}, echo.Context) error
-	RenderBy(w io.Writer, name string, tmplContent func(string) ([]byte, error), data interface{}, ctx echo.Context) error
+	Render(io.Writer, string, any, echo.Context) error
+	RenderBy(w io.Writer, name string, tmplContent func(string) ([]byte, error), data any, ctx echo.Context) error
 
 	//获取模板渲染后的结果
-	Fetch(string, interface{}, echo.Context) string
+	Fetch(string, any, echo.Context) string
 
 	//读取模板原始内容
 	RawContent(string) ([]byte, error)
@@ -78,12 +78,12 @@ type NopRenderer struct {
 	mgr Manager
 }
 
-func (n *NopRenderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+func (n *NopRenderer) Render(w io.Writer, name string, data any, c echo.Context) error {
 	return nil
 }
 
 // RenderBy render by content
-func (n *NopRenderer) RenderBy(w io.Writer, tmplName string, tmplContent func(string) ([]byte, error), values interface{}, c echo.Context) error {
+func (n *NopRenderer) RenderBy(w io.Writer, tmplName string, tmplContent func(string) ([]byte, error), values any, c echo.Context) error {
 	return nil
 }
 
@@ -98,8 +98,8 @@ func (n *NopRenderer) SetLogger(_ logger.Logger)                            {}
 func (n *NopRenderer) Logger() logger.Logger                                { return nil }
 func (n *NopRenderer) SetContentProcessor(fn func(string, []byte) []byte)   {}
 func (n *NopRenderer) SetManager(mgr Manager)                               { n.mgr = mgr }
-func (n *NopRenderer) SetFuncMap(_ func() map[string]interface{})           {}
-func (n *NopRenderer) Fetch(_ string, _ interface{}, _ echo.Context) string { return `` }
+func (n *NopRenderer) SetFuncMap(_ func() map[string]any)                   {}
+func (n *NopRenderer) Fetch(_ string, _ any, _ echo.Context) string         { return `` }
 func (n *NopRenderer) RawContent(_ string) ([]byte, error)                  { return nil, nil }
 func (n *NopRenderer) MonitorEvent(_ func(string))                          {}
 func (n *NopRenderer) ClearCache()                                          {}

@@ -38,11 +38,11 @@ type Context interface {
 	//Standard Context
 	StdContext() context.Context
 	WithContext(ctx context.Context) *http.Request
-	SetValue(key string, value interface{})
+	SetValue(key string, value any)
 
 	SetValidator(Validator)
 	Validator() Validator
-	Validate(item interface{}, args ...interface{}) error
+	Validate(item any, args ...any) error
 	translator
 	SetTranslator(Translator)
 	Translator() Translator
@@ -122,11 +122,11 @@ type Context interface {
 	// Context data
 	//----------------
 
-	Set(string, interface{})
-	SetMore(keyVal ...interface{})
-	Get(string, ...interface{}) interface{}
-	Incr(key string, n interface{}, defaults ...interface{}) int64
-	Decr(key string, n interface{}, defaults ...interface{}) int64
+	Set(string, any)
+	SetMore(keyVal ...any)
+	Get(string, ...any) any
+	Incr(key string, n any, defaults ...any) int64
+	Decr(key string, n any, defaults ...any) int64
 	Delete(...string)
 	Stored() Store
 	Internal() *param.SafeMap
@@ -135,31 +135,31 @@ type Context interface {
 	// Bind
 	//----------------
 
-	Bind(interface{}, ...FormDataFilter) error
-	BindAndValidate(interface{}, ...FormDataFilter) error
-	MustBind(interface{}, ...FormDataFilter) error
-	MustBindAndValidate(interface{}, ...FormDataFilter) error
-	BindWithDecoder(interface{}, BinderValueCustomDecoders, ...FormDataFilter) error
-	BindAndValidateWithDecoder(interface{}, BinderValueCustomDecoders, ...FormDataFilter) error
-	MustBindWithDecoder(interface{}, BinderValueCustomDecoders, ...FormDataFilter) error
-	MustBindAndValidateWithDecoder(interface{}, BinderValueCustomDecoders, ...FormDataFilter) error
+	Bind(any, ...FormDataFilter) error
+	BindAndValidate(any, ...FormDataFilter) error
+	MustBind(any, ...FormDataFilter) error
+	MustBindAndValidate(any, ...FormDataFilter) error
+	BindWithDecoder(any, BinderValueCustomDecoders, ...FormDataFilter) error
+	BindAndValidateWithDecoder(any, BinderValueCustomDecoders, ...FormDataFilter) error
+	MustBindWithDecoder(any, BinderValueCustomDecoders, ...FormDataFilter) error
+	MustBindAndValidateWithDecoder(any, BinderValueCustomDecoders, ...FormDataFilter) error
 
 	//----------------
 	// Response data
 	//----------------
 
-	Render(string, interface{}, ...int) error
-	RenderBy(string, func(string) ([]byte, error), interface{}, ...int) ([]byte, error)
+	Render(string, any, ...int) error
+	RenderBy(string, func(string) ([]byte, error), any, ...int) ([]byte, error)
 	HTML(string, ...int) error
 	String(string, ...int) error
 	Blob([]byte, ...int) error
-	JSON(interface{}, ...int) error
+	JSON(any, ...int) error
 	JSONBlob([]byte, ...int) error
-	JSONP(string, interface{}, ...int) error
-	XML(interface{}, ...int) error
+	JSONP(string, any, ...int) error
+	XML(any, ...int) error
 	XMLBlob([]byte, ...int) error
 	Stream(func(context.Context, io.Writer) (bool, error)) error
-	SSEvent(string, chan interface{}) error
+	SSEvent(string, chan any) error
 	File(string, ...http.FileSystem) error
 	CacheableFile(string, time.Duration, ...http.FileSystem) error
 	Attachment(io.Reader, string, time.Time, ...bool) error
@@ -168,8 +168,8 @@ type Context interface {
 	NoContent(...int) error
 	Redirect(string, ...int) error
 	Error(err error)
-	NewError(code pkgCode.Code, msg string, args ...interface{}) *Error
-	NewErrorWith(err error, code pkgCode.Code, args ...interface{}) *Error
+	NewError(code pkgCode.Code, msg string, args ...any) *Error
+	NewErrorWith(err error, code pkgCode.Code, args ...any) *Error
 	SetCode(int)
 	Code() int
 	SetData(Data)
@@ -188,17 +188,17 @@ type Context interface {
 	// FuncMap
 	//----------------
 
-	SetFunc(string, interface{})
-	GetFunc(string) interface{}
-	ResetFuncs(map[string]interface{})
-	Funcs() map[string]interface{}
+	SetFunc(string, any)
+	GetFunc(string) any
+	ResetFuncs(map[string]any)
+	Funcs() map[string]any
 	PrintFuncs()
 
 	//----------------
 	// Render
 	//----------------
 	SetAuto(on bool) Context
-	Fetch(string, interface{}) ([]byte, error)
+	Fetch(string, any) ([]byte, error)
 	SetRenderer(Renderer)
 	SetRenderDataWrapper(DataWrapper)
 	Renderer() Renderer
@@ -215,7 +215,7 @@ type Context interface {
 	GetCookie(string) string
 	// SetCookie set cookie
 	//  @param: key, value, maxAge(seconds), path(/), domain, secure(false), httpOnly(false), sameSite(lax/strict/default)
-	SetCookie(string, string, ...interface{})
+	SetCookie(string, string, ...any)
 
 	//----------------
 	// Session
@@ -225,7 +225,7 @@ type Context interface {
 	SessionOptions() *SessionOptions
 	SetSessioner(Sessioner)
 	Session() Sessioner
-	Flash(...string) interface{}
+	Flash(...string) any
 
 	//----------------
 	// Request data
@@ -270,8 +270,8 @@ type Context interface {
 	RealIP() string
 	HasAnyRequest() bool
 
-	MapForm(i interface{}, names ...string) error
-	MapData(i interface{}, data map[string][]string, names ...string) error
+	MapForm(i any, names ...string) error
+	MapData(i any, data map[string][]string, names ...string) error
 	SaveUploadedFile(fieldName string, saveAbsPath string, saveFileName ...func(*multipart.FileHeader) (string, error)) (*multipart.FileHeader, error)
 	SaveUploadedFileToWriter(string, io.Writer) (*multipart.FileHeader, error)
 	//Multiple file upload

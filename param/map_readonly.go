@@ -7,17 +7,17 @@ import (
 	"time"
 )
 
-type MapReadonly map[string]interface{}
+type MapReadonly map[string]any
 
 func (s MapReadonly) Has(key string) bool {
 	_, y := s[key]
 	return y
 }
 
-func (s MapReadonly) Get(key string, defaults ...interface{}) interface{} {
+func (s MapReadonly) Get(key string, defaults ...any) any {
 	value, ok := s[key]
 	if (!ok || value == nil) && len(defaults) > 0 {
-		if fallback, ok := defaults[0].(func() interface{}); ok {
+		if fallback, ok := defaults[0].(func() any); ok {
 			return fallback()
 		}
 		return defaults[0]
@@ -25,7 +25,7 @@ func (s MapReadonly) Get(key string, defaults ...interface{}) interface{} {
 	return value
 }
 
-func (s MapReadonly) String(key string, defaults ...interface{}) string {
+func (s MapReadonly) String(key string, defaults ...any) string {
 	return AsString(s.Get(key, defaults...))
 }
 
@@ -33,79 +33,79 @@ func (s MapReadonly) Split(key string, sep string, limit ...int) StringSlice {
 	return Split(s.Get(key), sep, limit...)
 }
 
-func (s MapReadonly) Trim(key string, defaults ...interface{}) String {
+func (s MapReadonly) Trim(key string, defaults ...any) String {
 	return Trim(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) HTML(key string, defaults ...interface{}) template.HTML {
+func (s MapReadonly) HTML(key string, defaults ...any) template.HTML {
 	return AsHTML(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) HTMLAttr(key string, defaults ...interface{}) template.HTMLAttr {
+func (s MapReadonly) HTMLAttr(key string, defaults ...any) template.HTMLAttr {
 	return AsHTMLAttr(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) JS(key string, defaults ...interface{}) template.JS {
+func (s MapReadonly) JS(key string, defaults ...any) template.JS {
 	return AsJS(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) CSS(key string, defaults ...interface{}) template.CSS {
+func (s MapReadonly) CSS(key string, defaults ...any) template.CSS {
 	return AsCSS(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Bool(key string, defaults ...interface{}) bool {
+func (s MapReadonly) Bool(key string, defaults ...any) bool {
 	return AsBool(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Float64(key string, defaults ...interface{}) float64 {
+func (s MapReadonly) Float64(key string, defaults ...any) float64 {
 	return AsFloat64(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Float32(key string, defaults ...interface{}) float32 {
+func (s MapReadonly) Float32(key string, defaults ...any) float32 {
 	return AsFloat32(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Int8(key string, defaults ...interface{}) int8 {
+func (s MapReadonly) Int8(key string, defaults ...any) int8 {
 	return AsInt8(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Int16(key string, defaults ...interface{}) int16 {
+func (s MapReadonly) Int16(key string, defaults ...any) int16 {
 	return AsInt16(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Int(key string, defaults ...interface{}) int {
+func (s MapReadonly) Int(key string, defaults ...any) int {
 	return AsInt(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Int32(key string, defaults ...interface{}) int32 {
+func (s MapReadonly) Int32(key string, defaults ...any) int32 {
 	return AsInt32(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Int64(key string, defaults ...interface{}) int64 {
+func (s MapReadonly) Int64(key string, defaults ...any) int64 {
 	return AsInt64(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Uint8(key string, defaults ...interface{}) uint8 {
+func (s MapReadonly) Uint8(key string, defaults ...any) uint8 {
 	return AsUint8(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Uint16(key string, defaults ...interface{}) uint16 {
+func (s MapReadonly) Uint16(key string, defaults ...any) uint16 {
 	return AsUint16(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Uint(key string, defaults ...interface{}) uint {
+func (s MapReadonly) Uint(key string, defaults ...any) uint {
 	return AsUint(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Uint32(key string, defaults ...interface{}) uint32 {
+func (s MapReadonly) Uint32(key string, defaults ...any) uint32 {
 	return AsUint32(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Uint64(key string, defaults ...interface{}) uint64 {
+func (s MapReadonly) Uint64(key string, defaults ...any) uint64 {
 	return AsUint64(s.Get(key, defaults...))
 }
 
-func (s MapReadonly) Timestamp(key string, defaults ...interface{}) time.Time {
+func (s MapReadonly) Timestamp(key string, defaults ...any) time.Time {
 	return AsTimestamp(s.Get(key, defaults...))
 }
 
@@ -117,7 +117,7 @@ func (s MapReadonly) DateTime(key string, layouts ...string) time.Time {
 	return AsDateTime(s.Get(key), layouts...)
 }
 
-func (s MapReadonly) Children(keys ...interface{}) MapReadonly {
+func (s MapReadonly) Children(keys ...any) MapReadonly {
 	r := s
 	for _, key := range keys {
 		r = r.GetStore(fmt.Sprint(key))
@@ -125,7 +125,7 @@ func (s MapReadonly) Children(keys ...interface{}) MapReadonly {
 	return r
 }
 
-func (s MapReadonly) GetStore(key string, defaults ...interface{}) MapReadonly {
+func (s MapReadonly) GetStore(key string, defaults ...any) MapReadonly {
 	return MapReadonly(AsStore(s.Get(key, defaults...)))
 }
 

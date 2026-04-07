@@ -49,14 +49,14 @@ type (
 	}
 
 	abstractLimiter interface {
-		getLimit(key string, policy ...int) ([]interface{}, error)
+		getLimit(key string, policy ...int) ([]any, error)
 		removeLimit(key string) error
 	}
 
 	//RedisClient interface
 	RedisClient interface {
 		DeleteKey(string) error
-		EvalulateSha(string, []string, ...interface{}) (interface{}, error)
+		EvalulateSha(string, []string, ...any) (any, error)
 		LuaScriptLoad(string) (string, error)
 	}
 )

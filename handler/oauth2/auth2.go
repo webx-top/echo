@@ -27,7 +27,7 @@ import (
 type OAuth struct {
 	Config              *Config
 	HostURL             string
-	successHandlers     []interface{}
+	successHandlers     []any
 	failHandler         echo.HTTPErrorHandler
 	beginAuthHandler    echo.Handler
 	completeAuthHandler func(ctx echo.Context) (goth.User, error)
@@ -46,13 +46,13 @@ func New(hostURL string, cfg *Config) *OAuth {
 }
 
 // SetSuccessHandler registers handler(s) which fires when the user logged in successfully
-func (p *OAuth) SetSuccessHandler(handlersFn ...interface{}) *OAuth {
+func (p *OAuth) SetSuccessHandler(handlersFn ...any) *OAuth {
 	p.successHandlers = handlersFn
 	return p
 }
 
 // AddSuccessHandler registers handler(s) which fires when the user logged in successfully
-func (p *OAuth) AddSuccessHandler(handlersFn ...interface{}) *OAuth {
+func (p *OAuth) AddSuccessHandler(handlersFn ...any) *OAuth {
 	p.successHandlers = append(p.successHandlers, handlersFn...)
 	return p
 }
@@ -121,15 +121,15 @@ func (p *OAuth) MiddlewareAuth(h echo.Handler) echo.Handler {
 }
 
 // Wrapper register the oauth route
-func (p *OAuth) Wrapper(e *echo.Echo, middlewares ...interface{}) {
+func (p *OAuth) Wrapper(e *echo.Echo, middlewares ...any) {
 	p.Config.GenerateProviders()
 
-	g := e.Group(p.Config.Path, append([]interface{}{MiddlewareVerifyProvider(p.Config)}, middlewares...)...)
+	g := e.Group(p.Config.Path, append([]any{MiddlewareVerifyProvider(p.Config)}, middlewares...)...)
 
-	successHandlers := append([]interface{}{p.MiddlewareAuth}, p.successHandlers...)
+	successHandlers := append([]any{p.MiddlewareAuth}, p.successHandlers...)
 	lastIndex := len(successHandlers) - 1
 	var callbackHandler echo.Handler
-	var callbackMiddlewares []interface{}
+	var callbackMiddlewares []any
 	if lastIndex == 0 {
 		callbackHandler = echo.HandlerFunc(func(ctx echo.Context) error {
 			return ctx.String(`Success Handler is not set`)

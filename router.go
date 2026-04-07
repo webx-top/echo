@@ -47,8 +47,8 @@ type (
 		Params     []string //param names
 		Prefix     string
 		Meta       H
-		handler    interface{}   //原始handler
-		middleware []interface{} //中间件
+		handler    any   //原始handler
+		middleware []any //中间件
 		group      *Group
 	}
 
@@ -117,7 +117,7 @@ func (r Routes) SetMeta(meta H) IRouter {
 	return r
 }
 
-func (r Routes) SetMetaKV(key string, value interface{}) IRouter {
+func (r Routes) SetMetaKV(key string, value any) IRouter {
 	for _, route := range r {
 		route.SetMetaKV(key, value)
 	}
@@ -171,7 +171,7 @@ func (r *Route) SetMeta(meta H) IRouter {
 	return r
 }
 
-func (r *Route) SetMetaKV(key string, value interface{}) IRouter {
+func (r *Route) SetMetaKV(key string, value any) IRouter {
 	if r.Meta == nil {
 		r.Meta = H{}
 	}
@@ -239,77 +239,77 @@ func (r *Route) IsZero() bool {
 	return r.Handler == nil
 }
 
-func (r *Route) Bool(name string, defaults ...interface{}) bool {
+func (r *Route) Bool(name string, defaults ...any) bool {
 	if r.Meta == nil {
 		return false
 	}
 	return r.Meta.Bool(name, defaults...)
 }
 
-func (r *Route) String(name string, defaults ...interface{}) string {
+func (r *Route) String(name string, defaults ...any) string {
 	if r.Meta == nil {
 		return ``
 	}
 	return r.Meta.String(name, defaults...)
 }
 
-func (r *Route) Float64(name string, defaults ...interface{}) float64 {
+func (r *Route) Float64(name string, defaults ...any) float64 {
 	if r.Meta == nil {
 		return 0
 	}
 	return r.Meta.Float64(name, defaults...)
 }
 
-func (r *Route) Float32(name string, defaults ...interface{}) float32 {
+func (r *Route) Float32(name string, defaults ...any) float32 {
 	if r.Meta == nil {
 		return 0
 	}
 	return r.Meta.Float32(name, defaults...)
 }
 
-func (r *Route) Uint64(name string, defaults ...interface{}) uint64 {
+func (r *Route) Uint64(name string, defaults ...any) uint64 {
 	if r.Meta == nil {
 		return 0
 	}
 	return r.Meta.Uint64(name, defaults...)
 }
 
-func (r *Route) Uint32(name string, defaults ...interface{}) uint32 {
+func (r *Route) Uint32(name string, defaults ...any) uint32 {
 	if r.Meta == nil {
 		return 0
 	}
 	return r.Meta.Uint32(name, defaults...)
 }
 
-func (r *Route) Uint(name string, defaults ...interface{}) uint {
+func (r *Route) Uint(name string, defaults ...any) uint {
 	if r.Meta == nil {
 		return 0
 	}
 	return r.Meta.Uint(name, defaults...)
 }
 
-func (r *Route) Int64(name string, defaults ...interface{}) int64 {
+func (r *Route) Int64(name string, defaults ...any) int64 {
 	if r.Meta == nil {
 		return 0
 	}
 	return r.Meta.Int64(name, defaults...)
 }
 
-func (r *Route) Int32(name string, defaults ...interface{}) int32 {
+func (r *Route) Int32(name string, defaults ...any) int32 {
 	if r.Meta == nil {
 		return 0
 	}
 	return r.Meta.Int32(name, defaults...)
 }
 
-func (r *Route) Int(name string, defaults ...interface{}) int {
+func (r *Route) Int(name string, defaults ...any) int {
 	if r.Meta == nil {
 		return 0
 	}
 	return r.Meta.Int(name, defaults...)
 }
 
-func (r *Route) Get(name string, defaults ...interface{}) interface{} {
+func (r *Route) Get(name string, defaults ...any) any {
 	if r == nil || r.Meta == nil {
 		return nil
 	}
@@ -327,15 +327,15 @@ func (r *Route) GetStore(names ...string) H {
 	return res
 }
 
-func (r *Route) MakeURIWithContext(c Context, params ...interface{}) string {
+func (r *Route) MakeURIWithContext(c Context, params ...any) string {
 	return r.makeURI(c.Echo(), c, params...)
 }
 
-func (r *Route) MakeURI(e *Echo, params ...interface{}) (uri string) {
+func (r *Route) MakeURI(e *Echo, params ...any) (uri string) {
 	return r.makeURI(e, nil, params...)
 }
 
-func (r *Route) makeURI(e *Echo, c Context, params ...interface{}) (uri string) {
+func (r *Route) makeURI(e *Echo, c Context, params ...any) (uri string) {
 	length := len(params)
 	var withoutExt bool
 	if length != 1 {
@@ -347,7 +347,7 @@ func (r *Route) makeURI(e *Echo, c Context, params ...interface{}) (uri string) 
 		withoutExt, ok = params[0].(bool)
 		if ok {
 			if length == 2 {
-				params = []interface{}{params[1]}
+				params = []any{params[1]}
 				goto END
 			}
 			uri = fmt.Sprintf(r.Format, params[1:]...)
@@ -365,7 +365,7 @@ END:
 	case url.Values:
 		uri = r.Path
 		if len(r.Params) > 0 {
-			values := make([]interface{}, len(r.Params))
+			values := make([]any, len(r.Params))
 			for index, name := range r.Params {
 				values[index] = val.Get(name)
 				val.Del(name)
@@ -380,7 +380,7 @@ END:
 	case H:
 		uri = r.Path
 		if len(r.Params) > 0 {
-			values := make([]interface{}, len(r.Params))
+			values := make([]any, len(r.Params))
 			for index, name := range r.Params {
 				var ok bool
 				values[index], ok = val[name]
@@ -401,10 +401,10 @@ END:
 			uri += sep + url.QueryEscape(k) + `=` + url.QueryEscape(val.String(k))
 			sep = `&`
 		}
-	case map[string]interface{}:
+	case map[string]any:
 		uri = r.Path
 		if len(r.Params) > 0 {
-			values := make([]interface{}, len(r.Params))
+			values := make([]any, len(r.Params))
 			for index, name := range r.Params {
 				var ok bool
 				values[index], ok = val[name]
@@ -428,7 +428,7 @@ END:
 	case map[string]string:
 		uri = r.Path
 		if len(r.Params) > 0 {
-			values := make([]interface{}, len(r.Params))
+			values := make([]any, len(r.Params))
 			for index, name := range r.Params {
 				var ok bool
 				values[index], ok = val[name]
@@ -449,7 +449,7 @@ END:
 			uri += sep + url.QueryEscape(k) + `=` + url.QueryEscape(val[k])
 			sep = `&`
 		}
-	case []interface{}:
+	case []any:
 		uri = fmt.Sprintf(r.Format, val...)
 		uri = e.wrapURI(c, uri, withoutExt)
 	default:
@@ -459,8 +459,8 @@ END:
 	return
 }
 
-func (r *Route) getMiddlewares() []interface{} {
-	middlewares := []interface{}{}
+func (r *Route) getMiddlewares() []any {
+	middlewares := []any{}
 	if r.group != nil {
 		for _, m := range r.group.getMiddlewares() {
 			middlewares = append(middlewares, m)

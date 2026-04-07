@@ -150,7 +150,7 @@ func TestEchoMetaRequestValidator2(t *testing.T) {
 			data := GetValidated(c).(*testRequestData)
 			return c.String(data.Name)
 		},
-		func() interface{} {
+		func() any {
 			return &testRequestData{}
 		},
 	))

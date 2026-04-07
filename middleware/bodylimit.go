@@ -96,7 +96,7 @@ func (r *limitedReader) Reset(reader io.Reader, context echo.Context) {
 
 func limitedReaderPool(c BodyLimitConfig) sync.Pool {
 	return sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return &limitedReader{BodyLimitConfig: c}
 		},
 	}

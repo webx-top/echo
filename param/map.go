@@ -17,22 +17,22 @@ func StoreStart() Store {
 	return Store{}
 }
 
-type Store map[string]interface{}
+type Store map[string]any
 
-func (s Store) Set(key string, value interface{}) Store {
+func (s Store) Set(key string, value any) Store {
 	s[key] = value
 	return s
 }
 
-func (s Store) SetMore(keyValue ...interface{}) Store {
+func (s Store) SetMore(keyValue ...any) Store {
 	SetMapItems(s, keyValue...)
 	return s
 }
 
-func (s Store) Get(key string, defaults ...interface{}) interface{} {
+func (s Store) Get(key string, defaults ...any) any {
 	value, ok := s[key]
 	if (!ok || value == nil) && len(defaults) > 0 {
-		if fallback, ok := defaults[0].(func() interface{}); ok {
+		if fallback, ok := defaults[0].(func() any); ok {
 			return fallback()
 		}
 		return defaults[0]
@@ -45,7 +45,7 @@ func (s Store) Has(key string) bool {
 	return y
 }
 
-func (s Store) String(key string, defaults ...interface{}) string {
+func (s Store) String(key string, defaults ...any) string {
 	return AsString(s.Get(key, defaults...))
 }
 
@@ -53,91 +53,91 @@ func (s Store) Split(key string, sep string, limit ...int) StringSlice {
 	return Split(s.Get(key), sep, limit...)
 }
 
-func (s Store) Trim(key string, defaults ...interface{}) String {
+func (s Store) Trim(key string, defaults ...any) String {
 	return Trim(s.Get(key, defaults...))
 }
 
-func (s Store) HTML(key string, defaults ...interface{}) template.HTML {
+func (s Store) HTML(key string, defaults ...any) template.HTML {
 	return AsHTML(s.Get(key, defaults...))
 }
 
-func (s Store) HTMLAttr(key string, defaults ...interface{}) template.HTMLAttr {
+func (s Store) HTMLAttr(key string, defaults ...any) template.HTMLAttr {
 	return AsHTMLAttr(s.Get(key, defaults...))
 }
 
-func (s Store) JS(key string, defaults ...interface{}) template.JS {
+func (s Store) JS(key string, defaults ...any) template.JS {
 	return AsJS(s.Get(key, defaults...))
 }
 
-func (s Store) CSS(key string, defaults ...interface{}) template.CSS {
+func (s Store) CSS(key string, defaults ...any) template.CSS {
 	return AsCSS(s.Get(key, defaults...))
 }
 
-func (s Store) Bool(key string, defaults ...interface{}) bool {
+func (s Store) Bool(key string, defaults ...any) bool {
 	return AsBool(s.Get(key, defaults...))
 }
 
-func (s Store) Float64(key string, defaults ...interface{}) float64 {
+func (s Store) Float64(key string, defaults ...any) float64 {
 	return AsFloat64(s.Get(key, defaults...))
 }
 
-func (s Store) Float32(key string, defaults ...interface{}) float32 {
+func (s Store) Float32(key string, defaults ...any) float32 {
 	return AsFloat32(s.Get(key, defaults...))
 }
 
-func (s Store) Int8(key string, defaults ...interface{}) int8 {
+func (s Store) Int8(key string, defaults ...any) int8 {
 	return AsInt8(s.Get(key, defaults...))
 }
 
-func (s Store) Int16(key string, defaults ...interface{}) int16 {
+func (s Store) Int16(key string, defaults ...any) int16 {
 	return AsInt16(s.Get(key, defaults...))
 }
 
-func (s Store) Int(key string, defaults ...interface{}) int {
+func (s Store) Int(key string, defaults ...any) int {
 	return AsInt(s.Get(key, defaults...))
 }
 
-func (s Store) Int32(key string, defaults ...interface{}) int32 {
+func (s Store) Int32(key string, defaults ...any) int32 {
 	return AsInt32(s.Get(key, defaults...))
 }
 
-func (s Store) Int64(key string, defaults ...interface{}) int64 {
+func (s Store) Int64(key string, defaults ...any) int64 {
 	return AsInt64(s.Get(key, defaults...))
 }
 
-func (s Store) Decr(key string, n int64, defaults ...interface{}) int64 {
+func (s Store) Decr(key string, n int64, defaults ...any) int64 {
 	v := Decr(s.Get(key, defaults...), n)
 	s.Set(key, v)
 	return v
 }
 
-func (s Store) Incr(key string, n int64, defaults ...interface{}) int64 {
+func (s Store) Incr(key string, n int64, defaults ...any) int64 {
 	v := Incr(s.Get(key, defaults...), n)
 	s.Set(key, v)
 	return v
 }
 
-func (s Store) Uint8(key string, defaults ...interface{}) uint8 {
+func (s Store) Uint8(key string, defaults ...any) uint8 {
 	return AsUint8(s.Get(key, defaults...))
 }
 
-func (s Store) Uint16(key string, defaults ...interface{}) uint16 {
+func (s Store) Uint16(key string, defaults ...any) uint16 {
 	return AsUint16(s.Get(key, defaults...))
 }
 
-func (s Store) Uint(key string, defaults ...interface{}) uint {
+func (s Store) Uint(key string, defaults ...any) uint {
 	return AsUint(s.Get(key, defaults...))
 }
 
-func (s Store) Uint32(key string, defaults ...interface{}) uint32 {
+func (s Store) Uint32(key string, defaults ...any) uint32 {
 	return AsUint32(s.Get(key, defaults...))
 }
 
-func (s Store) Uint64(key string, defaults ...interface{}) uint64 {
+func (s Store) Uint64(key string, defaults ...any) uint64 {
 	return AsUint64(s.Get(key, defaults...))
 }
 
-func (s Store) Timestamp(key string, defaults ...interface{}) time.Time {
+func (s Store) Timestamp(key string, defaults ...any) time.Time {
 	return AsTimestamp(s.Get(key, defaults...))
 }
 
@@ -149,7 +149,7 @@ func (s Store) DateTime(key string, layouts ...string) time.Time {
 	return AsDateTime(s.Get(key), layouts...)
 }
 
-func (s Store) Children(keys ...interface{}) Store {
+func (s Store) Children(keys ...any) Store {
 	r := s
 	for _, key := range keys {
 		r = r.GetStore(fmt.Sprint(key))
@@ -157,7 +157,7 @@ func (s Store) Children(keys ...interface{}) Store {
 	return r
 }
 
-func (s Store) GetStore(key string, defaults ...interface{}) Store {
+func (s Store) GetStore(key string, defaults ...any) Store {
 	return AsStore(s.Get(key, defaults...))
 }
 
@@ -214,7 +214,7 @@ func (s Store) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 func (s Store) DeepMerge(source Store) {
 	for k, value := range source {
 		var (
-			destValue interface{}
+			destValue any
 			ok        bool
 		)
 		if destValue, ok = s[k]; !ok {
@@ -270,7 +270,7 @@ func (s Store) Transform(transfers map[string]Transfer) Store {
 						break
 					}
 					switch v := value.(type) {
-					case map[string]interface{}:
+					case map[string]any:
 						tempMap = Store(v)
 					case Store:
 						tempMap = v
@@ -335,11 +335,11 @@ func (s Store) Transform(transfers map[string]Transfer) Store {
 	return rmap
 }
 
-func (s Store) SetMKey(key string, value interface{}) Store {
+func (s Store) SetMKey(key string, value any) Store {
 	return s.SetMKeys(strings.Split(key, `.`), value)
 }
 
-func (s Store) SetMKeys(keys []string, value interface{}) Store {
+func (s Store) SetMKeys(keys []string, value any) Store {
 	switch len(keys) {
 	case 0:
 		return s
@@ -357,7 +357,7 @@ func (s Store) SetMKeys(keys []string, value interface{}) Store {
 			tempMap[key] = value
 		}
 		switch v := value.(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			tempMap = Store(v)
 		case Store:
 			tempMap = v
