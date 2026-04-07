@@ -41,7 +41,7 @@ func NewMockContext(args ...*echo.Echo) echo.Context {
 	return c
 }
 
-func NewMockContextWithContext(ctx context.Context, args ...*echo.Echo) echo.Context {
+func NewMockContextWith(ctx context.Context, args ...*echo.Echo) echo.Context {
 	var e *echo.Echo
 	if len(args) > 0 {
 		e = args[0]
