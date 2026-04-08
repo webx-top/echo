@@ -1,6 +1,7 @@
 package ratelimiter
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -20,15 +21,15 @@ type redisClient struct {
 	*redis.Client
 }
 
-func (c *redisClient) DeleteKey(key string) error {
+func (c *redisClient) DeleteKey(ctx context.Context, key string) error {
 	return c.Del(key).Err()
 }
 
-func (c *redisClient) EvalulateSha(sha1 string, keys []string, args ...any) (any, error) {
+func (c *redisClient) EvalulateSha(ctx context.Context, sha1 string, keys []string, args ...any) (any, error) {
 	return c.EvalSha(sha1, keys, args...).Result()
 }
 
-func (c *redisClient) LuaScriptLoad(script string) (string, error) {
+func (c *redisClient) LuaScriptLoad(ctx context.Context, script string) (string, error) {
 	return c.ScriptLoad(script).Result()
 }
 
@@ -37,15 +38,15 @@ type failedClient struct {
 	*redis.Client
 }
 
-func (c *failedClient) DeleteKey(key string) error {
+func (c *failedClient) DeleteKey(ctx context.Context, key string) error {
 	return c.Del(key).Err()
 }
 
-func (c *failedClient) EvalulateSha(sha1 string, keys []string, args ...any) (any, error) {
+func (c *failedClient) EvalulateSha(ctx context.Context, sha1 string, keys []string, args ...any) (any, error) {
 	return nil, errors.New("noscript mock error")
 }
 
-func (c *failedClient) LuaScriptLoad(script string) (string, error) {
+func (c *failedClient) LuaScriptLoad(ctx context.Context, script string) (string, error) {
 	return c.ScriptLoad(script).Result()
 }
 
@@ -133,7 +134,7 @@ func TestRedisRatelimiter(t *testing.T) {
 		var id = genID()
 		var duration = time.Duration(60 * 1e9)
 		var redisLimiter *limiter
-		redisLimiter = newRedisLimiter(&RateLimiterConfig{
+		redisLimiter = newRedisLimiter(context.Background(), &RateLimiterConfig{
 
 			Client:   &redisClient{client},
 			Max:      100,
@@ -143,12 +144,12 @@ func TestRedisRatelimiter(t *testing.T) {
 		t.Run("New instance running with failedClient should be", func(t *testing.T) {
 
 			var limiter *limiter
-			limiter = newRedisLimiter(&RateLimiterConfig{
+			limiter = newRedisLimiter(context.Background(), &RateLimiterConfig{
 
 				Client: &failedClient{client},
 			})
 			policy := []int{2, 100}
-			res, err := limiter.Get(id, policy...)
+			res, err := limiter.Get(context.Background(), id, policy...)
 
 			assert.Equal(t, "noscript mock error", err.Error())
 			assert.Equal(t, 0, res.Total)
@@ -158,14 +159,14 @@ func TestRedisRatelimiter(t *testing.T) {
 
 		t.Run("Redislimiter.Get method should be", func(t *testing.T) {
 
-			res, err := redisLimiter.Get(id)
+			res, err := redisLimiter.Get(context.Background(), id)
 			assert.Nil(t, err)
 			assert.Equal(t, res.Total, 100)
 			assert.Equal(t, res.Remaining, 99)
 			assert.Equal(t, res.Duration, duration)
 			assert.True(t, res.Reset.UnixNano() > time.Now().UnixNano())
 
-			res, err = redisLimiter.Get(id)
+			res, err = redisLimiter.Get(context.Background(), id)
 			assert.Nil(t, err)
 			assert.Equal(t, res.Total, 100)
 			assert.Equal(t, res.Remaining, 98)
@@ -173,13 +174,13 @@ func TestRedisRatelimiter(t *testing.T) {
 		})
 
 		t.Run("Redislimiter.Get with invalid args should throw error", func(t *testing.T) {
-			_, err := redisLimiter.Get(id, 10)
+			_, err := redisLimiter.Get(context.Background(), id, 10)
 			assert.Equal(t, "ratelimiter: must be paired values", err.Error())
 
-			_, err2 := redisLimiter.Get(id, -1, 10)
+			_, err2 := redisLimiter.Get(context.Background(), id, -1, 10)
 			assert.Equal(t, "ratelimiter: must be positive integer", err2.Error())
 
-			_, err3 := redisLimiter.Get(id, 10, 0)
+			_, err3 := redisLimiter.Get(context.Background(), id, 10, 0)
 			assert.Equal(t, "ratelimiter: must be positive integer", err3.Error())
 		})
 
@@ -190,30 +191,30 @@ func TestRedisRatelimiter(t *testing.T) {
 
 			policy := []int{2, 100}
 
-			res, err := redisLimiter.Get(idx, policy...)
+			res, err := redisLimiter.Get(context.Background(), idx, policy...)
 			assert.Nil(err)
 			assert.Equal(2, res.Total)
 			assert.Equal(1, res.Remaining)
 			assert.Equal(time.Millisecond*100, res.Duration)
 
-			res, err = redisLimiter.Get(idx, policy...)
+			res, err = redisLimiter.Get(context.Background(), idx, policy...)
 			assert.Nil(err)
 			assert.Equal(0, res.Remaining)
 
-			res, err = redisLimiter.Get(idx, policy...)
+			res, err = redisLimiter.Get(context.Background(), idx, policy...)
 			assert.Nil(err)
 			assert.Equal(-1, res.Remaining)
 		})
 
 		t.Run("Redislimiter.Remove method should be", func(t *testing.T) {
 
-			err := redisLimiter.Remove(id)
+			err := redisLimiter.Remove(context.Background(), id)
 			assert.Nil(t, err)
 
-			err = redisLimiter.Remove(id)
+			err = redisLimiter.Remove(context.Background(), id)
 			assert.Nil(t, err)
 
-			res, err := redisLimiter.Get(id)
+			res, err := redisLimiter.Get(context.Background(), id)
 			assert.Nil(t, err)
 			assert.Equal(t, res.Total, 100)
 			assert.Equal(t, res.Remaining, 97)

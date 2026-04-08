@@ -1,6 +1,7 @@
 package ratelimiter
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"time"
@@ -46,7 +47,7 @@ func newMemoryLimiter(opts *RateLimiterConfig) *limiter {
 }
 
 // abstractLimiter interface
-func (m *memoryLimiter) getLimit(key string, policy ...int) ([]any, error) {
+func (m *memoryLimiter) getLimit(ctx context.Context, key string, policy ...int) ([]any, error) {
 	length := len(policy)
 	var args []int
 	if length == 0 {
@@ -68,7 +69,7 @@ func (m *memoryLimiter) getLimit(key string, policy ...int) ([]any, error) {
 }
 
 // abstractLimiter interface
-func (m *memoryLimiter) removeLimit(key string) error {
+func (m *memoryLimiter) removeLimit(ctx context.Context, key string) error {
 	statusKey := "{" + key + "}:S"
 	m.lock.Lock()
 	defer m.lock.Unlock()

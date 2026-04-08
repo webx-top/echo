@@ -1,6 +1,7 @@
 package ratelimiter
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -21,13 +22,13 @@ func TestMemoryRateLimiter(t *testing.T) {
 		id := genID()
 		policy := []int{10, 1000}
 
-		res, err := limiter.Get(id, policy...)
+		res, err := limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(10, res.Total)
 		assert.Equal(9, res.Remaining)
 		assert.Equal(1000, int(res.Duration/time.Millisecond))
 		assert.True(res.Reset.After(time.Now()))
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(10, res.Total)
 		assert.Equal(8, res.Remaining)
 	})
@@ -44,15 +45,15 @@ func TestMemoryRateLimiter(t *testing.T) {
 		id := genID()
 		policy := []int{10, 100}
 
-		res, err := limiter.Get(id, policy...)
+		res, err := limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(10, res.Total)
 		assert.Equal(9, res.Remaining)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(8, res.Remaining)
 
 		time.Sleep(100 * time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(10, res.Total)
 		assert.Equal(9, res.Remaining)
@@ -68,7 +69,7 @@ func TestMemoryRateLimiter(t *testing.T) {
 		})
 		policy := []int{10, 500}
 		id := genID()
-		res, err := limiter.Get(id, policy...)
+		res, err := limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(10, res.Total)
 		assert.Equal(9, res.Remaining)
@@ -76,13 +77,13 @@ func TestMemoryRateLimiter(t *testing.T) {
 		wait.Add(100)
 		for i := 0; i < 100; i++ {
 			go func() {
-				limiter.Get(id, policy...)
+				limiter.Get(context.Background(), id, policy...)
 				wait.Done()
 			}()
 		}
 		wait.Wait()
 		time.Sleep(200 * time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(10, res.Total)
 		assert.Equal(-1, res.Remaining)
@@ -99,33 +100,33 @@ func TestMemoryRateLimiter(t *testing.T) {
 		id := genID()
 		policy := []int{3, 100, 2, 200}
 
-		res, err := limiter.Get(id, policy...)
+		res, err := limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(1, res.Remaining)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(0, res.Remaining)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
 		assert.True(res.Reset.After(time.Now()))
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*200, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(0, res.Remaining)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*200, res.Duration)
@@ -142,12 +143,12 @@ func TestMemoryRateLimiter(t *testing.T) {
 		id := genID()
 		policy := []int{10, 1000}
 
-		res, err := limiter.Get(id, policy...)
+		res, err := limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(10, res.Total)
 		assert.Equal(9, res.Remaining)
-		limiter.Remove(id)
-		res, err = limiter.Get(id, policy...)
+		limiter.Remove(context.Background(), id)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(10, res.Total)
 		assert.Equal(9, res.Remaining)
 	})
@@ -163,7 +164,7 @@ func TestMemoryRateLimiter(t *testing.T) {
 		id := genID()
 		policy := []int{10, 1000, 1}
 
-		res, err := limiter.Get(id, policy...)
+		res, err := limiter.Get(context.Background(), id, policy...)
 		assert.Error(err)
 		assert.Equal(0, res.Total)
 		assert.Equal(0, res.Remaining)
@@ -180,7 +181,7 @@ func TestMemoryRateLimiter(t *testing.T) {
 		id := genID()
 		policy := []int{}
 
-		res, _ := limiter.Get(id, policy...)
+		res, _ := limiter.Get(context.Background(), id, policy...)
 		assert.Equal(100, res.Total)
 		assert.Equal(99, res.Remaining)
 		assert.Equal(time.Minute, res.Duration)
@@ -195,13 +196,13 @@ func TestMemoryRateLimiter(t *testing.T) {
 			Prefix:   "Test",
 		})
 		id := genID()
-		_, err := limiter.Get(id, 10)
+		_, err := limiter.Get(context.Background(), id, 10)
 		assert.Equal("ratelimiter: must be paired values", err.Error())
 
-		_, err2 := limiter.Get(id, -1, 10)
+		_, err2 := limiter.Get(context.Background(), id, -1, 10)
 		assert.Equal("ratelimiter: must be positive integer", err2.Error())
 
-		_, err3 := limiter.Get(id, 10, 0)
+		_, err3 := limiter.Get(context.Background(), id, 10, 0)
 		assert.Equal("ratelimiter: must be positive integer", err3.Error())
 	})
 
@@ -218,27 +219,27 @@ func TestMemoryRateLimiter(t *testing.T) {
 
 		id := genID()
 		policy := []int{10, 100}
-
-		res, _ := limiter.getLimit(id, policy...)
+		ctx := context.Background()
+		res, _ := limiter.getLimit(ctx, id, policy...)
 
 		assert.Equal(10, res[1].(int))
 		assert.Equal(9, res[0].(int))
 
 		time.Sleep(res[2].(time.Duration) + time.Millisecond)
 		limiter.clean()
-		res, _ = limiter.getLimit(id, policy...)
+		res, _ = limiter.getLimit(ctx, id, policy...)
 		assert.Equal(10, res[1].(int))
 		assert.Equal(9, res[0].(int))
 
 		time.Sleep(res[2].(time.Duration)*2 + time.Millisecond)
 		limiter.clean()
-		res, _ = limiter.getLimit(id, policy...)
+		res, _ = limiter.getLimit(ctx, id, policy...)
 		assert.Equal(10, res[1].(int))
 		assert.Equal(9, res[0].(int))
 		limiter.ticker = time.NewTicker(time.Millisecond)
 		go limiter.cleanCache()
 		time.Sleep(2 * time.Millisecond)
-		res, _ = limiter.getLimit(id, policy...)
+		res, _ = limiter.getLimit(ctx, id, policy...)
 		assert.Equal(10, res[1].(int))
 		assert.Equal(8, res[0].(int))
 	})
@@ -259,13 +260,13 @@ func TestMemoryRateLimiter(t *testing.T) {
 		for i := 0; i < 1000; i++ {
 			go func() {
 				newid := genID()
-				limiter.Get(newid, policy...)
-				limiter.Get(id, policy...)
+				limiter.Get(context.Background(), newid, policy...)
+				limiter.Get(context.Background(), id, policy...)
 				wg.Done()
 			}()
 		}
 		wg.Wait()
-		res, err := limiter.Get(id, policy...)
+		res, err := limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(1000, res.Total)
 		assert.Equal(-1, res.Remaining)
@@ -284,105 +285,105 @@ func TestMemoryRateLimiter(t *testing.T) {
 		policy := []int{2, 100, 2, 200, 3, 300, 3, 400}
 
 		//First policy
-		res, err := limiter.Get(id, policy...)
+		res, err := limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*100, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(0, res.Remaining)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
 		assert.Equal(time.Millisecond*100, res.Duration)
 
 		//Second policy
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*200, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(0, res.Remaining)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
 
 		//Third policy
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
-		res, err = limiter.Get(id, policy...)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
 
 		// restore to First policy after Third policy*2 Duration
 		time.Sleep(res.Duration*2 + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*100, res.Duration)
-		res, err = limiter.Get(id, policy...)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
 
 		//Second policy
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(0, res.Remaining)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
 		assert.Equal(time.Millisecond*200, res.Duration)
 
 		//Third policy
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
 
 		//Fourth policy
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
 		assert.Equal(time.Millisecond*400, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(1, res.Remaining)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(0, res.Remaining)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(-1, res.Remaining)
 
 		// restore to First policy after Fourth policy*2 Duration
 		time.Sleep(res.Duration*2 + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
@@ -400,106 +401,106 @@ func TestMemoryRateLimiter(t *testing.T) {
 		})
 		policy := []int{2, 150, 2, 200, 3, 300, 3, 400}
 
-		res, err := limiter.Get(id, policy...)
+		res, err := limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*150, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*150, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(0, res.Remaining)
 		assert.Equal(time.Millisecond*150, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(-1, res.Remaining)
 		assert.Equal(time.Millisecond*150, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*200, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*150, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(0, res.Remaining)
 		assert.Equal(time.Millisecond*150, res.Duration)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(-1, res.Remaining)
 		assert.Equal(time.Millisecond*150, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*200, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(0, res.Remaining)
 		assert.Equal(time.Millisecond*200, res.Duration)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 
 		assert.Equal(3, res.Total)
 		assert.Equal(0, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
-		assert.Equal(3, res.Total)
-		assert.Equal(2, res.Remaining)
-		assert.Equal(time.Millisecond*400, res.Duration)
-
-		res, err = limiter.Get(id, policy...)
-		assert.Equal(3, res.Total)
-		assert.Equal(1, res.Remaining)
-
-		res, err = limiter.Get(id, policy...)
-		assert.Equal(3, res.Total)
-		assert.Equal(0, res.Remaining)
-
-		res, err = limiter.Get(id, policy...)
-		assert.Equal(3, res.Total)
-		assert.Equal(-1, res.Remaining)
-
-		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
 		assert.Equal(time.Millisecond*400, res.Duration)
 
+		res, err = limiter.Get(context.Background(), id, policy...)
+		assert.Equal(3, res.Total)
+		assert.Equal(1, res.Remaining)
+
+		res, err = limiter.Get(context.Background(), id, policy...)
+		assert.Equal(3, res.Total)
+		assert.Equal(0, res.Remaining)
+
+		res, err = limiter.Get(context.Background(), id, policy...)
+		assert.Equal(3, res.Total)
+		assert.Equal(-1, res.Remaining)
+
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
+		assert.Equal(3, res.Total)
+		assert.Equal(2, res.Remaining)
+		assert.Equal(time.Millisecond*400, res.Duration)
+
+		time.Sleep(res.Duration + time.Millisecond)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*150, res.Duration)
@@ -517,87 +518,87 @@ func TestMemoryRateLimiter(t *testing.T) {
 		})
 		policy := []int{2, 300, 3, 100}
 
-		res, err := limiter.Get(id, policy...)
+		res, err := limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
 		assert.Equal(time.Millisecond*100, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
 		assert.Equal(time.Millisecond*100, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
 		assert.Equal(time.Millisecond*100, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
 		assert.Equal(time.Millisecond*100, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*100, res.Duration)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(0, res.Remaining)
 		assert.Equal(time.Millisecond*100, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
 		assert.Equal(time.Millisecond*100, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*100, res.Duration)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(0, res.Remaining)
 		assert.Equal(time.Millisecond*100, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
 		assert.Equal(time.Millisecond*100, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
@@ -615,38 +616,38 @@ func TestMemoryRateLimiter(t *testing.T) {
 		})
 		policy := []int{3, 300, 2, 200}
 
-		res, err := limiter.Get(id, policy...)
+		res, err := limiter.Get(context.Background(), id, policy...)
 		assert.Nil(err)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)
 
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(0, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(-1, res.Remaining)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*200, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(2, res.Total)
 		assert.Equal(1, res.Remaining)
 		assert.Equal(time.Millisecond*200, res.Duration)
 
 		time.Sleep(res.Duration + time.Millisecond)
-		res, err = limiter.Get(id, policy...)
+		res, err = limiter.Get(context.Background(), id, policy...)
 		assert.Equal(3, res.Total)
 		assert.Equal(2, res.Remaining)
 		assert.Equal(time.Millisecond*300, res.Duration)

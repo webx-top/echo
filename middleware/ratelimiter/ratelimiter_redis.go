@@ -1,6 +1,7 @@
 package ratelimiter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -14,8 +15,8 @@ type redisLimiter struct {
 	rc                  RedisClient
 }
 
-func newRedisLimiter(options *RateLimiterConfig) *limiter {
-	sha1, err := options.Client.LuaScriptLoad(LuaScriptForRedis)
+func newRedisLimiter(ctx context.Context, options *RateLimiterConfig) *limiter {
+	sha1, err := options.Client.LuaScriptLoad(ctx, LuaScriptForRedis)
 	if err != nil {
 		fmt.Println("redis is not working properly. use; docker run -it -p 6379:6379 --name my-redis -d redis")
 		panic(err)
@@ -29,11 +30,11 @@ func newRedisLimiter(options *RateLimiterConfig) *limiter {
 	return &limiter{r, options.Prefix}
 }
 
-func (r *redisLimiter) removeLimit(key string) error {
-	return r.rc.DeleteKey(key)
+func (r *redisLimiter) removeLimit(ctx context.Context, key string) error {
+	return r.rc.DeleteKey(ctx, key)
 }
 
-func (r *redisLimiter) getLimit(key string, policy ...int) ([]any, error) {
+func (r *redisLimiter) getLimit(ctx context.Context, key string, policy ...int) ([]any, error) {
 	keys := []string{key, fmt.Sprintf("{%s}:S", key)}
 	capacity := 3
 	length := len(policy)
@@ -56,12 +57,12 @@ func (r *redisLimiter) getLimit(key string, policy ...int) ([]any, error) {
 		}
 	}
 
-	res, err := r.rc.EvalulateSha(r.sha1, keys, args...)
+	res, err := r.rc.EvalulateSha(ctx, r.sha1, keys, args...)
 	if err != nil && isNoScriptErr(err) {
 		// try to load lua for cluster client and ring client for nodes changing.
-		_, err = r.rc.LuaScriptLoad(LuaScriptForRedis)
+		_, err = r.rc.LuaScriptLoad(ctx, LuaScriptForRedis)
 		if err == nil {
-			res, err = r.rc.EvalulateSha(r.sha1, keys, args...)
+			res, err = r.rc.EvalulateSha(ctx, r.sha1, keys, args...)
 		}
 	}
 

@@ -1,33 +1,34 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
 
+	goredislib "github.com/redis/go-redis/v9"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/engine/standard"
 	"github.com/webx-top/echo/handler/pprof"
 	"github.com/webx-top/echo/middleware/ratelimiter"
 	"github.com/webx-top/echo/testing"
-	"gopkg.in/redis.v5"
 )
 
 // RedisClient Implements RedisClient for redis.Client
 type RedisClient struct {
-	*redis.Client
+	*goredislib.Client
 }
 
-func (c *RedisClient) DeleteKey(key string) error {
-	return c.Del(key).Err()
+func (c *RedisClient) DeleteKey(ctx context.Context, key string) error {
+	return c.Client.Del(ctx, key).Err()
 }
 
-func (c *RedisClient) EvalulateSha(sha1 string, keys []string, args ...any) (any, error) {
-	return c.EvalSha(sha1, keys, args...).Result()
+func (c *RedisClient) EvalulateSha(ctx context.Context, sha1 string, keys []string, args ...any) (any, error) {
+	return c.Client.EvalSha(ctx, sha1, keys, args...).Result()
 }
 
-func (c *RedisClient) LuaScriptLoad(script string) (string, error) {
-	return c.ScriptLoad(script).Result()
+func (c *RedisClient) LuaScriptLoad(ctx context.Context, script string) (string, error) {
+	return c.Client.ScriptLoad(ctx, script).Result()
 }
 
 func main() {
@@ -41,7 +42,7 @@ func main() {
 	redisDisabled := false
 	if !redisDisabled {
 
-		var client = redis.NewClient(&redis.Options{
+		var client = goredislib.NewClient(&goredislib.Options{
 			Addr: `127.0.0.1:6379`,
 		})
 		defer client.Close()

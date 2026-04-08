@@ -1,6 +1,7 @@
 package ratelimiter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -49,15 +50,15 @@ type (
 	}
 
 	abstractLimiter interface {
-		getLimit(key string, policy ...int) ([]any, error)
-		removeLimit(key string) error
+		getLimit(ctx context.Context, key string, policy ...int) ([]any, error)
+		removeLimit(ctx context.Context, key string) error
 	}
 
 	//RedisClient interface
 	RedisClient interface {
-		DeleteKey(string) error
-		EvalulateSha(string, []string, ...any) (any, error)
-		LuaScriptLoad(string) (string, error)
+		DeleteKey(context.Context, string) error
+		EvalulateSha(context.Context, string, []string, ...any) (any, error)
+		LuaScriptLoad(context.Context, string) (string, error)
 	}
 )
 
@@ -108,7 +109,7 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 		limiterImp = newMemoryLimiter(&config)
 	} else {
 		//setup redis client
-		limiterImp = newRedisLimiter(&config)
+		limiterImp = newRedisLimiter(context.Background(), &config)
 	}
 
 	return func(h echo.Handler) echo.Handler {
@@ -125,7 +126,7 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 			]
 			*/
 			id, policy := config.LimiterKeyGenerator(c)
-			result, err := limiterImp.Get(id, policy...)
+			result, err := limiterImp.Get(c, id, policy...)
 
 			if err != nil {
 				if config.SkipRateLimiterInternalError {
@@ -154,7 +155,7 @@ func RateLimiterWithConfig(config RateLimiterConfig) echo.MiddlewareFunc {
 
 // get & remove
 
-func (l *limiter) Get(id string, policy ...int) (Result, error) {
+func (l *limiter) Get(ctx context.Context, id string, policy ...int) (Result, error) {
 	var result Result
 	key := l.prefix + id
 
@@ -162,7 +163,7 @@ func (l *limiter) Get(id string, policy ...int) (Result, error) {
 		return result, errors.New("ratelimiter: must be paired values")
 	}
 
-	res, err := l.getLimit(key, policy...)
+	res, err := l.getLimit(ctx, key, policy...)
 	if err != nil {
 		return result, err
 	}
@@ -190,6 +191,6 @@ func (l *limiter) Get(id string, policy ...int) (Result, error) {
 }
 
 // Remove remove limiter record for id
-func (l *limiter) Remove(id string) error {
-	return l.removeLimit(l.prefix + id)
+func (l *limiter) Remove(ctx context.Context, id string) error {
+	return l.removeLimit(ctx, l.prefix+id)
 }
