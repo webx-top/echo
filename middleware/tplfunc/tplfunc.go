@@ -359,6 +359,9 @@ func UnicodeDecode(str string) string {
 // It returns the JSON string representation of the value.
 // The indents parameter specifies the indentation string to use (e.g., "  " for two spaces).
 func JSONEncode(s any, indents ...string) string {
+	if s == nil {
+		return ``
+	}
 	r, _ := com.JSONEncode(s, indents...)
 	return string(r)
 }
