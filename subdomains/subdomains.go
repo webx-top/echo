@@ -197,6 +197,11 @@ func (s *Subdomains) Add(name string, e *echo.Echo) *Subdomains {
 	return s
 }
 
+func (s *Subdomains) RemoveHost(host string) {
+	s.Hosts.Remove(host)
+	s.hostsNum.Store(int32(s.Hosts.Size()))
+}
+
 func (s *Subdomains) Get(args ...string) *Info {
 	name := s.Default
 	if len(args) > 0 {

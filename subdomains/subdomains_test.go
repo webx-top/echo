@@ -34,10 +34,10 @@ func TestSortHosts(t *testing.T) {
 	})
 	a.Add(`backend`, e2)
 
-	a.Ready().Commit()
 	assert.Equal(t, []string{`backend`, `frontend`}, *a.Hosts.Get(``))
 	assert.Equal(t, int32(1), a.hostsNum.Load())
 
+	a.Ready().Commit()
 	c, b := request(echo.GET, "/", a)
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, "frontend", b)
@@ -66,6 +66,26 @@ func TestSortHosts(t *testing.T) {
 	assert.Equal(t, []string{`backend`}, *a.Hosts.Get(`github.com`))
 	assert.Equal(t, []string{`backend`}, *a.Hosts.Get(`coscms.com`))
 	assert.Equal(t, int32(3), a.hostsNum.Load())
+
+	a.Ready().Commit()
+	c, b = request(echo.GET, "/index", a, func(r *http.Request) {
+		r.Host = `github.com`
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `backend-index`, b)
+
+	a.RemoveHost(`github.com`)
+	c, b = request(echo.GET, "/index", a, func(r *http.Request) {
+		r.Host = `github.com`
+	})
+	assert.Equal(t, http.StatusNotFound, c)
+
+	a.Add(`backend@new.coscms.com`, e3)
+	c, b = request(echo.GET, "/index", a, func(r *http.Request) {
+		r.Host = `new.coscms.com`
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `backend-index`, b)
 
 	e4 := echo.New()
 	e4.SetPrefix(`/portal`)
