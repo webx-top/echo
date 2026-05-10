@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/admpub/log"
 	"github.com/admpub/realip"
@@ -33,7 +34,7 @@ type (
 		renderer            Renderer
 		renderDataWrapper   DataWrapper
 		pool                sync.Pool
-		debug               bool
+		debug               atomic.Bool
 		router              *Router
 		logger              logger.Logger
 		groups              map[string]*Group
@@ -185,7 +186,7 @@ func (e *Echo) Reset() *Echo {
 	e.SetBinder(NewBinder(e))
 	e.notFoundHandler = nil
 	e.renderer = nil
-	e.debug = false
+	e.debug.Store(false)
 	e.router = NewRouter(e)
 	e.logger = log.GetLogger("echo")
 	e.groups = make(map[string]*Group)
@@ -377,7 +378,7 @@ func (e *Echo) DefaultHTTPErrorHandler(err error, c Context) {
 		code = he.Code
 		msg = he.Message
 	}
-	if e.debug {
+	if e.debug.Load() {
 		msg = err.Error()
 	}
 	if !c.Response().Committed() {
@@ -436,7 +437,7 @@ func (e *Echo) RenderDataWrapper() DataWrapper {
 
 // SetDebug enable/disable debug mode.
 func (e *Echo) SetDebug(on bool) {
-	e.debug = on
+	e.debug.Store(on)
 	if logger, ok := e.logger.(logger.LevelSetter); ok {
 		if on {
 			logger.SetLevel(`Debug`)
@@ -448,7 +449,7 @@ func (e *Echo) SetDebug(on bool) {
 
 // Debug returns debug mode (enabled or disabled).
 func (e *Echo) Debug() bool {
-	return e.debug
+	return e.debug.Load()
 }
 
 func (e *Echo) SetMultilingual(on bool) {

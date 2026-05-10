@@ -44,6 +44,9 @@ type (
 		// can be cached.
 		// Optional with default value as 0.
 		MaxAge int
+
+		allowOriginLookup map[string]bool
+		allowAllOrigins   bool
 	}
 )
 
@@ -56,13 +59,23 @@ var (
 	}
 )
 
+func (c *CORSConfig) resolveAllowOrigin(origin string) string {
+	if c.allowAllOrigins {
+		return "*"
+	}
+	if c.allowOriginLookup[origin] {
+		return origin
+	}
+	return ""
+}
+
 // CORS returns a cross-origin HTTP request (CORS) middleware.
 // See https://developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS
 func CORS() echo.MiddlewareFunc {
 	return CORSWithConfig(DefaultCORSConfig)
 }
 
-// CORSFromConfig returns a CORS middleware from config.
+// CORSWithConfig returns a CORS middleware from config.
 // See `CORS()`.
 func CORSWithConfig(config CORSConfig) echo.MiddlewareFunc {
 	// Defaults
@@ -75,7 +88,17 @@ func CORSWithConfig(config CORSConfig) echo.MiddlewareFunc {
 	if len(config.AllowMethods) == 0 {
 		config.AllowMethods = DefaultCORSConfig.AllowMethods
 	}
-	allowOrigins := strings.Join(config.AllowOrigins, ",")
+
+	// Pre-build origin lookup map for O(1) validation
+	config.allowOriginLookup = make(map[string]bool, len(config.AllowOrigins))
+	for _, o := range config.AllowOrigins {
+		if o == "*" {
+			config.allowAllOrigins = true
+		} else {
+			config.allowOriginLookup[o] = true
+		}
+	}
+
 	allowMethods := strings.Join(config.AllowMethods, ",")
 	allowHeaders := strings.Join(config.AllowHeaders, ",")
 	exposeHeaders := strings.Join(config.ExposeHeaders, ",")
@@ -88,11 +111,17 @@ func CORSWithConfig(config CORSConfig) echo.MiddlewareFunc {
 			}
 			req := c.Request()
 			header := c.Response().Header()
+			origin := req.Header().Get(echo.HeaderOrigin)
+
+			// Determine allowed origin
+			allowOrigin := config.resolveAllowOrigin(origin)
 
 			// Simple request
 			if req.Method() != echo.OPTIONS {
 				header.Add(echo.HeaderVary, echo.HeaderOrigin)
-				header.Set(echo.HeaderAccessControlAllowOrigin, allowOrigins)
+				if allowOrigin != "" {
+					header.Set(echo.HeaderAccessControlAllowOrigin, allowOrigin)
+				}
 				if config.AllowCredentials {
 					header.Set(echo.HeaderAccessControlAllowCredentials, "true")
 				}
@@ -106,7 +135,9 @@ func CORSWithConfig(config CORSConfig) echo.MiddlewareFunc {
 			header.Add(echo.HeaderVary, echo.HeaderOrigin)
 			header.Add(echo.HeaderVary, echo.HeaderAccessControlRequestMethod)
 			header.Add(echo.HeaderVary, echo.HeaderAccessControlRequestHeaders)
-			header.Set(echo.HeaderAccessControlAllowOrigin, allowOrigins)
+			if allowOrigin != "" {
+				header.Set(echo.HeaderAccessControlAllowOrigin, allowOrigin)
+			}
 			header.Set(echo.HeaderAccessControlAllowMethods, allowMethods)
 			if config.AllowCredentials {
 				header.Set(echo.HeaderAccessControlAllowCredentials, "true")

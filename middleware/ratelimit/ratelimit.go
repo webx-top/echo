@@ -189,7 +189,7 @@ func BuildKeys(limiter *config.Limiter, r engine.Request) [][]string {
 		// Limit by HTTP methods and HTTP headers+values and Basic Auth credentials.
 		if StringInSlice(limiter.Methods, r.Method()) {
 			for headerKey, headerValues := range limiter.Headers {
-				if (headerValues == nil || len(headerValues) <= 0) && r.Header().Get(headerKey) != "" {
+				if len(headerValues) <= 0 && r.Header().Get(headerKey) != "" {
 					// If header values are empty, rate-limit all request with headerKey.
 					username, _, ok := r.BasicAuth()
 					if ok && StringInSlice(limiter.BasicAuthUsers, username) {
@@ -212,7 +212,7 @@ func BuildKeys(limiter *config.Limiter, r engine.Request) [][]string {
 		// Limit by HTTP methods and HTTP headers+values.
 		if StringInSlice(limiter.Methods, r.Method()) {
 			for headerKey, headerValues := range limiter.Headers {
-				if (headerValues == nil || len(headerValues) <= 0) && r.Header().Get(headerKey) != "" {
+				if len(headerValues) <= 0 && r.Header().Get(headerKey) != "" {
 					// If header values are empty, rate-limit all request with headerKey.
 					sliceKeys = append(sliceKeys, []string{remoteIP, path, r.Method(), headerKey})
 

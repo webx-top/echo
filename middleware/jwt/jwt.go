@@ -18,7 +18,6 @@ package middleware
 import (
 	"fmt"
 	"net/http"
-	"reflect"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -210,8 +209,7 @@ func JWTWithConfig(config JWTConfig) echo.MiddlewareFuncd {
 			if _, ok := config.Claims.(jwt.MapClaims); ok {
 				token, err = jwt.Parse(auth, config.keyFunc)
 			} else {
-				claims := reflect.ValueOf(config.Claims).Interface().(jwt.Claims)
-				token, err = jwt.ParseWithClaims(auth, claims, config.keyFunc)
+				token, err = jwt.ParseWithClaims(auth, config.Claims, config.keyFunc)
 			}
 			if err == nil && token.Valid {
 				// Store user information from token into context.
@@ -234,7 +232,7 @@ func jwtFromHeader(header string) jwtExtractor {
 	return func(c echo.Context) (string, error) {
 		auth := c.Request().Header().Get(header)
 		l := len(bearer)
-		if len(auth) > l+1 && auth[:l] == bearer {
+		if len(auth) > l+1 && strings.EqualFold(auth[:l], bearer) {
 			return auth[l+1:], nil
 		}
 		return "", ErrJWTMissing

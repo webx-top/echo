@@ -60,7 +60,7 @@ func HTTPSWWWRedirect() echo.MiddlewareFunc {
 // See `HTTPSWWWRedirect()`.
 func HTTPSWWWRedirectWithConfig(config RedirectConfig) echo.MiddlewareFunc {
 	return redirect(config, func(scheme, host, uri string) (ok bool, url string) {
-		if ok = scheme != "https" && host[:3] != www; ok {
+		if ok = scheme != "https" && (len(host) < 3 || host[:3] != www); ok {
 			url = "https://www." + host + uri
 		}
 		return
@@ -80,7 +80,7 @@ func HTTPSNonWWWRedirect() echo.MiddlewareFunc {
 func HTTPSNonWWWRedirectWithConfig(config RedirectConfig) echo.MiddlewareFunc {
 	return redirect(config, func(scheme, host, uri string) (ok bool, url string) {
 		if ok = scheme != "https"; ok {
-			if host[:3] == www {
+			if len(host) >= 3 && host[:3] == www {
 				host = host[4:]
 			}
 			url = "https://" + host + uri
@@ -101,7 +101,7 @@ func WWWRedirect() echo.MiddlewareFunc {
 // See `WWWRedirect()`.
 func WWWRedirectWithConfig(config RedirectConfig) echo.MiddlewareFunc {
 	return redirect(config, func(scheme, host, uri string) (ok bool, url string) {
-		if ok = host[:3] != www; ok {
+		if ok = len(host) < 3 || host[:3] != www; ok {
 			url = scheme + "://www." + host + uri
 		}
 		return
@@ -120,7 +120,7 @@ func NonWWWRedirect() echo.MiddlewareFunc {
 // See `NonWWWRedirect()`.
 func NonWWWRedirectWithConfig(config RedirectConfig) echo.MiddlewareFunc {
 	return redirect(config, func(scheme, host, uri string) (ok bool, url string) {
-		if ok = host[:3] == www; ok {
+		if ok = len(host) >= 3 && host[:3] == www; ok {
 			url = scheme + "://" + host[4:] + uri
 		}
 		return

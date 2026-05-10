@@ -47,7 +47,7 @@ func (w *gzipWriter) WriteHeader(code int) {
 		w.Header().Del(echo.HeaderContentEncoding)
 	}
 	w.Header().Del(echo.HeaderContentLength)
-	w.WriteHeader(code)
+	w.Response.WriteHeader(code)
 }
 
 func (w *gzipWriter) Write(b []byte) (int, error) {
