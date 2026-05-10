@@ -243,7 +243,7 @@ func BuildKeys(limiter *config.Limiter, r engine.Request) [][]string {
 	} else if limiter.Headers != nil {
 		// Limit by HTTP headers+values.
 		for headerKey, headerValues := range limiter.Headers {
-			if (headerValues == nil || len(headerValues) <= 0) && r.Header().Get(headerKey) != "" {
+			if len(headerValues) <= 0 && r.Header().Get(headerKey) != "" {
 				// If header values are empty, rate-limit all request with headerKey.
 				sliceKeys = append(sliceKeys, []string{remoteIP, path, headerKey})
 
