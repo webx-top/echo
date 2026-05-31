@@ -349,6 +349,10 @@ func (c *XContext) NoContent(codes ...int) error {
 	if c.code == 0 {
 		c.code = http.StatusOK
 	}
+	err := c.preResponse()
+	if err != nil {
+		return err
+	}
 	c.response.WriteHeader(c.code)
 	return nil
 }

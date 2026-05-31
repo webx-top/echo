@@ -180,16 +180,20 @@ func (r *Response) Stream(step func(context.Context, io.Writer) (bool, error)) e
 			defer tick.Stop()
 			defer cancel()
 			for {
-				<-tick.C
-				_, err := w.Write(ssePingBytes)
-				if err != nil {
-					r.logger.Debug(`SSE: `, err)
+				select {
+				case <-ctx.Done():
 					return
-				}
-				err = w.Flush()
-				if err != nil {
-					r.logger.Debug(`Flush: `, err)
-					return
+				case <-tick.C:
+					_, err := w.Write(ssePingBytes)
+					if err != nil {
+						r.logger.Debug(`SSE: `, err)
+						return
+					}
+					err = w.Flush()
+					if err != nil {
+						r.logger.Debug(`Flush: `, err)
+						return
+					}
 				}
 			}
 		}()
@@ -237,8 +241,8 @@ func (r *Response) Error(errMsg string, args ...int) {
 	} else {
 		r.status = fasthttp.StatusInternalServerError
 	}
-	r.Write(engine.Str2bytes(errMsg))
 	r.WriteHeader(r.status)
+	r.Write(engine.Str2bytes(errMsg))
 }
 
 func (r *Response) reset(req *Request, h engine.Header) {
@@ -249,6 +253,7 @@ func (r *Response) reset(req *Request, h engine.Header) {
 	r.committed = false
 	r.writer = req.context
 	r.stdResponseWriter = nil
+	r.logger = log.GetLogger("echo")
 }
 
 func (r *Response) StdResponseWriter() http.ResponseWriter {

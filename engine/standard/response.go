@@ -57,9 +57,7 @@ func (r *Response) WriteHeader(code int) {
 		return
 	}
 	r.status = code
-	r.header.lock.Lock()
 	r.ResponseWriter.WriteHeader(code)
-	r.header.lock.Unlock()
 	r.committed = true
 }
 
@@ -112,8 +110,8 @@ func (r *Response) Error(errMsg string, args ...int) {
 	} else {
 		r.status = http.StatusInternalServerError
 	}
-	r.Write(engine.Str2bytes(errMsg))
 	r.WriteHeader(r.status)
+	r.Write(engine.Str2bytes(errMsg))
 }
 
 func (r *Response) reset(w http.ResponseWriter, req *http.Request, h *Header) {
