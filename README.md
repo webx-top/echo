@@ -1,5 +1,5 @@
 # Echo
-[![Go](https://github.com/webx-top/echo/actions/workflows/go.yml/badge.svg)](https://github.com/webx-top/echo/actions/workflows/go.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/webx-top/echo)](https://goreportcard.com/report/github.com/webx-top/echo)
+[![Go](https://github.com/webx-top/echo/actions/workflows/go.yml/badge.svg)](https://github.com/webx-top/echo/actions/workflows/go.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/webx-top/echo)](https://goreportcard.com/report/github.com/webx-top/echo) [中文文档](README_zh.md)
 #### Echo is a fast and unfancy web framework for Go (Golang). Up to 10x faster than the rest.
 This package need >= **go 1.25**
 
@@ -608,6 +608,52 @@ SSE | github.com/webx-top/echo/middleware/render/sse | Server-Sent Events render
 
 ## Template Func docs
 [Template Function Documentation](middleware/tplfunc/TplFuncMap_Documentation.md)
+
+## Template Data
+
+When using the Render middleware, the data passed to `c.Render(data)` is wrapped into `*echo.RenderData`. In Go templates, call its exported methods via `$.XXX`:
+
+```gotmpl
+{{$.Now}}           {{/* 当前时间 */}}
+{{$.UnixTime}}      {{/* 当前时间戳 */}}
+{{$.Site}}          {{/* 网站URL */}}
+{{$.SiteRoot}}      {{/* 网站根路径 */}}
+{{$.URL}}           {{/* 当前请求URL */}}
+{{$.URI}}           {{/* 当前请求URI */}}
+{{$.Path}}          {{/* 当前请求路径 */}}
+{{$.Domain}}        {{/* 当前域名 */}}
+{{$.Port}}          {{/* 当前端口 */}}
+{{$.Scheme}}        {{/* http/https */}}
+{{$.Lang}}          {{/* 当前语言 */}}
+{{$.Referer}}       {{/* 来源地址 */}}
+{{$.Query "key"}}   {{/* 获取查询参数 */}}
+{{$.Form "key"}}    {{/* 获取表单参数 */}}
+{{$.Param "key"}}   {{/* 获取路径参数 */}}
+{{$.Get "key"}}     {{/* 获取Context中存储的值 */}}
+{{$.Cookie}}        {{/* Cookie操作 */}}
+{{$.Session}}       {{/* Session操作 */}}
+{{$.Flash "key"}}   {{/* Flash消息 */}}
+{{$.T "你好%v" "世界"}}  {{/* 多语言翻译 */}}
+{{$.LangURI "zh"}}  {{/* 生成语言链接 */}}
+{{$.URLByName "routeName" "param1"}}  {{/* 根据路由名生成URL */}}
+{{$.CaptchaForm}}   {{/* 验证码表单 */}}
+{{$.TimeAgo $time}} {{/* 时间友好显示 */}}
+{{$.TsHumanize $time}}{{/* 时间区间友好显示 */}}
+{{$.DurationFormat $t}}{{/* 持续时间格式化 */}}
+{{$.Fetch "subtmpl" .}}{{/* 渲染子模板并嵌入 */}}
+{{$.MakeURL "handler" "arg"}}{{/* 生成URL */}}
+{{$.Ext}}           {{/* 默认扩展名 */}}
+{{$.ThemeColor}}    {{/* 主题色 */}}
+{{$.Prefix}}        {{/* 当前路由前缀 */}}
+{{$.RootPrefix}}    {{/* 根路由前缀 */}}
+{{$.UploadURL "subdir"}}{{/* 上传文件URL */}}
+{{$.FullURL "/path"}}{{/* 生成完整URL */}}
+{{$.HasAnyRequest}} {{/* 是否有任何请求数据 */}}
+{{$.GetNextURL}}    {{/* 获取跳转URL */}}
+{{$.ReturnToCurrentURL}}{{/* 返回当前URL */}}
+```
+
+`$.Data` is the original data passed to `c.Render()`, and `$.Stored` is read-only data set via `c.Set("key",any)`.
 
 ## Additional Packages
 

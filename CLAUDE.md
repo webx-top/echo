@@ -51,8 +51,9 @@ echo/
 │   ├── language/        — i18n
 │   ├── ipfilter/        — IP allow/block
 │   ├── opentracing/     — Distributed tracing
-│   └── bindata/         — Embedded static files
+│   └── bindata/         — go-bindata assetfs integration (Static middleware, NewTmplManager)
 ├── handler/             — Handler wrappers (websocket, sockjs, oauth2, pprof, captcha, embed)
+│   └── embed/           — embed.FS multi-FS aggregator (FileSystems) + File handler
 ├── engine/              — Server engine implementations (standard, fasthttp, mock)
 ├── formfilter/          — Build FormDataFilter functions for pre-bind data transformation
 ├── param/               — Type-safe param access (String, StringSlice, Store)
