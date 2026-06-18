@@ -1,6 +1,7 @@
 package subdomains
 
 import (
+	"fmt"
 	"slices"
 	"sort"
 	"strings"
@@ -17,7 +18,7 @@ import (
 
 var Default = New()
 
-func New() *Subdomains {
+func New(opts ...func(*Subdomains)) *Subdomains {
 	s := &Subdomains{
 		Hosts:    InitSafeMap[*[]string](),
 		Alias:    InitSafeMap[*Info](),
@@ -25,6 +26,9 @@ func New() *Subdomains {
 		Protocol: `http`,
 	}
 	s.dispatcher = s.DefaultDispatcher
+	for _, opt := range opts {
+		opt(s)
+	}
 	return s
 }
 
@@ -122,6 +126,22 @@ func (s *Subdomains) SetDispatcher(dispatcher Dispatcher) *Subdomains {
 	return s
 }
 
+func (s *Subdomains) SetDefault(defaultAlias string) *Subdomains {
+	s.Default = defaultAlias
+	return s
+}
+
+func (s *Subdomains) SetBoot(bootAlias string) *Subdomains {
+	s.Boot = bootAlias
+	return s
+}
+
+// SetProtocol http/https
+func (s *Subdomains) SetProtocol(protocol string) *Subdomains {
+	s.Protocol = protocol
+	return s
+}
+
 // Add 添加子域名，name的值支持以下三种格式：
 // 1. 别名@域名 ———— 一个别名可以对应多个域名，每个域名之间用半角逗号“,”分隔
 // 2. 域名 ———— 可以添加多个域名，每个域名之间用半角逗号“,”分隔。这里会自动将第一个域名中的首个点号“.”前面的部分作为别名，例如“blog.webx.top,news.webx.top”会自动将“blog”作为别名
@@ -198,8 +218,39 @@ func (s *Subdomains) Add(name string, e *echo.Echo) *Subdomains {
 }
 
 func (s *Subdomains) RemoveHost(host string) {
+	names := s.Hosts.Get(host)
+	if names == nil {
+		return
+	}
 	s.Hosts.Remove(host)
-	s.hostsNum.Store(int32(s.Hosts.Size()))
+
+	var chg bool
+	aliases, ok := s.Hosts.GetOk(``)
+	if !ok {
+		cloned := make([]string, len(*names))
+		copy(cloned, *names)
+		aliases = &cloned
+		s.Hosts.Set(``, aliases)
+		chg = true
+	} else {
+		for _, name := range *names {
+			if !com.InSlice(name, *aliases) {
+				*aliases = append(*aliases, name)
+				chg = true
+			}
+		}
+	}
+	if chg {
+		s.sort(*aliases)
+	}
+
+	//s.PrintAlias()
+
+	n := s.Hosts.Size()
+	// println()
+	// println(host, `:~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~>`, n)
+	// s.PrintHosts()
+	s.hostsNum.Store(int32(n))
 }
 
 func (s *Subdomains) Get(args ...string) *Info {
@@ -329,18 +380,43 @@ func (s *Subdomains) FindByDomain(host string, upath string) (*echo.Echo, bool) 
 	if exists && names != nil {
 		infos := s.Alias.Gets(*names...)
 		cleaned, foundLocale := FixLocalePath(upath)
+		//fmt.Printf("-----------------> upath=%s; cleaned=%s; foundLocale=%v; names=%+v; infos=%d\n", upath, cleaned, foundLocale, *names, len(infos))
 		for _, info := range infos {
+			//fmt.Printf("found: %s: %+v\n", info.Prefix(), *info)
 			if info.MatchPath(upath, cleaned, foundLocale) {
 				return info.Echo, exists
 			}
 		}
 	}
+	// s.PrintAlias()
 	var info *Info
 	info, exists = s.Alias.GetOk(s.Default)
 	if exists {
 		return info.Echo, exists
 	}
 	return nil, exists
+}
+
+func (s *Subdomains) PrintAlias() {
+	fmt.Println()
+	fmt.Println(`+------------------------[PrintAlias]----------------------+`)
+	s.Alias.Range(func(key string, val *Info) bool {
+		fmt.Printf("| %s: %+v\n", key, *val)
+		return true
+	})
+	fmt.Println(`+----------------------------------------------------------+`)
+	fmt.Println()
+}
+
+func (s *Subdomains) PrintHosts() {
+	fmt.Println()
+	fmt.Println(`+------------------------[PrintHosts]----------------------+`)
+	s.Hosts.Range(func(key string, val *[]string) bool {
+		fmt.Printf("| %s: %+v\n", key, *val)
+		return true
+	})
+	fmt.Println(`+----------------------------------------------------------+`)
+	fmt.Println()
 }
 
 func (s *Subdomains) DefaultDispatcher(r engine.Request, w engine.Response) (*echo.Echo, bool) {

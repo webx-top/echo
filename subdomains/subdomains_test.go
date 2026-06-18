@@ -23,6 +23,9 @@ func TestSortHosts(t *testing.T) {
 	e.Get(`/`, func(c echo.Context) error {
 		return c.String(`frontend`)
 	})
+	e.Get(`/index`, func(c echo.Context) error {
+		return c.String(`frontend-index`)
+	})
 	a.Add(`frontend`, e)
 	e2 := echo.New()
 	e2.SetPrefix(`/admin`)
@@ -80,12 +83,25 @@ func TestSortHosts(t *testing.T) {
 	})
 	assert.Equal(t, http.StatusNotFound, c)
 
-	a.Add(`backend@new.coscms.com`, e3)
+	a.Add(`backend@new.coscms.com,10.0.0.1`, e3)
+
+	assert.Equal(t, []string{`frontend`}, *a.Hosts.Get(``))
+	assert.Equal(t, []string{`backend`}, *a.Hosts.Get(`new.coscms.com`))
+	assert.Equal(t, []string{`backend`}, *a.Hosts.Get(`10.0.0.1`))
+	assert.Equal(t, int32(3), a.hostsNum.Load())
+
 	c, b = request(echo.GET, "/index", a, func(r *http.Request) {
 		r.Host = `new.coscms.com`
 	})
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, `backend-index`, b)
+
+	a.SetDefault(`frontend`)
+	c, b = request(echo.GET, "/index", a, func(r *http.Request) {
+		r.Host = `new2.coscms.com`
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `frontend-index`, b)
 
 	e4 := echo.New()
 	e4.SetPrefix(`/portal`)
@@ -94,4 +110,39 @@ func TestSortHosts(t *testing.T) {
 	})
 	a.Add(`portal`, e4)
 	assert.Equal(t, []string{`portal`, `frontend`}, *a.Hosts.Get(``))
+
+	// ----------------------------
+	// a.PrintAlias()
+	// a.PrintHosts()
+	e3.SetPrefix(`/admin`)
+	e3.Get(``, func(c echo.Context) error {
+		return c.String(`backend`)
+	})
+	e3.Get(`/index`, func(c echo.Context) error {
+		return c.String(`backend-index`)
+	})
+	e3.Commit()
+	a.Add(`backend@new.coscms.com,10.0.0.1`, e3)
+	// a.PrintAlias()
+	// a.PrintHosts()
+	a.RemoveHost(`new.coscms.com`)
+	a.RemoveHost(`10.0.0.1`)
+	// a.PrintAlias()
+	// a.PrintHosts()
+
+	assert.Equal(t, "/admin", e3.Prefix())
+	assert.Equal(t, []string{"portal", "backend", "frontend"}, *a.Hosts.Get(``))
+	assert.Equal(t, int32(1), a.hostsNum.Load())
+
+	c, b = request(echo.GET, "/index", a, func(r *http.Request) {
+		r.Host = `new.coscms.com`
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `frontend-index`, b)
+
+	c, b = request(echo.GET, "/admin", a, func(r *http.Request) {
+		r.Host = `new.coscms.com`
+	})
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `backend`, b)
 }
