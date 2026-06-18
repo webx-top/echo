@@ -52,13 +52,11 @@ func fixedRedirectURIQueryString(ctx echo.Context, authURL string) string {
 	return authURL
 }
 
-/*
-BeginAuthHandler is a convienence handler for starting the authentication process.
-It expects to be able to get the name of the provider from the named parameters
-as either "provider" or url query parameter ":provider".
-BeginAuthHandler will redirect the user to the appropriate authentication end-point
-for the requested provider.
-*/
+// BeginAuthHandler is a convienence handler for starting the authentication process.
+// It expects to be able to get the name of the provider from the named parameters
+// as either "provider" or url query parameter ":provider".
+// BeginAuthHandler will redirect the user to the appropriate authentication end-point
+// for the requested provider.
 func BeginAuthHandler(ctx echo.Context) error {
 	authURL, err := GetAuthURL(ctx)
 	if err != nil {
@@ -106,14 +104,25 @@ var GetState = func(ctx echo.Context) string {
 	return state
 }
 
-/*
-GetAuthURL starts the authentication process with the requested provided.
-It will return a URL that should be used to send users to.
-It expects to be able to get the name of the provider from the query parameters
-as either "provider" or url query parameter ":provider".
-I would recommend using the BeginAuthHandler instead of doing all of these steps
-yourself, but that's entirely up to you.
-*/
+type SiteURLSetter interface {
+	SetSiteURL(string)
+}
+
+func SetSessionDefaults(ctx echo.Context, sess goth.Session) {
+	switch sv := sess.(type) {
+	case echo.ContextRegister:
+		sv.SetContext(ctx)
+	case SiteURLSetter:
+		sv.SetSiteURL(ctx.Site())
+	}
+}
+
+// GetAuthURL starts the authentication process with the requested provided.
+// It will return a URL that should be used to send users to.
+// It expects to be able to get the name of the provider from the query parameters
+// as either "provider" or url query parameter ":provider".
+// I would recommend using the BeginAuthHandler instead of doing all of these steps
+// yourself, but that's entirely up to you.
 func GetAuthURL(ctx echo.Context) (string, error) {
 	providerName, err := GetProviderName(ctx)
 	if err != nil {
@@ -133,9 +142,7 @@ func GetAuthURL(ctx echo.Context) (string, error) {
 		return "", err
 	}
 
-	if cr, ok := sess.(echo.ContextRegister); ok {
-		cr.SetContext(ctx)
-	}
+	SetSessionDefaults(ctx, sess)
 
 	authURL, err := sess.GetAuthURL()
 	if err != nil {
@@ -205,9 +212,7 @@ func fetchUser(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	if cr, ok := sess.(echo.ContextRegister); ok {
-		cr.SetContext(ctx)
-	}
+	SetSessionDefaults(ctx, sess)
 
 	var user goth.User
 	user, err = provider.FetchUser(sess)
@@ -218,12 +223,10 @@ func fetchUser(ctx echo.Context) (goth.User, error) {
 	return user, err
 }
 
-/*
-CompleteUserAuth does what it says on the tin. It completes the authentication
-process and fetches all of the basic information about the user from the provider.
-It expects to be able to get the name of the provider from the named parameters
-as either "provider" or url query parameter ":provider".
-*/
+// CompleteUserAuth does what it says on the tin. It completes the authentication
+// process and fetches all of the basic information about the user from the provider.
+// It expects to be able to get the name of the provider from the named parameters
+// as either "provider" or url query parameter ":provider".
 var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 	providerName, err := GetProviderName(ctx)
 	if err != nil {
@@ -259,9 +262,7 @@ var CompleteUserAuth = func(ctx echo.Context) (goth.User, error) {
 		return EmptyUser, err
 	}
 
-	if cr, ok := sess.(echo.ContextRegister); ok {
-		cr.SetContext(ctx)
-	}
+	SetSessionDefaults(ctx, sess)
 
 	err = validateState(ctx, sess)
 	if err != nil {
