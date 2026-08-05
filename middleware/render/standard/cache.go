@@ -35,10 +35,11 @@ func (c *CacheData) hasAnyBlock(blocks ...string) bool {
 }
 
 func (c *CacheData) setFunc(funcMap template.FuncMap) template.FuncMap {
-	if funcMap == nil {
-		funcMap = template.FuncMap{}
+	result := template.FuncMap{}
+	for k, v := range funcMap {
+		result[k] = v
 	}
-	funcMap["hasBlock"] = c.hasBlock
-	funcMap["hasAnyBlock"] = c.hasAnyBlock
-	return funcMap
+	result["hasBlock"] = c.hasBlock
+	result["hasAnyBlock"] = c.hasAnyBlock
+	return result
 }

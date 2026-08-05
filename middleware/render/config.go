@@ -1,6 +1,7 @@
 package render
 
 import (
+	"html/template"
 	"path/filepath"
 	"strings"
 
@@ -165,7 +166,7 @@ func (t *Config) ApplyTo(e *echo.Echo, manager ...driver.Manager) *Config {
 }
 
 func defaultTplFuncMap() map[string]any {
-	return tplfunc.TplFuncMap
+	return tplfunc.New()
 }
 
 func (t *Config) MakeRenderer(manager ...driver.Manager) driver.Driver {
@@ -173,7 +174,13 @@ func (t *Config) MakeRenderer(manager ...driver.Manager) driver.Driver {
 	if t.FuncMapGlobal == nil {
 		renderer.SetFuncMap(defaultTplFuncMap)
 	} else {
-		renderer.SetFuncMap(func() map[string]any { return t.FuncMapGlobal })
+		renderer.SetFuncMap(func() map[string]any {
+			r := template.FuncMap{}
+			for k, v := range t.FuncMapGlobal {
+				r[k] = v
+			}
+			return r
+		})
 	}
 	t.renderer = renderer
 	return renderer
