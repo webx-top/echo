@@ -274,6 +274,16 @@ func (a *Standard) parse(c echo.Context, tmplName string, tmplContent func(strin
 
 var bytesBOM = []byte("\xEF\xBB\xBF")
 
+func safeSetTmplFuncMap(tmpl *template.Template, funcMap template.FuncMap) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("set template funcMap error: %v", r)
+		}
+	}()
+	tmpl.Funcs(funcMap)
+	return
+}
+
 func (a *Standard) find(c echo.Context,
 	tmplOriginalName string, tmplName string, tmplContent func(string) ([]byte, error),
 	cachedKey string, funcMap template.FuncMap) (tmpl *template.Template, err error) {
@@ -287,8 +297,15 @@ func (a *Standard) find(c echo.Context,
 	tmpl = template.New(driver.CleanTemplateName(tmplName))
 	tmpl.Delims(a.DelimLeft, a.DelimRight)
 	cacheData := NewCache(tmpl)
+
+	// set template funcMap
 	funcMap = cacheData.setFunc(funcMap)
-	tmpl.Funcs(funcMap)
+	err = safeSetTmplFuncMap(tmpl, funcMap)
+	if err != nil {
+		err = fmt.Errorf("%s: %w", tmplName, err)
+		return
+	}
+
 	var b []byte
 	b, err = tmplContent(tmplName)
 	if err != nil {
@@ -328,27 +345,27 @@ func (a *Standard) find(c echo.Context,
 		return
 	}
 
-	var defines string
+	var defines strings.Builder
 
 	// include
 	for name, subc := range includes {
 		subc = a.ContainsSnippetResult(c, tmplOriginalName, subc, clips)
 		subc = a.Tag(`define "`+driver.CleanTemplateName(name)+`"`) + subc + a.Tag(`end`)
-		defines += subc
+		defines.WriteString(subc)
 	}
 
 	// block
 	for name, extc := range blocks {
 		extc = a.ContainsSnippetResult(c, tmplOriginalName, extc, clips)
 		extc = a.Tag(`define "`+driver.CleanTemplateName(name)+`"`) + extc + a.Tag(`end`)
-		defines += extc
+		defines.WriteString(extc)
 		cacheData.blocks[name] = struct{}{}
 	}
 
 	// parse define...
-	tmpl, err = tmpl.Parse(defines)
+	tmpl, err = tmpl.Parse(defines.String())
 	if err != nil {
-		err = parseError(err, defines)
+		err = parseError(err, defines.String())
 		return
 	}
 	a.cache.Set(cachedKey, cacheData)

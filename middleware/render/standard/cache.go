@@ -16,25 +16,29 @@ type CacheData struct {
 	blocks   map[string]struct{}
 }
 
+func (c *CacheData) hasBlock(blocks ...string) bool {
+	for _, blockName := range blocks {
+		if _, ok := c.blocks[blockName]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func (c *CacheData) hasAnyBlock(blocks ...string) bool {
+	for _, blockName := range blocks {
+		if _, ok := c.blocks[blockName]; ok {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *CacheData) setFunc(funcMap template.FuncMap) template.FuncMap {
 	if funcMap == nil {
 		funcMap = template.FuncMap{}
 	}
-	funcMap["hasBlock"] = func(blocks ...string) bool {
-		for _, blockName := range blocks {
-			if _, ok := c.blocks[blockName]; !ok {
-				return false
-			}
-		}
-		return true
-	}
-	funcMap["hasAnyBlock"] = func(blocks ...string) bool {
-		for _, blockName := range blocks {
-			if _, ok := c.blocks[blockName]; ok {
-				return true
-			}
-		}
-		return false
-	}
+	funcMap["hasBlock"] = c.hasBlock
+	funcMap["hasAnyBlock"] = c.hasAnyBlock
 	return funcMap
 }
