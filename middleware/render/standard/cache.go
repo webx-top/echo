@@ -35,7 +35,7 @@ func (c *CacheData) hasAnyBlock(blocks ...string) bool {
 }
 
 func (c *CacheData) setFunc(funcMap template.FuncMap) template.FuncMap {
-	result := template.FuncMap{}
+	result := make(template.FuncMap, len(funcMap)+2)
 	for k, v := range funcMap {
 		result[k] = v
 	}
