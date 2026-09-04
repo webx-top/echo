@@ -42,7 +42,7 @@ require (
 	github.com/webx-top/com v1.5.3
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380
 	github.com/webx-top/tagfast v0.0.1
-	github.com/webx-top/validation v0.0.3
+	github.com/webx-top/validation v0.0.4
 	golang.org/x/crypto v0.56.0
 	golang.org/x/sync v0.22.0
 	golang.org/x/time v0.15.0

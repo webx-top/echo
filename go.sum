@@ -295,8 +295,8 @@ github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380/go.mod h1:JGnKm+kST
 github.com/webx-top/tagfast v0.0.0-20161020041435-9a2065ce3dd2/go.mod h1:pMe3sJitHxbxX2EAI/v9HEAXjodP4c+yUVw3rbKcljI=
 github.com/webx-top/tagfast v0.0.1 h1:SNC2ui+ngSCwMaQgtfAsRKFLAt0GuiquMO9jwySfsGU=
 github.com/webx-top/tagfast v0.0.1/go.mod h1:vArAB9fuv8AVZ7NfWedERyyY1og7lEHkjuq+o5YuaP8=
-github.com/webx-top/validation v0.0.3 h1:6vBoAp5iqjIpfFA+XoCnIzBHcuLjQzxv7MRlshptUqk=
-github.com/webx-top/validation v0.0.3/go.mod h1:74lFGn3naxJl8FelK8RfCatVCKDB6G2ckG96tm3w1ug=
+github.com/webx-top/validation v0.0.4 h1:RlZqPiFoAbQ3jSkPJM0srOv03bxmkalyaaNcGp/ZR3s=
+github.com/webx-top/validation v0.0.4/go.mod h1:74lFGn3naxJl8FelK8RfCatVCKDB6G2ckG96tm3w1ug=
 github.com/xyproto/randomstring v1.0.5 h1:YtlWPoRdgMu3NZtP45drfy1GKoojuR7hmRcnhZqKjWU=
 github.com/xyproto/randomstring v1.0.5/go.mod h1:rgmS5DeNXLivK7YprL0pY+lTuhNQW3iGxZ18UQApw/E=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
